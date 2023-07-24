@@ -1,0 +1,141 @@
+  {
+  "language.name": "正體中文",
+  "language.region": "Taiwan",
+  "language.code": "zh_tw",
+
+  "itemGroup.yuushya.modelling": "Yuushya-建模",
+  
+  "item.yuushya.pos_trans_item": "方塊實體層位移工具",
+  "item.yuushya.pos_trans_item.line1": "\u00A79置於主手右鍵一[方塊實體]調整其相應[層]的位移值",
+  "item.yuushya.pos_trans_item.line2": "\u00A79副手右鍵調整模式(共3種) 主手左右鍵執行位移",
+  "item.yuushya.pos_trans_item.line3": "\u00A79可調整的數值為[層]的XYZ偏移值",
+  "item.yuushya.pos_trans_item.line4": "\u00A79您可通過查看F3準星來確定軸向",
+  
+  "item.yuushya.pos_trans_item.0": "\u00A7cX軸模式",
+  "item.yuushya.pos_trans_item.1": "\u00A7aY軸模式",
+  "item.yuushya.pos_trans_item.2": "\u00A79Z軸模式",
+  "item.yuushya.pos_trans_item.switch": "X軸偏移:%s Y軸偏移:%s Z軸偏移:%s",
+  
+  "item.yuushya.micro_pos_trans_item": "方塊實體層微調工具",
+  "item.yuushya.micro_pos_trans_item.line1": "\u00A79置於主手右鍵一[方塊實體]對其[層]進行位置微調",
+  "item.yuushya.micro_pos_trans_item.line2": "\u00A79副手右鍵調整模式(共4種) 主手左右鍵執行位移和復原",
+  "item.yuushya.micro_pos_trans_item.line3": "\u00A79調整細微偏移值以防止Z-Fighting(閃爍)",
+  "item.yuushya.micro_pos_trans_item.line4": "\u00A79可調整的數值為[層]的XYZ偏移值",  
+  
+  "item.yuushya.micro_pos_trans_item.0": "\u00A7cX軸模式",
+  "item.yuushya.micro_pos_trans_item.1": "\u00A7aY軸模式",
+  "item.yuushya.micro_pos_trans_item.2": "\u00A79Z軸模式",
+  "item.yuushya.micro_pos_trans_item.3": "\u00A7a復原模式",
+  "item.yuushya.micro_pos_trans_item.switch": "X軸偏移:%s Y軸偏移:%s Z軸偏移:%s", 
+
+  "item.yuushya.rot_trans_item": "方塊實體層旋轉工具",
+  "item.yuushya.rot_trans_item.line1": "\u00A79置於主手右鍵一[方塊實體]調整其相應[層]的旋轉角度",
+  "item.yuushya.rot_trans_item.line2": "\u00A79副手右鍵調整模式(共3種) 主手左右鍵執行旋轉",
+  "item.yuushya.rot_trans_item.line3": "\u00A79可調整的數值為[層]的XYZ偏移值",
+  "item.yuushya.rot_trans_item.line4": "\u00A79您可通過查看F3準星來確定軸向",
+  
+  "item.yuushya.rot_trans_item.0": "\u00A7cX軸模式",
+  "item.yuushya.rot_trans_item.1": "\u00A7aY軸模式",
+  "item.yuushya.rot_trans_item.2": "\u00A79Z軸模式",
+  "item.yuushya.rot_trans_item.switch": "X軸旋轉:%s Y軸旋轉:%s Z軸旋轉:%s",  
+  
+  "item.yuushya.slot_trans_item": "方塊實體層切換工具",
+  "item.yuushya.slot_trans_item.line1": "",
+  "item.yuushya.slot_trans_item.line2": "\u00A79左右鍵切換[方塊實體]的當前選定層",
+  "item.yuushya.slot_trans_item.line3": "\u00A79左鍵一[方塊實體]即可切換當前操作層為其空白層，即最高層",
+  "item.yuushya.slot_trans_item.line4": "\u00A79左鍵一[方塊實體]將當前選定層下移一層",  
+  
+  
+  "item.yuushya.scale_trans_item": "方塊實體層縮放工具",
+  "item.yuushya.scale_trans_item.line1": "\u00A79置於主手右鍵一[方塊實體]調整其相應[層]的縮放大小",
+  "item.yuushya.scale_trans_item.line2": "\u00A79主手左鍵執行縮小",
+  "item.yuushya.scale_trans_item.line3": "\u00A79主手右鍵執行放大",
+  "item.yuushya.scale_trans_item.line4": "\u00A79可調整的數值為[層]的縮放大小",
+  "item.yuushya.scale_trans_item.switch": "執行縮放",   
+  
+  "item.yuushya.get_mixedblock_item": "融合葫蘆",
+  "item.yuushya.get_mixedblock_item.success": "融合方塊[外殼]轉化成功!",
+  "item.yuushya.get_mixedblock_item.line1": "\u00A79右鍵一方塊使其變為[外殼]",
+  "item.yuushya.get_mixedblock_item.line2": "\u00A79之後手持另一方塊右鍵[外殼]使手持方塊作為[核心]",
+  "item.yuushya.get_mixedblock_item.line3": "\u00A79實現了[外殼]與[核心]融合的方塊融合效果",
+  "item.yuushya.get_mixedblock_item.line4": "\u00A79可用[核心調節工具]等工具調節[核心]的各項數值",  
+  
+  "item.yuushya.get_showblock_item": "實體葫蘆",
+  "item.yuushya.get_showblock_item.line1": "\u00A79右鍵一方塊使其變為[方塊實體]",
+  "item.yuushya.get_showblock_item.line2": "\u00A79並自動將這一方塊轉變為其中一[層]",
+  "item.yuushya.get_showblock_item.line3": "\u00A79右鍵此方塊取下或放上[核心]",
+  "item.yuushya.get_showblock_item.line4": "\u00A79可用[核心調節工具]等工具調整特定[層]的各項數值",
+  
+  "item.yuushya.get_blockstate_item": "拷貝葫蘆",
+  "item.yuushya.get_blockstate_item.line1": "",
+  "item.yuushya.get_blockstate_item.line2": "\u00A79置於主手右鍵一普通方塊復製其方塊ID與方塊狀態",
+  "item.yuushya.get_blockstate_item.line3": "\u00A79置於副手右鍵一[方塊實體]將其套用到對應的[層]上",
+  "item.yuushya.get_blockstate_item.offhand.success": "成功套用方塊ID與方塊狀態",
+  "item.yuushya.get_blockstate_item.mainhand.success": "成功拷貝方塊ID與方塊狀態",
+  "item.yuushya.get_blockstate_item.mainhand.pass": "此層無內容!",
+  
+    
+  "item.yuushya.move_transformdata_item": "層剪切葫蘆",
+  "item.yuushya.move_transformdata_item.line1": "",
+  "item.yuushya.move_transformdata_item.line2": "\u00A79置於主手右鍵一[方塊實體]剪切其當前層的所有內容",
+  "item.yuushya.move_transformdata_item.line3": "\u00A79置於副手右鍵一[方塊實體]將其套用到對應的[層]上",
+  "item.yuushya.move_transformdata_item.line4": "",
+  "item.yuushya.move_transformdata_item.offhand.success": "成功套用剪切",
+  "item.yuushya.move_transformdata_item.mainhand.success": "成功拷貝剪切",
+  "item.yuushya.move_transformdata_item.mainhand.pass": "此層無內容!",
+  
+  "item.yuushya.form_trans_item": "形態扳手",
+  "item.yuushya.form_trans_item.line3": "",
+  "item.yuushya.form_trans_item.line1": "\u00A79左右鍵特定方塊切換其前一個或後一個[形態變量]",
+  "item.yuushya.form_trans_item.line2": "\u00A79其註釋中有[可變形態]字樣的方塊方可調整",
+  "item.yuushya.form_trans_item.line4": "\u00A79持此扳手對這些方塊右鍵即可調整其形態",
+  "item.yuushya.form_trans_item.select": "切換形態",  
+  
+  "item.yuushya.get_entity_tool": "實體工具",  
+  "item.yuushya.get_as_entity_tool": "實體工具",  
+  "item.get_entity_item.tooltip1": "\u00A78未完成,請勿使用",
+  "item.get_entity_item.tooltip2": "\u00A78未完成,請勿使用",
+  "item.get_entity_item.tooltip3": "\u00A78未完成,請勿使用",
+  "item.get_entity_item.tooltip4": "\u00A78未完成,請勿使用",
+  "item.get_entity_item.tooltip5": "\u00A78未完成,請勿使用",
+  
+  "item.yuushya.get_lit_item": "方塊實體點亮工具",   
+  "item.yuushya.get_lit_item.line1": "\u00A79點亮或取消點亮一個方塊實體",
+  "item.yuushya.get_lit_item.line2": "\u00A79主手左右鍵一[方塊實體]加減它的亮度",
+
+  
+  "item.yuushya.slot_trans_item.slot": "當前層: %s，內容: %s 本層可見: %s",   
+  "item.yuushya.slot_trans_item.slot.fail.max": "已達到最高空白層，您可以副手持拷貝葫蘆右鍵放置所復製的內容",
+  "item.yuushya.slot_trans_item.slot.fail.min": "當前層: 0，內容: %s 本層可見: %s",
+  
+  "item.yuushya.the_encyclopedia": "\u00A7c「世界的證明」",  
+  "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o「你已被世界認可」",  
+  
+  "item.yuushya.shimmering_pearl": "\u00A79點金珠璣",  
+  "item.yuushya.everlasting_wood": "\u00A79紀香沈木",  
+  "item.yuushya.sprouting_dirt": "\u00A79抔土生枝",  
+  "item.yuushya.floating_bloom": "\u00A79盈水浮花",  
+  "item.yuushya.sparking_flame": "\u00A79明火灼焰",  
+  "item.yuushya.shimmering_pearl.line1": "\u00A77\u00A7o「錘煉」",
+  "item.yuushya.everlasting_wood.line1": "\u00A77\u00A7o「初心」",
+  "item.yuushya.sprouting_dirt.line1": "\u00A77\u00A7o「新生」",
+  "item.yuushya.floating_bloom.line1": "\u00A77\u00A7o「剛柔」",
+  "item.yuushya.sparking_flame.line1": "\u00A77\u00A7o「命運」",
+  
+
+  "block.yuushya.modelframe": "實體方塊",
+  "block.yuushya.showblock": "方塊實體",
+  "block.yuushya.mixedblock": "融合方塊",
+  "block.yuushya.showblock.pos_text": "位置: ",
+  "block.yuushya.showblock.rot_text": "旋轉: ",
+  "block.yuushya.showblock.x": " X[%s]",
+  "block.yuushya.showblock.y": " Y[%s]",
+  "block.yuushya.showblock.z": " Z[%s]",
+  "block.yuushya.showblock.scale_text": "縮放: [%s]",
+  "block.yuushya.showblock.slot_text": "[%s]: ",
+
+  "block.yuushya.modelframe.line1": "\u00A78不可用",
+  "block.yuushya.showblock.line1": "\u00A78空",
+  "block.yuushya.mixedblock.line1": "\u00A78不可用"
+  
+}
