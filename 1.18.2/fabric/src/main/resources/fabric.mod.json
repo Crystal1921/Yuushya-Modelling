@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "yuushya-modelling",
+  "id": "yuushya_modelling",
   "version": "${mod_version}",
   "name": "${mod_name}",
   "description": "${mod_description}",
@@ -23,13 +23,10 @@
       "com.yuushya.modelling.fabric.YuushyaClientFabric"
     ]
   },
+  "mixins": [],
   "depends": {
     "fabric": "*",
     "minecraft": ">=1.18.2",
     "architectury": ">=4.10.88"
-  },
-  "mixins": [
-    "yuushya.mixins.json",
-    "yuushya-common.mixins.json"
-  ]
+  }
 }

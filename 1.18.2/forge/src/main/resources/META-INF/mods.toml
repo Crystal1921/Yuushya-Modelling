@@ -4,7 +4,7 @@ loaderVersion = "[40,)"
 license = "GNU 3.0"
 
 [[mods]]
-modId = "yuushya-modelling"
+modId = "yuushya_modelling"
 version = "${mod_version}"
 displayName = "${mod_name}"
 logoFile = "pack.png"
@@ -16,21 +16,21 @@ description = '''
     '''
 #logoFile = ""
 
-[[dependencies.yuushya-modelling]]
+[[dependencies.yuushya_modelling]]
 modId = "forge"
 mandatory = true
 versionRange = "[40,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.yuushya-modelling]]
+[[dependencies.yuushya_modelling]]
 modId = "minecraft"
 mandatory = true
 versionRange = "[1.18.2,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.yuushya-modelling]]
+[[dependencies.yuushya_modelling]]
 modId = "architectury"
 mandatory = true
 versionRange = "[4.10.88,)"

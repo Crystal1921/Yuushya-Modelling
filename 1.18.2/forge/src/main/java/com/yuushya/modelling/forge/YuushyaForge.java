@@ -10,7 +10,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import static com.yuushya.modelling.registries.YuushyaRegistries.YUUSHYA_MODELLING;
 
-@Mod("yuushya-modelling")
+@Mod("yuushya_modelling")
 public class YuushyaForge {
     public YuushyaForge() {
         // Submit our event bus to let architectury register our content on the right time
