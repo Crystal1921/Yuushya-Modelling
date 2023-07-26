@@ -7,7 +7,6 @@ import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -60,37 +59,33 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
         showText = showText <0? 0: showText -1;
     }
 
-    public ShowBlockEntity() {
-        super(YuushyaRegistries.SHOW_BLOCK_ENTITY.get());
+    public ShowBlockEntity(BlockPos blockPos, BlockState blockState) {
+        super(YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), blockPos, blockState);
         transformDatas = new ArrayList<>();
         transformDatas.add(new TransformData());
         slot=0;
     }
-
-    //readNbt
     @Override
-    public void load(BlockState blockState, CompoundTag compoundTag) {
-        super.load(blockState, compoundTag);
+    //readNbt
+    public void load(CompoundTag compoundTag){
+        super.load(compoundTag);
         iTransformDataInventory.load(compoundTag,transformDatas);
         slot= (int) compoundTag.getByte("ControlSlot");
     }
-
-    //writeNbt
     @Override
-    public CompoundTag save(CompoundTag compoundTag) {
-        super.save(compoundTag);
+    //writeNbt
+    protected void saveAdditional(CompoundTag compoundTag) {
+        super.saveAdditional(compoundTag);
         iTransformDataInventory.saveAdditional(compoundTag,transformDatas);
         compoundTag.putByte("ControlSlot",slot.byteValue());
-        return compoundTag;
     }
-
 
     @Override
     //toInitialChunkDataNbt //When you first load world it writeNbt firstly
     public CompoundTag getUpdateTag() {
         saveChanged();
         CompoundTag compoundTag =  super.getUpdateTag();
-        iTransformDataInventory.saveAdditional(compoundTag,transformDatas);
+        //saveAdditional(compoundTag);
         return compoundTag;
     }
 
@@ -104,12 +99,11 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     }
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return new ClientboundBlockEntityDataPacket(getBlockPos(), 13,getUpdateTag() );
+        CompoundTag compoundTag=getUpdateTag();
+        return ClientboundBlockEntityDataPacket.create(this,(blockEntity)->{saveAdditional(compoundTag);return compoundTag;});}
 
-    }
+
 }
-
-
 
 
 
