@@ -1,26 +1,29 @@
 {
   "schema_version": 1,
-  "mixin": [
-    "examplemod.mixins.json",
-    "examplemod-common.mixins.json"
-  ],
+  "mixin": [],
   "quilt_loader": {
     "group": "${group}",
-    "id": "examplemod",
-    "version": "${version}",
-    "name": "Example Mod",
-    "description": "This is an example description! Tell everyone what your mod is about!",
-    "authors": ["Me!"],
+    "id": "yuushya_modelling",
+    "version": "${mod_version}",
+    "name": "${mod_name}",
+    "description": "${mod_description}",
+    "authors": [
+      "${mod_authors}"
+    ],
     "contact": {
-      "sources": "https://github.com/architectury/architectury-templates"
+      "homepage": "${mod_homepage}",
+      "sources": "${mod_source}"
     },
-    "license": "Insert License Here",
-    "icon": "assets/examplemod/icon.png",
+    "license": "${mod_licence}",
+    "icon": "pack.png",
     "intermediate_mappings": "net.fabricmc:intermediary",
     "environment": "*",
     "entrypoints": {
       "init": [
-        "net.examplemod.quilt.ExampleModQuilt"
+        "com.yuushya.modelling.quilt.YuushyaQuilt"
+      ],
+      "client": [
+        "com.yuushya.modelling.quilt.YuushyaClientQuilt"
       ]
     },
     "depends": [
