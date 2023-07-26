@@ -1,6 +1,6 @@
 package com.yuushya.modelling.item.showblocktool;
 
-import com.mojang.math.Vector3d;
+import org.joml.Vector3d;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;

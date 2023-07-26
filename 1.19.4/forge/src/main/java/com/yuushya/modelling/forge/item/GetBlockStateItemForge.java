@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
@@ -22,10 +23,12 @@ public class GetBlockStateItemForge extends GetBlockStateItem {
             @Override
             public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(),Minecraft.getInstance().getEntityModels()){
+
                     @Override
-                    public void renderByItem(@NotNull ItemStack stack, ItemTransforms.@NotNull TransformType mode, @NotNull PoseStack matrices, @NotNull MultiBufferSource vertexConsumers, int light, int overlay) {
-                        GetBlockStateItem .renderByItem(stack,mode,matrices,vertexConsumers,light,overlay);
+                    public void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
+                        GetBlockStateItem .renderByItem(stack, displayContext, poseStack, buffer, packedLight, packedOverlay);
                     }
+
                 };
             }
         });

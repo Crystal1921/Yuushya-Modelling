@@ -4,11 +4,15 @@ import com.yuushya.modelling.YuushyaClient;
 import com.yuushya.modelling.fabriclike.client.ShowBlockModel;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
 import com.yuushya.modelling.registries.YuushyaRegistries;
-import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
+import com.yuushya.modelling.utils.YuushyaUtils;
+import net.fabricmc.fabric.api.client.model.loading.v1.BlockStateResolver;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
+import net.fabricmc.fabric.impl.client.model.loading.ModelLoadingPluginManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.block.Block;
@@ -19,16 +23,14 @@ import static com.yuushya.modelling.registries.YuushyaRegistries.BLOCKS;
 public class YuushyaClientFabricLike {
     public static void onInitializeClient() {
         YuushyaClient.onInitializeClient();
-        ModelLoadingRegistry.INSTANCE.registerVariantProvider(
-                (resourceManager) -> (modelResourceLocation, modelProviderContext) -> {
-                    for(BlockState blockState: BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()){
-                        if (modelResourceLocation.equals(BlockModelShaper.stateToModelLocation(blockState))) {
-                            return new ShowBlockModel();
-                        }
-                    }
-                    return null;
+        ModelLoadingPluginManager.registerPlugin(pluginContext -> {
+            pluginContext.registerBlockStateResolver(BLOCKS.get("showblock").get(), context -> {
+                for(BlockState blockState: BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()){
+                    context.setModel(blockState,new ShowBlockModel());
                 }
-        );
+            });
+        });
+
         //BuiltinItemRendererRegistry.INSTANCE.register();
         ColorProviderRegistry.BLOCK.register((state, view, pos, tintIndex) -> {
                     if (tintIndex > -1) {
@@ -46,7 +48,7 @@ public class YuushyaClientFabricLike {
                 YuushyaRegistries.SHOW_BLOCK.get());
         ColorProviderRegistry.ITEM.register((itemStack, i) -> {
             CompoundTag compoundTag = itemStack.getOrCreateTag();
-            BlockState blockState = NbtUtils.readBlockState(compoundTag.getCompound("BlockState"));
+            BlockState blockState = YuushyaUtils.readBlockState(compoundTag.getCompound("BlockState"));
             BlockColor blockColor = ColorProviderRegistry.BLOCK.get(blockState.getBlock());
             if (blockColor == null) return 0xFFFFFFFF;
             return blockColor.getColor(blockState, null, null, i);

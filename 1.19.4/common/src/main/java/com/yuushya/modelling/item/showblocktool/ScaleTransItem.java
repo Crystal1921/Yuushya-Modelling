@@ -1,6 +1,6 @@
 package com.yuushya.modelling.item.showblocktool;
 
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;

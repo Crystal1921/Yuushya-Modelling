@@ -54,7 +54,7 @@ public class TransformData{
         this.rot.set(listTagRot.getFloat(0), listTagRot.getFloat(1), listTagRot.getFloat(2));
         this.scales.set(listTagScales.getFloat(0), listTagScales.getFloat(1), listTagScales.getFloat(2));
         this.isShown = compoundTag.getBoolean("isShown");
-        this.blockState = NbtUtils.readBlockState(compoundTag.getCompound("BlockState"));
+        this.blockState = YuushyaUtils.readBlockState(compoundTag.getCompound("BlockState"));
     }
 
     //writeNbt to compoundTag

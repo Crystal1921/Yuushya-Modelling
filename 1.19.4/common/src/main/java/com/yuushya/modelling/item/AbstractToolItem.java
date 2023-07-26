@@ -27,7 +27,7 @@ public class AbstractToolItem extends AbstractYuushyaItem{
     public boolean canAttackBlock(@NotNull BlockState blockState, @NotNull Level level, @NotNull BlockPos blockPos, @NotNull Player player) {
         InteractionResult result = inMainHandLeftClickOnBlock(player, blockState, level, blockPos, player.getItemInHand(InteractionHand.MAIN_HAND));
         if (!level.isClientSide&&result.consumesAction()) {
-            level.playSound(null, blockPos, SoundEvents.UI_BUTTON_CLICK, SoundSource.BLOCKS, 1f, 0.2f);
+            level.playSound(null, blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 1f, 0.2f);
         }
         return false;
     }
@@ -44,7 +44,7 @@ public class AbstractToolItem extends AbstractYuushyaItem{
             resultHolder = new InteractionResultHolder<>(inMainHandRightClickInAir(player,level.getBlockState(blockPos),level,blockPos,handItemStack),handItemStack);
 
         if (!level.isClientSide && resultHolder.getResult().consumesAction()){
-            level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK, SoundSource.BLOCKS,1f,0.2f);
+            level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS,1f,0.2f);
         }
         return resultHolder;
     }
@@ -63,7 +63,7 @@ public class AbstractToolItem extends AbstractYuushyaItem{
             result = inMainHandRightClickOnBlock(player, level.getBlockState(blockPos), level, blockPos, useOnContext.getItemInHand());
 
         if (!level.isClientSide && result.consumesAction()){
-            level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK, SoundSource.BLOCKS,1f,0.2f);
+            level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS,1f,0.2f);
         }
         return result;
     }

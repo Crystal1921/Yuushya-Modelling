@@ -9,7 +9,7 @@ import static com.yuushya.modelling.registries.YuushyaRegistries.YUUSHYA_MODELLI
 
 public class YuushyaFabricLike {
     public static void init(){
-        YuushyaRegistries.ITEMS.register("get_blockstate_item", () -> new GetBlockStateItem(new Item.Properties().tab(YUUSHYA_MODELLING), 3));
+        YuushyaRegistries.ITEMS.register("get_blockstate_item", () -> new GetBlockStateItem(new Item.Properties(), 3));
         Yuushya.init();
         //ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> CollisionFileReader.readAllFileSelf());
     }

@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
-import net.minecraftforge.client.event.ModelEvent.BakingCompleted;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -24,7 +24,7 @@ public class YuushyaClientForge {
     }
 
     @SubscribeEvent
-    public static void onModelBaked(BakingCompleted event){
+    public static void onModelBaked(ModelEvent.BakingCompleted event){
         for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())
             event.getModels().put(BlockModelShaper.stateToModelLocation(blockState),new ShowBlockModel());
     }

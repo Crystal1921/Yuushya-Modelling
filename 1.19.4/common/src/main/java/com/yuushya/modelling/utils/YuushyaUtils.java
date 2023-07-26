@@ -6,19 +6,28 @@ import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.StateHolder;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -95,4 +104,38 @@ public class YuushyaUtils {
         });
         return listTag;
     }
+
+    public static BlockState readBlockState(CompoundTag tag) {
+        if (!tag.contains("Name", 8)) {
+            return Blocks.AIR.defaultBlockState();
+        } else {
+            Block block = (Block) BuiltInRegistries.BLOCK.get(new ResourceLocation(tag.getString("Name")));
+            BlockState blockState = block.defaultBlockState();
+            if (tag.contains("Properties", 10)) {
+                CompoundTag compoundTag = tag.getCompound("Properties");
+                StateDefinition<Block, BlockState> stateDefinition = block.getStateDefinition();
+                Iterator var5 = compoundTag.getAllKeys().iterator();
+
+                while(var5.hasNext()) {
+                    String string = (String)var5.next();
+                    net.minecraft.world.level.block.state.properties.Property<?> property = stateDefinition.getProperty(string);
+                    if (property != null) {
+                        blockState = (BlockState)setValueHelper(blockState, property, string, compoundTag, tag);
+                    }
+                }
+            }
+
+            return blockState;
+        }
+    }
+
+    private static <S extends StateHolder<?, S>, T extends Comparable<T>> S setValueHelper(S stateHolder, net.minecraft.world.level.block.state.properties.Property<T> property, String propertyName, CompoundTag propertiesTag, CompoundTag blockStateTag) {
+        Optional<T> optional = property.getValue(propertiesTag.getString(propertyName));
+        if (optional.isPresent()) {
+            return stateHolder.setValue(property, optional.get());
+        } else {
+            return stateHolder;
+        }
+    }
+
 }

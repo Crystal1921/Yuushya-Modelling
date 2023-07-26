@@ -4,14 +4,17 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaClient;
 import com.yuushya.modelling.forge.client.ShowBlockModel;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import com.yuushya.modelling.utils.YuushyaUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
-import net.minecraftforge.client.event.ModelEvent.BakingCompleted;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -24,7 +27,7 @@ public class YuushyaClientForge {
     }
 
     @SubscribeEvent
-    public static void onModelBaked(BakingCompleted event){
+    public static void onModelBaked(ModelEvent.ModifyBakingResult event){
         for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())
             event.getModels().put(BlockModelShaper.stateToModelLocation(blockState),new ShowBlockModel());
     }
@@ -58,7 +61,7 @@ public class YuushyaClientForge {
         event.getItemColors().register(
                 (itemStack, i) -> {
                     CompoundTag compoundTag = itemStack.getOrCreateTag();
-                    BlockState blockState = NbtUtils.readBlockState(compoundTag.getCompound("BlockState"));
+                    BlockState blockState = YuushyaUtils.readBlockState(compoundTag.getCompound("BlockState"));
                     return event.getBlockColors().getColor(blockState, null, null, i);
                 },YuushyaRegistries.ITEMS.get("get_blockstate_item").get()
         );

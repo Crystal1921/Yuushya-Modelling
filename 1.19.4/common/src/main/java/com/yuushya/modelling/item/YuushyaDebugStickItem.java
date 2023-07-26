@@ -7,6 +7,7 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -50,7 +51,7 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
         blockState = YuushyaUtils.getBlockState(blockState, levelAccessor, blockPos);
         StateDefinition<Block, BlockState> stateDefinition = blockState.getBlock().getStateDefinition();
         Collection<Property<?>> collection = stateDefinition.getProperties();
-        String blockName = Registry.BLOCK.getKey(blockState.getBlock()).toString();
+        String blockName = BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).toString();
         if (collection.isEmpty()) {
             player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".empty", blockName), true);
             return false;

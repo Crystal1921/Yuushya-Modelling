@@ -7,11 +7,13 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractYuushyaItem;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.item.showblocktool.*;
+import dev.architectury.registry.CreativeTabOutput;
 import dev.architectury.registry.CreativeTabRegistry;
 import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,12 +42,14 @@ public class YuushyaRegistries {
         ITEMS.register("sprouting_dirt",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("floating_bloom",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
 
+        CreativeTabRegistry.appendStack(YUUSHYA_MODELLING,()->new ItemStack(ITEMS.get("get_blockstate_item").get()));
+
         SHOW_BLOCK= BLOCKS.register("showblock",()->new ShowBlock(BlockBehaviour.Properties.of(Material.METAL).noCollission().noOcclusion().strength(4.0f).lightLevel(blockState ->blockState.getValue(YuushyaBlockStates.LIT)),1));
         ITEMS.register("showblock",()->new BlockItem(BLOCKS.get("showblock").get(),new Item.Properties().arch$tab(YUUSHYA_MODELLING)));
         SHOW_BLOCK_ENTITY= BLOCK_ENTITIES.register("showblockentity",()->BlockEntityType.Builder.of(ShowBlockEntity::new,BLOCKS.get("showblock").get()).build(null));//Util.fetchChoiceType(References.BLOCK_ENTITY,"yuushya:showblockentity")
 
     }
-
+    public static RegistrySupplier<Item> GET_BLOCKSTATE_ITEM = null;
     public static RegistrySupplier<Block> SHOW_BLOCK = null;
     public static RegistrySupplier<BlockEntityType<?>> SHOW_BLOCK_ENTITY = null;
 
