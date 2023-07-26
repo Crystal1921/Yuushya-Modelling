@@ -16,7 +16,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
-@Mod.EventBusSubscriber(modid = Yuushya.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(modid = Yuushya.MOD_ID_USED, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class YuushyaClientForge {
     @SubscribeEvent
     public static void onInitializeClient(FMLClientSetupEvent event) {

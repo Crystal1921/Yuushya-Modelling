@@ -9,9 +9,10 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
+import static com.yuushya.modelling.Yuushya.MOD_ID_USED;
 import static com.yuushya.modelling.registries.YuushyaRegistries.YUUSHYA_MODELLING;
 
-@Mod("yuushya_modelling")
+@Mod(MOD_ID_USED)
 public class YuushyaForge {
     public YuushyaForge() {
         // Submit our event bus to let architectury register our content on the right time
