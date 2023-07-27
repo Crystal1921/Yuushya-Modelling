@@ -16,8 +16,10 @@ import static com.yuushya.modelling.registries.YuushyaRegistries.YUUSHYA_MODELLI
 public class YuushyaForge {
     public YuushyaForge() {
         // Submit our event bus to let architectury register our content on the right time
-        if(EventBuses.getModEventBus(MOD_ID).isEmpty())
-            EventBuses.registerModEventBus(MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
+        try{
+            if(EventBuses.getModEventBus(Yuushya.MOD_ID).isEmpty())
+                EventBuses.registerModEventBus(Yuushya.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
+        } catch (IllegalStateException ignored) {}
         YuushyaRegistries.ITEMS.register("get_blockstate_item", () -> new GetBlockStateItemForge(new Item.Properties().tab(YUUSHYA_MODELLING), 3));
         Yuushya.init();
     }
