@@ -43,6 +43,7 @@ public class YuushyaRegistries {
         ITEMS.register("everlasting_wood",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("sprouting_dirt",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("floating_bloom",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
+        ITEMS.register("sparking_flame",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
 
         CreativeTabRegistry.appendStack(YUUSHYA_MODELLING,()->new ItemStack(ITEMS.get("get_blockstate_item").get()));
 

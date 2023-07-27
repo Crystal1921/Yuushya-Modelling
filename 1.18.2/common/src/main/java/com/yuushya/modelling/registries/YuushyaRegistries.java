@@ -38,6 +38,7 @@ public class YuushyaRegistries {
         ITEMS.register("everlasting_wood",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("sprouting_dirt",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("floating_bloom",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
+        ITEMS.register("sparking_flame",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
 
         SHOW_BLOCK= BLOCKS.register("showblock",()->new ShowBlock(BlockBehaviour.Properties.of(Material.METAL).noCollission().noOcclusion().strength(4.0f).lightLevel(blockState ->blockState.getValue(YuushyaBlockStates.LIT)),1));
         ITEMS.register("showblock",()->new BlockItem(BLOCKS.get("showblock").get(),new Item.Properties().tab(YUUSHYA_MODELLING)));
