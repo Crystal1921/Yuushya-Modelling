@@ -21,6 +21,7 @@ public class YuushyaForge {
             if(!EventBuses.getModEventBus(Yuushya.MOD_ID).isPresent())
                 EventBuses.registerModEventBus(Yuushya.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
         } catch (IllegalStateException ignored) {}
+        YuushyaRegistries.ITEMS.register("get_blockstate_item", () -> new GetBlockStateItem(new Item.Properties().tab(YUUSHYA_MODELLING).setISTER(GetBlockStateItemForge::getRenderCall), 3));
         Yuushya.init();
     }
 }
