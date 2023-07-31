@@ -64,10 +64,10 @@
   "item.yuushya.get_showblock_item.line3": "\u00A79And automatically set a [Layer] for it",
   "item.yuushya.get_showblock_item.line4": "\u00A79Use various tools to adjust the [Layer]",
 
-    "item.yuushya.get_showblock_item.1": "Entitilize Mode",
-    "item.yuushya.get_showblock_item.2": "Combine Mode",
-    "item.yuushya.get_showblock_item.3": "Fetch Item Mode",
-    "item.yuushya.get_showblock_item.4": "Reset to Block Mode",
+    "item.yuushya.get_showblock_item.0": "Entitilize Mode",
+    "item.yuushya.get_showblock_item.1": "Combine Mode",
+    "item.yuushya.get_showblock_item.2": "Fetch Item Mode",
+    "item.yuushya.get_showblock_item.3": "Reset to Block Mode",
   
   "item.yuushya.debug_stick_item": "Artificial Debug Stick",
   "item.yuushya.debug_stick_item.line1": " ",
