@@ -1,28 +1,28 @@
 {
   "schemaVersion": 1,
-  "id": "examplemod",
-  "version": "${version}",
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "id": "yuushya_modelling",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": [
-    "Me!"
+    "${mod_authors}"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "${mod_homepage}",
+    "sources": "${mod_source}"
   },
-  "license": "Insert License Here",
-  "icon": "assets/examplemod/icon.png",
+
+  "license": "${mod_licence}",
+  "icon": "pack.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.examplemod.fabric.ExampleModFabric"
+      "com.yuushya.modelling.fabric.YuushyaFabric"
+    ],
+    "client": [
+      "com.yuushya.modelling.fabric.YuushyaClientFabric"
     ]
   },
-  "mixins": [
-    "examplemod.mixins.json",
-    "examplemod-common.mixins.json"
-  ],
   "depends": {
     "fabric": "*",
     "minecraft": ">=1.19.4",

@@ -39,7 +39,8 @@ subprojects {
             mod_credits:mod_credits,
             mod_authors: mod_authors,
             mod_description: mod_description,
-            mod_licence:mod_licence]
+            mod_licence:mod_licence,
+            group:maven_group]
     processResources{
         inputs.properties replaceProperties
         filesMatching(resourceTargets) {
@@ -76,6 +77,4 @@ allprojects {
 }
 
 
-processResources{
-    finalizedBy(':common:copyResources-1.19.4')
-}
+

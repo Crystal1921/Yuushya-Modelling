@@ -26,10 +26,11 @@ import static com.yuushya.modelling.utils.YuushyaUtils.*;
 
 public class ShowBlockEntityRender extends BlockEntityRenderer<ShowBlockEntity> {
 
-    private final Font font;
+    private Font font;
     public ShowBlockEntityRender(BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
         super(blockEntityRenderDispatcher);
         this.font = blockEntityRenderDispatcher.getFont();
+        if(font==null) this.font = Minecraft.getInstance().font;
     }
 
     public static final Vec3 MIDDLE = new Vec3(8,8,8);
@@ -50,7 +51,8 @@ public class ShowBlockEntityRender extends BlockEntityRenderer<ShowBlockEntity> 
                     RenderSystem.defaultBlendFunc();
                     RenderSystem.disableTexture();
                     RenderSystem.lineWidth(8.0f);
-                    bufferBuilder.begin(GL11.GL_LINE, DefaultVertexFormat.POSITION_COLOR);
+                    RenderSystem.pushMatrix();
+                    bufferBuilder.begin(1, DefaultVertexFormat.POSITION_COLOR);
                     translate(matrixStack,transformData.pos);
                     translate(matrixStack,MIDDLE);
                     boolean showRotAxis = blockEntity.showRotAxis();
@@ -64,6 +66,7 @@ public class ShowBlockEntityRender extends BlockEntityRenderer<ShowBlockEntity> 
                     bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
                     bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
                     tesselator.end();
+                    RenderSystem.popMatrix();
                     RenderSystem.depthMask(true);
                     RenderSystem.disableBlend();
                     RenderSystem.enableCull();

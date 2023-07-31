@@ -81,10 +81,4 @@ allprojects {
     }
 }
 
-tasks.register("runTest"){
-    doLast {
-        println("hello")
-    }
-
-}
 

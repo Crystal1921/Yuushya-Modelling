@@ -90,7 +90,7 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     public CompoundTag getUpdateTag() {
         saveChanged();
         CompoundTag compoundTag =  super.getUpdateTag();
-        //saveAdditional(compoundTag);
+        iTransformDataInventory.saveAdditional(compoundTag,transformDatas);
         return compoundTag;
     }
 
@@ -104,9 +104,7 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     }
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        CompoundTag compoundTag = getUpdateTag();
-
-        return new ClientboundBlockEntityDataPacket(getBlockPos(), -1,save(compoundTag) );
+        return new ClientboundBlockEntityDataPacket(getBlockPos(), 13,getUpdateTag() );
 
     }
 }
