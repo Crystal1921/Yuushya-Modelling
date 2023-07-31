@@ -74,6 +74,10 @@
   "item.yuushya.get_showblock_item.line2": "\u00A79並自動將這一方塊轉變為其中一[層]",
   "item.yuushya.get_showblock_item.line3": "\u00A79右鍵此方塊取下或放上[核心]",
   "item.yuushya.get_showblock_item.line4": "\u00A79可用[核心調節工具]等工具調整特定[層]的各項數值",
+    "item.yuushya.get_showblock_item.1": "實體化模式",
+    "item.yuushya.get_showblock_item.2": "融合模式",
+    "item.yuushya.get_showblock_item.3": "物品取出模式",
+    "item.yuushya.get_showblock_item.4": "方塊還原模式",
   
   "item.yuushya.get_blockstate_item": "拷貝葫蘆",
   "item.yuushya.get_blockstate_item.line1": "",

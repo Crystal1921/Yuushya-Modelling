@@ -63,6 +63,11 @@
   "item.yuushya.get_showblock_item.line2": "\u00A79Rightclick to turn a block to a [Block Entity]",
   "item.yuushya.get_showblock_item.line3": "\u00A79And automatically set a [Layer] for it",
   "item.yuushya.get_showblock_item.line4": "\u00A79Use various tools to adjust the [Layer]",
+
+    "item.yuushya.get_showblock_item.1": "Entitilize Mode",
+    "item.yuushya.get_showblock_item.2": "Combine Mode",
+    "item.yuushya.get_showblock_item.3": "Fetch Item Mode",
+    "item.yuushya.get_showblock_item.4": "Reset to Block Mode",
   
   "item.yuushya.debug_stick_item": "Artificial Debug Stick",
   "item.yuushya.debug_stick_item.line1": " ",
@@ -73,7 +78,7 @@
   "item.yuushya.get_blockstate_item": "Gourd of Copy&Paste",
   "item.yuushya.get_blockstate_item.line2": "\u00A79Mainhand: Right click a normal block to copy its Blockstates",
   "item.yuushya.get_blockstate_item.line3": "\u00A79Offhand: Rightclick a [Block Entity] to apply the copied to its currently selected [Layer]",
-  "item.yuushya.get_blockstate_item.line1": " ",  
+  "item.yuushya.get_blockstate_item.line1": " ",
   
   "item.yuushya.get_blockstate_item.offhand.success": "Applied Blockstate successfully",
   "item.yuushya.get_blockstate_item.mainhand.success": "Copied Blockstate successfully",

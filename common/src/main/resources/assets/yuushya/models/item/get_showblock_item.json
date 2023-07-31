@@ -1,6 +1,12 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "yuushya:item/entitilize"
-  }
+    "nbt": "yuushya:item/gourd_entitilize"
+  },
+      "overrides": [
+        { "predicate": { "direction": 0 }, "model": "yuushya:item/gourd_entitilize" },
+		    { "predicate": { "direction": 0.1 }, "model": "yuushya:item/gourd_combine" },
+        { "predicate": { "direction": 0.2 }, "model": "yuushya:item/gourd_fetch" },
+        { "predicate": { "direction": 0.3 }, "model": "yuushya:item/gourd_reset" }
+	]
 }
