@@ -7,8 +7,10 @@ import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -83,9 +85,9 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     @Override
     //toInitialChunkDataNbt //When you first load world it writeNbt firstly
     public CompoundTag getUpdateTag() {
-        saveChanged();
+        //saveChanged();
         CompoundTag compoundTag =  super.getUpdateTag();
-        //saveAdditional(compoundTag);
+        iTransformDataInventory.saveAdditional(compoundTag,transformDatas);
         return compoundTag;
     }
 
