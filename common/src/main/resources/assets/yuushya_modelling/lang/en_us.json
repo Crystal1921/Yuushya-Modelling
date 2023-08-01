@@ -64,16 +64,19 @@
   "item.yuushya.get_showblock_item.line3": "\u00A79And automatically set a [Layer] for it",
   "item.yuushya.get_showblock_item.line4": "\u00A79Use various tools to adjust the [Layer]",
 
-    "item.yuushya.get_showblock_item.0": "Entitilize Mode",
-    "item.yuushya.get_showblock_item.1": "Combine Mode",
-    "item.yuushya.get_showblock_item.2": "Fetch Item Mode",
-    "item.yuushya.get_showblock_item.3": "Reset to Block Mode",
+  "item.yuushya.get_showblock_item.0": "Entitilize Mode",
+  "item.yuushya.get_showblock_item.1": "Combine Mode",
+  "item.yuushya.get_showblock_item.2": "Fetch Item Mode",
+  "item.yuushya.get_showblock_item.3": "Reset to Block Mode",
   
   "item.yuushya.debug_stick_item": "Artificial Debug Stick",
   "item.yuushya.debug_stick_item.line1": " ",
   "item.yuushya.debug_stick_item.line2": " ",
   "item.yuushya.debug_stick_item.line3": " ",
   "item.yuushya.debug_stick_item.line4": " ",
+  "item.yuushya.debug_stick_item.empty": "%s had not property",
+  "item.yuushya.debug_stick_item.select": "choose %s（%s）",
+  "item.yuushya.debug_stick_item.update": "update\"%s\" to %s",
   
   "item.yuushya.get_blockstate_item": "Gourd of Copy&Paste",
   "item.yuushya.get_blockstate_item.line2": "\u00A79Mainhand: Right click a normal block to copy its Blockstates",
@@ -87,12 +90,6 @@
   "item.yuushya.get_lit_item": "Block Entity Lighter",   
   "item.yuushya.get_lit_item.line1": "\u00A79Switch on or off a [Block Entity]'s Lighting",
   "item.yuushya.get_lit_item.line2": "\u00A79Mainhand: Leftclick or rightclick a [Block Entity] to adjust its brightness",
-  
-  "item.yuushya.form_trans_item": "Form Wrench",
-  "item.yuushya.form_trans_item.line2": "\u00A79Be used to adjust the forms of certain blocks",
-  "item.yuushya.form_trans_item.line1": "\u00A79",
-  "item.yuushya.form_trans_item.line3": "\u00A79The blocks noted [Form] can be adjusted that way",
-  "item.yuushya.form_trans_item.line4": "\u00A79Rightclick the block with this wrench to function",
   
   "item.yuushya.move_transformdata_item": "Gourd of Cut&Paste",
   "item.yuushya.move_transformdata_item.line1": "",
