@@ -22,7 +22,7 @@ public class ScaleTransItem extends PosTransItem{
             Vector3f scales = transformData.scales;
             switch (getForm()) {
                 case 0:
-                    scales.add(0.1f, 0.1f, 0.1f);
+                    scales.set(0.1f+scales.x(), 0.1f+scales.y(), 0.1f+scales.z());
                     break;
             }
             player.displayClientMessage(new TranslatableComponent(this.getDescriptionId()+".switch",scales.x(),scales.y(),scales.z()),true);
@@ -35,7 +35,7 @@ public class ScaleTransItem extends PosTransItem{
             Vector3f scales = transformData.scales;
             switch (getForm()) {
                 case 0:
-                    scales.add(-0.1f, -0.1f, -0.1f);
+                    scales.set(-0.1f+scales.x(), -0.1f+scales.y(), -0.1f+scales.z());
                     break;
             }
             player.displayClientMessage(new TranslatableComponent(this.getDescriptionId()+".switch",scales.x()),true);
