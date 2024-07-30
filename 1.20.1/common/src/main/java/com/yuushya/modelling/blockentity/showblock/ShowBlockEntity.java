@@ -4,20 +4,20 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.iTransformDataInventory;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.gameevent.GameEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShowBlockEntity extends BlockEntity implements iTransformDataInventory {
-
     private final List<TransformData> transformDatas;
     @Override
     public List<TransformData> getTransformDatas() {return transformDatas;}
@@ -69,10 +69,16 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     }
     @Override
     //readNbt
+    //called on server chunk loaded or client received block entity data packet
     public void load(CompoundTag compoundTag){
         super.load(compoundTag);
-        iTransformDataInventory.load(compoundTag,transformDatas);
+        iTransformDataInventory.load(compoundTag, transformDatas);
         slot= (int) compoundTag.getByte("ControlSlot");
+
+        //client chunk update
+        if (this.getLevel() instanceof ClientLevel clientLevel){
+            clientLevel.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        }
     }
     @Override
     //writeNbt
@@ -87,27 +93,20 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     public CompoundTag getUpdateTag() {
         //saveChanged();
         CompoundTag compoundTag =  super.getUpdateTag();
-        iTransformDataInventory.saveAdditional(compoundTag,transformDatas);
+        iTransformDataInventory.saveAdditional(compoundTag, transformDatas);
         return compoundTag;
     }
 
     public void saveChanged() {
         this.setChanged();
-        if (this.getLevel()!=null){
-            BlockState blockState =this.getLevel().getBlockState(this.getBlockPos());
-            this.getLevel().sendBlockUpdated(this.getBlockPos(),blockState,blockState,3);
-            //this.getLevel().setBlocksDirty(this.getBlockPos(), this.getLevel().getBlockState(this.getBlockPos()), Blocks.AIR.defaultBlockState());
-        }
+
+        if (!(this.getLevel() instanceof ServerLevel serverLevel)) return;
+
+        serverLevel.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
     }
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
         CompoundTag compoundTag=getUpdateTag();
-        return ClientboundBlockEntityDataPacket.create(this,(blockEntity)->{saveAdditional(compoundTag);return compoundTag;});}
-
-
+        return ClientboundBlockEntityDataPacket.create(this, (blockEntity)->{saveAdditional(compoundTag); return compoundTag;});
+    }
 }
-
-
-
-
-
