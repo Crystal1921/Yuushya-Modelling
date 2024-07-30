@@ -36,3 +36,10 @@ type = "required"
 versionRange = "[11.1.17,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.yuushya_modelling]]
+modId = "yuushya"
+type = "optional"
+versionRange = "[2.0.0,)"
+ordering = "AFTER"
+side = "BOTH"

@@ -1,7 +1,7 @@
 modLoader = "javafml"
 loaderVersion = "[36,)"
 #issueTrackerURL = ""
-license = "GNU 3.0"
+license = "${mod_licence}"
 
 [[mods]]
 modId = "yuushya_modelling"
@@ -33,7 +33,7 @@ side = "BOTH"
 [[dependencies.yuushya_modelling]]
 modId = "architectury"
 mandatory = true
-versionRange = "[1.32.67,)"
+versionRange = "[1.32.68,)"
 ordering = "AFTER"
 side = "BOTH"
 
