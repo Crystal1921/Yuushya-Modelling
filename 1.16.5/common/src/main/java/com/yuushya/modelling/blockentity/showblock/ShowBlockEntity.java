@@ -4,9 +4,12 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.iTransformDataInventory;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -73,6 +76,11 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
         super.load(blockState, compoundTag);
         iTransformDataInventory.load(compoundTag,transformDatas);
         slot= (int) compoundTag.getByte("ControlSlot");
+
+        //client chunk update
+        if (this.getLevel() instanceof ClientLevel ){
+            this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 11);
+        }
     }
 
     //writeNbt
@@ -96,11 +104,10 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
 
     public void saveChanged() {
         this.setChanged();
-        if (this.getLevel()!=null){
-            BlockState blockState =this.getLevel().getBlockState(this.getBlockPos());
-            this.getLevel().sendBlockUpdated(this.getBlockPos(),blockState,blockState,3);
-            //this.getLevel().setBlocksDirty(this.getBlockPos(), this.getLevel().getBlockState(this.getBlockPos()), Blocks.AIR.defaultBlockState());
-        }
+
+        if (!(this.getLevel() instanceof ServerLevel)) return;
+
+        this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 11);
     }
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
