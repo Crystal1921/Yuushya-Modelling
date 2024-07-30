@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 public class YuushyaDeferredRegister<T>{
     private final Map<String, RegistrySupplier<T>> OBJECT_MAP = new HashMap<>();
 
-    private static final Supplier<Registries> REGISTRIES = Suppliers.memoize(() -> Registries.get(Yuushya.MOD_ID));
+    private static final Supplier<Registries> REGISTRIES = Suppliers.memoize(() -> Registries.get(Yuushya.MOD_ID_USED));
     private final Registrar<T>  REGISTER;
 //    private final DeferredRegister<T> REGISTER;
 

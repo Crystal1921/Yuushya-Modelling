@@ -15,11 +15,12 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.yuushya.modelling.Yuushya.MOD_ID;
+import static com.yuushya.modelling.Yuushya.MOD_ID_USED;
 
 public class YuushyaDeferredRegister <T>{
     private final Map<String, RegistrySupplier<T>> OBJECT_MAP = new HashMap<>();
 
-    private static final Supplier<Registries> REGISTRIES = Suppliers.memoize(() -> Registries.get(MOD_ID));
+    private static final Supplier<Registries> REGISTRIES = Suppliers.memoize(() -> Registries.get(MOD_ID_USED));
     private final DeferredRegister<T>  REGISTER;
 
     public YuushyaDeferredRegister(ResourceKey<Registry<T>> key){

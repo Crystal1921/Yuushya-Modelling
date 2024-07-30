@@ -25,7 +25,7 @@ public class YuushyaRegistries {
     public static final YuushyaDeferredRegister<Block> BLOCKS = new YuushyaDeferredRegister<>(Registries.BLOCK);
     public static final YuushyaDeferredRegister<Item> ITEMS = new YuushyaDeferredRegister<>(Registries.ITEM);
     public static final YuushyaDeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = new YuushyaDeferredRegister<>(Registries.BLOCK_ENTITY_TYPE);
-    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Yuushya.MOD_ID, Registries.CREATIVE_MODE_TAB);
+    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Yuushya.MOD_ID_USED, Registries.CREATIVE_MODE_TAB);
 
     public static final RegistrySupplier<CreativeModeTab> YUUSHYA_MODELLING = TABS.register("modelling",()->CreativeTabRegistry.create(Component.translatable("itemGroup.yuushya.modelling"),()->new ItemStack(ITEMS.getInstanceOrDefault("pos_trans_item", Items.APPLE))));
     public static void registerAll(){
