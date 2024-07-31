@@ -1,0 +1,43 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+#issueTrackerURL = ""
+license = "${mod_licence}"
+
+[[mods]]
+modId = "yuushya_modelling"
+version = "${mod_version}"
+displayName = "${mod_name}"
+logoFile = "pack.png"
+displayURL = "${mod_homepage}"
+credits = "${mod_credits}"
+authors = "${mod_authors}"
+description = '''
+    ${mod_description}
+    '''
+
+[[dependencies.yuushya_modelling]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.yuushya_modelling]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.yuushya_modelling]]
+modId = "architectury"
+type = "required"
+versionRange = "[13.0.2,)"
+ordering = "AFTER"
+side = "BOTH"
+
+#[[mixins]]
+#config = "yuushya.mixins.json"
+#
+#[[mixins]]
+#config = "yuushya-common.mixins.json"
