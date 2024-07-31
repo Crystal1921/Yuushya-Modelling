@@ -3,6 +3,10 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -44,7 +48,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                     RenderSystem.defaultBlendFunc();
                     RenderSystem.lineWidth(8.0f);
                     bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                    translate(matrixStack,transformData.pos);
+                    translateAfterScale(matrixStack,transformData.pos,transformData.scales);
                     translate(matrixStack,MIDDLE);
                     boolean showRotAxis = blockEntity.showRotAxis();
                     if(showRotAxis) matrixStack.mulPose(Axis.ZP.rotationDegrees(transformData.rot.z()));
@@ -81,7 +85,10 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                         Style style =  blockEntity.getSlot()==slot ?Style.EMPTY.withColor(ChatFormatting.GOLD).withBold(true)
                                 : everyTransformData.isShown?Style.EMPTY.withColor( ChatFormatting.WHITE)
                                 :Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(true);
-                        Component component = Component.translatable("block.yuushya.showblock.slot_text",String.format("%2d",slot)).append(everyTransformData.blockState.getBlock().getName().append(Component.literal(YuushyaUtils.getBlockStateProperties(everyTransformData.blockState))).withStyle(style));
+                        Block block = everyTransformData.blockState.getBlock();
+                        Item item = block.asItem();
+                        MutableComponent displayName = (item==Items.AIR) ? block.getName() : (MutableComponent)item.getName(item.getDefaultInstance());
+                        Component component = Component.translatable("block.yuushya.showblock.slot_text",String.format("%2d",slot)).append(displayName.append(Component.literal(YuushyaUtils.getBlockStateProperties(everyTransformData.blockState))).withStyle(style));
                         renderText(font,component ,high-=0.25f,matrixStack ,multiBufferSource,light);
                     }
                 }matrixStack.popPose();
@@ -124,7 +131,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
         float g = Minecraft.getInstance().options.getBackgroundOpacity(0.25f);
         int backgroundColor = (int)(g * 255.0f) << 24;
             float floatx = (float) -font.width(component) / 2;
-            font.drawInBatch(component, 0, 0, -1, false, matrix4f, buffer, Font.DisplayMode.NORMAL, backgroundColor, 0xF000F0);
+            font.drawInBatch(component, 0, 0, -1, false, matrix4f, buffer, Font.DisplayMode.SEE_THROUGH, backgroundColor, 0xF000F0);
         }
         matrixStack.popPose();
     }

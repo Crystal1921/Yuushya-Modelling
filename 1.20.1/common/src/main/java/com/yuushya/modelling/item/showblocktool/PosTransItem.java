@@ -13,11 +13,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import org.joml.Vector3f;
 
 import java.util.function.Consumer;
 
 public class PosTransItem extends AbstractMultiPurposeToolItem {
-    private static final int MAX_POS_1 =17;
+    private static int getMaxPos(float scale){
+        return (int) Math.ceil((8 + 16)/scale) - 8 + 1;
+    }
     public PosTransItem(Properties properties, Integer tipLines) {
         super(properties, tipLines);
         MAX_FORMS=3;//x:0,y:1,z:2
@@ -29,10 +32,11 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
         getTag(handItemStack);
         return translateData(player,blockState,level,blockPos,handItemStack,(transformData)->{
             Vector3d pos = transformData.pos;
+            Vector3f scale = transformData.scales;
             switch (getForm()){
-                case 0-> pos.x=(pos.x-1)% MAX_POS_1;
-                case 1-> pos.y=(pos.y-1)% MAX_POS_1;
-                case 2-> pos.z=(pos.z-1)% MAX_POS_1;
+                case 0-> pos.x=(pos.x-1)% getMaxPos(scale.x);
+                case 1-> pos.y=(pos.y-1)% getMaxPos(scale.y);
+                case 2-> pos.z=(pos.z-1)% getMaxPos(scale.z);
             }
             player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z),true);
         });
@@ -43,10 +47,11 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
         getTag(handItemStack);
         return translateData(player,blockState,level,blockPos,handItemStack,(transformData)->{
             Vector3d pos = transformData.pos;
+            Vector3f scale = transformData.scales;
             switch (getForm()){
-                case 0-> pos.x=(pos.x+1)% MAX_POS_1;
-                case 1-> pos.y=(pos.y+1)% MAX_POS_1;
-                case 2-> pos.z=(pos.z+1)% MAX_POS_1;
+                case 0-> pos.x=(pos.x+1)% getMaxPos(scale.x);
+                case 1-> pos.y=(pos.y+1)% getMaxPos(scale.y);
+                case 2-> pos.z=(pos.z+1)% getMaxPos(scale.z);
             }
             player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z),true);
         });
