@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class SliderButton<T> extends AbstractSliderButton {
-    private static final Logger LOGGER = LogUtils.getLogger();
+    //private static final Logger LOGGER = LogUtils.getLogger();
     private final OptionInstance.CaptionBasedToString<T> captionBasedToString;
     private final T initialValue;
     private final Component caption;
