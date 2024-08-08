@@ -36,17 +36,26 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
         if (level.getBlockState(pos).is(state.getBlock())){
             if(context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"rot_trans_item")))){
                 ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
-                if(blockEntity!=null) blockEntity.setShowRotAixs();
+                if(blockEntity!=null) {
+                    blockEntity.setShowRotAixs();
+                    blockEntity.setShowText();
+                }
             }
             else if(context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"pos_trans_item")))
-                    ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"micro_pos_trans_item")))){
+                    ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"micro_pos_trans_item")))
+            ){
                 ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
-                if(blockEntity!=null) blockEntity.setShowPosAixs();
+                if(blockEntity!=null) {
+                    blockEntity.setShowPosAixs();
+                    blockEntity.setShowText();
+                }
             }
             else if(context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"slot_trans_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"get_showblock_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"move_transformdata_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"get_blockstate_item")))
+                    ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"scale_trans_item")))
+                    ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"debug_stick_item")))
             ){
                 ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
                 if(blockEntity!=null) blockEntity.setShowText();

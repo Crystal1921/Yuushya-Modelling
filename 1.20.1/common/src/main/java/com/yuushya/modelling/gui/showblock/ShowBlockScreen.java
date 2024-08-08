@@ -1,49 +1,59 @@
 package com.yuushya.modelling.gui.showblock;
 
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
+import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
+import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.validate.UnitDoubleRange;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.yuushya.modelling.blockentity.TransformType.*;
+
 public class ShowBlockScreen extends Screen {
     private final ShowBlockEntity blockEntity;
+    private int slot = 0;
+    private final Map<TransformType,Double> storage = new HashMap<>();
+    private final Map<TransformType, SliderButton<Double>> widgets = new HashMap<>();
 
     public ShowBlockScreen(ShowBlockEntity blockEntity) {
         super(GameNarrator.NO_TITLE);
         this.blockEntity = blockEntity;
     }
 
+    private static final int LEFT_COLUMN_X = 10;
+    private static final int LEFT_COLUMN_WIDTH = 120;
+    private static final int TOP = 10;
+    private static final int PER_HEIGHT = 20;
+
     @Override
     protected void init() {
-        Button buttonWidget = Button.builder(Component.literal("Hello World"), (btn) -> {
-            // When the button is clicked, we can display a toast to the screen.
-            this.minecraft.getToasts().addToast(
-                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.NARRATOR_TOGGLE,Component.literal("Hello World!"), Component.literal("This is a toast."))
-            );
-        }).bounds(40, 40, 120, 20).build();
+        Button button = Button.builder(Component.literal("test"),(btn)->{
+            widgets.get(ROT_X).setValue(0.5);
+        }).bounds(LEFT_COLUMN_X,TOP,LEFT_COLUMN_WIDTH,PER_HEIGHT).build();
 
-        AbstractWidget testWidget = UnitDoubleRange.createButton(Component.literal("Hello2"),
-                40,60,120,20,(number)->{
-                    TransformDataNetwork.updateTransformData(blockEntity,0,TransformDataNetwork.TransformType.ROT_X,number*360f);
-                    this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-                    TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),0, TransformDataNetwork.TransformType.ROT_X,number*360f);
-                });
-        // x, y, width, height
-        // It's recommended to use the fixed height of 20 to prevent rendering issues with the button
-        // textures.
+        widgets.put(ROT_X,
+            UnitDoubleRange.buttonBuilder(Component.literal("Hello2"),
+                        (number)->{
+                            blockEntity.setShowRotAixs();
+                            updateTransformData(ROT_X,360*number);
+                        })
+                    .initial(ROT_X.extract(blockEntity,slot)/360)
+                    .bounds(LEFT_COLUMN_X,TOP+PER_HEIGHT,LEFT_COLUMN_WIDTH,PER_HEIGHT).build());
 
-        // Register the button widget.
 
-        this.addRenderableWidget(buttonWidget);
-        this.addRenderableWidget(testWidget);
-
+        this.addRenderableWidget(button);
+        for(AbstractWidget widget:widgets.values()){
+            this.addRenderableWidget(widget);
+        }
     }
 
     @Override
@@ -65,8 +75,26 @@ public class ShowBlockScreen extends Screen {
         return false;
     }
 
+
+
     @Override
     public void removed() {
+        for(TransformType key:storage.keySet()){
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, key,storage.get(key));
+        }
         TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
+
+    private void updateTransformData(TransformType type, Double number){
+        this.storage.put(type,number);
+        type.modify(blockEntity,slot,number);
+        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+    }
 }
+
+
+/*
+this.minecraft.getToasts().addToast(
+        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.NARRATOR_TOGGLE,Component.literal("Hello World!"), Component.literal("This is a toast."))
+);
+ */

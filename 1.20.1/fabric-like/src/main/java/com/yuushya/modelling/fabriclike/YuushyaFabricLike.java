@@ -22,7 +22,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.io.IOException;
 
-import static com.yuushya.modelling.blockentity.TransformDataNetwork.updateTransformData;
 import static com.yuushya.modelling.registries.YuushyaRegistries.YUUSHYA_MODELLING;
 
 public class YuushyaFabricLike {

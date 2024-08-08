@@ -1,20 +1,14 @@
 package com.yuushya.modelling.gui.validate;
 
 import com.yuushya.modelling.gui.SliderButton;
-import net.minecraft.client.OptionInstance;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
-public enum UnitDoubleRange implements ValidateRange<Double> {
-    INSTANCE;
-    @Override
-    public Optional<Double> validateValue(Double value) {
-        return value >= 0.0 && value <= 1.0 ? Optional.of(value) : Optional.empty();
-    }
+public class UnitDoubleRange implements ValidateRange<Double> {
+
+    private double step = 0.001;
 
     @Override
     public double toSliderValue(Double value) {
@@ -22,10 +16,16 @@ public enum UnitDoubleRange implements ValidateRange<Double> {
     }
 
     @Override
-    public Double fromSliderValue(double sliderValue) {
-        return sliderValue;
-    }
+    public Double fromSliderValue(double sliderValue) { return sliderValue; }
 
+    @Override
+    public Double minInclusive() { return 0.0; }
+
+    @Override
+    public Double maxInclusive() { return 1.0; }
+
+    @Override
+    public void setStep(double step) {this.step = step; }
 
     public static Component percentValueLabel(Component text, double value) {
         return Component.translatable("options.percent_value", text, (int)(value * 100.0));
@@ -39,7 +39,16 @@ public enum UnitDoubleRange implements ValidateRange<Double> {
         }
         return percentValueLabel(caption, value);
     }
-    public static AbstractWidget createButton(Component caption, int x, int y, int width, int height, Consumer<Double> onValueChanged){
-        return new SliderButton<Double>(caption,x,y,width,height, OptionInstance.noTooltip(), UnitDoubleRange::captionToString,INSTANCE,1.0,onValueChanged);
+
+    public static ButtonBuilder buttonBuilder(Component caption, Consumer<Double> onValueChanged){
+        return new ButtonBuilder(caption,onValueChanged);
+    }
+
+    public static class ButtonBuilder extends SliderButton.Builder<Double> {
+        public ButtonBuilder(Component caption, Consumer<Double> onValueChanged) {
+            super(caption, new UnitDoubleRange(), onValueChanged);
+            this.text(UnitDoubleRange::captionToString);
+            this.initial(0.0);
+        }
     }
 }

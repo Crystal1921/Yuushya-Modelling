@@ -18,7 +18,7 @@ import org.joml.Vector3f;
 import java.util.function.Consumer;
 
 public class PosTransItem extends AbstractMultiPurposeToolItem {
-    private static int getMaxPos(float scale){
+    public static int getMaxPos(float scale){
         return (int) Math.ceil((8 + 16)/scale) - 8 + 1;
     }
     public PosTransItem(Properties properties, Integer tipLines) {
