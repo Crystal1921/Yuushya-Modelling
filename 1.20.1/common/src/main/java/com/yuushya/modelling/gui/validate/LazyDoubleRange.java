@@ -53,12 +53,7 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     }
 
     public static Component captionToString(Component caption, Double value) {
-        return Component.empty().append(caption).append(Component.literal(":").append(Component.literal(value.toString())));
-    }
-
-
-    public static ButtonBuilder buttonBuilder(Component caption, Supplier<Double> minInclusiveSupplier, Supplier<Double> maxInclusiveSupplier, Consumer<Double> onValueChanged) {
-        return new ButtonBuilder(caption, minInclusiveSupplier, maxInclusiveSupplier, onValueChanged);
+        return Component.empty().append(caption).append(Component.literal(":").append(Component.literal(String.format("%05.1f",value))));
     }
 
     @Override
@@ -84,12 +79,15 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
                 "step=" + step + ']';
     }
 
+    public static ButtonBuilder buttonBuilder(Component caption,Supplier<Double> minInclusiveSupplier, Supplier<Double> maxInclusiveSupplier, Consumer<Double> onValueChanged){
+        return new ButtonBuilder(caption,minInclusiveSupplier,maxInclusiveSupplier,onValueChanged);
+    }
 
     public static class ButtonBuilder extends SliderButton.Builder<Double> {
         public ButtonBuilder(Component caption, Supplier<Double> minInclusiveSupplier, Supplier<Double> maxInclusiveSupplier, Consumer<Double> onValueChanged) {
             super(caption, new LazyDoubleRange(minInclusiveSupplier, maxInclusiveSupplier), onValueChanged);
             this.text(LazyDoubleRange::captionToString);
-            this.initial(0.0);
+            this.initial(minInclusiveSupplier.get());
         }
     }
 }

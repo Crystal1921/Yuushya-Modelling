@@ -1,18 +1,13 @@
 package com.yuushya.modelling.gui;
 
-import com.mojang.logging.LogUtils;
 import com.yuushya.modelling.gui.validate.ValidateRange;
 import net.minecraft.client.OptionInstance;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton {
@@ -22,6 +17,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
     private final Component caption;
     private final ValidateRange<T> validateRange;
     private final OptionInstance.TooltipSupplier<T> tooltipSupplier;
+    private final Consumer<SliderButton<T>> onMouseOver;
     private final Consumer<T> onValueChanged;
 
     public SliderButton(Component caption,
@@ -30,6 +26,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
                         OptionInstance.CaptionBasedToString<T> captionBasedToString,
                         ValidateRange<T> validateRange,
                         T initialValue,
+                        Consumer<SliderButton<T>> onMouseOver,
                         Consumer<T> onValueChanged) {
         super(x, y, width, height, CommonComponents.EMPTY, validateRange.toSliderValue(initialValue));
         this.caption = caption;
@@ -37,15 +34,25 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
         this.validateRange = validateRange;
         this.tooltipSupplier = tooltipSupplier;
         this.captionBasedToString = captionBasedToString;
+        this.onMouseOver = onMouseOver;
         this.onValueChanged = onValueChanged;
         this.updateMessage();
     }
 
     @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        if(this.isHovered){
+            this.onMouseOver.accept(this);
+        }
+    }
+
+    @Override
     protected void updateMessage() {
         T value = this.validateRange.fromSliderValue(this.value);
-        this.setMessage(captionBasedToString.toString(this.caption,value));
-        this.setTooltip(this.tooltipSupplier.apply(value));
+        T object = this.validateRange.validateValue(value).orElseGet(() -> this.initialValue);
+        this.setMessage(captionBasedToString.toString(this.caption,object));
+        this.setTooltip(this.tooltipSupplier.apply(object));
     }
 
     @Override
@@ -60,6 +67,10 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
 
     public static <R extends Comparable<R>> Builder<R> builder(Component caption, ValidateRange<R> validateRange, Consumer<R> onValueChanged){
         return new Builder<>(caption,validateRange,onValueChanged);
+    }
+
+    public void setValidatedValue(T value){
+        this.setValue(this.validateRange.toSliderValue(value));
     }
 
     public void setValue(double value) {
@@ -86,6 +97,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
         private final Component caption;
         private final ValidateRange<R> validateRange;
         private final Consumer<R> onValueChanged;
+        private Consumer<SliderButton<R>> onMouseOver = (btn)->{};
         private double step = 0.001;
 
         public Builder(Component caption, ValidateRange<R> validateRange, Consumer<R> onValueChanged) {
@@ -126,6 +138,11 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
             return this;
         }
 
+        public Builder<R> onMouseOver(Consumer<SliderButton<R>> onMouseOver){
+            this.onMouseOver = onMouseOver;
+            return this;
+        }
+
         public Builder<R> initial(R number){
             this.initialValue = number;
             return this;
@@ -138,7 +155,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
 
         public SliderButton<R> build(){
             validateRange.setStep(step);
-            return new SliderButton<R>(caption,x,y,width,height,tooltipSupplier,captionBasedToString,validateRange,initialValue,onValueChanged);
+            return new SliderButton<R>(caption,x,y,width,height,tooltipSupplier,captionBasedToString,validateRange,initialValue, onMouseOver,onValueChanged);
         }
     }
 

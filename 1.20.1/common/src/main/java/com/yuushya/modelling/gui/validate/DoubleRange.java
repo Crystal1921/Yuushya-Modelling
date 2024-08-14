@@ -1,13 +1,17 @@
 package com.yuushya.modelling.gui.validate;
 
+import com.yuushya.modelling.gui.SliderButton;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-public final class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
-    private final Double minInclusive;
-    private final Double maxInclusive;
+public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
+    protected final Double minInclusive;
+    protected final Double maxInclusive;
     private double step = 0.001;
 
     public DoubleRange(Double minInclusive, Double maxInclusive) {
@@ -64,6 +68,17 @@ public final class DoubleRange implements ValidateRange<Double>, StepRange<Doubl
                 "step=" + step + ']';
     }
 
+    public static ButtonBuilder buttonBuilder(Component caption,  Double minInclusive, Double maxInclusive, Consumer<Double> onValueChanged){
+        return new ButtonBuilder(caption,minInclusive,maxInclusive,onValueChanged);
+    }
+
+    public static class ButtonBuilder extends SliderButton.Builder<Double> {
+        public ButtonBuilder(Component caption, Double minInclusive, Double maxInclusive, Consumer<Double> onValueChanged) {
+            super(caption, new DoubleRange(minInclusive, maxInclusive), onValueChanged);
+            this.text(LazyDoubleRange::captionToString);
+            this.initial(minInclusive);
+        }
+    }
 
 
 }

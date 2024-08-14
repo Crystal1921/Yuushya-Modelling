@@ -4,6 +4,8 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.item.AbstractToolItem;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
@@ -19,14 +21,19 @@ public class GuiItem  extends AbstractToolItem {
 
     @Override
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if(level.isClientSide){
-            if(blockState.getBlock() instanceof ShowBlock) {
-                ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
-                    Minecraft.getInstance().setScreen(
-                            new ShowBlockScreen(showBlockEntity)
-                    );
-            }
+        if(level.isClientSide) {
+            openGuiScreen(player, blockState, level, blockPos, handItemStack);
         }
         return InteractionResult.SUCCESS;
+    }
+
+    @Environment(EnvType.CLIENT)
+    public void openGuiScreen(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack){
+        if(blockState.getBlock() instanceof ShowBlock) {
+            ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
+            Minecraft.getInstance().setScreen(
+                    new ShowBlockScreen(showBlockEntity)
+            );
+        }
     }
 }

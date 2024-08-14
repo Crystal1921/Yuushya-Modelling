@@ -6,9 +6,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
-public class UnitDoubleRange implements ValidateRange<Double> {
-
-    private double step = 0.001;
+public record UnitDoubleRange() implements ValidateRange<Double> {
 
     @Override
     public double toSliderValue(Double value) {
@@ -24,8 +22,9 @@ public class UnitDoubleRange implements ValidateRange<Double> {
     @Override
     public Double maxInclusive() { return 1.0; }
 
+    //do nothing
     @Override
-    public void setStep(double step) {this.step = step; }
+    public void setStep(double step) { }
 
     public static Component percentValueLabel(Component text, double value) {
         return Component.translatable("options.percent_value", text, (int)(value * 100.0));
