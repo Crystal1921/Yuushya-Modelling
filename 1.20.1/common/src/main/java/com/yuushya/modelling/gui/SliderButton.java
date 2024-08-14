@@ -73,6 +73,10 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
         this.setValue(this.validateRange.toSliderValue(value));
     }
 
+    public T getValidatedValue(){
+        return this.validateRange.fromSliderValue(this.value);
+    }
+
     public void setValue(double value) {
         double d = this.value;
         this.value = Mth.clamp(value, 0.0, 1.0);
@@ -82,9 +86,8 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
         this.updateMessage();
     }
 
-    public void setStep(double step){
-        this.validateRange.setStep(step);
-    }
+    public void setStep(T step){ this.validateRange.setStep(step); }
+    public T getStep(){ return this.validateRange.getStep(); }
 
     public static class Builder<R extends Comparable<R>> {
         private int x;
@@ -98,7 +101,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
         private final ValidateRange<R> validateRange;
         private final Consumer<R> onValueChanged;
         private Consumer<SliderButton<R>> onMouseOver = (btn)->{};
-        private double step = 0.001;
+        private R step;
 
         public Builder(Component caption, ValidateRange<R> validateRange, Consumer<R> onValueChanged) {
             this.caption = caption;
@@ -148,7 +151,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
             return this;
         }
 
-        public Builder<R> step(double step){
+        public Builder<R> step(R step){
             this.step = step;
             return this;
         }

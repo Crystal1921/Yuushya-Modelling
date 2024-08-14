@@ -40,7 +40,10 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     }
 
     @Override
-    public void setStep(double step) {this.step = step; }
+    public void setStep(Double step) {this.step = step; }
+
+    @Override
+    public Double getStep() { return step; }
 
     @Override
     public double toSliderValue(Double value) {

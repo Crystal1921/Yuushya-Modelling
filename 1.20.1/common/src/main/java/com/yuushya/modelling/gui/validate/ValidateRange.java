@@ -11,7 +11,8 @@ interface Range<T extends Comparable<T>>{
     T maxInclusive();
 }
 interface StepRange<T extends Comparable<T>> extends Range<T>{
-    void setStep(double step);
+    void setStep(T step);
+    T getStep();
 }
 interface SliderValueSet<T> {
     double toSliderValue(T value);

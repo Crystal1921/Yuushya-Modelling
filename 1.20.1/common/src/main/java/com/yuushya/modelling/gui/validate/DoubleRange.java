@@ -7,7 +7,6 @@ import net.minecraft.util.Mth;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
     protected final Double minInclusive;
@@ -43,7 +42,10 @@ public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
     public Double maxInclusive() { return maxInclusive; }
 
     @Override
-    public void setStep(double step) {this.step = step; }
+    public void setStep(Double step) {this.step = step; }
+
+    @Override
+    public Double getStep() { return step; }
 
     @Override
     public boolean equals(Object obj) {

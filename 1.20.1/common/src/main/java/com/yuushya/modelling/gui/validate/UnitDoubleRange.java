@@ -24,7 +24,10 @@ public record UnitDoubleRange() implements ValidateRange<Double> {
 
     //do nothing
     @Override
-    public void setStep(double step) { }
+    public void setStep(Double step) { }
+
+    @Override
+    public Double getStep() { return 0.001; }
 
     public static Component percentValueLabel(Component text, double value) {
         return Component.translatable("options.percent_value", text, (int)(value * 100.0));

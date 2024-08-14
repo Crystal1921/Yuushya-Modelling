@@ -85,7 +85,7 @@ public class YuushyaUtils {
         }
         return stringBuilder.toString();
     }
-    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<>() {
+    public static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<>() {
         @Override
         public String apply(@Nullable Map.Entry<Property<?>, Comparable<?>> propertyValueMap) {
             if (propertyValueMap == null) {

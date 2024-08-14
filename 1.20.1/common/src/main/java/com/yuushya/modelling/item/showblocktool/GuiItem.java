@@ -4,10 +4,13 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.item.AbstractToolItem;
+import com.yuushya.modelling.utils.YuushyaUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -29,10 +32,20 @@ public class GuiItem  extends AbstractToolItem {
 
     @Environment(EnvType.CLIENT)
     public void openGuiScreen(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack){
+        BlockState newBlockState = null;
+        for(ItemStack itemStack: player.getHandSlots()){
+            if(itemStack.getItem() instanceof GetBlockStateItem){
+                CompoundTag compoundTag = itemStack.getOrCreateTag();
+                if(compoundTag.contains("BlockState")){
+                    newBlockState = YuushyaUtils.readBlockState(compoundTag.getCompound("BlockState"));
+                }
+            }
+        }
+
         if(blockState.getBlock() instanceof ShowBlock) {
             ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
             Minecraft.getInstance().setScreen(
-                    new ShowBlockScreen(showBlockEntity)
+                    new ShowBlockScreen(showBlockEntity,newBlockState)
             );
         }
     }

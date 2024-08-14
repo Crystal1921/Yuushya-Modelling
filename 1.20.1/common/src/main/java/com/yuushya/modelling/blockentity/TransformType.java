@@ -1,15 +1,18 @@
 package com.yuushya.modelling.blockentity;
 
+import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 public enum TransformType {
     POS_X(0), POS_Y(1), POS_Z(2),
     ROT_X(3), ROT_Y(4), ROT_Z(5),
-    SCALA_X(6), SCALA_Y(7), SCALA_Z(8),
+    SCALE_X(6), SCALE_Y(7), SCALE_Z(8),
     BLOCK_STATE(9),
     SHOWN(10),
-    SUCCESS(11), FAIL(12);
+    LIT(11),
+    SUCCESS(12), FAIL(13);
 
     public final int type;
 
@@ -25,12 +28,13 @@ public enum TransformType {
             case 3 -> ROT_X;
             case 4 -> ROT_Y;
             case 5 -> ROT_Z;
-            case 6 -> SCALA_X;
-            case 7 -> SCALA_Y;
-            case 8 -> SCALA_Z;
+            case 6 -> SCALE_X;
+            case 7 -> SCALE_Y;
+            case 8 -> SCALE_Z;
             case 9 -> BLOCK_STATE;
             case 10 -> SHOWN;
-            case 11 -> SUCCESS;
+            case 11 -> LIT;
+            case 12 -> SUCCESS;
             default -> FAIL;
         };
     }
@@ -44,11 +48,12 @@ public enum TransformType {
             case ROT_X -> transformData.rot.x();
             case ROT_Y -> transformData.rot.y();
             case ROT_Z -> transformData.rot.z();
-            case SCALA_X -> transformData.scales.x();
-            case SCALA_Y -> transformData.scales.y();
-            case SCALA_Z -> transformData.scales.z();
+            case SCALE_X -> transformData.scales.x();
+            case SCALE_Y -> transformData.scales.y();
+            case SCALE_Z -> transformData.scales.z();
             case BLOCK_STATE -> Block.getId(transformData.blockState);
             case SHOWN -> transformData.isShown ? 1 : 0;
+            case LIT -> 0;
             case SUCCESS -> 0;
             case FAIL -> 0;
         };
@@ -62,9 +67,9 @@ public enum TransformType {
             case ROT_X -> transformData.rot.set(number,transformData.rot.y(),transformData.rot.z());
             case ROT_Y -> transformData.rot.set(transformData.rot.x(),number,transformData.rot.z());
             case ROT_Z -> transformData.rot.set(transformData.rot.x(),transformData.rot.y(),number);
-            case SCALA_X -> transformData.scales.set(number,transformData.scales.y(),transformData.scales.z());
-            case SCALA_Y -> transformData.scales.set(transformData.scales.x(),number,transformData.scales.z());
-            case SCALA_Z -> transformData.scales.set(transformData.scales.x(),transformData.scales.y(),number);
+            case SCALE_X -> transformData.scales.set(number,transformData.scales.y(),transformData.scales.z());
+            case SCALE_Y -> transformData.scales.set(transformData.scales.x(),number,transformData.scales.z());
+            case SCALE_Z -> transformData.scales.set(transformData.scales.x(),transformData.scales.y(),number);
             case BLOCK_STATE -> transformData.blockState = Block.stateById((int) Math.round(number));
             case SHOWN -> transformData.isShown = number != 0;
             //case SUCCESS -> showBlockEntity.saveChanged();
@@ -75,12 +80,20 @@ public enum TransformType {
 
 
     public double extract(ShowBlockEntity showBlockEntity, int slot){
+        if(this == LIT){
+            return showBlockEntity.getBlockState().getValue(YuushyaBlockStates.LIT);
+        }
         return extract(showBlockEntity.getTransformData(slot));
     }
 
     public void modify(ShowBlockEntity showBlockEntity, int slot, double number){
-        if(this == TransformType.SUCCESS){
+        if(this == SUCCESS){
             showBlockEntity.saveChanged();
+            return;
+        }
+        if(this == LIT){
+            Level level = showBlockEntity.getLevel();
+            level.setBlock(showBlockEntity.getBlockPos(), showBlockEntity.getBlockState().setValue(YuushyaBlockStates.LIT,(int) Math.round(number)), 18);
             return;
         }
         showBlockEntity.setSlot(slot);
