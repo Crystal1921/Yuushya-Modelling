@@ -23,9 +23,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +82,11 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
             return itemStack;
         });
     }
+    private final Map<Integer, Collection<Property<?>>> rememberProperties = new HashMap<>();
+    public Collection<Property<?>> updateRenderProperties(BlockState blockState){
+        return rememberProperties.computeIfAbsent(Block.getId(blockState),(id)->
+                Block.stateById(id).getBlock().getStateDefinition().getProperties());
+    }
 
     @Override
     public int getRowWidth() { return itemWidth; }
@@ -97,6 +105,9 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     }
 
     public void addSlot(){
+        if( this.getSelected()!= null && transformDataList.get(this.getSelected().slot).blockState.getBlock() == Blocks.AIR){
+            return;
+        }
         if(children().size() == transformDataList.size()){
             Entry entry = new Entry(this,transformDataList.size());
             this.addEntry(entry);

@@ -12,7 +12,8 @@ public enum TransformType {
     BLOCK_STATE(9),
     SHOWN(10),
     LIT(11),
-    SUCCESS(12), FAIL(13);
+    REMOVE(12),
+    SUCCESS(13), FAIL(14);
 
     public final int type;
 
@@ -34,7 +35,8 @@ public enum TransformType {
             case 9 -> BLOCK_STATE;
             case 10 -> SHOWN;
             case 11 -> LIT;
-            case 12 -> SUCCESS;
+            case 12 -> REMOVE;
+            case 13 -> SUCCESS;
             default -> FAIL;
         };
     }
@@ -53,9 +55,7 @@ public enum TransformType {
             case SCALE_Z -> transformData.scales.z();
             case BLOCK_STATE -> Block.getId(transformData.blockState);
             case SHOWN -> transformData.isShown ? 1 : 0;
-            case LIT -> 0;
-            case SUCCESS -> 0;
-            case FAIL -> 0;
+            case LIT, REMOVE, SUCCESS, FAIL -> 0;
         };
     }
 
@@ -94,6 +94,10 @@ public enum TransformType {
         if(this == LIT){
             Level level = showBlockEntity.getLevel();
             level.setBlock(showBlockEntity.getBlockPos(), showBlockEntity.getBlockState().setValue(YuushyaBlockStates.LIT,(int) Math.round(number)), 18);
+            return;
+        }
+        if(this == REMOVE){
+            showBlockEntity.removeTransformData(slot);
             return;
         }
         showBlockEntity.setSlot(slot);

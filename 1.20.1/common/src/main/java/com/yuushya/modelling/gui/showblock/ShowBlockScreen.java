@@ -1,5 +1,6 @@
 package com.yuushya.modelling.gui.showblock;
 
+import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
@@ -7,6 +8,7 @@ import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
+import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -18,7 +20,10 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +45,7 @@ public class ShowBlockScreen extends Screen {
         for(TransformType type:this.sliderButtons.keySet()){
             this.sliderButtons.get(type).setValidatedValue(type.extract(this.blockEntity,slot));
         }
-
+        updateStateButtonVisible();
     }
     private final Map<TransformType,Double> storage = new HashMap<>();
     private final Map<TransformType,Double> standardStep = new HashMap<>();
@@ -59,14 +64,38 @@ public class ShowBlockScreen extends Screen {
     }
     private CycleButton<Mode> modeButton;
     private Button addStateButton;
+    private Button removeStateButton;
+    private CycleButton<Boolean> shownStateButton;
     private final Map<TransformType, EditBox> editBoxes = new HashMap<>();
     private BlockStateIconList blockStateList;
+    private Button leftPropertyButton;
+    private Property<?> property;
+    private Button rightPropertyButton;
+    private Button leftStateButton;
+    private Button rightStateButton;
+
+    public boolean updateStateButtonVisible(){
+        Collection<Property<?>> collection = blockStateList.updateRenderProperties(getBlockState());
+        boolean stateButtonVisible = !collection.isEmpty();
+        if(stateButtonVisible && property==null) property = collection.iterator().next();
+        leftStateButton.visible = stateButtonVisible;
+        rightStateButton.visible = stateButtonVisible;
+        leftPropertyButton.visible = stateButtonVisible;
+        rightPropertyButton.visible = stateButtonVisible;
+        return stateButtonVisible;
+    }
+
+    public BlockState getBlockState(){
+        return blockEntity.getTransformData(slot).blockState;
+    }
 
     public ShowBlockScreen(ShowBlockEntity blockEntity, BlockState newBlockState) {
         super(GameNarrator.NO_TITLE);
         this.blockEntity = blockEntity;
         this.newBlockState = newBlockState;
-        this.slot = blockEntity.getSlot();
+        if(blockEntity.getSlot() < blockEntity.getTransformDatas().size()){
+            this.slot = blockEntity.getSlot();
+        }
     }
 
     private int leftColumnX(){ return this.width/4*3 + 10; }
@@ -78,8 +107,6 @@ public class ShowBlockScreen extends Screen {
 
     @Override
     protected void init() {
-        blockStateList =  new BlockStateIconList(this.minecraft,40 ,this.height,2,TOP, this.height-TOP, 40,45,this.blockEntity.getTransformDatas(),this);
-        blockStateList.setSelectedSlot(slot);
         addStateButton = Button.builder(Component.literal("+"),
                         (btn)->{
                             if(this.newBlockState!=null){
@@ -88,8 +115,52 @@ public class ShowBlockScreen extends Screen {
                                 updateTransformData(SHOWN,1.0);
                             }
                         })
-                .bounds(45,TOP+60,20,PER_HEIGHT)
+                .bounds(2,TOP,20,PER_HEIGHT).build();
+        removeStateButton = Button.builder(Component.literal("X"),
+                        (btn)->{
+                            updateTransformData(REMOVE,0.0);
+                        }
+                )
+                .bounds(2+20,TOP,20,PER_HEIGHT).build();
+
+        shownStateButton = CycleButton.<Boolean>booleanBuilder(Component.literal("On"),Component.literal("Off"))
+                .displayOnlyValue()
+                .withInitialValue(true)
+                .create(2+20+20,TOP,20,PER_HEIGHT,Component.empty(),
+                        (btn,bl)->{
+                            updateTransformData(SHOWN,bl?1.0:0.0);
+                        }
+                );
+
+        blockStateList =  new BlockStateIconList(this.minecraft,40 ,this.height,2,TOP+20, this.height-TOP, 40,45,this.blockEntity.getTransformDatas(),this);
+
+        leftPropertyButton = Button.builder(Component.literal("<"),
+                        (btn)->{
+                            property = YuushyaBlockStates.getRelative(blockStateList.updateRenderProperties(getBlockState()), property, true);
+                        })
+                .bounds(45,TOP + 110,10,PER_HEIGHT)
                 .build();
+        rightPropertyButton = Button.builder(Component.literal(">"),
+                        (btn)->{
+                            property = YuushyaBlockStates.getRelative(blockStateList.updateRenderProperties(getBlockState()), property, false);
+                        })
+                .bounds(95,TOP + 110,10,PER_HEIGHT)
+                .build();
+        leftStateButton = Button.builder(Component.literal("<"),
+                        (btn)->{
+                            BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, true);
+                            updateTransformData(BLOCK_STATE,(double)Block.getId(nextBlockState));
+                        })
+                .bounds(45,TOP + 130,10,PER_HEIGHT)
+                .build();
+        rightStateButton = Button.builder(Component.literal(">"),
+                        (btn)->{
+                            BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, true);
+                            updateTransformData(BLOCK_STATE,(double)Block.getId(nextBlockState));
+                        })
+                .bounds(95,TOP + 130,10,PER_HEIGHT)
+                .build();
+
         modeButton = CycleButton.builder(Mode::getSymbol)
                         .withValues(Mode.values())
                         .withInitialValue(Mode.SLIDER)
@@ -102,6 +173,7 @@ public class ShowBlockScreen extends Screen {
                                     }
                                 }
                         );
+
         sliderButtons.put(POS_X,
                 LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.x)+1,
@@ -189,6 +261,18 @@ public class ShowBlockScreen extends Screen {
         addSmallButton(SCALE_X,false,leftColumnX()-10);
         addSmallButton(SCALE_X,true,leftColumnX()+leftColumnWidth());
 
+        sliderButtons.put(LIT,
+                DoubleRange.buttonBuilder(Component.literal("LIT"),0.0,15.0,
+                        (number)->{
+                            updateTransformData(LIT,number);
+                        })
+                        .text(LazyDoubleRange::captionToString)
+                        .step(standardStep.computeIfAbsent(LIT,(type)->1.0))
+                        .initial(LIT.extract(blockEntity,slot))
+                        .bounds(leftColumnX(),top(7,30),leftColumnWidth(),PER_HEIGHT).build());
+        addSmallButton(LIT,false,leftColumnX()-10);
+        addSmallButton(LIT,true,leftColumnX()+leftColumnWidth());
+
         for(SliderButton<Double> widget: sliderButtons.values()){
             this.addRenderableWidget(widget);
         }
@@ -204,18 +288,30 @@ public class ShowBlockScreen extends Screen {
         this.addRenderableWidget(modeButton);
         this.addWidget(this.blockStateList);
         this.addRenderableWidget(addStateButton);
+        this.addRenderableWidget(removeStateButton);
+        this.addRenderableWidget(shownStateButton);
+        this.addRenderableWidget(leftPropertyButton);
+        this.addRenderableWidget(rightPropertyButton);
+        this.addRenderableWidget(leftStateButton);
+        this.addRenderableWidget(rightStateButton);
+
+        blockStateList.setSelectedSlot(slot);//updateStateButtonVisible();
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         this.blockStateList.render(guiGraphics,mouseX,mouseY,partialTick);
-        BlockState blockState = this.blockEntity.getTransformData(slot).blockState;
-        guiGraphics.drawString(this.font,this.blockStateList.updateRenderDisplayName(blockState), 45, TOP, 0xFFFFFFFF, false);
+        BlockState blockState = getBlockState();
+        guiGraphics.drawString(this.font,this.blockStateList.updateRenderDisplayName(blockState), 45, TOP +6+20, 0xFFFFFFFF, false);
         List<String> properties = this.blockStateList.updateRenderBlockStateProperties(blockState);
         for(int i=0;i<properties.size();i++){
             MutableComponent displayBlockState = Component.literal(properties.get(i));
-            guiGraphics.drawString(this.font, displayBlockState, 45, TOP + this.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
+            guiGraphics.drawString(this.font, displayBlockState, 45, TOP +6+20 + this.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
+        }
+        if(updateStateButtonVisible()){
+            guiGraphics.drawString(this.font, property.getName(), 65,TOP + 120, 0xFFFFFFFF, false);
+            guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState,property), 65,TOP + 140, 0xFFFFFFFF, false);
         }
     }
 
@@ -231,6 +327,7 @@ public class ShowBlockScreen extends Screen {
         for(TransformType key:storage.keySet()){
             TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, key,storage.get(key));
         }
+        this.storage.clear();
         TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
