@@ -15,6 +15,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
     private final OptionInstance.CaptionBasedToString<T> captionBasedToString;
     private final T initialValue;
     private final Component caption;
+    public Component getCaption() { return caption; }
     private final ValidateRange<T> validateRange;
     private final OptionInstance.TooltipSupplier<T> tooltipSupplier;
     private final Consumer<SliderButton<T>> onMouseOver;

@@ -10,6 +10,7 @@ import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -20,7 +21,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
 
 import java.util.Collection;
@@ -37,31 +37,84 @@ public class ShowBlockScreen extends Screen {
     private int slot;
     public void setSlot(int slot){
         for(TransformType key:this.storage.keySet()){
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),this.slot, key,storage.get(key));
+            TransformDataNetwork.sendToServerSide(this.blockEntity.getBlockPos(),this.slot, key,this.storage.get(key));
         }
         this.storage.clear();
         this.slot = slot;
         this.blockEntity.setSlot(slot);
-        for(TransformType type:this.sliderButtons.keySet()){
-            this.sliderButtons.get(type).setValidatedValue(type.extract(this.blockEntity,slot));
+        for(TransformComponent component: this.panel.values()){
+            component.setSliderInitial(this.blockEntity,this.slot);
         }
         updateStateButtonVisible();
     }
     private final Map<TransformType,Double> storage = new HashMap<>();
-    private final Map<TransformType,Double> standardStep = new HashMap<>();
-    private final Map<TransformType, SliderButton<Double>> sliderButtons = new HashMap<>();
-    private final Map<TransformType, Button> minusButtons = new HashMap<>();
-    private final Map<TransformType, Button> addButtons = new HashMap<>();
-    private void addSmallButton(TransformType type,boolean increase,int x){
-        Map<TransformType, Button> buttons = increase ? addButtons : minusButtons;
-        Component text = increase ? Component.literal("+") : Component.literal("-");
-        buttons.put(type,Button.builder(text,
-                        (btn)->{
-                            step(sliderButtons.get(type),increase);
-                        })
-                .bounds(x,sliderButtons.get(type).getY(),10,20)
-                .build());
+
+    private final Map<TransformType, TransformComponent> panel = new HashMap<>();
+    private TransformComponent choose(TransformType type){
+        return panel.computeIfAbsent(type, TransformComponent::new);
     }
+    public static final class TransformComponent {
+        TransformType type;
+        double standardStep;
+        double fine_tuneStep = 0.001;
+        SliderButton<Double> sliderButton;
+        Button minusButton;
+        Button addButton;
+        EditBox editBox;
+        Button cancelButton;
+        Button finishButton;
+        TransformComponent(TransformType type){
+            this.type = type;
+        }
+
+        double setStandardStep(double step){
+            this.standardStep = step;
+            return step;
+        }
+        void setSliderInitial(ShowBlockEntity blockEntity,int slot ){ sliderButton.setValidatedValue(type.extract(blockEntity,slot));}
+        void setSliderStep(){ sliderButton.setStep(standardStep); }
+        void setSliderFineTune(){ sliderButton.setStep(fine_tuneStep); }
+        void step( boolean increase){
+            if(increase) sliderButton.setValidatedValue(sliderButton.getValidatedValue()+sliderButton.getStep());
+            else sliderButton.setValidatedValue(sliderButton.getValidatedValue()-sliderButton.getStep());
+        }
+        void setEditBoxInitial(){ editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));}
+        void saveEditBoxValue(){
+            double number;
+            try{
+                number =  Double.parseDouble(editBox.getValue());
+            } catch (NumberFormatException ignored){
+                number = sliderButton.getValidatedValue();
+            }
+            sliderButton.setValidatedValue(number);
+            setEditBoxInitial();
+        }
+        void triggerVisible(boolean sliderVisible){
+            sliderButton.visible = sliderVisible;
+            addButton.visible = sliderVisible;
+            minusButton.visible = sliderVisible;
+            editBox.setVisible(!sliderVisible);
+            finishButton.visible = !sliderVisible;
+            cancelButton.visible = !sliderVisible;
+        }
+
+        void initWidget(Font font){
+            minusButton = Button.builder(Component.literal("-"), (btn)-> step(false))
+                    .bounds(sliderButton.getX()-10,sliderButton.getY(),10,20).build();
+            addButton = Button.builder(Component.literal("+"), (btn)-> step(true))
+                    .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),10,20).build();
+            editBox = new EditBox(font,sliderButton.getX() ,sliderButton.getY() , sliderButton.getWidth(), PER_HEIGHT, sliderButton.getCaption());
+            editBox.setMaxLength(15);
+            setEditBoxInitial();
+
+            cancelButton = Button.builder(Component.literal("x"), (btn)-> setEditBoxInitial())
+                    .bounds(sliderButton.getX()-10,sliderButton.getY(),10,20).build();
+            finishButton = Button.builder(Component.literal("v"), (btn)-> saveEditBoxValue())
+                    .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),10,20).build();
+            triggerVisible(true);
+        }
+    }
+
     private CycleButton<Mode> modeButton;
     private Button addStateButton;
     private Button removeStateButton;
@@ -167,87 +220,77 @@ public class ShowBlockScreen extends Screen {
                         .create(leftColumnX(),TOP,leftColumnWidth(),PER_HEIGHT,Component.literal("MODE"),
                                 (btn,mode)->{
                                     switch (mode){
-                                        case SLIDER -> sliderButtons.forEach((type,btn1)->btn1.setStep(standardStep.get(type)));
-                                        case FINE_TUNE -> sliderButtons.forEach((type,btn1)->btn1.setStep(0.001));
-                                        case EDIT -> {}
+                                        case SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
+                                        case EDIT,FINE_TUNE -> panel.values().forEach(TransformComponent::setSliderFineTune);
+                                    }
+                                    switch (mode){
+                                        case SLIDER,FINE_TUNE -> panel.values().forEach((it)->it.triggerVisible(true));
+                                        case EDIT -> panel.values().forEach((it)->it.triggerVisible(false));
                                     }
                                 }
                         );
 
-        sliderButtons.put(POS_X,
+        choose(POS_X).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.x)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.x)-1,
                                 (number)->{updateTransformData(POS_X,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number))))
-                        .step(standardStep.computeIfAbsent(POS_X,(type)->1.0))
+                        .step(choose(POS_X).setStandardStep(1.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_X.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(0,0) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(POS_X,false,leftColumnX()-10);
-        addSmallButton(POS_X,true,leftColumnX()+leftColumnWidth());
-        //editBoxs.put(POS_X, new EditBox(this.font,leftColumnX() + leftColumnWidth() ,leftTop(0) , 27, PER_HEIGHT,Component.literal("test")));
+                        .bounds(leftColumnX(),top(0,0) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(POS_Y,
+        choose(POS_Y).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.y)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.y)-1,
                                 (number)->{updateTransformData(POS_Y,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number))))
-                        .step(standardStep.computeIfAbsent(POS_Y,(type)->1.0))
+                        .step(choose(POS_Y).setStandardStep(1.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_Y.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(1,0) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(POS_Y,false,leftColumnX()-10);
-        addSmallButton(POS_Y,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(1,0) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(POS_Z,
+        choose(POS_Z).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.z)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.z)-1,
                                 (number)->{updateTransformData(POS_Z,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number))))
-                        .step(standardStep.computeIfAbsent(POS_Z,(type)->1.0))
+                        .step(choose(POS_Z).setStandardStep(1.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_Z.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(2,0) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(POS_Z,false,leftColumnX()-10);
-        addSmallButton(POS_Z,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(2,0) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(ROT_X,
+        choose(ROT_X).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.rot_text"),0.0,360.0,
                             (number)->{updateTransformData(ROT_X,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number))))
-                        .step(standardStep.computeIfAbsent(ROT_X,(type)->22.5))
+                        .step(choose(ROT_X).setStandardStep(22.5))
                         .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
                         .initial(ROT_X.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(3,10) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(ROT_X,false,leftColumnX()-10);
-        addSmallButton(ROT_X,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(3,10) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(ROT_Y,
+        choose(ROT_Y).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.rot_text"),0.0,360.0,
                                 (number)->{updateTransformData(ROT_Y,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number))))
-                        .step(standardStep.computeIfAbsent(ROT_Y,(type)->22.5))
+                        .step(choose(ROT_Y).setStandardStep(22.5))
                         .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
                         .initial(ROT_Y.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(4,10) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(ROT_Y,false,leftColumnX()-10);
-        addSmallButton(ROT_Y,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(4,10) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(ROT_Z,
+        choose(ROT_Z).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.rot_text"),0.0,360.0,
                                 (number)->{updateTransformData(ROT_Z,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number))))
-                        .step(standardStep.computeIfAbsent(ROT_Z,(type)->22.5))
+                        .step(choose(ROT_Z).setStandardStep(22.5))
                         .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
                         .initial(ROT_Z.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(5,10) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(ROT_Z,false,leftColumnX()-10);
-        addSmallButton(ROT_Z,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(5,10) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(SCALE_X,
+        choose(SCALE_X).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(),0.0,1.0,10.0,
                                 (number)->{
                                     updateTransformData(SCALE_X,number);
@@ -255,35 +298,28 @@ public class ShowBlockScreen extends Screen {
                                     updateTransformData(SCALE_Z,number);
                                 })
                         .text((caption,number)->Component.translatable("block.yuushya.showblock.scale_text",String.format("%05.1f",number)))
-                        .step(standardStep.computeIfAbsent(SCALE_X,(type)->0.1))
+                        .step(choose(SCALE_X).setStandardStep(0.1))
                         .initial(SCALE_X.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(6,20) , leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(SCALE_X,false,leftColumnX()-10);
-        addSmallButton(SCALE_X,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(6,20) , leftColumnWidth(),PER_HEIGHT).build();
 
-        sliderButtons.put(LIT,
+        choose(LIT).sliderButton =
                 DoubleRange.buttonBuilder(Component.literal("LIT"),0.0,15.0,
                         (number)->{
                             updateTransformData(LIT,number);
                         })
                         .text(LazyDoubleRange::captionToString)
-                        .step(standardStep.computeIfAbsent(LIT,(type)->1.0))
+                        .step(choose(LIT).setStandardStep(1))
                         .initial(LIT.extract(blockEntity,slot))
-                        .bounds(leftColumnX(),top(7,30),leftColumnWidth(),PER_HEIGHT).build());
-        addSmallButton(LIT,false,leftColumnX()-10);
-        addSmallButton(LIT,true,leftColumnX()+leftColumnWidth());
+                        .bounds(leftColumnX(),top(7,30),leftColumnWidth(),PER_HEIGHT).build();
 
-        for(SliderButton<Double> widget: sliderButtons.values()){
-            this.addRenderableWidget(widget);
-        }
-        for(EditBox box: editBoxes.values()){
-            this.addRenderableWidget(box);
-        }
-        for(Button button: minusButtons.values()){
-            this.addRenderableWidget(button);
-        }
-        for(Button button: addButtons.values()){
-            this.addRenderableWidget(button);
+        for(TransformComponent component:this.panel.values()){
+            component.initWidget(this.font);
+            this.addRenderableWidget(component.sliderButton);
+            this.addRenderableWidget(component.minusButton);
+            this.addRenderableWidget(component.addButton);
+            this.addRenderableWidget(component.editBox);
+            this.addRenderableWidget(component.cancelButton);
+            this.addRenderableWidget(component.finishButton);
         }
         this.addRenderableWidget(modeButton);
         this.addWidget(this.blockStateList);
@@ -300,7 +336,6 @@ public class ShowBlockScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
         this.blockStateList.render(guiGraphics,mouseX,mouseY,partialTick);
         BlockState blockState = getBlockState();
         guiGraphics.drawString(this.font,this.blockStateList.updateRenderDisplayName(blockState), 45, TOP +6+20, 0xFFFFFFFF, false);
@@ -310,8 +345,23 @@ public class ShowBlockScreen extends Screen {
             guiGraphics.drawString(this.font, displayBlockState, 45, TOP +6+20 + this.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
         }
         if(updateStateButtonVisible()){
-            guiGraphics.drawString(this.font, property.getName(), 65,TOP + 120, 0xFFFFFFFF, false);
-            guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState,property), 65,TOP + 140, 0xFFFFFFFF, false);
+            guiGraphics.drawString(this.font, property.getName(), 62,TOP + 115, 0xFFFFFFFF, false);
+            guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState,property), 62,TOP + 135, 0xFFFFFFFF, false);
+        }
+        if(modeButton.getValue() == Mode.EDIT){
+            for(TransformComponent component:this.panel.values()){
+                guiGraphics.drawString(this.font,component.editBox.getMessage(),component.editBox.getX()+component.editBox.getWidth()/2,component.editBox.getY()+component.editBox.getHeight()/3,0x707070);
+                component.editBox.render(guiGraphics,mouseX,mouseY,partialTick);
+            }
+        }
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
+
+
+    @Override
+    public void tick() {
+        for(TransformComponent component:this.panel.values()){
+            component.editBox.tick();
         }
     }
 
@@ -335,11 +385,6 @@ public class ShowBlockScreen extends Screen {
         this.storage.put(type,number);
         type.modify(blockEntity,slot,number);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-    }
-
-    public void step(SliderButton<Double> sliderButton, boolean increase){
-        if(increase) sliderButton.setValidatedValue(sliderButton.getValidatedValue()+sliderButton.getStep());
-        else sliderButton.setValidatedValue(sliderButton.getValidatedValue()-sliderButton.getStep());
     }
 
     public enum Mode implements StringRepresentable {
