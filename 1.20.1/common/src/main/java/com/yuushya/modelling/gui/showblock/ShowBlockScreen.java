@@ -100,17 +100,17 @@ public class ShowBlockScreen extends Screen {
 
         void initWidget(Font font){
             minusButton = Button.builder(Component.literal("-"), (btn)-> step(false))
-                    .bounds(sliderButton.getX()-10,sliderButton.getY(),10,20).build();
+                    .bounds(sliderButton.getX()-SMALL_BUTTON_WIDTH,sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
             addButton = Button.builder(Component.literal("+"), (btn)-> step(true))
-                    .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),10,20).build();
+                    .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
             editBox = new EditBox(font,sliderButton.getX() ,sliderButton.getY() , sliderButton.getWidth(), PER_HEIGHT, sliderButton.getCaption());
             editBox.setMaxLength(15);
             setEditBoxInitial();
 
             cancelButton = Button.builder(Component.literal("x"), (btn)-> setEditBoxInitial())
-                    .bounds(sliderButton.getX()-10,sliderButton.getY(),10,20).build();
+                    .bounds(sliderButton.getX()-SMALL_BUTTON_WIDTH,sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
             finishButton = Button.builder(Component.literal("v"), (btn)-> saveEditBoxValue())
-                    .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),10,20).build();
+                    .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
             triggerVisible(true);
         }
     }
@@ -158,6 +158,17 @@ public class ShowBlockScreen extends Screen {
     // i \in [1,...]
     private static int top(int i, int offset){ return TOP+PER_HEIGHT + 10 + PER_HEIGHT*i+offset; }
 
+    private static final int RIGHT_COLUMN_X = 2;
+    private static final int RIGHT_BAR_WIDTH = PER_HEIGHT;
+    private static final int SMALL_BUTTON_WIDTH = 10;
+    private static final int RIGHT_LIST_WIDTH = 40;
+    private static final int RIGHT_LIST_PER_HEIGHT = 45;
+    private static final int RIGHT_LIST_TOP = TOP+PER_HEIGHT+5;
+    private static final int RIGHT_LIST_HEIGHT = 3* RIGHT_LIST_PER_HEIGHT+2;
+    private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
+    private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X+RIGHT_LIST_WIDTH +3;
+    private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
+
     @Override
     protected void init() {
         addStateButton = Button.builder(Component.literal("+"),
@@ -168,50 +179,50 @@ public class ShowBlockScreen extends Screen {
                                 updateTransformData(SHOWN,1.0);
                             }
                         })
-                .bounds(2,TOP,20,PER_HEIGHT).build();
+                .bounds(RIGHT_COLUMN_X,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
         removeStateButton = Button.builder(Component.literal("X"),
                         (btn)->{
                             updateTransformData(REMOVE,0.0);
                         }
                 )
-                .bounds(2+20,TOP,20,PER_HEIGHT).build();
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
         shownStateButton = CycleButton.<Boolean>booleanBuilder(Component.literal("On"),Component.literal("Off"))
                 .displayOnlyValue()
                 .withInitialValue(true)
-                .create(2+20+20,TOP,20,PER_HEIGHT,Component.empty(),
+                .create(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT,Component.empty(),
                         (btn,bl)->{
                             updateTransformData(SHOWN,bl?1.0:0.0);
                         }
                 );
 
-        blockStateList =  new BlockStateIconList(this.minecraft,40 ,this.height,2,TOP+20, this.height-TOP, 40,45,this.blockEntity.getTransformDatas(),this);
+        blockStateList =  new BlockStateIconList(this.minecraft,RIGHT_LIST_WIDTH ,RIGHT_LIST_HEIGHT ,RIGHT_COLUMN_X,RIGHT_LIST_TOP,RIGHT_LIST_BOTTOM , RIGHT_LIST_WIDTH,RIGHT_LIST_PER_HEIGHT,this.blockEntity.getTransformDatas(),this);
 
         leftPropertyButton = Button.builder(Component.literal("<"),
                         (btn)->{
                             property = YuushyaBlockStates.getRelative(blockStateList.updateRenderProperties(getBlockState()), property, true);
                         })
-                .bounds(45,TOP + 110,10,PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X,RIGHT_STATE_PANEL_Y,SMALL_BUTTON_WIDTH,PER_HEIGHT)
                 .build();
         rightPropertyButton = Button.builder(Component.literal(">"),
                         (btn)->{
                             property = YuushyaBlockStates.getRelative(blockStateList.updateRenderProperties(getBlockState()), property, false);
                         })
-                .bounds(95,TOP + 110,10,PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X+RIGHT_LIST_WIDTH/2*3,RIGHT_STATE_PANEL_Y,SMALL_BUTTON_WIDTH,PER_HEIGHT)
                 .build();
         leftStateButton = Button.builder(Component.literal("<"),
                         (btn)->{
                             BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, true);
                             updateTransformData(BLOCK_STATE,(double)Block.getId(nextBlockState));
                         })
-                .bounds(45,TOP + 130,10,PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X,RIGHT_STATE_PANEL_Y+PER_HEIGHT,SMALL_BUTTON_WIDTH,PER_HEIGHT)
                 .build();
         rightStateButton = Button.builder(Component.literal(">"),
                         (btn)->{
                             BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, true);
                             updateTransformData(BLOCK_STATE,(double)Block.getId(nextBlockState));
                         })
-                .bounds(95,TOP + 130,10,PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X+RIGHT_LIST_WIDTH/2*3,RIGHT_STATE_PANEL_Y+PER_HEIGHT,SMALL_BUTTON_WIDTH,PER_HEIGHT)
                 .build();
 
         modeButton = CycleButton.builder(Mode::getSymbol)
@@ -338,15 +349,15 @@ public class ShowBlockScreen extends Screen {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.blockStateList.render(guiGraphics,mouseX,mouseY,partialTick);
         BlockState blockState = getBlockState();
-        guiGraphics.drawString(this.font,this.blockStateList.updateRenderDisplayName(blockState), 45, TOP +6+20, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font,this.blockStateList.updateRenderDisplayName(blockState), RIGHT_STATE_INFORM_X, TOP +6 + PER_HEIGHT, 0xFFFFFFFF, false);
         List<String> properties = this.blockStateList.updateRenderBlockStateProperties(blockState);
         for(int i=0;i<properties.size();i++){
             MutableComponent displayBlockState = Component.literal(properties.get(i));
-            guiGraphics.drawString(this.font, displayBlockState, 45, TOP +6+20 + this.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
+            guiGraphics.drawString(this.font, displayBlockState, RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT + this.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
         }
         if(updateStateButtonVisible()){
-            guiGraphics.drawString(this.font, property.getName(), 62,TOP + 115, 0xFFFFFFFF, false);
-            guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState,property), 62,TOP + 135, 0xFFFFFFFF, false);
+            guiGraphics.drawString(this.font, property.getName(), RIGHT_COLUMN_X+RIGHT_LIST_WIDTH/2,RIGHT_STATE_PANEL_Y+5, 0xFFFFFFFF, false);
+            guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState,property), RIGHT_COLUMN_X+RIGHT_LIST_WIDTH/2,RIGHT_STATE_PANEL_Y+5+PER_HEIGHT, 0xFFFFFFFF, false);
         }
         if(modeButton.getValue() == Mode.EDIT){
             for(TransformComponent component:this.panel.values()){
