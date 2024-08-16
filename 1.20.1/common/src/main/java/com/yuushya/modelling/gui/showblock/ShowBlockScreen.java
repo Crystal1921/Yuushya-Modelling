@@ -1,8 +1,11 @@
 package com.yuushya.modelling.gui.showblock;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
+import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.TransformType;
+import com.yuushya.modelling.blockentity.iTransformDataInventory;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -15,7 +18,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringRepresentable;
@@ -23,10 +30,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.yuushya.modelling.blockentity.TransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
@@ -118,6 +122,8 @@ public class ShowBlockScreen extends Screen {
     private CycleButton<Mode> modeButton;
     private Button addStateButton;
     private Button removeStateButton;
+    private Button copyButton;
+    private Button parseButton;
     private CycleButton<Boolean> shownStateButton;
     private final Map<TransformType, EditBox> editBoxes = new HashMap<>();
     private BlockStateIconList blockStateList;
@@ -195,6 +201,31 @@ public class ShowBlockScreen extends Screen {
                             updateTransformData(SHOWN,bl?1.0:0.0);
                         }
                 );
+
+        copyButton = Button.builder(Component.literal("Copy"),
+                        (btn)->{
+                            CompoundTag compoundTag = new CompoundTag();
+                            iTransformDataInventory.saveAdditional(compoundTag, blockEntity.getTransformDatas());
+                            String res = NbtUtils.structureToSnbt(compoundTag);
+                            setClipboard(res);
+                        }
+                )
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*2+40,TOP,40,PER_HEIGHT).build();
+
+        parseButton = Button.builder(Component.literal("paste"),
+                        (btn)->{
+                            String string = getClipboard();
+                            try {
+                                CompoundTag compoundTag = NbtUtils.snbtToStructure(string);
+                                updateAllTransformData(compoundTag);
+                            } catch (CommandSyntaxException e) {
+                                this.minecraft.getToasts().addToast(
+                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE,Component.literal("Parsing Error"), Component.literal(e.getMessage()))
+                                );
+                            }
+                        }
+                )
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*2+80,TOP,40,PER_HEIGHT).build();
 
         blockStateList =  new BlockStateIconList(this.minecraft,RIGHT_LIST_WIDTH ,RIGHT_LIST_HEIGHT ,RIGHT_COLUMN_X,RIGHT_LIST_TOP,RIGHT_LIST_BOTTOM , RIGHT_LIST_WIDTH,RIGHT_LIST_PER_HEIGHT,this.blockEntity.getTransformDatas(),this);
 
@@ -341,6 +372,8 @@ public class ShowBlockScreen extends Screen {
         this.addRenderableWidget(rightPropertyButton);
         this.addRenderableWidget(leftStateButton);
         this.addRenderableWidget(rightStateButton);
+        this.addRenderableWidget(copyButton);
+        this.addRenderableWidget(parseButton);
 
         blockStateList.setSelectedSlot(slot);//updateStateButtonVisible();
     }
@@ -392,6 +425,29 @@ public class ShowBlockScreen extends Screen {
         TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
+    private void updateAllTransformData(CompoundTag compoundTag){
+        List<TransformData> dataList = blockEntity.getTransformDatas();
+        iTransformDataInventory.load(compoundTag,dataList);
+        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        this.storage.clear();
+        for(int slot=0;slot<dataList.size();slot++){
+            TransformData data = dataList.get(slot);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, POS_X,data.pos.x);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, POS_Y,data.pos.y);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, POS_Z,data.pos.z);
+
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_X,data.rot.x);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_Y,data.rot.y);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_Z,data.rot.z);
+
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_X,data.scales.x);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, BLOCK_STATE,Block.getId(data.blockState) );
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SHOWN,data.isShown?1:0 );
+        }
+        TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
+        this.blockStateList.updateRenderList();
+    }
+
     private void updateTransformData(TransformType type, Double number){
         this.storage.put(type,number);
         type.modify(blockEntity,slot,number);
@@ -411,11 +467,14 @@ public class ShowBlockScreen extends Screen {
         public String getSerializedName() { return name; }
         public Component getSymbol(){ return symbol; }
     }
+
+    private void setClipboard(String clipboardValue) {
+        if (this.minecraft != null) {
+            TextFieldHelper.setClipboardContents(this.minecraft, clipboardValue);
+        }
+    }
+
+    private String getClipboard() {
+        return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
+    }
 }
-
-
-/*
-this.minecraft.getToasts().addToast(
-        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.NARRATOR_TOGGLE,Component.literal("Hello World!"), Component.literal("This is a toast."))
-);
- */

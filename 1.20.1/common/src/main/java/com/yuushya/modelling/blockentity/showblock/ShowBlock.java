@@ -56,6 +56,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"get_blockstate_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"scale_trans_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"debug_stick_item")))
+                    ||context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"destroy_item")))
             ){
                 ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
                 if(blockEntity!=null) blockEntity.setShowText();
@@ -73,6 +74,8 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
         stateBuilder.add(LIT).add(POWERED);
     }
+
+
 
     @Override
     public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos){
