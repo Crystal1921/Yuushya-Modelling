@@ -124,9 +124,27 @@
   "block.yuushya.showblock.z": " Z[%s]",
   "block.yuushya.showblock.scale_text": "缩放: [%s]",
   "block.yuushya.showblock.slot_text": "[%s]: ",
-  
+
   "block.yuushya.modelframe.line1": "\u00A78不可用",
   "block.yuushya.showblock.line1": "\u00A78空",
-  "block.yuushya.mixedblock.line1": "\u00A78不可用"
-  
-}
+  "block.yuushya.mixedblock.line1": "\u00A78不可用",
+
+    "gui.showBlockScreen.mode.slider": "当前:一般模式",
+    "gui.showBlockScreen.mode.fine_tune": "当前:微调模式",
+    "gui.showBlockScreen.mode.edit": "当前:输入模式",
+
+    "gui.yuushya.showBlockScreen.pos_text": "位移",
+    "gui.yuushya.showBlockScreen.rot_text": "旋转",
+    "gui.yuushya.showBlockScreen.scale_text": "缩放 [%s]",
+    "gui.yuushya.showBlockScreen.brightness_text": "亮度",
+
+    "gui.showBlockScreen.workshop.copy": "复制分享码",
+    "gui.showBlockScreen.workshop.paste": "应用分享码",
+    "gui.showBlockScreen.workshop.error": "错误的分享码！",
+    "gui.showBlockScreen.workshop.copy_pass": "已复制分享码至剪贴板！",
+    "gui.showBlockScreen.workshop.share_hint": "您将可以分享给其他小伙伴",
+    "gui.showBlockScreen.workshop.paste_pass": "已应用分享码！",
+
+    "gui.showBlockScreen.display.on": "隐藏",
+    "gui.showBlockScreen.display.off": "显示"
+  }

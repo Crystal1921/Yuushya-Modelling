@@ -111,9 +111,9 @@ public class ShowBlockScreen extends Screen {
             editBox.setMaxLength(15);
             setEditBoxInitial();
 
-            cancelButton = Button.builder(Component.literal("x"), (btn)-> setEditBoxInitial())
+            cancelButton = Button.builder(Component.literal("×"), (btn)-> setEditBoxInitial())
                     .bounds(sliderButton.getX()-SMALL_BUTTON_WIDTH,sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
-            finishButton = Button.builder(Component.literal("v"), (btn)-> saveEditBoxValue())
+            finishButton = Button.builder(Component.literal("√"), (btn)-> saveEditBoxValue())
                     .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
             triggerVisible(true);
         }
@@ -186,14 +186,14 @@ public class ShowBlockScreen extends Screen {
                             }
                         })
                 .bounds(RIGHT_COLUMN_X,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
-        removeStateButton = Button.builder(Component.literal("X"),
+        removeStateButton = Button.builder(Component.literal("×"),
                         (btn)->{
                             updateTransformData(REMOVE,0.0);
                         }
                 )
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
-        shownStateButton = CycleButton.<Boolean>booleanBuilder(Component.literal("On"),Component.literal("Off"))
+        shownStateButton = CycleButton.<Boolean>booleanBuilder(Component.translatable("gui.showBlockScreen.display.on"),Component.translatable("gui.showBlockScreen.display.off"))
                 .displayOnlyValue()
                 .withInitialValue(true)
                 .create(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT,Component.empty(),
@@ -202,25 +202,31 @@ public class ShowBlockScreen extends Screen {
                         }
                 );
 
-        copyButton = Button.builder(Component.literal("Copy"),
+        copyButton = Button.builder(Component.translatable("gui.showBlockScreen.workshop.copy"),
                         (btn)->{
                             CompoundTag compoundTag = new CompoundTag();
                             iTransformDataInventory.saveAdditional(compoundTag, blockEntity.getTransformDatas());
                             String res = NbtUtils.structureToSnbt(compoundTag);
                             setClipboard(res);
+                            this.minecraft.getToasts().addToast(
+                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                            );
                         }
                 )
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*2+40,TOP,40,PER_HEIGHT).build();
 
-        parseButton = Button.builder(Component.literal("paste"),
+        parseButton = Button.builder(Component.translatable("gui.showBlockScreen.workshop.paste"),
                         (btn)->{
                             String string = getClipboard();
                             try {
                                 CompoundTag compoundTag = NbtUtils.snbtToStructure(string);
                                 updateAllTransformData(compoundTag);
+                                this.minecraft.getToasts().addToast(
+                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.paste_pass"), Component.literal(""))
+                                );
                             } catch (CommandSyntaxException e) {
                                 this.minecraft.getToasts().addToast(
-                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE,Component.literal("Parsing Error"), Component.literal(e.getMessage()))
+                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE,Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
                                 );
                             }
                         }
@@ -259,7 +265,7 @@ public class ShowBlockScreen extends Screen {
         modeButton = CycleButton.builder(Mode::getSymbol)
                         .withValues(Mode.values())
                         .withInitialValue(Mode.SLIDER)
-                        .create(leftColumnX(),TOP,leftColumnWidth(),PER_HEIGHT,Component.literal("MODE"),
+                        .create(leftColumnX(),TOP,leftColumnWidth(),PER_HEIGHT,Component.literal(""),
                                 (btn,mode)->{
                                     switch (mode){
                                         case SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
@@ -273,7 +279,7 @@ public class ShowBlockScreen extends Screen {
                         );
 
         choose(POS_X).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
+                LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.x)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.x)-1,
                                 (number)->{updateTransformData(POS_X,number);})
@@ -284,7 +290,7 @@ public class ShowBlockScreen extends Screen {
                         .bounds(leftColumnX(),top(0,0) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(POS_Y).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
+                LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.y)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.y)-1,
                                 (number)->{updateTransformData(POS_Y,number);})
@@ -295,7 +301,7 @@ public class ShowBlockScreen extends Screen {
                         .bounds(leftColumnX(),top(1,0) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(POS_Z).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.pos_text"),
+                LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.z)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.z)-1,
                                 (number)->{updateTransformData(POS_Z,number);})
@@ -306,7 +312,7 @@ public class ShowBlockScreen extends Screen {
                         .bounds(leftColumnX(),top(2,0) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(ROT_X).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.rot_text"),0.0,360.0,
+                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"),0.0,360.0,
                             (number)->{updateTransformData(ROT_X,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number))))
                         .step(choose(ROT_X).setStandardStep(22.5))
@@ -315,7 +321,7 @@ public class ShowBlockScreen extends Screen {
                         .bounds(leftColumnX(),top(3,10) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(ROT_Y).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.rot_text"),0.0,360.0,
+                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"),0.0,360.0,
                                 (number)->{updateTransformData(ROT_Y,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number))))
                         .step(choose(ROT_Y).setStandardStep(22.5))
@@ -324,7 +330,7 @@ public class ShowBlockScreen extends Screen {
                         .bounds(leftColumnX(),top(4,10) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(ROT_Z).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("block.yuushya.showblock.rot_text"),0.0,360.0,
+                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"),0.0,360.0,
                                 (number)->{updateTransformData(ROT_Z,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number))))
                         .step(choose(ROT_Z).setStandardStep(22.5))
@@ -339,13 +345,13 @@ public class ShowBlockScreen extends Screen {
                                     updateTransformData(SCALE_Y,number);
                                     updateTransformData(SCALE_Z,number);
                                 })
-                        .text((caption,number)->Component.translatable("block.yuushya.showblock.scale_text",String.format("%05.1f",number)))
+                        .text((caption,number)->Component.translatable("gui.yuushya.showBlockScreen.scale_text",String.format("%05.1f",number)))
                         .step(choose(SCALE_X).setStandardStep(0.1))
                         .initial(SCALE_X.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(6,20) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(LIT).sliderButton =
-                DoubleRange.buttonBuilder(Component.literal("LIT"),0.0,15.0,
+                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.brightness_text"),0.0,15.0,
                         (number)->{
                             updateTransformData(LIT,number);
                         })
