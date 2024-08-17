@@ -72,7 +72,8 @@ public class YuushyaUtils {
 
     public static BlockState getBlockState(BlockState blockState, LevelAccessor world, BlockPos blockPos){
         if(blockState.getBlock() instanceof ShowBlock){
-            return ((ShowBlockEntity)world.getBlockEntity(blockPos)).getTransformData(0).blockState;
+            ShowBlockEntity blockEntity = (ShowBlockEntity)world.getBlockEntity(blockPos);
+            return blockEntity.getTransFormDataNow().blockState;
         }
         else return blockState;
     }

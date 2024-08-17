@@ -12,6 +12,7 @@ import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -49,7 +50,7 @@ public class ShowBlockScreen extends Screen {
         for(TransformComponent component: this.panel.values()){
             component.setSliderInitial(this.blockEntity,this.slot);
         }
-        updateStateButtonVisible();
+        updateStateButtonVisible(true);
     }
     private final Map<TransformType,Double> storage = new HashMap<>();
 
@@ -133,10 +134,10 @@ public class ShowBlockScreen extends Screen {
     private Button leftStateButton;
     private Button rightStateButton;
 
-    public boolean updateStateButtonVisible(){
+    public boolean updateStateButtonVisible(boolean force){
         Collection<Property<?>> collection = blockStateList.updateRenderProperties(getBlockState());
         boolean stateButtonVisible = !collection.isEmpty();
-        if(stateButtonVisible && property==null) property = collection.iterator().next();
+        if(stateButtonVisible && (property==null||force)) property = collection.iterator().next();
         leftStateButton.visible = stateButtonVisible;
         rightStateButton.visible = stateButtonVisible;
         leftPropertyButton.visible = stateButtonVisible;
@@ -183,12 +184,14 @@ public class ShowBlockScreen extends Screen {
                                 blockStateList.addSlot();
                                 updateTransformData(BLOCK_STATE,(double) Block.getId(this.newBlockState));
                                 updateTransformData(SHOWN,1.0);
+                                updateStateButtonVisible(true);
                             }
                         })
                 .bounds(RIGHT_COLUMN_X,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
         removeStateButton = Button.builder(Component.literal("×"),
                         (btn)->{
                             updateTransformData(REMOVE,0.0);
+                            updateStateButtonVisible(true);
                         }
                 )
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
@@ -263,9 +266,10 @@ public class ShowBlockScreen extends Screen {
                 .build();
 
         modeButton = CycleButton.builder(Mode::getSymbol)
+                        .displayOnlyValue()
                         .withValues(Mode.values())
                         .withInitialValue(Mode.SLIDER)
-                        .create(leftColumnX(),TOP,leftColumnWidth(),PER_HEIGHT,Component.literal(""),
+                        .create(leftColumnX(),TOP,leftColumnWidth(),PER_HEIGHT,Component.literal("MODE"),
                                 (btn,mode)->{
                                     switch (mode){
                                         case SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
@@ -283,7 +287,7 @@ public class ShowBlockScreen extends Screen {
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.x)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.x)-1,
                                 (number)->{updateTransformData(POS_X,number);})
-                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number))))
+                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(POS_X).setStandardStep(1.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_X.extract(blockEntity,slot))
@@ -294,7 +298,7 @@ public class ShowBlockScreen extends Screen {
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.y)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.y)-1,
                                 (number)->{updateTransformData(POS_Y,number);})
-                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number))))
+                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(POS_Y).setStandardStep(1.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_Y.extract(blockEntity,slot))
@@ -305,7 +309,7 @@ public class ShowBlockScreen extends Screen {
                                 ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.z)+1,
                                 ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.z)-1,
                                 (number)->{updateTransformData(POS_Z,number);})
-                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number))))
+                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(POS_Z).setStandardStep(1.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_Z.extract(blockEntity,slot))
@@ -314,7 +318,7 @@ public class ShowBlockScreen extends Screen {
         choose(ROT_X).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"),0.0,360.0,
                             (number)->{updateTransformData(ROT_X,number);})
-                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number))))
+                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(ROT_X).setStandardStep(22.5))
                         .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
                         .initial(ROT_X.extract(blockEntity,slot))
@@ -323,7 +327,7 @@ public class ShowBlockScreen extends Screen {
         choose(ROT_Y).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"),0.0,360.0,
                                 (number)->{updateTransformData(ROT_Y,number);})
-                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number))))
+                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(ROT_Y).setStandardStep(22.5))
                         .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
                         .initial(ROT_Y.extract(blockEntity,slot))
@@ -332,7 +336,7 @@ public class ShowBlockScreen extends Screen {
         choose(ROT_Z).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"),0.0,360.0,
                                 (number)->{updateTransformData(ROT_Z,number);})
-                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number))))
+                        .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(ROT_Z).setStandardStep(22.5))
                         .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
                         .initial(ROT_Z.extract(blockEntity,slot))
@@ -394,7 +398,7 @@ public class ShowBlockScreen extends Screen {
             MutableComponent displayBlockState = Component.literal(properties.get(i));
             guiGraphics.drawString(this.font, displayBlockState, RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT + this.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
         }
-        if(updateStateButtonVisible()){
+        if(updateStateButtonVisible(false)){
             guiGraphics.drawString(this.font, property.getName(), RIGHT_COLUMN_X+RIGHT_LIST_WIDTH/2,RIGHT_STATE_PANEL_Y+5, 0xFFFFFFFF, false);
             guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState,property), RIGHT_COLUMN_X+RIGHT_LIST_WIDTH/2,RIGHT_STATE_PANEL_Y+5+PER_HEIGHT, 0xFFFFFFFF, false);
         }

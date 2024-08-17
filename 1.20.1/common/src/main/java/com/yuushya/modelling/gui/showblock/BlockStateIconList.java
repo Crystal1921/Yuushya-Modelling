@@ -37,7 +37,7 @@ import static com.yuushya.modelling.utils.YuushyaUtils.PROPERTY_ENTRY_TO_STRING_
 
 public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.Entry> {
 
-    private static final Logger LOGGER = LogUtils.getLogger();
+    //private static final Logger LOGGER = LogUtils.getLogger();
     protected final List<TransformData> transformDataList;
     protected final ShowBlockScreen screen;
     private int itemHeight;
