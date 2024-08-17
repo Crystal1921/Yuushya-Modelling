@@ -103,12 +103,23 @@ public class ShowBlockScreen extends Screen {
             cancelButton.visible = !sliderVisible;
         }
 
+        Component editBoxComponent(){
+            MutableComponent component = switch (type){
+                case POS_X,ROT_X -> Component.translatable("block.yuushya.showblock.x","").withStyle(ChatFormatting.DARK_RED);
+                case POS_Y,ROT_Y -> Component.translatable("block.yuushya.showblock.y","").withStyle(ChatFormatting.GREEN);
+                case POS_Z,ROT_Z -> Component.translatable("block.yuushya.showblock.z","").withStyle(ChatFormatting.BLUE);
+                case SCALE_X -> Component.translatable("gui.yuushya.showBlockScreen.scale_text","");
+                default -> Component.empty();
+            };
+            return Component.empty().append(sliderButton.getCaption()).append(component);
+        }
+
         void initWidget(Font font){
             minusButton = Button.builder(Component.literal("-"), (btn)-> step(false))
                     .bounds(sliderButton.getX()-SMALL_BUTTON_WIDTH,sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
             addButton = Button.builder(Component.literal("+"), (btn)-> step(true))
                     .bounds(sliderButton.getX()+sliderButton.getWidth(),sliderButton.getY(),SMALL_BUTTON_WIDTH,PER_HEIGHT).build();
-            editBox = new EditBox(font,sliderButton.getX() ,sliderButton.getY() , sliderButton.getWidth(), PER_HEIGHT, sliderButton.getCaption());
+            editBox = new EditBox(font,sliderButton.getX() ,sliderButton.getY() , sliderButton.getWidth(), PER_HEIGHT, editBoxComponent());
             editBox.setMaxLength(15);
             setEditBoxInitial();
 
@@ -225,7 +236,7 @@ public class ShowBlockScreen extends Screen {
                                 CompoundTag compoundTag = NbtUtils.snbtToStructure(string);
                                 updateAllTransformData(compoundTag);
                                 this.minecraft.getToasts().addToast(
-                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.paste_pass"), Component.literal(""))
+                                        new SystemToast(SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.paste_pass"),null)
                                 );
                             } catch (CommandSyntaxException e) {
                                 this.minecraft.getToasts().addToast(
