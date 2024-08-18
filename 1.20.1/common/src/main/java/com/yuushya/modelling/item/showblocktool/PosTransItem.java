@@ -18,8 +18,23 @@ import org.joml.Vector3f;
 import java.util.function.Consumer;
 
 public class PosTransItem extends AbstractMultiPurposeToolItem {
-    public static int getMaxPos(float scale){
-        return (int) Math.ceil((8 + 16)/scale) - 8 + 1;
+    public static double getMaxPos(double scale){
+        return (scale < 1) ? Math.ceil((8 + 16)/scale) - 8 : Math.ceil(16/scale);
+    }
+    public static double getStep(double max){
+        return (max<16) ? max / 16.0 : 1.0;
+    }
+    public static double getUpdate(boolean increase,double pos,float scale){
+        double max = getMaxPos(scale);
+        double perPos = getStep(max);
+        if(increase){
+            double res = pos+perPos;
+            return res> max ? 0 : res;
+        }
+        else{
+            double res = pos-perPos;
+            return res< -max ? 0 : res;
+        }
     }
     public PosTransItem(Properties properties, Integer tipLines) {
         super(properties, tipLines);
@@ -34,9 +49,9 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
             Vector3d pos = transformData.pos;
             Vector3f scale = transformData.scales;
             switch (getForm()){
-                case 0-> pos.x=(pos.x-1)% getMaxPos(scale.x);
-                case 1-> pos.y=(pos.y-1)% getMaxPos(scale.y);
-                case 2-> pos.z=(pos.z-1)% getMaxPos(scale.z);
+                case 0-> pos.x=getUpdate(false,pos.x,scale.x);
+                case 1-> pos.y=getUpdate(false,pos.y,scale.y);
+                case 2-> pos.z=getUpdate(false,pos.z,scale.z);
             }
             player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z),true);
         });
@@ -49,9 +64,9 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
             Vector3d pos = transformData.pos;
             Vector3f scale = transformData.scales;
             switch (getForm()){
-                case 0-> pos.x=(pos.x+1)% getMaxPos(scale.x);
-                case 1-> pos.y=(pos.y+1)% getMaxPos(scale.y);
-                case 2-> pos.z=(pos.z+1)% getMaxPos(scale.z);
+                case 0-> pos.x=getUpdate(true,pos.x,scale.x);
+                case 1-> pos.y=getUpdate(true,pos.y,scale.y);
+                case 2-> pos.z=getUpdate(true,pos.z,scale.z);
             }
             player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z),true);
         });

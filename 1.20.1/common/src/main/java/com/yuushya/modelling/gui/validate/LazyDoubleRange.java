@@ -13,6 +13,17 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     private final Supplier<Double> minInclusiveSupplier;
     private final Supplier<Double> maxInclusiveSupplier;
     private double step = 0.001;
+    private Supplier<Double> stepSupplier;
+
+    public LazyDoubleRange(
+            Supplier<Double> minInclusiveSupplier,
+            Supplier<Double> maxInclusiveSupplier,
+            Supplier<Double> stepSupplier
+    ){
+        this(minInclusiveSupplier,maxInclusiveSupplier);
+        this.stepSupplier = stepSupplier;
+        this.step = 0;
+    }
 
     public LazyDoubleRange(
             Supplier<Double> minInclusiveSupplier,
@@ -20,6 +31,7 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     ) {
         this.minInclusiveSupplier = minInclusiveSupplier;
         this.maxInclusiveSupplier = maxInclusiveSupplier;
+        this.stepSupplier =  ()->step;
     }
 
     @Override
@@ -36,14 +48,18 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     public Optional<Double> validateValue(Double value) {
         if (value < this.minInclusive()) return Optional.of(this.minInclusive());
         if (value > this.maxInclusive()) return Optional.of(this.maxInclusive());
-        return Optional.of(Math.floor(value / step) * step);
+        return Optional.of(Math.floor(value / getStep()) * getStep());
     }
+
+    public void setStepSupplier(Supplier<Double> stepSupplier) { this.stepSupplier = stepSupplier;}
 
     @Override
     public void setStep(Double step) {this.step = step; }
 
     @Override
-    public Double getStep() { return step; }
+    public Double getStep() {
+        return (step == 0.0) ? stepSupplier.get() : step;
+    }
 
     @Override
     public double toSliderValue(Double value) {
@@ -86,11 +102,22 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
         return new ButtonBuilder(caption,minInclusiveSupplier,maxInclusiveSupplier,onValueChanged);
     }
 
+    public static ButtonBuilder buttonBuilder(Component caption,Supplier<Double> minInclusiveSupplier, Supplier<Double> maxInclusiveSupplier, Supplier<Double> stepSupplier,  Consumer<Double> onValueChanged){
+        return new ButtonBuilder(caption,minInclusiveSupplier,maxInclusiveSupplier,stepSupplier,onValueChanged);
+    }
+
     public static class ButtonBuilder extends SliderButton.Builder<Double> {
         public ButtonBuilder(Component caption, Supplier<Double> minInclusiveSupplier, Supplier<Double> maxInclusiveSupplier, Consumer<Double> onValueChanged) {
             super(caption, new LazyDoubleRange(minInclusiveSupplier, maxInclusiveSupplier), onValueChanged);
             this.text(LazyDoubleRange::captionToString);
             this.initial(minInclusiveSupplier.get());
         }
+        public ButtonBuilder(Component caption, Supplier<Double> minInclusiveSupplier, Supplier<Double> maxInclusiveSupplier, Supplier<Double> stepSupplier, Consumer<Double> onValueChanged) {
+            super(caption, new LazyDoubleRange(minInclusiveSupplier, maxInclusiveSupplier, stepSupplier), onValueChanged);
+            this.text(LazyDoubleRange::captionToString);
+            this.initial(minInclusiveSupplier.get());
+        }
+
+
     }
 }

@@ -35,6 +35,7 @@ import java.util.*;
 
 import static com.yuushya.modelling.blockentity.TransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
+import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 
 public class ShowBlockScreen extends Screen {
     private final ShowBlockEntity blockEntity;
@@ -295,33 +296,36 @@ public class ShowBlockScreen extends Screen {
 
         choose(POS_X).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.x)+1,
-                                ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.x)-1,
+                                ()-> -getMaxPos(blockEntity.getTransformData(slot).scales.x),
+                                ()-> getMaxPos(blockEntity.getTransformData(slot).scales.x),
+                                ()-> getStep(getMaxPos(blockEntity.getTransformData(slot).scales.x)),
                                 (number)->{updateTransformData(POS_X,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number)).withStyle(ChatFormatting.DARK_RED)))
-                        .step(choose(POS_X).setStandardStep(1.0))
+                        .step(choose(POS_X).setStandardStep(0.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_X.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(0,0) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(POS_Y).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.y)+1,
-                                ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.y)-1,
+                                ()-> -getMaxPos(blockEntity.getTransformData(slot).scales.y),
+                                ()-> getMaxPos(blockEntity.getTransformData(slot).scales.y),
+                                ()-> getStep(getMaxPos(blockEntity.getTransformData(slot).scales.y)),
                                 (number)->{updateTransformData(POS_Y,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number)).withStyle(ChatFormatting.GREEN)))
-                        .step(choose(POS_Y).setStandardStep(1.0))
+                        .step(choose(POS_Y).setStandardStep(0.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_Y.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(1,0) , leftColumnWidth(),PER_HEIGHT).build();
 
         choose(POS_Z).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                ()-> (double) -getMaxPos(blockEntity.getTransformData(slot).scales.z)+1,
-                                ()-> (double) getMaxPos(blockEntity.getTransformData(slot).scales.z)-1,
+                                ()-> -getMaxPos(blockEntity.getTransformData(slot).scales.z),
+                                ()-> getMaxPos(blockEntity.getTransformData(slot).scales.z),
+                                ()-> getStep(getMaxPos(blockEntity.getTransformData(slot).scales.z)),
                                 (number)->{updateTransformData(POS_Z,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number)).withStyle(ChatFormatting.BLUE)))
-                        .step(choose(POS_Z).setStandardStep(1.0))
+                        .step(choose(POS_Z).setStandardStep(0.0))
                         .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
                         .initial(POS_Z.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(2,0) , leftColumnWidth(),PER_HEIGHT).build();
@@ -359,6 +363,9 @@ public class ShowBlockScreen extends Screen {
                                     updateTransformData(SCALE_X,number);
                                     updateTransformData(SCALE_Y,number);
                                     updateTransformData(SCALE_Z,number);
+                                    choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
+                                    choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
+                                    choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
                                 })
                         .text((caption,number)->Component.translatable("gui.yuushya.showBlockScreen.scale_text",String.format("%05.1f",number)))
                         .step(choose(SCALE_X).setStandardStep(0.1))
