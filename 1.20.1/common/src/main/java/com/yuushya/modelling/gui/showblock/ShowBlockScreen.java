@@ -1,6 +1,5 @@
 package com.yuushya.modelling.gui.showblock;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
@@ -12,6 +11,7 @@ import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
+import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.Font;
@@ -23,7 +23,6 @@ import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringRepresentable;
@@ -221,7 +220,7 @@ public class ShowBlockScreen extends Screen {
                         (btn)->{
                             CompoundTag compoundTag = new CompoundTag();
                             iTransformDataInventory.saveAdditional(compoundTag, blockEntity.getTransformDatas());
-                            String res = NbtUtils.structureToSnbt(compoundTag);
+                            String res = ShareUtils.asString(compoundTag);
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
@@ -234,12 +233,12 @@ public class ShowBlockScreen extends Screen {
                         (btn)->{
                             String string = getClipboard();
                             try {
-                                CompoundTag compoundTag = NbtUtils.snbtToStructure(string);
+                                CompoundTag compoundTag = ShareUtils.asCompoundTag(string);
                                 updateAllTransformData(compoundTag);
                                 this.minecraft.getToasts().addToast(
                                         new SystemToast(SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.paste_pass"),null)
                                 );
-                            } catch (CommandSyntaxException e) {
+                            } catch (Exception e) {
                                 this.minecraft.getToasts().addToast(
                                         SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE,Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
                                 );
@@ -469,6 +468,8 @@ public class ShowBlockScreen extends Screen {
             TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_Z,data.rot.z);
 
             TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_X,data.scales.x);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_Y,data.scales.y);
+            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_Z,data.scales.z);
             TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, BLOCK_STATE,Block.getId(data.blockState) );
             TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SHOWN,data.isShown?1:0 );
         }
