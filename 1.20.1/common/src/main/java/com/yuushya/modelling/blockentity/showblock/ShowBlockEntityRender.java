@@ -3,6 +3,9 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -35,6 +38,11 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
     //private final Random random = new Random();
     @Override
     public void render(ShowBlockEntity blockEntity, float tickDelta, @NotNull PoseStack matrixStack, @NotNull MultiBufferSource multiBufferSource, int light, int overlay) {
+        if(blockEntity.showFrame()){
+            VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
+            LevelRenderer.renderLineBox(matrixStack, vertexConsumer, -0.01,-0.01,-0.01,1.01,1.01,1.01, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F);
+            blockEntity.consumeShow();
+        }
         if(blockEntity.showRotAxis()||blockEntity.showPosAxis()|| blockEntity.showText()){
             TransformData transformData = blockEntity.getTransFormDataNow();
             if(transformData.isShown&&(blockEntity.showPosAxis()||blockEntity.showRotAxis())){

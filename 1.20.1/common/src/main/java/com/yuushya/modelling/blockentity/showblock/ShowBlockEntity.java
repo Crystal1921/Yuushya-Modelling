@@ -37,6 +37,9 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
         }
         this.slot=slot;
     }
+    private Integer showFrame =0;
+    public boolean showFrame(){return showFrame >0;}
+    public void setShowFrame(){showFrame =5;}
 
     //显示旋转的坐标轴
     private Integer showRotAxis =0;
@@ -55,6 +58,7 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
         showRotAxis = showRotAxis< 0? 0: showRotAxis -1;
         showPosAxis = showPosAxis< 0? 0: showPosAxis -1;
         showText = showText <0? 0: showText -1;
+        showFrame = showFrame< 0? 0: showFrame -1;
     }
 
     public ShowBlockEntity(BlockPos blockPos, BlockState blockState) {

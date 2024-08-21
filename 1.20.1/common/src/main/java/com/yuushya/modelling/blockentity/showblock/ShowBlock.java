@@ -34,7 +34,13 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         if (level.getBlockState(pos).is(state.getBlock())){
-            if(context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"rot_trans_item")))){
+            if(context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"gui_item")))){
+                ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
+                if(blockEntity!=null) {
+                    blockEntity.setShowFrame();
+                }
+            }
+            else if(context.isHoldingItem(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"rot_trans_item")))){
                 ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
                 if(blockEntity!=null) {
                     blockEntity.setShowRotAixs();
