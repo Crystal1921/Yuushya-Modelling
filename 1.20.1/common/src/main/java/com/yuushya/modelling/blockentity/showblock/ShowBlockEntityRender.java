@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -41,7 +42,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
         if(blockEntity.showFrame()){
             VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
             LevelRenderer.renderLineBox(matrixStack, vertexConsumer, -0.01,-0.01,-0.01,1.01,1.01,1.01, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F);
-            blockEntity.consumeShow();
+            blockEntity.consumeShowFrame();
         }
         if(blockEntity.showRotAxis()||blockEntity.showPosAxis()|| blockEntity.showText()){
             TransformData transformData = blockEntity.getTransFormDataNow();
@@ -59,15 +60,23 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                     translateAfterScale(matrixStack,transformData.pos,transformData.scales);
                     translate(matrixStack,MIDDLE);
                     boolean showRotAxis = blockEntity.showRotAxis();
+                    int redX = 0x64E65A46, greenY = 0x64A0DC5A, blueZ = 0x645AB4DC;
+                    if(blockEntity.getShowAxis()!=null){
+                        switch (blockEntity.getShowAxis()) {
+                            case X: redX = 0xFFE65A46;break;
+                            case Y: greenY = 0xFFA0DC5A;break;
+                            case Z: blueZ = 0xFF5AB4DC;break;
+                        }
+                    }
                     if(showRotAxis) matrixStack.mulPose(Axis.ZP.rotationDegrees(transformData.rot.z()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0.0f, -1.5f).color(90,180, 220,  100).normal(0f,0f,1.5f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0f, 1.5f).color(90, 180,220,  100).normal(0f,0f,1.5f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0.0f, -1.5f).color(blueZ).normal(0f,0f,1.5f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0f, 1.5f).color(blueZ).normal(0f,0f,1.5f).endVertex();
                     if(showRotAxis) matrixStack.mulPose(Axis.YP.rotationDegrees(transformData.rot.y()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, -1.5f, 0.0f).color(160, 220, 90, 100).normal(0f,1.5f,0f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 1.5f, 0.0f).color(160, 220, 90, 100).normal(0f,1.5f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, -1.5f, 0.0f).color(greenY).normal(0f,1.5f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 1.5f, 0.0f).color(greenY).normal(0f,1.5f,0f).endVertex();
                     if(showRotAxis) matrixStack.mulPose(Axis.XP.rotationDegrees(transformData.rot.x()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(redX).normal(1.5f,0f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(redX).normal(1.5f,0f,0f).endVertex();
                     tesselator.end();
                     RenderSystem.depthMask(true);
                     RenderSystem.disableBlend();
@@ -102,6 +111,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                 }matrixStack.popPose();
             }
             blockEntity.consumeShow();
+            blockEntity.consumeShowAxis();
         }
 
     }

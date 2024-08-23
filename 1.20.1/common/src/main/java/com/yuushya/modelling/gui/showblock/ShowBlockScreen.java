@@ -19,9 +19,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -134,8 +137,10 @@ public class ShowBlockScreen extends Screen {
     private CycleButton<Mode> modeButton;
     private Button addStateButton;
     private Button removeStateButton;
+    private Button replaceButton;
     private Button copyButton;
     private Button parseButton;
+
     private CycleButton<Boolean> shownStateButton;
     private final Map<TransformType, EditBox> editBoxes = new HashMap<>();
     private BlockStateIconList blockStateList;
@@ -198,6 +203,7 @@ public class ShowBlockScreen extends Screen {
                                 updateStateButtonVisible(true);
                             }
                         })
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.add")))
                 .bounds(RIGHT_COLUMN_X,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
         removeStateButton = Button.builder(Component.literal("×"),
                         (btn)->{
@@ -205,21 +211,34 @@ public class ShowBlockScreen extends Screen {
                             updateStateButtonVisible(true);
                         }
                 )
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.remove")))
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
+        replaceButton = Button.builder(Component.literal("⇄"),
+                        (btn)->{
+                            updateTransformData(BLOCK_STATE,(double) Block.getId(this.newBlockState));
+                            updateStateButtonVisible(true);
+                        }
+                )
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.replace")))
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
-        shownStateButton = CycleButton.<Boolean>booleanBuilder(Component.translatable("gui.showBlockScreen.display.on"),Component.translatable("gui.showBlockScreen.display.off"))
+        shownStateButton = CycleButton.<Boolean>booleanBuilder(
+                        Component.literal("\uD83D\uDD76"),//Component.translatable("gui.showBlockScreen.display.on"),
+                        Component.literal("\uD83D\uDC40"))//Component.translatable("gui.showBlockScreen.display.off"))
                 .displayOnlyValue()
                 .withInitialValue(true)
-                .create(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT,Component.empty(),
+                .withTooltip((on)-> Tooltip.create(on? Component.translatable("gui.showBlockScreen.display.on"):Component.translatable("gui.showBlockScreen.display.off")))
+                .create(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT,Component.empty(),
                         (btn,bl)->{
                             updateTransformData(SHOWN,bl?1.0:0.0);
                         }
                 );
 
-        copyButton = Button.builder(Component.translatable("gui.showBlockScreen.workshop.copy"),
+
+        copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.copy"),
                         (btn)->{
                             CompoundTag compoundTag = new CompoundTag();
-                            iTransformDataInventory.saveAdditional(compoundTag, blockEntity.getTransformDatas());
+                            iTransformDataInventory.saveAdditionalWithoutAir(compoundTag, blockEntity.getTransformDatas());
                             String res = ShareUtils.asString(compoundTag);
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
@@ -227,14 +246,16 @@ public class ShowBlockScreen extends Screen {
                             );
                         }
                 )
-                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*2+40,TOP,40,PER_HEIGHT).build();
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.copy")))
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*3+40,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
-        parseButton = Button.builder(Component.translatable("gui.showBlockScreen.workshop.paste"),
+        parseButton = Button.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.paste"),
                         (btn)->{
                             String string = getClipboard();
                             try {
                                 CompoundTag compoundTag = ShareUtils.asCompoundTag(string);
                                 updateAllTransformData(compoundTag);
+                                updateStateButtonVisible(true);
                                 this.minecraft.getToasts().addToast(
                                         new SystemToast(SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.paste_pass"),null)
                                 );
@@ -245,7 +266,8 @@ public class ShowBlockScreen extends Screen {
                             }
                         }
                 )
-                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*2+80,TOP,40,PER_HEIGHT).build();
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.paste")))
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*3+60,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
         blockStateList =  new BlockStateIconList(this.minecraft,RIGHT_LIST_WIDTH ,RIGHT_LIST_HEIGHT ,RIGHT_COLUMN_X,RIGHT_LIST_TOP,RIGHT_LIST_BOTTOM , RIGHT_LIST_WIDTH,RIGHT_LIST_PER_HEIGHT,this.blockEntity.getTransformDatas(),this);
 
@@ -280,6 +302,13 @@ public class ShowBlockScreen extends Screen {
                         .displayOnlyValue()
                         .withValues(Mode.values())
                         .withInitialValue(Mode.SLIDER)
+                        .withTooltip((mode)-> Tooltip.create(
+                                    switch (mode){
+                                        case SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
+                                        case FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
+                                        case EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
+                                    }
+                        ))
                         .create(leftColumnX(),TOP,leftColumnWidth(),PER_HEIGHT,Component.literal("MODE"),
                                 (btn,mode)->{
                                     switch (mode){
@@ -301,7 +330,7 @@ public class ShowBlockScreen extends Screen {
                                 (number)->{updateTransformData(POS_X,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(POS_X).setStandardStep(0.0))
-                        .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
+                        .onMouseOver((btn)->{blockEntity.setShowAxis(Direction.Axis.X);blockEntity.setShowPosAixs();})
                         .initial(POS_X.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(0,0) , leftColumnWidth(),PER_HEIGHT).build();
 
@@ -313,7 +342,7 @@ public class ShowBlockScreen extends Screen {
                                 (number)->{updateTransformData(POS_Y,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(POS_Y).setStandardStep(0.0))
-                        .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
+                        .onMouseOver((btn)->{blockEntity.setShowAxis(Direction.Axis.Y);blockEntity.setShowPosAixs();})
                         .initial(POS_Y.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(1,0) , leftColumnWidth(),PER_HEIGHT).build();
 
@@ -325,7 +354,7 @@ public class ShowBlockScreen extends Screen {
                                 (number)->{updateTransformData(POS_Z,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(POS_Z).setStandardStep(0.0))
-                        .onMouseOver((btn)->{blockEntity.setShowPosAixs();})
+                        .onMouseOver((btn)->{blockEntity.setShowAxis(Direction.Axis.Z);blockEntity.setShowPosAixs();})
                         .initial(POS_Z.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(2,0) , leftColumnWidth(),PER_HEIGHT).build();
 
@@ -334,7 +363,7 @@ public class ShowBlockScreen extends Screen {
                             (number)->{updateTransformData(ROT_X,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x",String.format("%05.1f",number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(ROT_X).setStandardStep(22.5))
-                        .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
+                        .onMouseOver((btn)->{blockEntity.setShowAxis(Direction.Axis.X);blockEntity.setShowRotAixs();})
                         .initial(ROT_X.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(3,10) , leftColumnWidth(),PER_HEIGHT).build();
 
@@ -343,7 +372,7 @@ public class ShowBlockScreen extends Screen {
                                 (number)->{updateTransformData(ROT_Y,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y",String.format("%05.1f",number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(ROT_Y).setStandardStep(22.5))
-                        .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
+                        .onMouseOver((btn)->{blockEntity.setShowAxis(Direction.Axis.Y);blockEntity.setShowRotAixs();})
                         .initial(ROT_Y.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(4,10) , leftColumnWidth(),PER_HEIGHT).build();
 
@@ -352,7 +381,7 @@ public class ShowBlockScreen extends Screen {
                                 (number)->{updateTransformData(ROT_Z,number);})
                         .text((caption,number)->Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z",String.format("%05.1f",number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(ROT_Z).setStandardStep(22.5))
-                        .onMouseOver((btn)->{blockEntity.setShowRotAixs();})
+                        .onMouseOver((btn)->{blockEntity.setShowAxis(Direction.Axis.Z);blockEntity.setShowRotAixs();})
                         .initial(ROT_Z.extract(blockEntity,slot))
                         .bounds(leftColumnX(),top(5,10) , leftColumnWidth(),PER_HEIGHT).build();
 
@@ -394,6 +423,7 @@ public class ShowBlockScreen extends Screen {
         this.addWidget(this.blockStateList);
         this.addRenderableWidget(addStateButton);
         this.addRenderableWidget(removeStateButton);
+        this.addRenderableWidget(replaceButton);
         this.addRenderableWidget(shownStateButton);
         this.addRenderableWidget(leftPropertyButton);
         this.addRenderableWidget(rightPropertyButton);
@@ -454,26 +484,36 @@ public class ShowBlockScreen extends Screen {
 
     private void updateAllTransformData(CompoundTag compoundTag){
         List<TransformData> dataList = blockEntity.getTransformDatas();
-        iTransformDataInventory.load(compoundTag,dataList);
-        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        this.storage.clear();
-        for(int slot=0;slot<dataList.size();slot++){
-            TransformData data = dataList.get(slot);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, POS_X,data.pos.x);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, POS_Y,data.pos.y);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, POS_Z,data.pos.z);
-
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_X,data.rot.x);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_Y,data.rot.y);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, ROT_Z,data.rot.z);
-
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_X,data.scales.x);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_Y,data.scales.y);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SCALE_Z,data.scales.z);
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, BLOCK_STATE,Block.getId(data.blockState) );
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(),slot, SHOWN,data.isShown?1:0 );
+        BlockPos pos = blockEntity.getBlockPos();
+        int currentSize = dataList.size();
+        for(int slot=0;slot<currentSize;slot++){
+            blockEntity.removeTransformData(slot);
+            TransformDataNetwork.sendToServerSide(pos,slot, REMOVE, 0.0);
         }
-        TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
+        iTransformDataInventory.load(compoundTag,dataList);
+        int nextSize = dataList.size();
+        this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        this.storage.clear();
+        for(int slot=0;slot<nextSize;slot++){
+            TransformData data = dataList.get(slot);
+            TransformDataNetwork.sendToServerSide(pos,slot, POS_X,data.pos.x);
+            TransformDataNetwork.sendToServerSide(pos,slot, POS_Y,data.pos.y);
+            TransformDataNetwork.sendToServerSide(pos,slot, POS_Z,data.pos.z);
+
+            TransformDataNetwork.sendToServerSide(pos,slot, ROT_X,data.rot.x);
+            TransformDataNetwork.sendToServerSide(pos,slot, ROT_Y,data.rot.y);
+            TransformDataNetwork.sendToServerSide(pos,slot, ROT_Z,data.rot.z);
+
+            TransformDataNetwork.sendToServerSide(pos,slot, SCALE_X,data.scales.x);
+            TransformDataNetwork.sendToServerSide(pos,slot, SCALE_Y,data.scales.y);
+            TransformDataNetwork.sendToServerSide(pos,slot, SCALE_Z,data.scales.z);
+            TransformDataNetwork.sendToServerSide(pos,slot, BLOCK_STATE,Block.getId(data.blockState) );
+            TransformDataNetwork.sendToServerSide(pos,slot, SHOWN,data.isShown?1:0 );
+        }
+        TransformDataNetwork.sendToServerSideSuccess(pos);
+        for(int slot = nextSize-1;slot<currentSize;slot++){
+            blockEntity.setSlot(slot);
+        }
         this.blockStateList.updateRenderList();
     }
 

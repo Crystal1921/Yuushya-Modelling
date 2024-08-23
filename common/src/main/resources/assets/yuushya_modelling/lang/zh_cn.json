@@ -132,6 +132,9 @@
     "gui.showBlockScreen.mode.slider": "当前:一般模式",
     "gui.showBlockScreen.mode.fine_tune": "当前:微调模式",
     "gui.showBlockScreen.mode.edit": "当前:输入模式",
+    "gui.showBlockScreen.mode.slider.tooltip": "一般模式：数值调整为固定增量",
+    "gui.showBlockScreen.mode.fine_tune.tooltip": "微调模式：解除增量限制（比如90.5度的旋转角、2.05的位移）",
+    "gui.showBlockScreen.mode.edit.tooltip": "输入模式：支持自行输入数值，按下右侧的按钮应用数值，按下左侧的按钮还原",
 
     "gui.yuushya.showBlockScreen.pos_text": "位移",
     "gui.yuushya.showBlockScreen.rot_text": "旋转",
@@ -144,7 +147,9 @@
     "gui.showBlockScreen.workshop.copy_pass": "已复制分享码至剪贴板！",
     "gui.showBlockScreen.workshop.share_hint": "您将可以分享给其他小伙伴",
     "gui.showBlockScreen.workshop.paste_pass": "已应用分享码！",
-
+    "gui.showBlockScreen.display.add": "添加副手的方块状态到列表",
+    "gui.showBlockScreen.display.remove": "删除选中的方块状态",
+    "gui.showBlockScreen.display.replace": "用副手的方块状态来替换选中的方块状态",
     "gui.showBlockScreen.display.on": "隐藏",
     "gui.showBlockScreen.display.off": "显示"
   }

@@ -6,6 +6,7 @@ import com.yuushya.modelling.blockentity.iTransformDataInventory;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
@@ -40,7 +41,9 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     private Integer showFrame =0;
     public boolean showFrame(){return showFrame >0;}
     public void setShowFrame(){showFrame =5;}
-
+    public void consumeShowFrame(){
+        showFrame = showFrame< 0? 0: showFrame -1;
+    }
     //显示旋转的坐标轴
     private Integer showRotAxis =0;
     public boolean showRotAxis(){return showRotAxis >0;}
@@ -54,11 +57,18 @@ public class ShowBlockEntity extends BlockEntity implements iTransformDataInvent
     private Integer showText =0;
     public boolean showText(){return showText>0;}
     public void setShowText(){showText =5;}
+
+    private Direction.Axis showAxis = null;
+    public Direction.Axis getShowAxis(){ return showAxis; }
+    public void setShowAxis(Direction.Axis axis){ showAxis = axis; }
+    public void consumeShowAxis(){
+        if (showRotAxis <= 0 && showPosAxis <= 0) showAxis = null;
+    }
+
     public void consumeShow(){
         showRotAxis = showRotAxis< 0? 0: showRotAxis -1;
         showPosAxis = showPosAxis< 0? 0: showPosAxis -1;
         showText = showText <0? 0: showText -1;
-        showFrame = showFrame< 0? 0: showFrame -1;
     }
 
     public ShowBlockEntity(BlockPos blockPos, BlockState blockState) {

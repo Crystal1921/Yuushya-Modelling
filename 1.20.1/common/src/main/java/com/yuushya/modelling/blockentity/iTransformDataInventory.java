@@ -80,4 +80,17 @@ public interface iTransformDataInventory {
         index++;}
         if(!listTag.isEmpty()) compoundTag.put("Blocks",listTag);
     }
+
+    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformData> transformDatas) {
+        ListTag listTag=new ListTag(); int index=0;
+        for(TransformData transformData:transformDatas){
+            if(!(transformData.blockState.getBlock() instanceof AirBlock)){
+                CompoundTag compoundTagTemp=new CompoundTag();
+                compoundTagTemp.putByte("Slot",(byte)index);
+                transformData.saveAdditional(compoundTagTemp);
+                listTag.add(compoundTagTemp);
+            }
+            index++;}
+        if(!listTag.isEmpty()) compoundTag.put("Blocks",listTag);
+    }
 }
