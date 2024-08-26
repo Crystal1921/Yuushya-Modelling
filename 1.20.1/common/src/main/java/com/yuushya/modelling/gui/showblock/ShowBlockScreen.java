@@ -53,6 +53,7 @@ public class ShowBlockScreen extends Screen {
         for(TransformComponent component: this.panel.values()){
             component.setSliderInitial(this.blockEntity,this.slot);
         }
+        shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
         updateStateButtonVisible(true);
     }
     private final Map<TransformType,Double> storage = new HashMap<>();
