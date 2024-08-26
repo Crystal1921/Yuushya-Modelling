@@ -9,11 +9,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public interface iTransformDataInventory {
+public interface ITransformDataInventory {
     //作为lambda类型的唯一抽象方法 the unique abstract function of interface and provide the lambda type.
     List<TransformData> getTransformDatas();
     //利用函数式构造参数类型的包装器，保证返回的实例与原来相同 Creates an inventory from the block list.Must return the same instance every time it's called.
-    static iTransformDataInventory of(List<TransformData> transformDatas){return ()->transformDatas;}//interface ::=functional
+    static ITransformDataInventory of(List<TransformData> transformDatas){return ()->transformDatas;}//interface ::=functional
 
     //default function for control the inventory
     default int size(){return getTransformDatas().size();}

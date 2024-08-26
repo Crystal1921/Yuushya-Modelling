@@ -4,7 +4,7 @@ import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.TransformType;
-import com.yuushya.modelling.blockentity.iTransformDataInventory;
+import com.yuushya.modelling.blockentity.ITransformDataInventory;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -239,7 +239,7 @@ public class ShowBlockScreen extends Screen {
         copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.copy"),
                         (btn)->{
                             CompoundTag compoundTag = new CompoundTag();
-                            iTransformDataInventory.saveAdditionalWithoutAir(compoundTag, blockEntity.getTransformDatas());
+                            ITransformDataInventory.saveAdditionalWithoutAir(compoundTag, blockEntity.getTransformDatas());
                             String res = ShareUtils.asString(compoundTag);
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
@@ -491,7 +491,7 @@ public class ShowBlockScreen extends Screen {
             blockEntity.removeTransformData(slot);
             TransformDataNetwork.sendToServerSide(pos,slot, REMOVE, 0.0);
         }
-        iTransformDataInventory.load(compoundTag,dataList);
+        ITransformDataInventory.load(compoundTag,dataList);
         int nextSize = dataList.size();
         this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         this.storage.clear();
