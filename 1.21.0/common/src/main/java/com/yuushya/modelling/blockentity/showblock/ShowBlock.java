@@ -34,7 +34,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         if (level.getBlockState(pos).is(state.getBlock())){
-            if(context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"rot_trans_item")))){
+            if(context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"gui_item")))){
                 ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
                 if(blockEntity!=null) {
                     blockEntity.setShowFrame();
@@ -83,7 +83,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
-        if(blockPlaceContext.getPlayer().isSecondaryUseActive())
+        if(blockPlaceContext.getPlayer()!=null && blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"rot_trans_item"))))
             return blockPlaceContext.getClickedFace().getAxis() == Direction.Axis.Y
                 ? this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
                 : this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());

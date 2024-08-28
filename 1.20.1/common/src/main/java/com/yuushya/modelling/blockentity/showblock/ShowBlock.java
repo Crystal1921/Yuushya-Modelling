@@ -84,7 +84,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
-        if(blockPlaceContext.getPlayer().isSecondaryUseActive())
+        if(blockPlaceContext.getPlayer()!=null && blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(new ResourceLocation(Yuushya.MOD_ID,"rot_trans_item"))))
             return blockPlaceContext.getClickedFace().getAxis() == Direction.Axis.Y
                 ? this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
                 : this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());

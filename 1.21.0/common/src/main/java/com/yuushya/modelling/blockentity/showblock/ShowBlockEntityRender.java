@@ -54,12 +54,12 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
         if(blockEntity.showRotAxis()||blockEntity.showPosAxis()|| blockEntity.showText()){
             TransformData transformData = blockEntity.getTransFormDataNow();
             if(transformData.isShown&&(blockEntity.showPosAxis()||blockEntity.showRotAxis())){
-                Direction facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
-                float f = facing.toYRot();
-                matrixStack.translate(0.5f, 0.5f, 0.5f);
-                matrixStack.mulPose(Axis.YP.rotationDegrees(-f));
-                matrixStack.translate(-0.5f, -0.5f, -0.5f);
                 matrixStack.pushPose();{
+                    Direction facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
+                    float f = facing.toYRot();
+                    matrixStack.translate(0.5f, 0.5f, 0.5f);
+                    matrixStack.mulPose(Axis.YP.rotationDegrees(-f));
+                    matrixStack.translate(-0.5f, -0.5f, -0.5f);
                     Tesselator tesselator = Tesselator.getInstance();
                     RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
                     RenderSystem.depthMask(true);
