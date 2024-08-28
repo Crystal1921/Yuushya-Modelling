@@ -24,11 +24,15 @@ allprojects {
     }
 }
 
-def versions = ['1.16.5','1.18.2','1.19.2','1.19.4','1.20.1'];
-def apis = ['forge','fabric']
+def versions = ['1.16.5','1.18.2','1.19.2','1.19.4','1.20.1','1.20.4','1.20.6','1.21.0'];
+def apis = { ver->
+    if(ver in ['1.20.6','1.21.0']) ['neoforge','fabric']
+    else if(ver == '1.20.4') ['forge','fabric','neoforge']
+    else ['forge','fabric']
+}
 
 versions.forEach {ver->
-    apis.forEach {api->
+    apis(ver).forEach {api->
         tasks.register("runClient-${ver}-${api}"){
             dependsOn(":${ver}:${api}:runClient")
         }
@@ -46,7 +50,7 @@ versions.forEach {ver->
 
 tasks.register("build-jar"){
     versions.forEach {ver->
-        apis.forEach { api ->
+        apis(ver).forEach { api ->
             dependsOn "build-jar-${ver}-${api}"
         }
     }
@@ -55,13 +59,13 @@ tasks.register("build-jar"){
 tasks.register("clean-all"){
     dependsOn(":common:clean")
     versions.forEach { ver ->
-        (["common"]+apis).forEach { api ->
+        (["common"]+apis(ver)).forEach { api ->
             dependsOn(":${ver}:${api}:clean")
         }
     }
 }
 
-def build_tasks = versions.collectMany {ver-> apis.collect {api-> "build-jar-${ver}-${api}"}}
+def build_tasks = versions.collectMany {ver-> apis(ver).collect {api-> "build-jar-${ver}-${api}"}}
 
 tasks.register("build-chain1",SequenceTask,["clean-all"]+build_tasks.subList(0, build_tasks.size()/2 as int))
 tasks.register("build-chain2",SequenceTask,build_tasks.subList(build_tasks.size()/2 as int,build_tasks.size()))
