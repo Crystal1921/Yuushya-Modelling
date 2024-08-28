@@ -85,7 +85,7 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
         return true;
     }
 
-    private static <T extends Comparable<T>> String getNameHelper(BlockState blockState, Property<T> property) {
+    public static <T extends Comparable<T>> String getNameHelper(BlockState blockState, Property<T> property) {
         return property.getName(blockState.getValue(property));
     }
 }

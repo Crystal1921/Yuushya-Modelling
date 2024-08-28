@@ -2,6 +2,7 @@ package com.yuushya.modelling.blockentity.showblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Axis;
 import org.joml.Vector4f;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -24,6 +25,13 @@ import java.util.*;
 import java.util.function.Function;
 
 public class ShowBlockModel implements BakedModel, UnbakedModel {
+    private final PoseStack stack = new PoseStack();
+    public ShowBlockModel(Direction facing){
+        float f = facing.toYRot();
+        stack.translate(0.5f, 0.5f, 0.5f);
+        stack.mulPose(Axis.YP.rotationDegrees(-f));
+        stack.translate(-0.5f, -0.5f, -0.5f);
+    }
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ShowBlockEntity blockEntity) {
         int vertexSize=YuushyaUtils.vertexSize();
         BlockRenderDispatcher blockRenderDispatcher =Minecraft.getInstance().getBlockRenderer();
@@ -38,7 +46,6 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
                 for (BakedQuad bakedQuad : blockModelQuads) {
                     int[] vertex = bakedQuad.getVertices().clone();
                     // 执行核心方块的位移和旋转
-                    PoseStack stack = new PoseStack();
                     stack.pushPose();{
                         YuushyaUtils.scale(stack, transformData.scales);
                         YuushyaUtils.translate(stack,transformData.pos);
