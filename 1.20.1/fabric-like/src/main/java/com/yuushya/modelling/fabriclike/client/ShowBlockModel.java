@@ -18,10 +18,8 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements UnbakedModel,BakedModel, FabricBakedModel {
-    private final Direction facing;
     public ShowBlockModel(Direction facing) {
         super(facing);
-        this.facing = facing;
     }
 
     @Override

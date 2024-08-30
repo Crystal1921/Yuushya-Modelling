@@ -6,8 +6,7 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
@@ -36,11 +35,7 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntity> {
 
     private final Font font;
-    private final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
-    public ShowBlockEntityRender(BlockEntityRendererProvider.Context context){
-        this.font = context.getFont();
-        this.blockEntityRenderDispatcher = context.getBlockEntityRenderDispatcher();
-    }
+    public ShowBlockEntityRender(BlockEntityRendererProvider.Context context){ this.font = context.getFont(); }
 
     public static final Vector3d MIDDLE = new Vector3d(8,8,8);
     public static final Vector3d _MIDDLE = new Vector3d(-8,-8,-8);
@@ -70,7 +65,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                     RenderSystem.defaultBlendFunc();
                     RenderSystem.lineWidth(8.0f);
                     bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                    translate(matrixStack,transformData.pos);
+                    translateAfterScale(matrixStack,transformData.pos,transformData.scales);
                     translate(matrixStack,MIDDLE);
                     boolean showRotAxis = blockEntity.showRotAxis();
                     int redX = 0x64E65A46, greenY = 0x64A0DC5A, blueZ = 0x645AB4DC;
@@ -82,14 +77,14 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                         }
                     }
                     if(showRotAxis) matrixStack.mulPose(Axis.ZP.rotationDegrees(transformData.rot.z()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0.0f, -1.5f).color(90,180, 220,  100).normal(0f,0f,1.5f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0f, 1.5f).color(90, 180,220,  100).normal(0f,0f,1.5f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0.0f, -1.5f).color(blueZ).normal(0f,0f,1.5f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0f, 1.5f).color(blueZ).normal(0f,0f,1.5f).endVertex();
                     if(showRotAxis) matrixStack.mulPose(Axis.YP.rotationDegrees(transformData.rot.y()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, -1.5f, 0.0f).color(160, 220, 90, 100).normal(0f,1.5f,0f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 1.5f, 0.0f).color(160, 220, 90, 100).normal(0f,1.5f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, -1.5f, 0.0f).color(greenY).normal(0f,1.5f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 1.5f, 0.0f).color(greenY).normal(0f,1.5f,0f).endVertex();
                     if(showRotAxis) matrixStack.mulPose(Axis.XP.rotationDegrees(transformData.rot.x()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(redX).normal(1.5f,0f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(redX).normal(1.5f,0f,0f).endVertex();
                     tesselator.end();
                     RenderSystem.depthMask(true);
                     RenderSystem.disableBlend();
@@ -162,7 +157,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
         float g = Minecraft.getInstance().options.getBackgroundOpacity(0.25f);
         int backgroundColor = (int)(g * 255.0f) << 24;
             float floatx = (float) -font.width(component) / 2;
-            font.drawInBatch(component, 0, 0, -1, false, matrix4f, buffer, Font.DisplayMode.NORMAL, backgroundColor, 0xF000F0);
+            font.drawInBatch(component, 0, 0, -1, false, matrix4f, buffer, Font.DisplayMode.SEE_THROUGH, backgroundColor, 0xF000F0);
         }
         matrixStack.popPose();
     }

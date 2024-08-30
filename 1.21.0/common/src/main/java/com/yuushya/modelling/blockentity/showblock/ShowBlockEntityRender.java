@@ -68,7 +68,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                     RenderSystem.defaultBlendFunc();
                     RenderSystem.lineWidth(8.0f);
                     BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                    translate(matrixStack,transformData.pos);
+                    translateAfterScale(matrixStack,transformData.pos,transformData.scales);
                     translate(matrixStack,MIDDLE);
                     boolean showRotAxis = blockEntity.showRotAxis();
                     int redX = 0x64E65A46, greenY = 0x64A0DC5A, blueZ = 0x645AB4DC;
@@ -165,7 +165,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
         float g = Minecraft.getInstance().options.getBackgroundOpacity(0.25f);
         int backgroundColor = (int)(g * 255.0f) << 24;
             float floatx = (float) -font.width(component) / 2;
-            font.drawInBatch(component, 0, 0, -1, false, matrix4f, buffer, Font.DisplayMode.NORMAL, backgroundColor, 0xF000F0);
+            font.drawInBatch(component, 0, 0, -1, false, matrix4f, buffer, Font.DisplayMode.SEE_THROUGH, backgroundColor, 0xF000F0);
         }
         matrixStack.popPose();
     }
