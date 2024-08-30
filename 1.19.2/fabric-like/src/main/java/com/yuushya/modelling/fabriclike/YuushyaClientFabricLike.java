@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 import static com.yuushya.modelling.registries.YuushyaRegistries.BLOCKS;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class YuushyaClientFabricLike {
     public static void onInitializeClient() {
@@ -23,7 +24,7 @@ public class YuushyaClientFabricLike {
                 (resourceManager) -> (modelResourceLocation, modelProviderContext) -> {
                     for(BlockState blockState: BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()){
                         if (modelResourceLocation.equals(BlockModelShaper.stateToModelLocation(blockState))) {
-                            return new ShowBlockModel();
+                            return new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING));
                         }
                     }
                     return null;

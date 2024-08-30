@@ -31,6 +31,12 @@ public class YuushyaUtils {
             arg.translate(-0.5,-0.5,-0.5);
         }
     }
+    public static void translateAfterScale(PoseStack arg, Vector3d pos, Vector3f scales){
+        if (pos.x!=0.0||pos.y!=0.0||pos.z!=0.0){
+            arg.translate(pos.x*scales.x()/16,pos.y*scales.y()/16,pos.z*scales.z()/16);
+        }
+    }
+
     public static void translate(PoseStack arg, Vector3d pos){
         if (pos.x!=0.0||pos.y!=0.0||pos.z!=0.0)
             arg.translate(pos.x/16,pos.y/16,pos.z/16);
@@ -56,7 +62,8 @@ public class YuushyaUtils {
 
     public static BlockState getBlockState(BlockState blockState, LevelAccessor world, BlockPos blockPos){
         if(blockState.getBlock() instanceof ShowBlock){
-            return ((ShowBlockEntity)world.getBlockEntity(blockPos)).getTransformData(0).blockState;
+            ShowBlockEntity blockEntity = (ShowBlockEntity)world.getBlockEntity(blockPos);
+            return blockEntity.getTransFormDataNow().blockState;
         }
         else return blockState;
     }
@@ -69,7 +76,7 @@ public class YuushyaUtils {
         }
         return stringBuilder.toString();
     }
-    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<>() {
+    public static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<>() {
         @Override
         public String apply(@Nullable Map.Entry<Property<?>, Comparable<?>> propertyValueMap) {
             if (propertyValueMap == null) {
