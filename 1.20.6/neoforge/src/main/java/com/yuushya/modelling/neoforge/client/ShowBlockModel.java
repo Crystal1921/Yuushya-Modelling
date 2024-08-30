@@ -23,7 +23,9 @@ import java.util.*;
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements IBakedModelExtension, BakedModel {
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
-
+    public ShowBlockModel(Direction facing) {
+        super(facing);
+    }
 
     @NotNull
     @Override

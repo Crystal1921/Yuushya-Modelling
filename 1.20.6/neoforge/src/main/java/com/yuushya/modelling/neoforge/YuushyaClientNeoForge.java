@@ -22,6 +22,8 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
+
 
 @Mod(value = Yuushya.MOD_ID_USED, dist = Dist.CLIENT)
 public class YuushyaClientNeoForge {
@@ -40,7 +42,7 @@ public class YuushyaClientNeoForge {
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event){
         for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())
-            event.getModels().put(BlockModelShaper.stateToModelLocation(blockState),new ShowBlockModel());
+            event.getModels().put(BlockModelShaper.stateToModelLocation(blockState),new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING)));
     }
     /**
      * getColor是对面片执行的，所以只需要知道这个面片事实上来自哪个方块就能知道颜色
