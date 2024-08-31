@@ -1,6 +1,7 @@
 package com.yuushya.modelling.gui.showblock;
 
 import com.mojang.logging.LogUtils;
+import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -177,6 +178,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(left + 16, top  + 16, 32);
             guiGraphics.pose().scale(32.0f, 32.0f, 32.0f);
+            guiGraphics.pose().mulPose(Axis.ZP.rotationDegrees(180));
             //
             //BlockRenderDispatcher blockRenderDispatcher = this.minecraft.getBlockRenderer();
             //BakedModel model = blockRenderDispatcher.getBlockModel(blockState);

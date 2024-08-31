@@ -1,6 +1,7 @@
 package com.yuushya.modelling.gui.showblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -170,13 +171,15 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
             poseStack.pushPose();
             poseStack.translate(left + 16, top  + 16, 32);
             poseStack.scale(32.0f, 32.0f, 32.0f);
+            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180));
             //
             //BlockRenderDispatcher blockRenderDispatcher = this.minecraft.getBlockRenderer();
             //BakedModel model = blockRenderDispatcher.getBlockModel(blockState);
             ItemStack itemStack = this.parent.updateRenderItemstack(blockState);
-            BakedModel model = this.minecraft.getItemRenderer().getModel(itemStack, this.minecraft.level, this.minecraft.player);
+            BakedModel model = this.minecraft.getItemRenderer().getModel(itemStack, this.minecraft.level, null);
             MultiBufferSource.BufferSource bufferSource = this.minecraft.renderBuffers().bufferSource();
             this.minecraft.getItemRenderer().render(itemStack, GUI, false, poseStack,bufferSource , 0xF000F0, OverlayTexture.NO_OVERLAY, model);
+            bufferSource.endBatch();
             poseStack.popPose();
 
 
