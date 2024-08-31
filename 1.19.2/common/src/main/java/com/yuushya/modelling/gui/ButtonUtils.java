@@ -5,6 +5,8 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.gui.components.Button.OnPress;
 import net.minecraft.client.gui.components.Button.OnTooltip;
 
+import static net.minecraft.client.gui.components.Button.NO_TOOLTIP;
+
 public class ButtonUtils {
     public static Builder builder(Component message, OnPress onPress) {
         return new Builder(message, onPress);
@@ -54,7 +56,7 @@ public class ButtonUtils {
 
 
         public net.minecraft.client.gui.components.Button build() {
-            net.minecraft.client.gui.components.Button button = new net.minecraft.client.gui.components.Button(this.x, this.y, this.width, this.height, this.message, this.onPress, this.tooltip);
+            net.minecraft.client.gui.components.Button button = new net.minecraft.client.gui.components.Button(this.x, this.y, this.width, this.height, this.message, this.onPress,this.tooltip == null ? NO_TOOLTIP : this.tooltip);
             return button;
         }
     }
