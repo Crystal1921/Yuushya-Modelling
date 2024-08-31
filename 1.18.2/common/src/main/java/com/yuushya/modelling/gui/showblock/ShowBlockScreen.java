@@ -461,6 +461,12 @@ public class ShowBlockScreen extends Screen {
                 component.editBox.render(poseStack,mouseX,mouseY,partialTick);
             }
         }
+        if(modeButton.isHoveredOrFocused()){
+            this.renderTooltip(poseStack,modeButton.getTooltip(),mouseX,mouseY);
+        }
+        if(shownStateButton.isHoveredOrFocused()){
+            this.renderTooltip(poseStack,shownStateButton.getTooltip(),mouseX,mouseY);
+        }
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
