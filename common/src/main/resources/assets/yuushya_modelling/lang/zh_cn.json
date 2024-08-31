@@ -159,5 +159,7 @@
   "gui.showBlockScreen.display.remove": "删除选中的方块状态",
   "gui.showBlockScreen.display.replace": "用副手的方块状态来替换选中的方块状态",
   "gui.showBlockScreen.display.on": "切换当前层为隐藏",
-  "gui.showBlockScreen.display.off": "切换当前层为显示"
+  "gui.showBlockScreen.display.off": "切换当前层为显示",
+  "gui.showBlockScreen.display.on.button": "隐藏",
+  "gui.showBlockScreen.display.off.button": "显示"
 }

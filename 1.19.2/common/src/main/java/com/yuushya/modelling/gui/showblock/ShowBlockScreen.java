@@ -226,19 +226,19 @@ public class ShowBlockScreen extends Screen {
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
         shownStateButton = CycleButton.<Boolean>booleanBuilder(
-                        Component.literal("\uD83D\uDD76"),//Component.translatable("gui.showBlockScreen.display.on"),
-                        Component.literal("\uD83D\uDC40"))//Component.translatable("gui.showBlockScreen.display.off"))
+                        Component.translatable("gui.showBlockScreen.display.on.button"),
+                        Component.translatable("gui.showBlockScreen.display.off.button"))
                 .displayOnlyValue()
                 .withInitialValue(true)
                 .withTooltip((on)-> List.of( (on? Component.translatable("gui.showBlockScreen.display.on"):Component.translatable("gui.showBlockScreen.display.off")).getVisualOrderText()))
-                .create(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT,Component.empty(),
+                .create(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,TOP,RIGHT_BAR_WIDTH+RIGHT_BAR_WIDTH,PER_HEIGHT,Component.empty(),
                         (btn,bl)->{
                             updateTransformData(SHOWN,bl?1.0:0.0);
                         }
                 );
 
 
-        copyButton = ButtonUtils.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.copy"),
+        copyButton = ButtonUtils.builder(Component.translatable("gui.showBlockScreen.workshop.copy"),
                         (btn)->{
                             CompoundTag compoundTag = new CompoundTag();
                             ITransformDataInventory.saveAdditionalWithoutAir(compoundTag, blockEntity.getTransformDatas());
@@ -250,9 +250,9 @@ public class ShowBlockScreen extends Screen {
                         }
                 )
                 .tooltip(TooltipUtils.create(this,Component.translatable("gui.showBlockScreen.workshop.copy")))
-                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*3+40,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*4+40,TOP,RIGHT_BAR_WIDTH*3,PER_HEIGHT).build();
 
-        parseButton = ButtonUtils.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.paste"),
+        parseButton = ButtonUtils.builder(Component.translatable("gui.showBlockScreen.workshop.paste"),
                         (btn)->{
                             String string = getClipboard();
                             try {
@@ -270,7 +270,7 @@ public class ShowBlockScreen extends Screen {
                         }
                 )
                 .tooltip(TooltipUtils.create(this,Component.translatable("gui.showBlockScreen.workshop.paste")))
-                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*3+60,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*4+100,TOP,RIGHT_BAR_WIDTH*3,PER_HEIGHT).build();
 
         blockStateList =  new BlockStateIconList(this.minecraft,RIGHT_LIST_WIDTH ,RIGHT_LIST_HEIGHT ,RIGHT_COLUMN_X,RIGHT_LIST_TOP,RIGHT_LIST_BOTTOM , RIGHT_LIST_WIDTH,RIGHT_LIST_PER_HEIGHT,this.blockEntity.getTransformDatas(),this);
 
