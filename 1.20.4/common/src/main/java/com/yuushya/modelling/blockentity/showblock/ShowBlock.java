@@ -111,5 +111,13 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
         showBlockEntity.saveChanged();
         return stateIn.setValue(POWERED,!stateIn.getValue(POWERED));
     }
+    @Override
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(HORIZONTAL_FACING, rotation.rotate(state.getValue(HORIZONTAL_FACING)));
+    }
 
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(HORIZONTAL_FACING)));
+    }
 }

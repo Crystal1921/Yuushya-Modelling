@@ -43,7 +43,7 @@ import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 
 public class ShowBlockScreen extends Screen {
     public static MutableComponent componentEmpty(){
-        return (MutableComponent) TextComponent.EMPTY;
+        return new TextComponent("");//(MutableComponent) TextComponent.EMPTY;
     }
     private final ShowBlockEntity blockEntity;
     private final BlockState newBlockState;

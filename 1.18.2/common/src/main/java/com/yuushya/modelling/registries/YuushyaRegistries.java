@@ -33,6 +33,9 @@ public class YuushyaRegistries {
         ITEMS.register("move_transformdata_item",()->new MoveTransformDataItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo(1),4));
         ITEMS.register("debug_stick_item",()->new YuushyaDebugStickItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo(1),4));
         ITEMS.register("get_lit_item",()->new GetLitItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo(1),2));
+        ITEMS.register("destroy_item",()->new DestroyItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo(1).durability(384),2));
+        ITEMS.register("gui_item",()->new GuiItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo(1),2));
+
         ITEMS.register("the_encyclopedia",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("shimmering_pearl",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("everlasting_wood",   ()->new AbstractYuushyaItem(new Item.Properties().tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
