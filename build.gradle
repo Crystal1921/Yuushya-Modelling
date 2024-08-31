@@ -39,7 +39,7 @@ versions.forEach {ver->
         tasks.register("build-jar-${ver}-${api}",Copy){
             dependsOn(":${ver}:${api}:build")
             with{
-                from("./${ver}/${api}/build/libs/yuushya-${mod_version}.jar")
+                from("./${ver}/${api}/build/libs/yuushya-modelling-${mod_version}.jar")
                 rename {"yuushya-modelling-${ver}-${api}-${mod_version}.jar"}
                 into("./build/libs")
                 duplicatesStrategy(DuplicatesStrategy.INHERIT)
