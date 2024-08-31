@@ -2,6 +2,7 @@ package com.yuushya.modelling.blockentity.showblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -22,13 +23,24 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Function;
 
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
+
 public class ShowBlockModel implements BakedModel, UnbakedModel {
+    protected final Direction facing;
+    public ShowBlockModel(Direction facing){
+        this.facing = facing;
+    }
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull Random rand, @NotNull ShowBlockEntity blockEntity) {
         int vertexSize=YuushyaUtils.vertexSize();
         BlockRenderDispatcher blockRenderDispatcher =Minecraft.getInstance().getBlockRenderer();
         List<BakedQuad> finalQuads = new ArrayList<>();
         if (side != null) {return Collections.emptyList();}
         ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));directions.add(null); // 加个null
+        float f = facing.toYRot();
+        PoseStack stack = new PoseStack();
+        stack.translate(0.5f, 0.5f, 0.5f);
+        stack.mulPose(Vector3f.YP.rotationDegrees(-f));
+        stack.translate(-0.5f, -0.5f, -0.5f);
         for(TransformData transformData:blockEntity.getTransformDatas())if (transformData.isShown){
             BlockState blockState = transformData.blockState;
             BakedModel blockModel = blockRenderDispatcher.getBlockModel(blockState);
@@ -37,7 +49,6 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
                 for (BakedQuad bakedQuad : blockModelQuads) {
                     int[] vertex = bakedQuad.getVertices().clone();
                     // 执行核心方块的位移和旋转
-                    PoseStack stack = new PoseStack();
                     stack.pushPose();{
                         YuushyaUtils.scale(stack, transformData.scales);
                         YuushyaUtils.translate(stack,transformData.pos);

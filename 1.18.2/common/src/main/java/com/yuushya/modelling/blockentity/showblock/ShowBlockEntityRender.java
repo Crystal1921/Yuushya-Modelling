@@ -11,16 +11,24 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 
 import static com.yuushya.modelling.utils.YuushyaUtils.*;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntity> {
 
@@ -32,10 +40,20 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
     //private final Random random = new Random();
     @Override
     public void render(ShowBlockEntity blockEntity, float tickDelta, @NotNull PoseStack matrixStack, @NotNull MultiBufferSource multiBufferSource, int light, int overlay) {
+        if(blockEntity.showFrame()){
+            VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
+            LevelRenderer.renderLineBox(matrixStack, vertexConsumer, -0.01,-0.01,-0.01,1.01,1.01,1.01, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F);
+            blockEntity.consumeShowFrame();
+        }
         if(blockEntity.showRotAxis()||blockEntity.showPosAxis()|| blockEntity.showText()){
             TransformData transformData = blockEntity.getTransFormDataNow();
             if(transformData.isShown&&(blockEntity.showPosAxis()||blockEntity.showRotAxis())){
                 matrixStack.pushPose();{
+                    Direction facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
+                    float f = facing.toYRot();
+                    matrixStack.translate(0.5f, 0.5f, 0.5f);
+                    matrixStack.mulPose(Vector3f.YP.rotationDegrees(-f));
+                    matrixStack.translate(-0.5f, -0.5f, -0.5f);
                     Tesselator tesselator = Tesselator.getInstance();
                     BufferBuilder bufferBuilder = tesselator.getBuilder();
                     RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
@@ -46,18 +64,26 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                     RenderSystem.disableTexture();
                     RenderSystem.lineWidth(8.0f);
                     bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                    translate(matrixStack,transformData.pos);
+                    translateAfterScale(matrixStack,transformData.pos,transformData.scales);
                     translate(matrixStack,MIDDLE);
                     boolean showRotAxis = blockEntity.showRotAxis();
+                    int redX = 0x64E65A46, greenY = 0x64A0DC5A, blueZ = 0x645AB4DC;
+                    if(blockEntity.getShowAxis()!=null){
+                        switch (blockEntity.getShowAxis()) {
+                            case X: redX = 0xFFE65A46;break;
+                            case Y: greenY = 0xFFA0DC5A;break;
+                            case Z: blueZ = 0xFF5AB4DC;break;
+                        }
+                    }
                     if(showRotAxis) matrixStack.mulPose(Vector3f.ZP.rotationDegrees(transformData.rot.z()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0.0f, -1.5f).color(90,180, 220,  100).normal(0f,0f,1.5f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0f, 1.5f).color(90, 180,220,  100).normal(0f,0f,1.5f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0.0f, -1.5f).color(blueZ).normal(0f,0f,1.5f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 0f, 1.5f).color(blueZ).normal(0f,0f,1.5f).endVertex();
                     if(showRotAxis) matrixStack.mulPose(Vector3f.YP.rotationDegrees(transformData.rot.y()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, -1.5f, 0.0f).color(160, 220, 90, 100).normal(0f,1.5f,0f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 1.5f, 0.0f).color(160, 220, 90, 100).normal(0f,1.5f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, -1.5f, 0.0f).color(greenY).normal(0f,1.5f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),0.0f, 1.5f, 0.0f).color(greenY).normal(0f,1.5f,0f).endVertex();
                     if(showRotAxis) matrixStack.mulPose(Vector3f.XP.rotationDegrees(transformData.rot.x()));
-                    bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
-                    bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(230, 90, 70, 100).normal(1.5f,0f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),-1.5f, 0.0f, 0.0f).color(redX).normal(1.5f,0f,0f).endVertex();
+                    bufferBuilder.vertex(matrixStack.last().pose(),1.5f, 0f, 0.0f).color(redX).normal(1.5f,0f,0f).endVertex();
                     tesselator.end();
                     RenderSystem.depthMask(true);
                     RenderSystem.disableBlend();
@@ -84,12 +110,16 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                         Style style =  blockEntity.getSlot()==slot ?Style.EMPTY.withColor(ChatFormatting.GOLD).withBold(true)
                                 : everyTransformData.isShown?Style.EMPTY.withColor( ChatFormatting.WHITE)
                                 :Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(true);
-                        Component component = new TranslatableComponent("block.yuushya.showblock.slot_text",String.format("%2d",slot)).append(everyTransformData.blockState.getBlock().getName().append(new TextComponent(YuushyaUtils.getBlockStateProperties(everyTransformData.blockState))).withStyle(style));
+                        Block block = everyTransformData.blockState.getBlock();
+                        Item item = block.asItem();
+                        MutableComponent displayName = (item== Items.AIR) ? block.getName() : (MutableComponent)item.getName(item.getDefaultInstance());
+                        Component component = new TranslatableComponent("block.yuushya.showblock.slot_text",String.format("%2d",slot)).append(displayName.append(new TextComponent(YuushyaUtils.getBlockStateProperties(everyTransformData.blockState))).withStyle(style));
                         renderText(font,component ,high-=0.25f,matrixStack ,multiBufferSource,light);
                     }
                 }matrixStack.popPose();
             }
             blockEntity.consumeShow();
+            blockEntity.consumeShowAxis();
         }
 
     }

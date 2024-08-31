@@ -21,6 +21,10 @@ import java.util.*;
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements IForgeBakedModel, BakedModel {
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
+    public ShowBlockModel(Direction facing) {
+        super(facing);
+    }
+
     @NotNull
     @Override
     public IModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull IModelData modelData) {
