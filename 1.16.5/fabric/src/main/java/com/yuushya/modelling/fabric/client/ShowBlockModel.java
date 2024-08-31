@@ -16,6 +16,10 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements UnbakedModel,BakedModel, FabricBakedModel {
+    public ShowBlockModel(Direction facing) {
+        super(facing);
+    }
+
     @Override
     public boolean isVanillaAdapter() {
         return false;
@@ -25,7 +29,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<Random> randomSupplier, RenderContext context) {
         ShowBlockEntity blockEntity=(ShowBlockEntity) blockView.getBlockEntity(pos);
         if (blockEntity==null) return;
-        context.fallbackConsumer().accept(new ShowBlockModel() {
+        context.fallbackConsumer().accept(new ShowBlockModel(facing) {
             @Override
             public boolean isVanillaAdapter() {
                 return true;

@@ -32,6 +32,12 @@ public class YuushyaUtils {
             arg.translate(-0.5,-0.5,-0.5);
         }
     }
+    public static void translateAfterScale(PoseStack arg, Vec3 pos, Vector3f scales){
+        if (pos.x!=0.0||pos.y!=0.0||pos.z!=0.0){
+            arg.translate(pos.x*scales.x()/16,pos.y*scales.y()/16,pos.z*scales.z()/16);
+        }
+    }
+
     public static void translate(PoseStack arg, Vec3 pos){
         if (pos.x!=0.0||pos.y!=0.0||pos.z!=0.0)
             arg.translate(pos.x/16,pos.y/16,pos.z/16);
@@ -57,7 +63,8 @@ public class YuushyaUtils {
 
     public static BlockState getBlockState(BlockState blockState, LevelAccessor world, BlockPos blockPos){
         if(blockState.getBlock() instanceof ShowBlock){
-            return ((ShowBlockEntity)world.getBlockEntity(blockPos)).getTransformData(0).blockState;
+            ShowBlockEntity blockEntity = (ShowBlockEntity)world.getBlockEntity(blockPos);
+            return blockEntity.getTransFormDataNow().blockState;
         }
         else return blockState;
     }
@@ -70,7 +77,7 @@ public class YuushyaUtils {
         }
         return stringBuilder.toString();
     }
-    private static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<Map.Entry<Property<?>, Comparable<?>>, String>() {
+    public static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<Map.Entry<Property<?>, Comparable<?>>, String>() {
         @Override
         public String apply(@Nullable Map.Entry<Property<?>, Comparable<?>> propertyValueMap) {
             if (propertyValueMap == null) {
@@ -101,5 +108,19 @@ public class YuushyaUtils {
     }
     public static Vector3d convertVec3(Vec3 vector3d){
         return new Vector3d(vector3d.x,vector3d.y,vector3d.z);
+    }
+
+    public static class Mth{
+        public static double lerp(double delta, double start, double end) {
+            return start + delta * (end - start);
+        }
+
+        public static double inverseLerp(double delta, double start, double end) {
+            return (delta - start) / (end - start);
+        }
+
+        public static double map(double d, double e, double f, double g, double h) {
+            return lerp(inverseLerp(d, e, f), g, h);
+        }
     }
 }
