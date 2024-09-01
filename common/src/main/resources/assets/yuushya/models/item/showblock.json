@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "minecraft:block/cube_all",
   "textures": {
-    "layer0": "yuushya:item/abandon"
+    "all": "yuushya:item/abandon"
   }
 }
