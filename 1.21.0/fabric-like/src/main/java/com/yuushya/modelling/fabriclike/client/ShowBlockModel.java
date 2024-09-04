@@ -31,47 +31,45 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
         super(facing,backup);
     }
 
+    private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();
+    protected boolean vanillaAdapter = false;
+    protected List<TransformData> transformDatas = null;
+
     @Override
     public boolean isVanillaAdapter() {
-        return false;
+        return this.vanillaAdapter;
     }
 
+    //释放blockQuads的是每次区块构建的时候生成的，所以直接修改自己，不用new新的
     @Override
     public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
         ShowBlockEntity blockEntity=(ShowBlockEntity) blockView.getBlockEntity(pos);
         if (blockEntity==null) return;
-        VanillaModelEncoder.emitBlockQuads(new ShowBlockModel(facing) {
-            @Override
-            public boolean isVanillaAdapter() {
-                return true;
-            }
-
-            @Override
-            public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return super.getQuads(blockState,side,rand,blockEntity.getTransformDatas());
-            }
-        }, state, randomSupplier, context, context.getEmitter());
+        this.vanillaAdapter = true;
+        this.transformDatas = blockEntity.getTransformDatas();
+        VanillaModelEncoder.emitBlockQuads(this, state, randomSupplier, context, context.getEmitter());
+    }
+    @Override
+    public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+        if(transformDatas==null) return super.getQuads(blockState,side,rand);
+        return super.getQuads(blockState,side,rand,transformDatas);
     }
 
+    //释放itemQuads的只有一个showModel单例，这个单例会拿到各种stack，所以这里得用new
     @Override
     public void emitItemQuads(ItemStack stack, Supplier<RandomSource> randomSupplier, RenderContext context) {
         CustomData data = stack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
         if(data == CustomData.EMPTY){
             VanillaModelEncoder.emitItemQuads(backup, null, randomSupplier, context);
         }
-        List<TransformData> transformDatas = new ArrayList<>();
-        ITransformDataInventory.load(data.copyTag(),transformDatas);
-        VanillaModelEncoder.emitItemQuads(new ShowBlockModel(Direction.SOUTH){
-            @Override
-            public boolean isVanillaAdapter() {
-                return true;
-            }
-
-            @Override
-            public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return super.getQuads(blockState,side,rand,transformDatas);
-            }
-
-        }, null, randomSupplier, context);
+        else{
+            VanillaModelEncoder.emitItemQuads(itemModelCache.computeIfAbsent(stack,(_stack)->new ShowBlockModel(Direction.SOUTH) {
+                {
+                    this.transformDatas = new ArrayList<>();
+                    ITransformDataInventory.load(data.copyTag(), this.transformDatas);
+                    this.vanillaAdapter = true;
+                }
+            }), null, randomSupplier, context);
+        }
     }
 }

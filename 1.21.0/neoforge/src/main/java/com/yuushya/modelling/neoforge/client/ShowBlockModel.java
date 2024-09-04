@@ -56,19 +56,25 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
         return super.getQuads(state,side,rand,blockEntity.getTransformDatas());
     }
 
+    private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();
+
+
     @Override
     public List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
         CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
         if(data == CustomData.EMPTY){
             return List.of(backup);
         }
-        List<TransformData> transformDatas = new ArrayList<>();
-        ITransformDataInventory.load(data.copyTag(),transformDatas);
-        return List.of(new ShowBlockModel(Direction.SOUTH){
+        return List.of(itemModelCache.computeIfAbsent(itemStack,(_stack)-> new ShowBlockModel(Direction.SOUTH){
+            private final List<TransformData> transformDatas;
+            {
+                this.transformDatas = new ArrayList<>();
+                ITransformDataInventory.load(data.copyTag(),transformDatas);
+            }
             @Override
             public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
                 return super.getQuads(blockState,side,rand,transformDatas);
             }
-        });
+        }));
     }
 }
