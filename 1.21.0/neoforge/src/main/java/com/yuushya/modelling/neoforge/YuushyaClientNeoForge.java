@@ -85,18 +85,15 @@ public class YuushyaClientNeoForge {
                 },YuushyaRegistries.ITEMS.get("get_blockstate_item").get()
         );
         event.getItemColors().register(
-                new ItemColor() {
-                    @Override
-                    public int getColor(ItemStack arg, int tintIndex) {
-                        if (tintIndex > -1) {
-                            // decodeTintWithState
-                            // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
-                            BlockState trueState = Block.stateById(tintIndex >> 8);
-                            int trueTint = tintIndex & 0xFF;
-                            return event.getBlockColors().getColor(trueState, null, null, trueTint);
-                        } else {
-                            return 0xFFFFFFFF;
-                        }
+                (arg, tintIndex) -> {
+                    if (tintIndex > -1) {
+                        // decodeTintWithState
+                        // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
+                        BlockState trueState = Block.stateById(tintIndex >> 8);
+                        int trueTint = tintIndex & 0xFF;
+                        return event.getBlockColors().getColor(trueState, null, null, trueTint);
+                    } else {
+                        return 0xFFFFFFFF;
                     }
                 },YuushyaRegistries.ITEMS.get("showblock").get()
         );

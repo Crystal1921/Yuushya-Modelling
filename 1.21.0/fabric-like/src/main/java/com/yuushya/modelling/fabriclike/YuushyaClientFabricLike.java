@@ -33,12 +33,13 @@ import static com.yuushya.modelling.registries.YuushyaRegistries.BLOCKS;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class YuushyaClientFabricLike {
+    private static final ModelResourceLocation SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"showblock"),"inventory");
     public static void onInitializeClient() {
         YuushyaClient.onInitializeClient();
         ModelLoadingPlugin.register((context)->{
             context.modifyModelAfterBake().register((model,modelBakeAfterContext)->{
                 if(modelBakeAfterContext.topLevelId()!=null){
-                    if(modelBakeAfterContext.topLevelId().equals(new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"showblock"),"inventory"))){
+                    if(modelBakeAfterContext.topLevelId().equals(SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION)){
                         return new ShowBlockModel(Direction.SOUTH,model);
                     }
                     for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())

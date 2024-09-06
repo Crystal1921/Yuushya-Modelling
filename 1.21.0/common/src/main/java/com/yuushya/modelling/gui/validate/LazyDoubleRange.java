@@ -81,7 +81,7 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (LazyDoubleRange) obj;
+        LazyDoubleRange that = (LazyDoubleRange) obj;
         return Objects.equals(this.minInclusiveSupplier.get(), that.minInclusiveSupplier.get()) &&
                 Objects.equals(this.maxInclusiveSupplier.get(), that.maxInclusiveSupplier.get()) &&
                 Objects.equals(this.step,that.step);

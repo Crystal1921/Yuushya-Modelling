@@ -51,7 +51,7 @@ public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (DoubleRange) obj;
+        DoubleRange that = (DoubleRange) obj;
         return Objects.equals(this.minInclusive, that.minInclusive) &&
                 Objects.equals(this.maxInclusive, that.maxInclusive) &&
                 Objects.equals(this.step, that.step);

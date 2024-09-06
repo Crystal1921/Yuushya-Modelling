@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.yuushya.modelling.gui.showblock.ShowBlockScreen.componentEmpty;
+import static com.yuushya.modelling.gui.validate.DoubleRange.near;
 
 public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<Double> {
     private final Supplier<Double> minInclusiveSupplier;
@@ -51,7 +52,7 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     public Optional<Double> validateValue(Double value) {
         if (value < this.minInclusive()) return Optional.of(this.minInclusive());
         if (value > this.maxInclusive()) return Optional.of(this.maxInclusive());
-        return Optional.of(Math.floor(value / getStep()) * getStep());
+        return Optional.of(near(value / getStep()) * getStep());
     }
 
     public void setStepSupplier(Supplier<Double> stepSupplier) { this.stepSupplier = stepSupplier;}

@@ -29,10 +29,16 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 
 public class ShowBlockModel implements BakedModel, UnbakedModel {
     protected final Direction facing;
+    protected final BakedModel backup;
     public ShowBlockModel(Direction facing){
         this.facing = facing;
+        this.backup = this;
     }
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ShowBlockEntity blockEntity) {
+    public ShowBlockModel(Direction facing,BakedModel backup) {
+        this.facing = facing;
+        this.backup = backup;
+    }
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, List<TransformData> transformDatas) {
         int vertexSize=YuushyaUtils.vertexSize();
         BlockRenderDispatcher blockRenderDispatcher =Minecraft.getInstance().getBlockRenderer();
         List<BakedQuad> finalQuads = new ArrayList<>();
@@ -43,7 +49,7 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
         stack.translate(0.5f, 0.5f, 0.5f);
         stack.mulPose(Axis.YP.rotationDegrees(-f));
         stack.translate(-0.5f, -0.5f, -0.5f);
-        for(TransformData transformData:blockEntity.getTransformDatas())if (transformData.isShown){
+        for(TransformData transformData:transformDatas)if (transformData.isShown){
             BlockState blockState = transformData.blockState;
             BakedModel blockModel = blockRenderDispatcher.getBlockModel(blockState);
             for (Direction value : directions) {
@@ -80,43 +86,64 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
 
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-        return Collections.emptyList();
+        return backup.getQuads(blockState,side,rand);
     }
 
     @Override
     public boolean useAmbientOcclusion() {
+        if(backup!=this){
+            return backup.usesBlockLight();
+        }
         return false;
     }
 
     @Override
     public boolean isGui3d() {
-        return false;
+        if(backup!=this){
+            return backup.isGui3d();
+        }
+        return true;
     }
 
     @Override
     public boolean usesBlockLight() {
+        if(backup!=this){
+            return backup.usesBlockLight();
+        }
         return false;
     }
 
     @Override
     public boolean isCustomRenderer() {
+        if(backup!=this){
+            return backup.isCustomRenderer();
+        }
         return false;
     }
 
     @Override
     public TextureAtlasSprite getParticleIcon() {
+        if(backup!=this){
+            return backup.getParticleIcon();
+        }
         return Minecraft.getInstance().getBlockRenderer().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
 
     }
 
     @Override
     public ItemTransforms getTransforms() {
-        return null;
+        if(backup!=this){
+            return backup.getTransforms();
+        }
+        return Minecraft.getInstance().getBlockRenderer().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getTransforms();
     }
 
     @Override
     public ItemOverrides getOverrides() {
-        return null;
+        if(backup!=this){
+            return backup.getOverrides();
+        }
+        return ItemOverrides.EMPTY;
     }
 
     @Override
@@ -132,6 +159,4 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
     public void resolveParents(Function<ResourceLocation, UnbakedModel> function) {
 
     }
-
-
 }

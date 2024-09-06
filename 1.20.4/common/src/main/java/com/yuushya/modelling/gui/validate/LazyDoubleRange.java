@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static com.yuushya.modelling.gui.validate.DoubleRange.near;
+
 public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<Double> {
     private final Supplier<Double> minInclusiveSupplier;
     private final Supplier<Double> maxInclusiveSupplier;
@@ -48,7 +50,7 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     public Optional<Double> validateValue(Double value) {
         if (value < this.minInclusive()) return Optional.of(this.minInclusive());
         if (value > this.maxInclusive()) return Optional.of(this.maxInclusive());
-        return Optional.of(Math.floor(value / getStep()) * getStep());
+        return Optional.of(near(value / getStep()) * getStep());
     }
 
     public void setStepSupplier(Supplier<Double> stepSupplier) { this.stepSupplier = stepSupplier;}
@@ -79,7 +81,7 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (LazyDoubleRange) obj;
+        LazyDoubleRange that = (LazyDoubleRange) obj;
         return Objects.equals(this.minInclusiveSupplier.get(), that.minInclusiveSupplier.get()) &&
                 Objects.equals(this.maxInclusiveSupplier.get(), that.maxInclusiveSupplier.get()) &&
                 Objects.equals(this.step,that.step);
