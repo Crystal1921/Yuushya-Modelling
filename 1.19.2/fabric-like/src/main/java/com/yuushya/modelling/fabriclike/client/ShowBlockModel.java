@@ -6,11 +6,12 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemOverrides;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -18,20 +19,34 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements UnbakedModel,BakedModel, FabricBakedModel {
     public ShowBlockModel(Direction facing) {
         super(facing);
     }
-
     public ShowBlockModel(Direction facing,BakedModel backup) {
         super(facing,backup);
+    }
+    public ResourceLocation backupResourceLocation;
+    public ShowBlockModel(Direction facing, ResourceLocation backupResourceLocation ) {
+        super(facing);
+        this.backupResourceLocation = backupResourceLocation;
+    }
+
+    @Override
+    public @Nullable BakedModel bake(ModelBakery modelBakery, Function<Material, TextureAtlasSprite> function, ModelState modelState, ResourceLocation resourceLocation) {
+        if(backupResourceLocation !=null){
+            backup = modelBakery.getModel(backupResourceLocation).bake(modelBakery, function, modelState, resourceLocation);
+        }
+        return super.bake(modelBakery, function, modelState, resourceLocation);
     }
 
     private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();
     protected boolean vanillaAdapter = false;
     protected List<TransformData> transformDatas = null;
+    private static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
 
     @Override
     public boolean isVanillaAdapter() {
@@ -56,7 +71,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     //释放itemQuads的只有一个showModel单例，这个单例会拿到各种stack，所以这里得用new
     @Override
     public void emitItemQuads(ItemStack stack, Supplier<RandomSource> randomSupplier, RenderContext context) {
-        CompoundTag data = stack.getTag();
+        CompoundTag data = stack.getTagElement(BLOCK_ENTITY_TAG);
         if(data == null){
             context.fallbackConsumer().accept(backup);
         }

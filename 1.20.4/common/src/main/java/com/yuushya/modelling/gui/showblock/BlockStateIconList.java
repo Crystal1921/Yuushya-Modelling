@@ -125,7 +125,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 
     public int getChosenOne(){
         if(!this.chosen.isEmpty()){
-            return chosen.getLast().slot;
+            return chosen.get(chosen.size()-1).slot;
         }
         return -1;
     }

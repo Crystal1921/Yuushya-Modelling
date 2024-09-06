@@ -6,6 +6,7 @@ import com.yuushya.modelling.fabric.client.ShowBlockModel;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.model.ExtraModelProvider;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
@@ -17,21 +18,31 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.function.Consumer;
 
 import static com.yuushya.modelling.registries.YuushyaRegistries.BLOCKS;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class YuushyaClientFabric  implements ClientModInitializer {
     private static final ModelResourceLocation SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION = new ModelResourceLocation(new ResourceLocation(Yuushya.MOD_ID,"showblock"),"inventory");
+    private static final ResourceLocation SHOWBLOCK_ITEM_BACKUP = new ResourceLocation(Yuushya.MOD_ID,"item/showblock");
     @Override
     public void onInitializeClient() {
         YuushyaClient.onInitializeClient();
+        ModelLoadingRegistry.INSTANCE.registerModelProvider(new ExtraModelProvider() {
+            @Override
+            public void provideExtraModels(ResourceManager manager, Consumer<ResourceLocation> out) {
+                out.accept(SHOWBLOCK_ITEM_BACKUP);
+            }
+        });
         ModelLoadingRegistry.INSTANCE.registerVariantProvider(
                 (resourceManager) -> (modelResourceLocation, modelProviderContext) -> {
                     if(modelResourceLocation.equals(SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION)){
-                        return new ShowBlockModel(Direction.SOUTH);
+                        return new ShowBlockModel(Direction.SOUTH,SHOWBLOCK_ITEM_BACKUP);
                     }
                     for(BlockState blockState: BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()){
                         if (modelResourceLocation.equals(BlockModelShaper.stateToModelLocation(blockState))) {

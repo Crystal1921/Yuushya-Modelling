@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static net.minecraft.world.item.BlockItem.BLOCK_ENTITY_TAG;
+
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements IForgeBakedModel, BakedModel {
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
@@ -60,7 +62,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
 
     @Override
     public List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
-        CompoundTag data = itemStack.getTag();
+        CompoundTag data = itemStack.getTagElement(BLOCK_ENTITY_TAG);
         if(data == null){
             return List.of(backup);
         }

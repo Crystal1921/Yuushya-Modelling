@@ -28,7 +28,7 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 
 public class ShowBlockModel implements BakedModel, UnbakedModel {
     protected final Direction facing;
-    protected final BakedModel backup;
+    protected BakedModel backup;
     public ShowBlockModel(Direction facing){
         this.facing = facing;
         this.backup = this;
@@ -85,7 +85,10 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
 
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-        return backup.getQuads(blockState,side,rand);
+        if(backup!=this){
+            return backup.getQuads(blockState,side,rand);
+        }
+        return Collections.emptyList();
     }
 
     @Override

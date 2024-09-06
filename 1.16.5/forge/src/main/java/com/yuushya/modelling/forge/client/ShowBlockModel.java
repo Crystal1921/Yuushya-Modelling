@@ -59,10 +59,11 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     }
 
     private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();
+    private static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
 
     @Override
     public List<Pair<BakedModel, RenderType>> getLayerModels(ItemStack itemStack, boolean fabulous) {
-        CompoundTag data = itemStack.getTag();
+        CompoundTag data = itemStack.getTagElement(BLOCK_ENTITY_TAG);
         if(data == null){
             return Collections.singletonList(Pair.of(backup, ItemBlockRenderTypes.getRenderType(itemStack, fabulous)));
         }

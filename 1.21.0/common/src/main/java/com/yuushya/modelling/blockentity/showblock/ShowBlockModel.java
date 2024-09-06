@@ -84,7 +84,10 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
 
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-        return backup.getQuads(blockState,side,rand);
+        if(backup!=this){
+            return backup.getQuads(blockState,side,rand);
+        }
+        return Collections.emptyList();
     }
 
     @Override

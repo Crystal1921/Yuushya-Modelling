@@ -21,6 +21,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static net.minecraft.world.item.BlockItem.BLOCK_ENTITY_TAG;
+
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements UnbakedModel,BakedModel, FabricBakedModel {
     public ShowBlockModel(Direction facing) {
         super(facing);
@@ -57,7 +59,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     //释放itemQuads的只有一个showModel单例，这个单例会拿到各种stack，所以这里得用new
     @Override
     public void emitItemQuads(ItemStack stack, Supplier<RandomSource> randomSupplier, RenderContext context) {
-        CompoundTag data = stack.getTag();
+        CompoundTag data = stack.getTagElement(BLOCK_ENTITY_TAG);
         if(data == null){
             VanillaModelEncoder.emitItemQuads(backup, null, randomSupplier, context);
         }
