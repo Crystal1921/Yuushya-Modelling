@@ -5,8 +5,11 @@ import com.yuushya.modelling.YuushyaClient;
 import com.yuushya.modelling.forge.client.ShowBlockModel;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
@@ -27,8 +30,12 @@ public class YuushyaClientForge {
 
     @SubscribeEvent
     public static void onModelBaked(ModelBakeEvent event){
-        for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())
-            event.getModelRegistry().put(BlockModelShaper.stateToModelLocation(blockState),new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING)));
+        ModelResourceLocation inventory =new ModelResourceLocation(new ResourceLocation(Yuushya.MOD_ID,"showblock"),"inventory");
+        event.getModelRegistry().put(inventory, new ShowBlockModel(Direction.SOUTH,event.getModelRegistry().get(inventory)));
+        for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()){
+            ModelResourceLocation stateResourceLocation = BlockModelShaper.stateToModelLocation(blockState);
+            event.getModelRegistry().put(stateResourceLocation,new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING),event.getModelRegistry().get(stateResourceLocation)));
+        }
     }
     /**
      * getColor是对面片执行的，所以只需要知道这个面片事实上来自哪个方块就能知道颜色
@@ -63,6 +70,19 @@ public class YuushyaClientForge {
                     BlockState blockState = NbtUtils.readBlockState(compoundTag.getCompound("BlockState"));
                     return event.getBlockColors().getColor(blockState, null, null, i);
                 },YuushyaRegistries.ITEMS.get("get_blockstate_item").get()
+        );
+        event.getItemColors().register(
+                (arg, tintIndex) -> {
+                    if (tintIndex > -1) {
+                        // decodeTintWithState
+                        // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
+                        BlockState trueState = Block.stateById(tintIndex >> 8);
+                        int trueTint = tintIndex & 0xFF;
+                        return event.getBlockColors().getColor(trueState, null, null, trueTint);
+                    } else {
+                        return 0xFFFFFFFF;
+                    }
+                },YuushyaRegistries.ITEMS.get("showblock").get()
         );
     }
 

@@ -22,7 +22,7 @@ public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
     public Optional<Double> validateValue(Double value) {
         if (value < this.minInclusive()) return Optional.of(this.minInclusive());
         if (value > this.maxInclusive()) return Optional.of(this.maxInclusive());
-        return Optional.of(Math.floor(value / step) * step);
+        return Optional.of(near(value / step) * step);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (DoubleRange) obj;
+        DoubleRange that = (DoubleRange) obj;
         return Objects.equals(this.minInclusive, that.minInclusive) &&
                 Objects.equals(this.maxInclusive, that.maxInclusive) &&
                 Objects.equals(this.step, that.step);
@@ -82,5 +82,9 @@ public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
         }
     }
 
-
+    public static Double near(Double value){
+        double ceil = Math.ceil(value);
+        if(ceil-value<0.001) return ceil;
+        return Math.floor(value);
+    }
 }

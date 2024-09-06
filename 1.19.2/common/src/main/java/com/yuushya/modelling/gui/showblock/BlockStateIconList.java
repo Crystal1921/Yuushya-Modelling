@@ -28,10 +28,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.yuushya.modelling.utils.YuushyaUtils.PROPERTY_ENTRY_TO_STRING_FUNCTION;
 import static net.minecraft.client.renderer.block.model.ItemTransforms.TransformType.GUI;
@@ -40,6 +37,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 
     //private static final Logger LOGGER = LogUtils.getLogger();
     protected final List<TransformData> transformDataList;
+    protected final List<Entry> chosen = new ArrayList<>();
     protected final ShowBlockScreen screen;
     private int itemHeight;
     private int itemWidth;
@@ -131,14 +129,44 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         }
     }
 
+
+    public int getChosenOne(){
+        if(!this.chosen.isEmpty()){
+            return chosen.get(chosen.size()-1).slot;
+        }
+        return -1;
+    }
+    public void setChosenCurrent() {
+        Entry selected = this.getSelected();
+        if(selected!=null){
+            selected.chosen = true;
+            this.chosen.add(selected);
+        }
+    }
+    public void clearChosen(){
+        for(Entry entry:this.chosen){
+            entry.chosen = false;
+        }
+        this.chosen.clear();
+    }
+
     public static final class Entry extends ObjectSelectionList.Entry<Entry>{
 
         private final BlockStateIconList parent;
         private final int slot;
         private final Minecraft minecraft;
+        private boolean chosen = false;
+        public TransformData getTransformData(){
+            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot) : new TransformData();
+        }
         public BlockState updateRenderState(){
             return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot).blockState : Blocks.AIR.defaultBlockState();
         }
+
+        public boolean updateRenderShown(){
+            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot).isShown : true;
+        }
+
         public Entry(BlockStateIconList parent,int slot){
             this.parent = parent;
             this.minecraft = parent.minecraft;
@@ -155,7 +183,18 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            Entry preSelected = this.parent.getSelected();
             this.parent.setSelected(this);
+            if(preSelected == this){
+                if(this.chosen){
+                    this.chosen = false;
+                    this.parent.chosen.remove(this);
+                }
+                else{
+                    this.chosen = true;
+                    this.parent.chosen.add(this);
+                }
+            }
             //LOGGER.info("select "+this.slot);
             return true;
         }
@@ -176,7 +215,10 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 //                MutableComponent displayBlockState = Component.literal(properties.get(i));
 //                guiGraphics.drawString(this.minecraft.font, displayBlockState, left + 32 + 3, top + this.minecraft.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
 //            }
-            fill(poseStack,left, top, left + 32 + 4, top + fontHeight + 32, -1601138544);
+            if(updateRenderShown())
+                fill(poseStack,left, top, left + 32 + 4, top + fontHeight + 32, -1601138544);
+            if(chosen)
+                fill(poseStack,left, top, left + 32 + 4, top + fontHeight + 32, 0x5FD85C2F);
             poseStack.pushPose();
             poseStack.translate(left + 16, top  + 16, 32);
             poseStack.scale(32.0f, 32.0f, 32.0f);
