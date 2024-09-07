@@ -86,8 +86,8 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
         ITransformDataInventory.load(compoundTag,transformDatas);
         slot= (int) compoundTag.getByte("ControlSlot");
         //client chunk update
-        if (this.getLevel() instanceof ClientLevel clientLevel){
-            clientLevel.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        if (this.getLevel() != null && this.getLevel().isClientSide){
+            this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         }
     }
     @Override
@@ -110,10 +110,9 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     public void saveChanged() {
         this.setChanged();
 
-        if (!(this.getLevel() instanceof ServerLevel)) return;
-
-        this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-
+        if (this.getLevel() != null && !this.getLevel().isClientSide) {
+            this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        }
     }
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
