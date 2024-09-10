@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BS#",
+    "SXS",
+    "#SB"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:stick"
+    },
+	"#": {
+      "item": "yuushya:showblock"
+    },
+	"X": {
+      "item": "minecraft:iron_nugget"
+    },
+    "S": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "id": "yuushya:destory_item",
+	"count": 1
+  }
+}
