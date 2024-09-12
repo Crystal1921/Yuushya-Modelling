@@ -126,7 +126,7 @@
   "block.yuushya.showblock.slot_text": "[%s]: ",
 
   "block.yuushya.modelframe.line1": "\u00A78不可用",
-  "block.yuushya.showblock.line1": "\u00A78空",
+  "block.yuushya.showblock.line1": "\u00A79副手持[实体方块旋转工具]可根据玩家朝向旋转放置此实体方块",
   "block.yuushya.mixedblock.line1": "\u00A78不可用",
 
   "item.yuushya.destroy_item": "采集锤",
