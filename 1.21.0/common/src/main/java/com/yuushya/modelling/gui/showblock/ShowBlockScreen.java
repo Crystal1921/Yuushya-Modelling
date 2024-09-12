@@ -107,6 +107,7 @@ public class ShowBlockScreen extends Screen {
             sliderButton.visible = sliderVisible;
             addButton.visible = sliderVisible;
             minusButton.visible = sliderVisible;
+            if(!sliderVisible){ setEditBoxInitial(); }
             editBox.setVisible(!sliderVisible);
             finishButton.visible = !sliderVisible;
             cancelButton.visible = !sliderVisible;
