@@ -34,7 +34,7 @@ public class ShareUtils {
     public static final Gson GSON = new GsonBuilder()
             .disableHtmlEscaping()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
-            .setPrettyPrinting().create();
+            .create();
     public record ShareInformation(
             Set<String> mods,
             List<ShareData> blocks
