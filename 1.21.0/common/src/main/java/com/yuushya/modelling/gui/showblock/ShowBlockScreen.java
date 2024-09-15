@@ -6,6 +6,7 @@ import com.yuushya.modelling.blockentity.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.SliderButton;
+import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
@@ -33,6 +34,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
+import java.io.IOException;
 import java.util.*;
 
 import static com.yuushya.modelling.blockentity.TransformType.*;
@@ -147,6 +149,7 @@ public class ShowBlockScreen extends Screen {
     private Button replaceButton;
     private Button copyButton;
     private Button parseButton;
+    private Button saveButton;
 
     private CycleButton<Boolean> shownStateButton;
     private final Map<TransformType, EditBox> editBoxes = new HashMap<>();
@@ -289,6 +292,37 @@ public class ShowBlockScreen extends Screen {
                 )
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.paste")))
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*3+60,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
+
+        saveButton = Button.builder(Component.literal("\uD83D\uDCBE").withStyle(ChatFormatting.BOLD),
+                        (btn)->{
+                            this.minecraft.setScreen(new EditScreen(this,
+                                    Component.translatable("gui.showBlockScreen.workshop.save"),
+                                    Component.translatable("gui.showBlockScreen.workshop.save.tip"),
+                                    (string)->{
+                                        if(string!=null){
+                                            String res = ShareUtils.transfer(blockEntity.getTransformDatas());
+                                            try {
+                                                EngraveItemResultLoader.save(res,string);
+                                                this.minecraft.getToasts().addToast(
+                                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE,Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                                                );
+                                            } catch (IOException e) {
+                                                this.minecraft.getToasts().addToast(
+                                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE,Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
+                                                );
+                                            }
+                                            this.minecraft.setScreen(this);
+                                        }
+                                        else{
+                                            this.minecraft.setScreen(this);
+                                        }
+                                    },
+                                    (string)->true
+                                    ));
+                        }
+                )
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.save")))
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*4+60,TOP,RIGHT_BAR_WIDTH,PER_HEIGHT).build();
 
         blockStateList =  new BlockStateIconList(this.minecraft,RIGHT_LIST_WIDTH ,RIGHT_LIST_HEIGHT ,RIGHT_COLUMN_X,RIGHT_LIST_TOP, RIGHT_LIST_WIDTH,RIGHT_LIST_PER_HEIGHT,this.blockEntity.getTransformDatas(),this);
 
@@ -453,6 +487,7 @@ public class ShowBlockScreen extends Screen {
         this.addRenderableWidget(rightStateButton);
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
+        this.addRenderableWidget(saveButton);
 
         blockStateList.setSelectedSlot(slot);//updateStateButtonVisible();
     }

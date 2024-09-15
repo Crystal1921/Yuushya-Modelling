@@ -59,7 +59,7 @@ public class TransformDataListNetwork {
                     }
                     String name = tag.getString("ItemName");
                     String hash = player.getStringUUID()+name;
-                    if(HandlingCache.containsKey(hash)){
+                    if(!tag.contains("Blocks") && HandlingCache.containsKey(hash)){
                         menu.setupResultSlotServer(HandlingCache.get(hash));
                     }
                     else{
@@ -81,6 +81,9 @@ public class TransformDataListNetwork {
     }
 
     public static final Set<String> SendingCache = new HashSet<>();
+    public static void updateSendingCache(String name){
+        SendingCache.remove(name);
+    }
 
     //architectury提供的另一种风格的api
     public static void sendToServerSide(EngraveItemResult itemResult){
