@@ -53,7 +53,7 @@ public class YuushyaRegistries {
         ITEMS.register("get_lit_item",()->new GetLitItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1),2));
         ITEMS.register("destroy_item",()->new DestroyItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1).durability(384),2));
         ITEMS.register("gui_item",()->new GuiItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1),2));
-        ITEMS.register("engrave_item",()->new EngraveItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1),2));
+        ITEMS.register("engrave_item",()->new EngraveItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1),3));
 
         ITEMS.register("the_encyclopedia",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
         ITEMS.register("shimmering_pearl",   ()->new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo( 16).rarity(Rarity.RARE),1));
