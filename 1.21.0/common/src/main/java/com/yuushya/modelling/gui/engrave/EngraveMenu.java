@@ -3,6 +3,7 @@ package com.yuushya.modelling.gui.engrave;
 import com.google.common.collect.Lists;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
@@ -88,7 +89,7 @@ public class EngraveMenu
                 //EngraveMenu.this.resultContainer.awardUsedRecipes(player, this.getRelevantItems());
                 ItemStack itemStack = EngraveMenu.this.inputSlot.remove(1);
                 if (!itemStack.isEmpty()) {
-                    EngraveMenu.this.setupResultSlot();
+                    EngraveMenu.this.setupResultSlotServer(stack);
                 }
                 access.execute((level, blockPos) -> {
                     long l = level.getGameTime();
@@ -171,20 +172,34 @@ public class EngraveMenu
         }
     }
 
-    void setupResultSlot() {
-        if (!this.recipes.isEmpty() && this.isValidRecipeIndex(this.selectedRecipeIndex.get())) {
-            EngraveItemResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
-            ItemStack itemStack = recipeHolder.getResultItem().copy();
-            if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
-                //this.resultContainer.setRecipeUsed(recipeHolder);
-                this.resultSlot.set(itemStack);
-            } else {
-                this.resultSlot.set(ItemStack.EMPTY);
-            }
+    void setupResultSlotServer(ItemStack resultItemStack){
+        ItemStack itemStack = resultItemStack.copy();
+        if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
+            //this.resultContainer.setRecipeUsed(recipeHolder);
+            this.resultSlot.set(itemStack);
         } else {
             this.resultSlot.set(ItemStack.EMPTY);
         }
         this.broadcastChanges();
+    }
+
+    void setupResultSlot() {
+        if(level.isClientSide){
+            if (!this.recipes.isEmpty() && this.isValidRecipeIndex(this.selectedRecipeIndex.get())) {
+                EngraveItemResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
+                ItemStack itemStack = recipeHolder.getResultItem().copy();
+                if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
+                    //this.resultContainer.setRecipeUsed(recipeHolder);
+                    TransformDataListNetwork.sendToServerSide(recipeHolder);
+                    this.resultSlot.set(itemStack);
+                } else {
+                    this.resultSlot.set(ItemStack.EMPTY);
+                }
+            } else {
+                this.resultSlot.set(ItemStack.EMPTY);
+            }
+            this.broadcastChanges();
+        }
     }
 
     public MenuType<?> getType() {

@@ -24,4 +24,8 @@ public class EngraveItemResult {
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
         saveToItem(resultItemStack,transformDataList);
     }
+
+    public String getName() {
+        return name;
+    }
 }

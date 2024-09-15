@@ -122,7 +122,7 @@ public class EngraveScreen
                 int m = l - this.startIndex;
                 double d = mouseX - (double)(i + m % RECIPES_COLUMNS * RECIPES_IMAGE_SIZE_WIDTH);
                 double e = mouseY - (double)(j + m / RECIPES_COLUMNS * RECIPES_IMAGE_SIZE_HEIGHT);
-                if (!(d >= 0.0) || !(e >= 0.0) || !(d < 16.0) || !(e < 18.0) || !this.menu.clickMenuButton((Player) this.minecraft.player, l)) continue;
+                if (!(d >= 0.0) || !(e >= 0.0) || !(d < 16.0) || !(e < 18.0) || !this.menu.clickMenuButton(this.minecraft.player, l)) continue;
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0f));
                 this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, l);
                 return true;
