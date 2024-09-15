@@ -58,9 +58,12 @@ public class EngraveItemResultLoader {
         SHOWBLOCK_ITEM_MAP.put(name,new EngraveItemResult(name, information));
         TransformDataListNetwork.updateSendingCache(name);
         Path out = PATH.resolve("./"+name+".json");
-        if(!Files.exists(out))
+        if(!Files.exists(out)){
+            if(!Files.exists(out.getParent())) Files.createDirectories(out.getParent());
             Files.createFile(out);
-        if(Files.exists(out))
+        }
+        if(Files.exists(out)){
             Files.writeString(out,string, StandardCharsets.UTF_8);
+        }
     }
 }
