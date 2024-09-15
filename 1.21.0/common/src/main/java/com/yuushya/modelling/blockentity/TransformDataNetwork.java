@@ -76,8 +76,8 @@ public class TransformDataNetwork{
 
     //architectury提供的另一种风格的api
     public static void sendToServerSide(BlockPos blockPos, int slot, TransformType type, double number){
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        new TransformDataOncePacket(blockPos,type,slot,number).encoder(buf);
+        //FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        //new TransformDataOncePacket(blockPos,type,slot,number).encoder(buf);
         NetworkManager.sendToServer(new TransformDataOncePacket(blockPos,type,slot,number));
     }
 

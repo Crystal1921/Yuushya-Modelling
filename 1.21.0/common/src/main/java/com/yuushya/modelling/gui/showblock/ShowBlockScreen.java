@@ -4,7 +4,6 @@ import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.TransformType;
-import com.yuushya.modelling.blockentity.ITransformDataInventory;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -12,8 +11,10 @@ import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.utils.ShareUtils;
+import dev.architectury.platform.Platform;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -25,7 +26,6 @@ import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringRepresentable;
@@ -259,9 +259,7 @@ public class ShowBlockScreen extends Screen {
 
         copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.copy"),
                         (btn)->{
-                            CompoundTag compoundTag = new CompoundTag();
-                            ITransformDataInventory.saveAdditionalWithoutAir(compoundTag, blockEntity.getTransformDatas());
-                            String res = ShareUtils.asString(compoundTag);
+                            String res = ShareUtils.transfer(blockEntity.getTransformDatas());
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE,Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
@@ -275,8 +273,9 @@ public class ShowBlockScreen extends Screen {
                         (btn)->{
                             String string = getClipboard();
                             try {
-                                CompoundTag compoundTag = ShareUtils.asCompoundTag(string);
-                                updateAllTransformData(compoundTag);
+                                ShareUtils.ShareInformation shareInformation = ShareUtils.from(string);
+                                checkModLack(shareInformation);
+                                updateAllTransformData(shareInformation);
                                 updateStateButtonVisible(true);
                                 this.minecraft.getToasts().addToast(
                                         new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,Component.translatable("gui.showBlockScreen.workshop.paste_pass"),null)
@@ -499,7 +498,14 @@ public class ShowBlockScreen extends Screen {
         TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
-    private void updateAllTransformData(CompoundTag compoundTag){
+    public void checkModLack(ShareUtils.ShareInformation shareInformation){
+        List<String> unLoaded = shareInformation.mods().stream().filter(id->!Platform.getModIds().contains(id)).toList();
+        Minecraft.getInstance().getToasts().addToast(
+                SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ",unLoaded)))
+        );
+    }
+
+    private void updateAllTransformData(ShareUtils.ShareInformation shareInformation){
         List<TransformData> dataList = blockEntity.getTransformDatas();
         BlockPos pos = blockEntity.getBlockPos();
         int currentSize = dataList.size();
@@ -507,7 +513,9 @@ public class ShowBlockScreen extends Screen {
             blockEntity.removeTransformData(slot);
             TransformDataNetwork.sendToServerSide(pos,slot, REMOVE, 0.0);
         }
-        ITransformDataInventory.load(compoundTag,dataList);
+
+        shareInformation.transfer(dataList);
+
         int nextSize = dataList.size();
         this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         this.storage.clear();
