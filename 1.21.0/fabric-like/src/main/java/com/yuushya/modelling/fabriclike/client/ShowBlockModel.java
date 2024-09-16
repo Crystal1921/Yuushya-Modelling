@@ -47,7 +47,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
         if (blockEntity==null) return;
         this.vanillaAdapter = true;
         this.transformDatas = blockEntity.getTransformDatas();
-        VanillaModelEncoder.emitBlockQuads(this, state, randomSupplier, context, context.getEmitter());
+        VanillaModelEncoder.emitBlockQuads(this, state, randomSupplier, context);
     }
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
