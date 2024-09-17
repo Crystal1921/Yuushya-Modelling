@@ -1,10 +1,14 @@
 package com.yuushya.modelling.item.showblocktool;
 
+import com.yuushya.modelling.blockentity.ITransformDataInventory;
+import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
+import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -18,6 +22,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static net.minecraft.world.level.block.Block.getId;
 
 public class DestroyItem extends AbstractMultiPurposeToolItem{
@@ -27,14 +34,17 @@ public class DestroyItem extends AbstractMultiPurposeToolItem{
 
     @Override
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if(blockState.getBlock() instanceof ShowBlock){
-            ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
-            ItemStack offhandItem = player.getOffhandItem();
-            if(offhandItem.getItem() instanceof BlockItem blockItem){
-                if(blockItem.getBlock() instanceof ShowBlock){
+        ItemStack offhandItem = player.getOffhandItem();
+        if(offhandItem.getItem() instanceof BlockItem blockItem){
+            if(blockItem.getBlock() instanceof ShowBlock){
+                if(blockState.getBlock() instanceof ShowBlock){
+                    ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
                     showBlockEntity.saveToItem(offhandItem);
-                    return InteractionResult.SUCCESS;
                 }
+                else{
+                    saveToItem(offhandItem,blockState);
+                }
+                return InteractionResult.SUCCESS;
             }
         }
         return InteractionResult.PASS;
@@ -57,5 +67,20 @@ public class DestroyItem extends AbstractMultiPurposeToolItem{
 
         }
         return InteractionResult.SUCCESS;
+    }
+
+    public static void saveToItem(ItemStack itemStack,BlockState blockState){
+        List<TransformData> transformDataList = new ArrayList<>();
+        TransformData data =  new TransformData();
+        data.blockState = blockState;
+        data.isShown = true;
+        transformDataList.add(data);
+        saveToItem(itemStack,transformDataList);
+    }
+
+    public static void saveToItem(ItemStack itemStack,List<TransformData> transformDataList){
+        CompoundTag compoundTag = new CompoundTag();
+        ITransformDataInventory.saveAdditional(compoundTag, transformDataList);
+        BlockItem.setBlockEntityData(itemStack, YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), compoundTag);
     }
 }

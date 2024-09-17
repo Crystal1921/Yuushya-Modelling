@@ -15,7 +15,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -159,10 +158,7 @@ public class EngraveMenu
             this.input = itemStack.copy();
             this.setupRecipeList(container, itemStack);
         }
-    }
 
-    private static SingleRecipeInput createRecipeInput(Container container) {
-        return new SingleRecipeInput(container.getItem(INPUT_SLOT));
     }
 
     private void setupRecipeList(Container container, ItemStack stack) {

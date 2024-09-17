@@ -15,16 +15,12 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.StonecutterMenu;
 
 @Environment(value=EnvType.CLIENT)
 public class EngraveScreen
         extends AbstractContainerScreen<EngraveMenu> {
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller");
-    private static final ResourceLocation SCROLLER_DISABLED_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/scroller_disabled");
-    private static final ResourceLocation RECIPE_SELECTED_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/recipe_selected");
-    private static final ResourceLocation RECIPE_HIGHLIGHTED_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/recipe_highlighted");
-    private static final ResourceLocation RECIPE_SPRITE = ResourceLocation.withDefaultNamespace("container/stonecutter/recipe");
-    private static final ResourceLocation BG_LOCATION = ResourceLocation.withDefaultNamespace("textures/gui/container/stonecutter.png");
+    private static final ResourceLocation BG_LOCATION = new ResourceLocation("textures/gui/container/stonecutter.png");
     private static final int SCROLLER_WIDTH = 12;
     private static final int SCROLLER_HEIGHT = 15;
     private static final int RECIPES_COLUMNS = 4;
@@ -60,12 +56,12 @@ public class EngraveScreen
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+        this.renderBackground(guiGraphics);
         int i = this.leftPos;
         int j = this.topPos;
         guiGraphics.blit(BG_LOCATION, i, j, 0, 0, this.imageWidth, this.imageHeight);
         int k = (int)(41.0f * this.scrollOffs);
-        ResourceLocation resourceLocation = this.isScrollBarActive() ? SCROLLER_SPRITE : SCROLLER_DISABLED_SPRITE;
-        guiGraphics.blitSprite(resourceLocation, i + 119, j + SCROLLER_HEIGHT + k, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        guiGraphics.blit(BG_LOCATION, i + 119, j + 15 + k, 176 + (this.isScrollBarActive() ? 0 : 12), 0, 12, 15);
         int l = this.leftPos + RECIPES_X;
         int m = this.topPos + RECIPES_Y;
         int n = this.startIndex + SCROLLER_WIDTH;
@@ -94,11 +90,17 @@ public class EngraveScreen
     private void renderButtons(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y, int lastVisibleElementIndex) {
         for (int i = this.startIndex; i < lastVisibleElementIndex && i < this.menu.getNumRecipes(); ++i) {
             int j = i - this.startIndex;
-            int k = x + j % RECIPES_COLUMNS * RECIPES_IMAGE_SIZE_WIDTH;
-            int l = j / RECIPES_COLUMNS;
-            int m = y + l * RECIPES_IMAGE_SIZE_HEIGHT + 2;
-            ResourceLocation resourceLocation = i == this.menu.getSelectedRecipeIndex() ? RECIPE_SELECTED_SPRITE : (mouseX >= k && mouseY >= m && mouseX < k + RECIPES_IMAGE_SIZE_WIDTH && mouseY < m + RECIPES_IMAGE_SIZE_HEIGHT ? RECIPE_HIGHLIGHTED_SPRITE : RECIPE_SPRITE);
-            guiGraphics.blitSprite(resourceLocation, k, m - 1, RECIPES_IMAGE_SIZE_WIDTH, RECIPES_IMAGE_SIZE_HEIGHT);
+            int k = x + j % 4 * 16;
+            int l = j / 4;
+            int m = y + l * 18 + 2;
+            int n = this.imageHeight;
+            if (i == this.menu.getSelectedRecipeIndex()) {
+                n += 18;
+            } else if (mouseX >= k && mouseY >= m && mouseX < k + 16 && mouseY < m + 18) {
+                n += 36;
+            }
+
+            guiGraphics.blit(BG_LOCATION, k, m - 1, 0, n, 16, 18);
         }
     }
 

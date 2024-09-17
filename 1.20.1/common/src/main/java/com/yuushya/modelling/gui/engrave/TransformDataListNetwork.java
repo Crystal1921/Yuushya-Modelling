@@ -1,24 +1,16 @@
 package com.yuushya.modelling.gui.engrave;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.networking.NetworkManager;
 import io.netty.buffer.Unpooled;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,16 +18,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import static net.minecraft.world.item.BlockItem.BLOCK_ENTITY_TAG;
+
 public class TransformDataListNetwork {
-    public static final ResourceLocation TRANSFORM_DATA_LIST_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "transform_data_list_packet");
-    public static final StreamCodec<FriendlyByteBuf, TransformDataListPacket> STREAM_CODEC = CustomPacketPayload.codec(TransformDataListPacket::encoder, TransformDataListPacket::decoder);
-    public static final CustomPacketPayload.Type<TransformDataListPacket> TRANSFORM_DATA_LIST_PACKET_TYPE = new CustomPacketPayload.Type<>(TRANSFORM_DATA_LIST_PACKET_ID);
+    public static final ResourceLocation TRANSFORM_DATA_LIST_PACKET_ID = new ResourceLocation(Yuushya.MOD_ID_USED, "transform_data_list_packet");
 
     private static final Map<String,ItemStack> HandlingCache = new HashMap<>();
 
     public record TransformDataListPacket(
             CompoundTag tag
-    )   implements CustomPacketPayload {
+    )  {
         //buf -> pack
         public static TransformDataListPacket decoder(FriendlyByteBuf buf){
             return new TransformDataListPacket(
@@ -64,18 +56,13 @@ public class TransformDataListNetwork {
                     }
                     else{
                         ItemStack itemStack = YuushyaRegistries.ITEMS.get("showblock").get().getDefaultInstance();
-                        itemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
-                        itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tag));
+                        itemStack.addTagElement(BLOCK_ENTITY_TAG,tag);
+                        itemStack.setHoverName(Component.literal(name));
                         HandlingCache.put(hash,itemStack);
                         menu.setupResultSlotServer(itemStack);
                     }
                 }
             });
-        }
-
-        @Override
-        public CustomPacketPayload.Type<TransformDataListPacket> type() {
-            return TRANSFORM_DATA_LIST_PACKET_TYPE;
         }
 
     }
@@ -94,15 +81,17 @@ public class TransformDataListNetwork {
         }
         else{
             ItemStack itemStack = itemResult.getResultItem();
-            CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA,CustomData.EMPTY);
-            tag = data.copyTag();
+            tag = itemStack.getOrCreateTagElement(BLOCK_ENTITY_TAG);
         }
         tag.putString("ItemName",name);
-        NetworkManager.sendToServer(new TransformDataListPacket(tag));
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        new TransformDataListPacket(tag).encoder(buf);
+        NetworkManager.sendToServer(TRANSFORM_DATA_LIST_PACKET_ID,buf);
     }
 
     public static void registerServerSideReceiver(){
-        NetworkManager.registerReceiver(NetworkManager.Side.C2S, TRANSFORM_DATA_LIST_PACKET_TYPE,STREAM_CODEC, (packet, context) -> {
+        NetworkManager.registerReceiver(NetworkManager.Side.C2S,TRANSFORM_DATA_LIST_PACKET_ID, (buf, context) -> {
+            TransformDataListPacket packet = TransformDataListPacket.decoder(buf);
             packet.handler(()->context);
         });
     }
