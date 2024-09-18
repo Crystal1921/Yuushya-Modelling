@@ -22,6 +22,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class YuushyaUtils {
+    public static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
+
     public static int vertexSize() { return DefaultVertexFormat.BLOCK.getVertexSize() / 4;} // 一个顶点用多少位int表示，原版和开了光影的OptiFine不同所以得在这算出来
 
     public static void scale(PoseStack arg, Vector3f scales){
