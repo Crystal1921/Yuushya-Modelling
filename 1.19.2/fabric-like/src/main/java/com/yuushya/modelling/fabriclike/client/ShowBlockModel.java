@@ -13,8 +13,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,13 +46,10 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     }
 
     private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();
-    protected boolean vanillaAdapter = false;
-    protected List<TransformData> transformDatas = null;
-    private static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
 
     @Override
     public boolean isVanillaAdapter() {
-        return this.vanillaAdapter;
+        return false;
     }
 
     //释放blockQuads的是每次区块构建的时候生成的，所以直接修改自己，不用new新的
@@ -58,29 +57,38 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
         ShowBlockEntity blockEntity=(ShowBlockEntity) blockView.getBlockEntity(pos);
         if (blockEntity==null) return;
-        this.vanillaAdapter = true;
-        this.transformDatas = blockEntity.getTransformDatas();
-        context.fallbackConsumer().accept(this);
-    }
-    @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-        if(transformDatas==null) return super.getQuads(blockState,side,rand);
-        return super.getQuads(blockState,side,rand,transformDatas);
+        context.fallbackConsumer().accept(new ShowBlockModel(facing) {
+            @Override
+            public boolean isVanillaAdapter() {
+                return true;
+            }
+
+            @Override
+            public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+                return super.getQuads(blockState,side,rand,blockEntity.getTransformDatas());
+            }
+        });
     }
 
     //释放itemQuads的只有一个showModel单例，这个单例会拿到各种stack，所以这里得用new
     @Override
     public void emitItemQuads(ItemStack stack, Supplier<RandomSource> randomSupplier, RenderContext context) {
-        CompoundTag data = stack.getTagElement(BLOCK_ENTITY_TAG);
+        CompoundTag data = stack.getTagElement(BlockItem.BLOCK_STATE_TAG);
         if(data == null){
             context.fallbackConsumer().accept(backup);
         }
         else{
+            List<TransformData> transformDatas = new ArrayList<>();
+            ITransformDataInventory.load(data,transformDatas);
             context.fallbackConsumer().accept(itemModelCache.computeIfAbsent(stack,(_stack)->new ShowBlockModel(Direction.SOUTH) {
-                {
-                    this.transformDatas = new ArrayList<>();
-                    ITransformDataInventory.load(data, this.transformDatas);
-                    this.vanillaAdapter = true;
+                @Override
+                public boolean isVanillaAdapter() {
+                    return true;
+                }
+
+                @Override
+                public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+                    return super.getQuads(blockState,side,rand,transformDatas);
                 }
             }));
         }
