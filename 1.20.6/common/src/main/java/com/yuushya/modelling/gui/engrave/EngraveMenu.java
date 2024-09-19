@@ -10,15 +10,10 @@ import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.DataSlot;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.ResultContainer;
-import net.minecraft.world.inventory.Slot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +34,7 @@ public class EngraveMenu
     private final Level level;
     private List<EngraveItemResult> recipes = Lists.newArrayList();
     /**
-     * The {@linkplain net.minecraft.world.item.ItemStack} set in the input slot by the player.
+     * The {@linkplain ItemStack} set in the input slot by the player.
      */
     private ItemStack input = ItemStack.EMPTY;
     /**
