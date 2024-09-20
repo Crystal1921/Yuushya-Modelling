@@ -161,7 +161,7 @@
   "gui.showBlockScreen.workshop.share_hint": "您将可以分享给其他小伙伴",
   "gui.showBlockScreen.workshop.paste_pass": "已应用分享码！",
   "gui.showBlockScreen.workshop.save": "保存建模作品为本地文件",
-  "gui.showBlockScreen.workshop.save": "保存建模作品为本地文件",
+  "gui.showBlockScreen.workshop.save_button": "保存作品",
   "gui.showBlockScreen.workshop.save.tip": "将建模作品以此文件名保存在[./版本文件夹/modelling]下",
   "gui.showBlockScreen.workshop.save_pass": "已将建模作品保存至[./版本文件夹/modelling]下！",
   "gui.showBlockScreen.display.add": "添加副手的方块状态到列表",

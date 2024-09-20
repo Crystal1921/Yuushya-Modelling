@@ -21,6 +21,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.yuushya.modelling.utils.YuushyaUtils.BLOCK_ENTITY_TAG;
+
 public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements UnbakedModel,BakedModel, FabricBakedModel {
     public ShowBlockModel(Direction facing) {
         super(facing);
@@ -43,13 +45,10 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     }
 
     private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();
-    protected boolean vanillaAdapter = false;
-    protected List<TransformData> transformDatas = null;
-    private static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
 
     @Override
     public boolean isVanillaAdapter() {
-        return this.vanillaAdapter;
+        return false;
     }
 
     //释放blockQuads的是每次区块构建的时候生成的，所以直接修改自己，不用new新的
@@ -57,14 +56,17 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<Random> randomSupplier, RenderContext context) {
         ShowBlockEntity blockEntity=(ShowBlockEntity) blockView.getBlockEntity(pos);
         if (blockEntity==null) return;
-        this.vanillaAdapter = true;
-        this.transformDatas = blockEntity.getTransformDatas();
-        context.fallbackConsumer().accept(this);
-    }
-    @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, Random rand) {
-        if(transformDatas==null) return super.getQuads(blockState,side,rand);
-        return super.getQuads(blockState,side,rand,transformDatas);
+        context.fallbackConsumer().accept(new ShowBlockModel(facing) {
+            @Override
+            public boolean isVanillaAdapter() {
+                return true;
+            }
+
+            @Override
+            public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, Random rand) {
+                return super.getQuads(blockState,side,rand,blockEntity.getTransformDatas());
+            }
+        });
     }
 
     //释放itemQuads的只有一个showModel单例，这个单例会拿到各种stack，所以这里得用new
@@ -75,11 +77,17 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
             context.fallbackConsumer().accept(backup);
         }
         else{
+            List<TransformData> transformDatas = new ArrayList<>();
+            ITransformDataInventory.load(data,transformDatas);
             context.fallbackConsumer().accept(itemModelCache.computeIfAbsent(stack,(_stack)->new ShowBlockModel(Direction.SOUTH) {
-                {
-                    this.transformDatas = new ArrayList<>();
-                    ITransformDataInventory.load(data, this.transformDatas);
-                    this.vanillaAdapter = true;
+                @Override
+                public boolean isVanillaAdapter() {
+                    return true;
+                }
+
+                @Override
+                public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, Random rand) {
+                    return super.getQuads(blockState,side,rand,transformDatas);
                 }
             }));
         }

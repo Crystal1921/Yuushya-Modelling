@@ -11,13 +11,16 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.ButtonUtils;
 import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.TooltipUtils;
+import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.utils.ShareUtils;
+import dev.architectury.platform.Platform;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -35,6 +38,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
+import java.io.IOException;
 import java.util.*;
 
 import static com.yuushya.modelling.blockentity.TransformType.*;
@@ -149,6 +153,7 @@ public class ShowBlockScreen extends Screen {
     private Button replaceButton;
     private Button copyButton;
     private Button parseButton;
+    private Button saveButton;
 
     private CycleButton<Boolean> shownStateButton;
     private final Map<TransformType, EditBox> editBoxes = new HashMap<>();
@@ -261,9 +266,7 @@ public class ShowBlockScreen extends Screen {
 
         copyButton = ButtonUtils.builder(Component.translatable("gui.showBlockScreen.workshop.copy"),
                         (btn)->{
-                            CompoundTag compoundTag = new CompoundTag();
-                            ITransformDataInventory.saveAdditionalWithoutAir(compoundTag, blockEntity.getTransformDatas());
-                            String res = ShareUtils.asString(compoundTag);
+                            String res = ShareUtils.transfer(blockEntity.getTransformDatas());
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
@@ -277,8 +280,9 @@ public class ShowBlockScreen extends Screen {
                         (btn)->{
                             String string = getClipboard();
                             try {
-                                CompoundTag compoundTag = ShareUtils.asCompoundTag(string);
-                                updateAllTransformData(compoundTag);
+                                ShareUtils.ShareInformation shareInformation = ShareUtils.from(string);
+                                checkModLack(shareInformation);
+                                updateAllTransformData(shareInformation);
                                 updateStateButtonVisible(true);
                                 this.minecraft.getToasts().addToast(
                                         new SystemToast(SystemToast.SystemToastIds.TUTORIAL_HINT,Component.translatable("gui.showBlockScreen.workshop.paste_pass"),null)
@@ -292,6 +296,37 @@ public class ShowBlockScreen extends Screen {
                 )
                 .tooltip(TooltipUtils.create(this,Component.translatable("gui.showBlockScreen.workshop.paste")))
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*4+100,TOP,RIGHT_BAR_WIDTH*3,PER_HEIGHT).build();
+
+        saveButton = ButtonUtils.builder(Component.translatable("gui.showBlockScreen.workshop.save_button").withStyle(ChatFormatting.BOLD),
+                        (btn)->{
+                            this.minecraft.setScreen(new EditScreen(this,
+                                    Component.translatable("gui.showBlockScreen.workshop.save"),
+                                    Component.translatable("gui.showBlockScreen.workshop.save.tip"),
+                                    (string)->{
+                                        if(string!=null){
+                                            String res = ShareUtils.transfer(blockEntity.getTransformDatas());
+                                            try {
+                                                EngraveItemResultLoader.save(res,string);
+                                                this.minecraft.getToasts().addToast(
+                                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.NARRATOR_TOGGLE,Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                                                );
+                                            } catch (IOException e) {
+                                                this.minecraft.getToasts().addToast(
+                                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE,Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
+                                                );
+                                            }
+                                            this.minecraft.setScreen(this);
+                                        }
+                                        else{
+                                            this.minecraft.setScreen(this);
+                                        }
+                                    },
+                                    (string)->true
+                                    ));
+                        }
+                )
+                .tooltip(TooltipUtils.create(this,Component.translatable("gui.showBlockScreen.workshop.save")))
+                .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*4+160,TOP,RIGHT_BAR_WIDTH*3,PER_HEIGHT).build();
 
         blockStateList =  new BlockStateIconList(this.minecraft,RIGHT_LIST_WIDTH ,RIGHT_LIST_HEIGHT ,RIGHT_COLUMN_X,RIGHT_LIST_TOP,RIGHT_LIST_BOTTOM , RIGHT_LIST_WIDTH,RIGHT_LIST_PER_HEIGHT,this.blockEntity.getTransformDatas(),this);
 
@@ -456,6 +491,7 @@ public class ShowBlockScreen extends Screen {
         this.addRenderableWidget(rightStateButton);
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
+        this.addRenderableWidget(saveButton);
 
         blockStateList.setSelectedSlot(slot);//updateStateButtonVisible();
     }
@@ -513,7 +549,14 @@ public class ShowBlockScreen extends Screen {
         TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
-    private void updateAllTransformData(CompoundTag compoundTag){
+    public void checkModLack(ShareUtils.ShareInformation shareInformation){
+        List<String> unLoaded = shareInformation.mods().stream().filter(id->!Platform.getModIds().contains(id)).toList();
+        Minecraft.getInstance().getToasts().addToast(
+                SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastIds.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ",unLoaded)))
+        );
+    }
+
+    private void updateAllTransformData(ShareUtils.ShareInformation shareInformation){
         List<TransformData> dataList = blockEntity.getTransformDatas();
         BlockPos pos = blockEntity.getBlockPos();
         int currentSize = dataList.size();
@@ -521,7 +564,9 @@ public class ShowBlockScreen extends Screen {
             blockEntity.removeTransformData(slot);
             TransformDataNetwork.sendToServerSide(pos,slot, REMOVE, 0.0);
         }
-        ITransformDataInventory.load(compoundTag,dataList);
+
+        shareInformation.transfer(dataList);
+
         int nextSize = dataList.size();
         this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         this.storage.clear();

@@ -1,6 +1,11 @@
 tasks.register('generateAssetsAndData'){
     dependsOn(processResources)
+    finalizedBy('copyLicense')
+}
 
+tasks.register('copyLicense',Copy){
+    from "../LICENSE"
+    into "./build/resources/main/"
 }
 
 ['1.16.5', '1.20.6', '1.21.0'].forEach {ver->
@@ -24,6 +29,7 @@ partVersions.forEach {ver->
 tasks.register('gen-1.16.5',Copy){
     dependsOn('clean-resource-1.16.5')
     dependsOn('generateAssetsAndData')
+    mustRunAfter('copyLicense')
     from("./build/resources/main/")
     into("../1.16.5/common/build/resources/main/")
     duplicatesStrategy = DuplicatesStrategy.INHERIT
@@ -35,6 +41,7 @@ partVersions.forEach {ver->
     tasks.register("copyAssetsAndDataFromCommon-${ver}",Copy){
         dependsOn("generateAssetsAndData")
         dependsOn("clean-resource-${ver}")
+        mustRunAfter('copyLicense')
         from("./build/resources/main/")
         into("../${ver}/common/build/resources/main/")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -56,21 +63,18 @@ partVersions.forEach { ver ->
     }
 }
 
-tasks.register("gen-part"){
-    dependsOn(partVersions.collect{"gen-${it}"})
-}
-
 
 //1.20.6
 
 tasks.register('generateAssetsAndData-1.20.6'){
     dependsOn('clean-resource-1.20.6')
     dependsOn(processResources)
-
+    finalizedBy('copyLicense')
 }
 
 tasks.register("copyAssetsAndDataFromCommon-1.20.6",Copy){
     dependsOn('generateAssetsAndData-1.20.6')
+    mustRunAfter('copyLicense')
     from("./build/resources/main/")
     into("../1.20.6/common/build/resources/main/")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -91,10 +95,12 @@ tasks.register("gen-1.20.6"){
 tasks.register('generateAssetsAndData-1.21.0'){
     dependsOn('clean-resource-1.21.0')
     dependsOn(processResources)
+    finalizedBy('copyLicense')
 }
 
 tasks.register("copyAssetsAndDataFromCommon-1.21.0",Copy){
     dependsOn('generateAssetsAndData-1.21.0')
+    mustRunAfter('copyLicense')
     from("./build/resources/main/")
     into("../1.21.0/common/build/resources/main/")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

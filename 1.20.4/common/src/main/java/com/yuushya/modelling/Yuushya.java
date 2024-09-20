@@ -1,6 +1,7 @@
 package com.yuushya.modelling;
 
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
+import com.yuushya.modelling.gui.engrave.TransformDataListNetwork;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 
 public class Yuushya {
@@ -9,5 +10,6 @@ public class Yuushya {
     public static void init(){
         YuushyaRegistries.registerAll();
         TransformDataNetwork.registerChannel();
+        TransformDataListNetwork.registerServerSideReceiver();
     }
 }

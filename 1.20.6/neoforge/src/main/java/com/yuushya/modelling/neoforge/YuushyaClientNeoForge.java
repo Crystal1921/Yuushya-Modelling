@@ -2,6 +2,8 @@ package com.yuushya.modelling.neoforge;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaClient;
+import com.yuushya.modelling.gui.engrave.EngraveMenu;
+import com.yuushya.modelling.gui.engrave.EngraveScreen;
 import com.yuushya.modelling.neoforge.client.ShowBlockModel;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -13,6 +15,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
@@ -26,6 +29,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
@@ -38,7 +42,12 @@ public class YuushyaClientNeoForge {
             modBus.addListener(this::onModelBaked);
             modBus.addListener(this::handleBlockColor);
             modBus.addListener(this::handleItemColor);
+            modBus.addListener(this::onRegisterMenuScreensEvent);
         }
+    }
+
+    public void onRegisterMenuScreensEvent(RegisterMenuScreensEvent event){
+        event.register((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 
     public void onInitializeClient(FMLClientSetupEvent event) {
