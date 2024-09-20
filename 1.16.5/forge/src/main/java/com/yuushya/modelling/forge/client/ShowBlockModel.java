@@ -62,6 +62,11 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     private static final String BLOCK_ENTITY_TAG = "BlockEntityTag";
 
     @Override
+    public boolean isLayered() {
+        return true;
+    }
+
+    @Override
     public List<Pair<BakedModel, RenderType>> getLayerModels(ItemStack itemStack, boolean fabulous) {
         CompoundTag data = itemStack.getTagElement(BLOCK_ENTITY_TAG);
         if(data == null){
