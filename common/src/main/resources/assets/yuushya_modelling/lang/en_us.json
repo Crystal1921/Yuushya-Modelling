@@ -130,6 +130,49 @@
   
   "block.yuushya.modelframe.line1": "\u00A78Unavailable",
   "block.yuushya.showblock.line1": "\u00A78Unavailable",
-  "block.yuushya.mixedblock.line1": "\u00A78Unavailable"
+  "block.yuushya.mixedblock.line1": "\u00A78Unavailable",
 
-  }
+  "item.yuushya.destroy_item": "Silk Touch Hammer",
+  "item.yuushya.destroy_item.line1": "\u00A79Click to get Entity Block without NBT loss",
+  "item.yuushya.destroy_item.line2": "\u00A79Right Click on an Entity Block to copy NBT to Entity Block item in the offhand",
+
+  "item.yuushya.gui_item": "\u00A7CModelling GUI Terminal",
+  "item.yuushya.gui_item.line1": "\u00A79Right click on an [Entity Block] to open a screen",
+  "item.yuushya.gui_item.line2": "\u00A79You can modify the values and layers within this screen",
+
+  "gui.showBlockScreen.mode.slider": "Mode:Incremental",
+  "gui.showBlockScreen.mode.fine_tune": "Mode:Fine Tune",
+  "gui.showBlockScreen.mode.edit": "Mode:Input",
+  "gui.showBlockScreen.mode.slider.tooltip": "Values are changed on a fixed scale",
+  "gui.showBlockScreen.mode.fine_tune.tooltip": "Removes incremental limits (e.g., 90.5-degree rotation, 2.05 displacement)",
+  "gui.showBlockScreen.mode.edit.tooltip": "Allows manual input of values. Press the button on the right to apply the values, and press the button on the left to reset them.",
+
+  "gui.yuushya.showBlockScreen.pos_text": "Position",
+  "gui.yuushya.showBlockScreen.rot_text": "Rotation",
+  "gui.yuushya.showBlockScreen.scale_text": "Scale [%s]",
+  "gui.yuushya.showBlockScreen.brightness_text": "Brightness",
+
+  "item.yuushya.engrave_item": "\u00A7CModelling Chisel",
+  "item.yuushya.engrave_item.line1": "\u00A79Hold [Entity Block] in the off-hand and right-click to open a screen for selecting saved local modelling works.",
+  "item.yuushya.engrave_item.line2": "\u00A79In the [Modelling GUI Terminal] screen, saved modelling works will be displayed in this interface.",
+  "item.yuushya.engrave_item.line3": "\u00A79Local modelling works are saved in the 'modellings' folder under the version folder.",
+
+  "gui.showBlockScreen.workshop.copy": "Copy Share Code",
+  "gui.showBlockScreen.workshop.paste": "Apply Share Code",
+  "gui.showBlockScreen.workshop.error": "Invalid Share Code!",
+  "gui.showBlockScreen.workshop.copy_pass": "Share code copied to clipboard!",
+  "gui.showBlockScreen.workshop.share_hint": "You can share it with your friends.",
+  "gui.showBlockScreen.workshop.paste_pass": "Share code applied!",
+  "gui.showBlockScreen.workshop.save": "Save modelling work as local file",
+  "gui.showBlockScreen.workshop.save_button": "Save Work",
+  "gui.showBlockScreen.workshop.save.tip": "Save the modelling work under this filename in [./Version Folder/modelling]",
+  "gui.showBlockScreen.workshop.save_pass": "Modelling work saved to [./Version Folder/modelling]!",
+  "gui.showBlockScreen.display.add": "Add block or blockstate in the offhand to list",
+  "gui.showBlockScreen.display.remove": "Remove selected block or blockstate",
+  "gui.showBlockScreen.display.replace": "Replace selected block or blockstate with in the off hand",
+  "gui.showBlockScreen.display.on": "Switch to hidden",
+  "gui.showBlockScreen.display.off": "Switch to visible",
+  "gui.showBlockScreen.display.on.button": "Hide",
+  "gui.showBlockScreen.display.off.button": "Show"
+
+}
