@@ -296,7 +296,7 @@ public class ShowBlockScreen extends Screen {
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.paste")))
                 .bounds(RIGHT_COLUMN_X+RIGHT_BAR_WIDTH*4+100,TOP,RIGHT_BAR_WIDTH*3,PER_HEIGHT).build();
 
-        saveButton = Button.builder(Component.literal("\uD83D\uDCBE").withStyle(ChatFormatting.BOLD),
+        saveButton = Button.builder(Component.translatable("gui.showBlockScreen.workshop.save_button").withStyle(ChatFormatting.BOLD),
                         (btn)->{
                             this.minecraft.setScreen(new EditScreen(this,
                                     Component.translatable("gui.showBlockScreen.workshop.save"),
