@@ -9,8 +9,12 @@ architectury {
 }
 
 allprojects {
-    group = maven_group
-    version = mod_version
+    apply plugin: "java"
+    apply plugin: "maven-publish"
+
+    archivesBaseName = rootProject.archives_base_name
+    version = rootProject.mod_version
+    group = rootProject.maven_group
 }
 
 subprojects {
