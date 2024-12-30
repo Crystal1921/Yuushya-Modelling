@@ -1,130 +1,13 @@
-tasks.register('generateAssetsAndData'){
-    dependsOn(processResources)
-    finalizedBy('copyLicense')
+architectury {
+    common parent.enabled_platforms.split(',')
 }
 
-tasks.register('copyLicense',Copy){
-    from "../LICENSE"
-    into "./build/resources/main/"
-}
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$parent.fabric_loader_version"
 
-['1.16.5', '1.20.6', '1.21.0'].forEach {ver->
-    tasks.register("clean-resource-${ver}"){
-        dependsOn(clean)
-        dependsOn(":${ver}:common:clean")
-    }
-}
-
-def partVersions = ['1.18.2', '1.19.2', '1.19.4', '1.20.1', '1.20.4']
-
-partVersions.forEach {ver->
-    tasks.register("clean-resource-${ver}"){
-        dependsOn(":${ver}:common:clean")
-    }
-}
-
-
-//1.16.5
-
-tasks.register('gen-1.16.5',Copy){
-    dependsOn('clean-resource-1.16.5')
-    dependsOn('generateAssetsAndData')
-    mustRunAfter('copyLicense')
-    from("./build/resources/main/")
-    into("../1.16.5/common/build/resources/main/")
-    duplicatesStrategy = DuplicatesStrategy.INHERIT
-}
-
-//1.18.2-1.20.4
-
-partVersions.forEach {ver->
-    tasks.register("copyAssetsAndDataFromCommon-${ver}",Copy){
-        dependsOn("generateAssetsAndData")
-        dependsOn("clean-resource-${ver}")
-        mustRunAfter('copyLicense')
-        from("./build/resources/main/")
-        into("../${ver}/common/build/resources/main/")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-}
-
-partVersions.forEach { ver ->
-    tasks.register("copyAssetsAndDataFrom1.16.5-${ver}", Copy) {
-        from("../1.16.5/common/src/main/resources/data/yuushya/")
-        into("../${ver}/common/build/resources/main/data/yuushya/")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-}
-
-partVersions.forEach { ver ->
-    tasks.register("gen-${ver}"){
-        dependsOn("copyAssetsAndDataFromCommon-${ver}")
-        finalizedBy("copyAssetsAndDataFrom1.16.5-${ver}")
-    }
-}
-
-
-//1.20.6
-
-tasks.register('generateAssetsAndData-1.20.6'){
-    dependsOn('clean-resource-1.20.6')
-    dependsOn(processResources)
-    finalizedBy('copyLicense')
-}
-
-tasks.register("copyAssetsAndDataFromCommon-1.20.6",Copy){
-    dependsOn('generateAssetsAndData-1.20.6')
-    mustRunAfter('copyLicense')
-    from("./build/resources/main/")
-    into("../1.20.6/common/build/resources/main/")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.register("copyAssetsAndDataFrom1.16.5-1.20.6", Copy) {
-    from("../1.16.5/common/src/main/resources/data/yuushya/")
-    into("../1.20.6/common/build/resources/main/data/yuushya/")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.register("gen-1.20.6"){
-    dependsOn("copyAssetsAndDataFromCommon-1.20.6")
-    finalizedBy("copyAssetsAndDataFrom1.16.5-1.20.6")
-}
-//1.21.0
-
-tasks.register('generateAssetsAndData-1.21.0'){
-    dependsOn('clean-resource-1.21.0')
-    dependsOn(processResources)
-    finalizedBy('copyLicense')
-}
-
-tasks.register("copyAssetsAndDataFromCommon-1.21.0",Copy){
-    dependsOn('generateAssetsAndData-1.21.0')
-    mustRunAfter('copyLicense')
-    from("./build/resources/main/")
-    into("../1.21.0/common/build/resources/main/")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.register("copyAssetsAndDataFrom1.20.6-1.21.0", Copy) {
-    from("../1.20.6/common/src/main/resources/data/yuushya/recipes")
-    into("../1.21.0/common/build/resources/main/data/yuushya/recipe")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-def mapping = ["advancement":"advancement","loot_tables":"loot_table",
-               "structures":"structure","tags/items":"tags/item"]
-
-mapping.forEach { key,value ->
-    tasks.register("copyAssetsAndDataFrom1.16.5-1.21.0-${key.replace("/","_")}", Copy) {
-        from("../1.16.5/common/src/main/resources/data/yuushya/${key}/")
-        into("../1.21.0/common/build/resources/main/data/yuushya/${value}/")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-}
-
-tasks.register("gen-1.21.0"){
-    dependsOn("copyAssetsAndDataFromCommon-1.21.0")
-    finalizedBy(mapping.collect {"copyAssetsAndDataFrom1.16.5-1.21.0-${it.key.replace("/","_")}"})
-    finalizedBy("copyAssetsAndDataFrom1.20.6-1.21.0")
+    // Architectury API. This is optional, and you can comment it out if you don't need it.
+    modImplementation "dev.architectury:architectury:$parent.architectury_api_version"
 }
