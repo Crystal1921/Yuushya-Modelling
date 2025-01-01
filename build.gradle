@@ -69,18 +69,18 @@ subprojects {
         it.options.release = 17
     }
 
-    def resourceTargets=["fabric.mod.json",'quilt.mod.json','META-INF/mods.toml'];
+    def resourceTargets = ["fabric.mod.json", 'quilt.mod.json', 'META-INF/mods.toml'];
     def replaceProperties = [
-            mod_name: mod_name,
-            mod_version: mod_version,
-            mod_homepage:mod_homepage,
-            mod_source:mod_source,
-            mod_credits:mod_credits,
-            mod_authors: mod_authors,
+            mod_name       : mod_name,
+            mod_version    : mod_version,
+            mod_homepage   : mod_homepage,
+            mod_source     : mod_source,
+            mod_credits    : mod_credits,
+            mod_authors    : mod_authors,
             mod_description: mod_description,
-            mod_licence:mod_licence,
-            group:maven_group]
-    processResources{
+            mod_licence    : mod_licence,
+            group          : maven_group]
+    processResources {
         inputs.properties replaceProperties
         filesMatching(resourceTargets) {
             expand replaceProperties
@@ -102,6 +102,38 @@ subprojects {
             // Notice: This block does NOT have the same function as the block in the top level.
             // The repositories here will be used for publishing your artifact, not for
             // retrieving dependencies.
+        }
+    }
+}
+
+def versions = ['1.20.1'];
+def apis = { ver->
+    if(ver in ['1.20.6','1.21.0']) ['neoforge','fabric']
+    else if(ver == '1.20.4') ['fabric','neoforge']
+    else ['forge','fabric']
+}
+
+versions.forEach {ver->
+    apis(ver).forEach {api->
+        tasks.register("runClient-${ver}-${api}"){
+            dependsOn(":${api}:runClient")
+        }
+        tasks.register("build-jar-${ver}-${api}",Copy){
+            dependsOn(":${api}:build")
+            with{
+                from("./${api}/build/libs/yuushya-modelling-${mod_version}.jar")
+                rename {"yuushya-modelling-${ver}-${api}-${mod_version}.jar"}
+                into("./build/libs")
+                duplicatesStrategy(DuplicatesStrategy.INHERIT)
+            }
+        }
+    }
+}
+
+tasks.register("build-jar"){
+    versions.forEach {ver->
+        apis(ver).forEach { api ->
+            dependsOn "build-jar-${ver}-${api}"
         }
     }
 }

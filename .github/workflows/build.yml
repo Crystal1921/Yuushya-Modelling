@@ -1,4 +1,4 @@
-name: Gradle Package 1.21
+name: Gradle Package 1.20
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'microsoft'
@@ -40,7 +40,7 @@ jobs:
       - name: Build with Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew build
+          ./gradlew build-jar
 
       - name: Create timestamp
         id: create_timestamp
@@ -57,7 +57,7 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            ./forge/build/libs/*.jar
+            ./build/libs/*.jar
 
       - name: Cleanup Gradle Cache
         run: |
