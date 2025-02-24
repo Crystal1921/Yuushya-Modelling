@@ -7,7 +7,9 @@ import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
@@ -15,7 +17,6 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -27,7 +28,6 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
 public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
-    public static final BooleanProperty NOT_SOLID = BooleanProperty.create("not_solid");
     public ShowBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
         this.registerDefaultState(defaultBlockState().setValue(POWERED,false).setValue(LIT,0).setValue(HORIZONTAL_FACING,Direction.SOUTH));
@@ -76,7 +76,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
 
     @Override
     protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-        return blockState.getValue(NOT_SOLID) ?Shapes.empty() : blockState.getShape(blockGetter, blockPos);
+        return blockState.getValue(SHAPES).voxelShape;
     }
 
     @Nullable
@@ -86,7 +86,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     }
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(NOT_SOLID);
+        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos){
+    public @NotNull BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos){
         ShowBlockEntity showBlockEntity= (ShowBlockEntity) worldIn.getBlockEntity(currentPos);
         BlockState blockState=showBlockEntity.getTransformData(0).blockState;
         Block block=blockState.getBlock();
@@ -120,12 +120,34 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     }
 
     @Override
-    public BlockState rotate(BlockState state, Rotation rotation) {
+    public @NotNull BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(HORIZONTAL_FACING, rotation.rotate(state.getValue(HORIZONTAL_FACING)));
     }
 
     @Override
-    public BlockState mirror(BlockState state, Mirror mirror) {
+    public @NotNull BlockState mirror(BlockState state, Mirror mirror) {
         return state.rotate(mirror.getRotation(state.getValue(HORIZONTAL_FACING)));
+    }
+
+    public enum BlockShape implements StringRepresentable {
+        NONE(Shapes.empty()),
+        FENCE(Shapes.create(0.4375,0,0.4375,0.5625,1,0.5625)),
+        BOTTOM_HALF(Shapes.create(0,0,0,1,0.5,1)),
+        TOP_HALF(Shapes.create(0,0.5,0,1,1,1)),
+        BLOCK(Shapes.block());
+
+        final VoxelShape voxelShape;
+        BlockShape(VoxelShape voxelShape) {
+            this.voxelShape = voxelShape;
+        }
+
+        @Override
+        public @NotNull String getSerializedName() {
+            return name().toLowerCase();
+        }
+
+        public Component getSymbol(){
+            return Component.translatable("gui.showBlockScreen.shape." + name().toLowerCase());
+        }
     }
 }

@@ -170,5 +170,10 @@
   "gui.showBlockScreen.display.on": "切换当前层为隐藏",
   "gui.showBlockScreen.display.off": "切换当前层为显示",
   "gui.showBlockScreen.display.on.button": "隐藏",
-  "gui.showBlockScreen.display.off.button": "显示"
+  "gui.showBlockScreen.display.off.button": "显示",
+  "gui.showBlockScreen.shape.none": "空",
+  "gui.showBlockScreen.shape.fence": "栅栏",
+  "gui.showBlockScreen.shape.bottom_half": "下半砖",
+  "gui.showBlockScreen.shape.top_half": "上半砖",
+  "gui.showBlockScreen.shape.block": "完整方块"
 }

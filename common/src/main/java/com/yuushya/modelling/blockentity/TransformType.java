@@ -1,9 +1,12 @@
 package com.yuushya.modelling.blockentity;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
+import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+
+import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public enum TransformType {
     POS_X(0), POS_Y(1), POS_Z(2),
@@ -13,7 +16,8 @@ public enum TransformType {
     SHOWN(10),
     LIT(11),
     REMOVE(12),
-    SUCCESS(13), FAIL(14);
+    SUCCESS(13), FAIL(14),
+    SHAPE(15);
 
     public final int type;
 
@@ -37,6 +41,7 @@ public enum TransformType {
             case 11 -> LIT;
             case 12 -> REMOVE;
             case 13 -> SUCCESS;
+            case 15 -> SHAPE;
             default -> FAIL;
         };
     }
@@ -55,7 +60,7 @@ public enum TransformType {
             case SCALE_Z -> transformData.scales.z();
             case BLOCK_STATE -> Block.getId(transformData.blockState);
             case SHOWN -> transformData.isShown ? 1 : 0;
-            case LIT, REMOVE, SUCCESS, FAIL -> 0;
+            case LIT, REMOVE, SUCCESS, SHAPE, FAIL -> 0;
         };
     }
 
@@ -86,6 +91,10 @@ public enum TransformType {
         return extract(showBlockEntity.getTransformData(slot));
     }
 
+    public ShowBlock.BlockShape extractShape(ShowBlockEntity showBlockEntity) {
+        return showBlockEntity.getBlockState().getValue(SHAPES);
+    }
+
     public void modify(ShowBlockEntity showBlockEntity, int slot, double number){
         if(this == SUCCESS){
             showBlockEntity.saveChanged();
@@ -98,6 +107,11 @@ public enum TransformType {
         }
         if(this == REMOVE){
             showBlockEntity.removeTransformData(slot);
+            return;
+        }
+        if (this == SHAPE) {
+            Level level = showBlockEntity.getLevel();
+            level.setBlock(showBlockEntity.getBlockPos(), showBlockEntity.getBlockState().setValue(SHAPES, ShowBlock.BlockShape.values()[(int) number]), 18);
             return;
         }
         showBlockEntity.setSlot(slot);
