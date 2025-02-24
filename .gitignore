@@ -5,6 +5,7 @@
 /fabric/.gradle
 /fabric/build
 /common/build
+/common/.gradle
 
 /.idea
 /.gradle
