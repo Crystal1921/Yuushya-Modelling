@@ -10,6 +10,7 @@ import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
+import com.yuushya.modelling.gui.widget.BlockStateIconList;
 import com.yuushya.modelling.gui.widget.TransformComponent;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.utils.ShareUtils;
