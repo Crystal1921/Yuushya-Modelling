@@ -4,6 +4,8 @@ import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
+import com.yuushya.modelling.gui.validate.LazyDoubleRange;
+import com.yuushya.modelling.gui.validate.ValidateRange;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
@@ -61,6 +63,20 @@ public final class TransformComponent {
             number = Double.parseDouble(editBox.getValue());
         } catch (NumberFormatException ignored) {
             number = sliderButton.getValidatedValue();
+        }
+        ValidateRange<Double> validateRange = sliderButton.getValidateRange();
+        if (validateRange instanceof LazyDoubleRange doubleValidateRange) {
+            double min = doubleValidateRange.minInclusive();
+            double max = doubleValidateRange.maxInclusive();
+            if (number < min) {
+                double finalNumber = number;
+                doubleValidateRange.setMinInclusiveSupplier(() -> finalNumber);
+            }
+
+            if (number > max) {
+                double finalNumber = number;
+                doubleValidateRange.setMaxInclusiveSupplier(() -> finalNumber);
+            }
         }
         sliderButton.setValidatedValue(number);
         setEditBoxInitial();

@@ -1,6 +1,7 @@
 package com.yuushya.modelling.gui.validate;
 
 import com.yuushya.modelling.gui.SliderButton;
+import lombok.Setter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
@@ -11,9 +12,10 @@ import java.util.function.Supplier;
 
 import static com.yuushya.modelling.gui.validate.DoubleRange.near;
 
+@Setter
 public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<Double> {
-    private final Supplier<Double> minInclusiveSupplier;
-    private final Supplier<Double> maxInclusiveSupplier;
+    private Supplier<Double> minInclusiveSupplier;
+    private Supplier<Double> maxInclusiveSupplier;
     private double step = 0.001;
     private Supplier<Double> stepSupplier;
 
@@ -52,8 +54,6 @@ public final class LazyDoubleRange implements ValidateRange<Double>, StepRange<D
         if (value > this.maxInclusive()) return Optional.of(this.maxInclusive());
         return Optional.of(near(value / getStep()) * getStep());
     }
-
-    public void setStepSupplier(Supplier<Double> stepSupplier) { this.stepSupplier = stepSupplier;}
 
     @Override
     public void setStep(Double step) {this.step = step; }

@@ -1,6 +1,8 @@
 package com.yuushya.modelling.gui;
 
 import com.yuushya.modelling.gui.validate.ValidateRange;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
@@ -14,9 +16,11 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
     //private static final Logger LOGGER = LogUtils.getLogger();
     private final OptionInstance.CaptionBasedToString<T> captionBasedToString;
     private final T initialValue;
+    @Getter
     private final Component caption;
-    public Component getCaption() { return caption; }
-    private final ValidateRange<T> validateRange;
+    @Setter
+    @Getter
+    private ValidateRange<T> validateRange;
     private final OptionInstance.TooltipSupplier<T> tooltipSupplier;
     private final Consumer<SliderButton<T>> onMouseOver;
     private final Consumer<T> onValueChanged;
