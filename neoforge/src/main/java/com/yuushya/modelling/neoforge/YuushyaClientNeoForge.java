@@ -51,7 +51,9 @@ public class YuushyaClientNeoForge {
     }
 
     public void onInitializeClient(FMLClientSetupEvent event) {
-        YuushyaClient.onInitializeClient();
+        event.enqueueWork(() -> {
+            YuushyaClient.onInitializeClient();
+        });
     }
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event){
