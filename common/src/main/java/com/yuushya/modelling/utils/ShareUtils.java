@@ -5,9 +5,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -132,7 +135,92 @@ public class ShareUtils {
         ShareInformation shareInformation = ShareInformation.from(transformDataList);
         return GSON.toJson(shareInformation,ShareInformation.class);
     }
+    
+    public static String transferItems(List<TransformItemData> transformDataList){
+        ItemShareInformation shareInformation = ItemShareInformation.from(transformDataList);
+        return GSON.toJson(shareInformation, ItemShareInformation.class);
+    }
+    
     public static ShareInformation from(String json) {
         return GSON.fromJson(json,ShareInformation.class);
+    }
+    
+    public static ItemShareInformation fromItems(String json) {
+        return GSON.fromJson(json, ItemShareInformation.class);
+    }
+
+    // Item sharing support
+    public record ItemShareInformation(
+            Set<String> mods,
+            List<ItemShareData> items
+    ){
+        public static ItemShareInformation from(List<TransformItemData> transformDataList){
+            Set<String> modIds = new HashSet<>();
+            List<ItemShareData> shareDataList = new ArrayList<>();
+            for(TransformItemData data: transformDataList){
+                String namespace = BuiltInRegistries.ITEM.getKey(data.itemStack.getItem()).getNamespace();
+                if(!"minecraft".equals(namespace)) modIds.add(namespace);
+                shareDataList.add(ItemShareData.from(data));
+            }
+            return new ItemShareInformation(modIds, shareDataList);
+        }
+
+        public void transferItems(List<TransformItemData> transformDataList){
+            if (!transformDataList.isEmpty()) transformDataList.clear();
+            for(ItemShareData data: items){
+                transformDataList.add(data.transfer());
+            }
+        }
+
+        public record ItemShareData(
+                List<Double> pos,
+                List<Float> rot,
+                List<Float> scales,
+                ShareItemStack itemStack,
+                boolean isShown
+        ){
+            public static ItemShareData from(TransformItemData data){
+                return new ItemShareData(
+                        List.of(data.pos.x(), data.pos.y(), data.pos.z()),
+                        List.of(data.rot.x(), data.rot.y(), data.rot.z()),
+                        List.of(data.scales.x(), data.scales.y(), data.scales.z()),
+                        ShareItemStack.from(data.itemStack),
+                        data.isShown
+                );
+            }
+
+            public TransformItemData transfer(){
+                List<Double> posList = new ArrayList<>(pos);
+                List<Float> rotList = new ArrayList<>(rot);
+                List<Float> scalesList = new ArrayList<>(scales);
+                
+                posList.add(0d); posList.add(0d); posList.add(0d);
+                rotList.add(0f); rotList.add(0f); rotList.add(0f);
+                scalesList.add(1f); scalesList.add(1f); scalesList.add(1f);
+                
+                return new TransformItemData(
+                        new Vector3d(posList.get(0), posList.get(1), posList.get(2)),
+                        new Vector3f(rotList.get(0), rotList.get(1), rotList.get(2)),
+                        new Vector3f(scalesList.get(0), scalesList.get(1), scalesList.get(2)),
+                        itemStack.transfer(),
+                        isShown
+                );
+            }
+
+            public record ShareItemStack(
+                    String name,
+                    int count
+            ){
+                public static ShareItemStack from(ItemStack stack){
+                    String name = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+                    return new ShareItemStack(name, stack.getCount());
+                }
+
+                public ItemStack transfer(){
+                    Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.name));
+                    return new ItemStack(item, this.count);
+                }
+            }
+        }
     }
 }
