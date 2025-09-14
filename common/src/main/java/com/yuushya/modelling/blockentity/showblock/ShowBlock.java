@@ -1,20 +1,18 @@
 package com.yuushya.modelling.blockentity.showblock;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.block.AbstractYuushyaBlock;
+import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
@@ -24,10 +22,9 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.*;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
-public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
+public class ShowBlock extends AbstractTransformBlock {
     public ShowBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
-        this.registerDefaultState(defaultBlockState().setValue(POWERED,false).setValue(LIT,0).setValue(HORIZONTAL_FACING,Direction.SOUTH));
     }
 
     @Environment(EnvType.CLIENT)
@@ -72,20 +69,6 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new ShowBlockEntity(blockPos,blockState);
     }
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES);
-    }
-
-    @Override
-    public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
-        if(blockPlaceContext.getPlayer()!=null && blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"rot_trans_item"))))
-            return blockPlaceContext.getClickedFace().getAxis() == Direction.Axis.Y
-                ? this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
-                : this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());
-        else
-            return super.getStateForPlacement(blockPlaceContext);
-    }
 
     @Override
     public @NotNull BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos){
@@ -105,16 +88,6 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
             showBlockEntity.saveChanged();
         }
         return stateIn.setValue(POWERED,!stateIn.getValue(POWERED));
-    }
-
-    @Override
-    public @NotNull BlockState rotate(BlockState state, Rotation rotation) {
-        return state.setValue(HORIZONTAL_FACING, rotation.rotate(state.getValue(HORIZONTAL_FACING)));
-    }
-
-    @Override
-    public @NotNull BlockState mirror(BlockState state, Mirror mirror) {
-        return state.rotate(mirror.getRotation(state.getValue(HORIZONTAL_FACING)));
     }
 
 }
