@@ -80,6 +80,15 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
     }
 
     /**
+     * Renders coordinate axes for rotation and position using the common interface
+     */
+    protected void renderAxes(T blockEntity, PoseStack matrixStack, MultiBufferSource multiBufferSource, 
+                            ITransformDataProvider transformData) {
+        renderAxes(blockEntity, matrixStack, multiBufferSource, 
+                  transformData.getPosition(), transformData.getRotation(), transformData.getScale());
+    }
+
+    /**
      * Renders coordinate axes for rotation and position
      */
     protected void renderAxes(T blockEntity, PoseStack matrixStack, MultiBufferSource multiBufferSource, 

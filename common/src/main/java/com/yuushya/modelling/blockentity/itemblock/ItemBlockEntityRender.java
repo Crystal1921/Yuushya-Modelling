@@ -29,7 +29,7 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<It
         TransformItemData transformData = blockEntity.getTransFormDataNow();
         
         if (transformData.isShown && (blockEntity.showPosAxis() || blockEntity.showRotAxis())) {
-            renderAxes(blockEntity, matrixStack, multiBufferSource, transformData.pos, transformData.rot, transformData.scales);
+            renderAxes(blockEntity, matrixStack, multiBufferSource, transformData);
         }
         
         if (blockEntity.showText()) {
