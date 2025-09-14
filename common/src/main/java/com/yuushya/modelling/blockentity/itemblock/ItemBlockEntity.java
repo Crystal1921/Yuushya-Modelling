@@ -1,10 +1,12 @@
 package com.yuushya.modelling.blockentity.itemblock;
 
 import com.yuushya.modelling.blockentity.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.ITransformItemDataInventory;
+import com.yuushya.modelling.blockentity.TransformItemData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -12,14 +14,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItemBlockEntity extends BlockEntity implements ITransformDataInventory {
+public class ItemBlockEntity extends BlockEntity implements ITransformItemDataInventory {
     @Getter
-    private final List<TransformData> transformData;
+    private final List<TransformItemData> transformData;
     @NotNull
-    public TransformData getTransFormDataNow(){return getTransformData(slot);}
+    public TransformItemData getTransFormDataNow(){return getTransformData(slot);}
     public void removeTransFormDataNow(){removeTransformData(slot);}
-    public void setTransformDataNow(TransformData transformData){setTransformData(slot,transformData);}
-    public void setSlotBlockStateNow(BlockState blockState){setSlotBlockState(slot,blockState);}
+    public void setTransformDataNow(TransformItemData transformData){setTransformData(slot,transformData);}
+    public void setSlotBlockStateNow(ItemStack itemStack){setSlotBlockState(slot,itemStack);}
 
 
     private Integer slot;
@@ -27,7 +29,7 @@ public class ItemBlockEntity extends BlockEntity implements ITransformDataInvent
     public void setSlot(int slot){
         if (slot>= transformData.size()){
             for (int i = slot- transformData.size()+1; i>0; i--)
-                transformData.add(new TransformData());
+                transformData.add(new TransformItemData());
         }
         this.slot=slot;
     }
@@ -54,7 +56,7 @@ public class ItemBlockEntity extends BlockEntity implements ITransformDataInvent
     public ItemBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(YuushyaRegistries.ITEM_BLOCK_ENTITY.get(), blockPos, blockState);
         transformData = new ArrayList<>();
-        transformData.add(new TransformData());
+        transformData.add(new TransformItemData());
         slot = 0;
     }
 }

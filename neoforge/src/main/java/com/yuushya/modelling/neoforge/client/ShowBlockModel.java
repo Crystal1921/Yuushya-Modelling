@@ -2,7 +2,7 @@ package com.yuushya.modelling.neoforge.client;
 
 
 import com.yuushya.modelling.blockentity.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -66,7 +66,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
             return List.of(backup);
         }
         return List.of(itemModelCache.computeIfAbsent(itemStack,(_stack)-> new ShowBlockModel(Direction.SOUTH){
-            private final List<TransformData> transformDatas;
+            private final List<TransformBlockData> transformDatas;
             {
                 this.transformDatas = new ArrayList<>();
                 ITransformDataInventory.load(data.copyTag(),transformDatas);

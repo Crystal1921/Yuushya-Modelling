@@ -1,7 +1,7 @@
 package com.yuushya.modelling.item.showblocktool;
 
 import org.joml.Vector3d;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
@@ -11,7 +11,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector3f;
 
@@ -72,10 +71,10 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
         });
     }
 
-    protected static InteractionResult translateData(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack, Consumer<TransformData> consumer){
+    protected static InteractionResult translateData(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack, Consumer<TransformBlockData> consumer){
         if(blockState.getBlock() instanceof ShowBlock) {
             ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
-            TransformData transformData=showBlockEntity.getTransFormDataNow();
+            TransformBlockData transformData=showBlockEntity.getTransFormDataNow();
             consumer.accept(transformData);
             showBlockEntity.saveChanged();
             return InteractionResult.SUCCESS;

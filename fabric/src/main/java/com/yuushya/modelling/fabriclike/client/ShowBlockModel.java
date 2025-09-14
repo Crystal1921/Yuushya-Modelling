@@ -1,7 +1,7 @@
 package com.yuushya.modelling.fabriclike.client;
 
 import com.yuushya.modelling.blockentity.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
@@ -65,7 +65,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
             VanillaModelEncoder.emitItemQuads(backup, null, randomSupplier, context);
         }
         else{
-            List<TransformData> transformDatas = new ArrayList<>();
+            List<TransformBlockData> transformDatas = new ArrayList<>();
             ITransformDataInventory.load(data.copyTag(),transformDatas);
             VanillaModelEncoder.emitItemQuads(itemModelCache.computeIfAbsent(stack,(_stack)->new ShowBlockModel(Direction.SOUTH) {
                 @Override

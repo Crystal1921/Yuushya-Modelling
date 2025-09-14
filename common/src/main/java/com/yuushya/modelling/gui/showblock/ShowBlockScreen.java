@@ -2,7 +2,7 @@ package com.yuushya.modelling.gui.showblock;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.BlockShape;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.blockentity.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
@@ -135,7 +135,7 @@ public class ShowBlockScreen extends Screen {
                             int chosen = this.blockStateList.getChosenOne();
                             if (chosen != -1) {
                                 blockStateList.addSlot();
-                                blockEntity.getTransformData().add(new TransformData());
+                                blockEntity.getTransformData().add(new TransformBlockData());
                                 updateTransformDataServerImmediate(blockEntity.getTransformData(chosen), slot);
                                 TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
                                 updateStateButtonVisible(true);
@@ -485,7 +485,7 @@ public class ShowBlockScreen extends Screen {
     }
 
     private void updateAllTransformData(ShareUtils.ShareInformation shareInformation) {
-        List<TransformData> dataList = blockEntity.getTransformData();
+        List<TransformBlockData> dataList = blockEntity.getTransformData();
         BlockPos pos = blockEntity.getBlockPos();
         int currentSize = dataList.size();
         for (int slot = 0; slot < currentSize; slot++) {
@@ -499,7 +499,7 @@ public class ShowBlockScreen extends Screen {
         this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         this.storage.clear();
         for (int slot = 0; slot < nextSize; slot++) {
-            TransformData data = dataList.get(slot);
+            TransformBlockData data = dataList.get(slot);
             updateTransformDataServerImmediate(data, slot);
         }
         TransformDataNetwork.sendToServerSideSuccess(pos);
@@ -509,7 +509,7 @@ public class ShowBlockScreen extends Screen {
         this.blockStateList.updateRenderList();
     }
 
-    private void updateTransformDataServerImmediate(TransformData data, int slot) {
+    private void updateTransformDataServerImmediate(TransformBlockData data, int slot) {
         BlockPos pos = blockEntity.getBlockPos();
         TransformDataNetwork.sendToServerSide(pos, slot, POS_X, data.pos.x);
         TransformDataNetwork.sendToServerSide(pos, slot, POS_Y, data.pos.y);

@@ -1,6 +1,6 @@
 package com.yuushya.modelling.gui.engrave;
 
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.core.component.DataComponents;
@@ -18,7 +18,7 @@ public class EngraveItemResult {
     public ItemStack getResultItem(){return resultItemStack;}
     public EngraveItemResult(String name, ShareUtils.ShareInformation itemInfo){
         this.name = name;
-        List<TransformData> transformDataList = new ArrayList<>();
+        List<TransformBlockData> transformDataList = new ArrayList<>();
         itemInfo.transfer(transformDataList);
         resultItemStack = YuushyaRegistries.ITEMS.get("showblock").get().getDefaultInstance();
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));

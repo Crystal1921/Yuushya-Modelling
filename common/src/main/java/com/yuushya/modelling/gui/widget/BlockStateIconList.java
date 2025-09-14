@@ -1,7 +1,7 @@
 package com.yuushya.modelling.gui.widget;
 
 import com.mojang.math.Axis;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.client.Minecraft;
@@ -30,13 +30,13 @@ import static com.yuushya.modelling.utils.YuushyaUtils.PROPERTY_ENTRY_TO_STRING_
 public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.Entry> {
 
     //private static final Logger LOGGER = LogUtils.getLogger();
-    protected final List<TransformData> transformDataList;
+    protected final List<TransformBlockData> transformDataList;
     protected final List<Entry> chosen = new ArrayList<>();
     protected final ShowBlockScreen screen;
     private int itemHeight;
     private int itemWidth;
-    public BlockStateIconList(Minecraft minecraft, int width, int height,int x , int y0, int itemWidth, int itemHeight,
-                                List<TransformData> transformDataList, ShowBlockScreen showBlockScreen
+    public BlockStateIconList(Minecraft minecraft, int width, int height, int x , int y0, int itemWidth, int itemHeight,
+                              List<TransformBlockData> transformDataList, ShowBlockScreen showBlockScreen
     ) {
         super(minecraft, width, height, y0, itemHeight);
         this.setX(x);
@@ -147,8 +147,8 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         private final int slot;
         private final Minecraft minecraft;
         private boolean chosen = false;
-        public TransformData getTransformData(){
-            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot) : new TransformData();
+        public TransformBlockData getTransformData(){
+            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot) : new TransformBlockData();
         }
         public BlockState updateRenderState(){
             return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot).blockState : Blocks.AIR.defaultBlockState();

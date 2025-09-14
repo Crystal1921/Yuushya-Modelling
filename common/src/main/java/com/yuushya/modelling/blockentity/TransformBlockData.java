@@ -7,20 +7,20 @@ import net.minecraft.nbt.*;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class TransformData{
+public class TransformBlockData {
     public Vector3d pos;
     public Vector3f rot;
     public Vector3f scales;
     public BlockState blockState;
     public boolean isShown;
-    public TransformData(){
+    public TransformBlockData(){
         this.pos=new Vector3d(0,0,0);
         this.rot=new Vector3f(0,0,0);
         this.scales=new Vector3f(1,1,1);
         this.blockState= Blocks.AIR.defaultBlockState();
         this.isShown=false;
     }
-    public TransformData(Vector3d pos, Vector3f rot, Vector3f scales, BlockState blockState,boolean isShown){
+    public TransformBlockData(Vector3d pos, Vector3f rot, Vector3f scales, BlockState blockState, boolean isShown){
         this();
         this.pos.set(pos);
         this.rot.set(rot.x(),rot.y(),rot.z());
@@ -35,7 +35,7 @@ public class TransformData{
         this.blockState= blockState;
         this.isShown=isShown;
     }
-    public void set(TransformData old){
+    public void set(TransformBlockData old){
         set(old.pos,old.rot,old.scales,old.blockState,old.isShown);
     }
     public void set(){

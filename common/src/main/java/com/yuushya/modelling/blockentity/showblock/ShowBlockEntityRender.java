@@ -3,7 +3,7 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
@@ -75,7 +75,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
             blockEntity.consumeShowFrame();
         }
         if (blockEntity.showRotAxis() || blockEntity.showPosAxis() || blockEntity.showText()) {
-            TransformData transformData = blockEntity.getTransFormDataNow();
+            TransformBlockData transformData = blockEntity.getTransFormDataNow();
             if (transformData.isShown && (blockEntity.showPosAxis() || blockEntity.showRotAxis())) {
                 matrixStack.pushPose();
                 {
@@ -141,7 +141,7 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                                     .append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", transformData.rot.z())).withStyle(ChatFormatting.BLUE)), 0.55f, matrixStack, multiBufferSource, light, camera);
                     renderText(font, Component.translatable("block.yuushya.showblock.scale_text", transformData.scales.x()), 0.3f, matrixStack, multiBufferSource, light, camera);
                     float high = 0.3f;
-                    for (TransformData everyTransformData : blockEntity.getTransformData()) {
+                    for (TransformBlockData everyTransformData : blockEntity.getTransformData()) {
                         int slot = blockEntity.getTransformData().indexOf(everyTransformData);
                         Style style = blockEntity.getSlot() == slot ? Style.EMPTY.withColor(ChatFormatting.GOLD).withBold(true)
                                 : everyTransformData.isShown ? Style.EMPTY.withColor(ChatFormatting.WHITE)

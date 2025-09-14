@@ -1,7 +1,7 @@
 package com.yuushya.modelling.blockentity.showblock;
 
 
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.blockentity.ITransformDataInventory;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import lombok.Getter;
@@ -28,12 +28,12 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 public class ShowBlockEntity extends BlockEntity implements ITransformDataInventory {
 
     @Getter
-    private final List<TransformData> transformData;
+    private final List<TransformBlockData> transformData;
 
     @NotNull
-    public TransformData getTransFormDataNow(){return getTransformData(slot);}
+    public TransformBlockData getTransFormDataNow(){return getTransformData(slot);}
     public void removeTransFormDataNow(){removeTransformData(slot);}
-    public void setTransformDataNow(TransformData transformData){setTransformData(slot,transformData);}
+    public void setTransformDataNow(TransformBlockData transformData){setTransformData(slot,transformData);}
     public void setSlotBlockStateNow(BlockState blockState){setSlotBlockState(slot,blockState);}
 
 
@@ -42,7 +42,7 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     public void setSlot(int slot){
         if (slot>= transformData.size()){
             for (int i = slot- transformData.size()+1; i>0; i--)
-                transformData.add(new TransformData());
+                transformData.add(new TransformBlockData());
         }
         this.slot=slot;
     }
@@ -83,7 +83,7 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     public ShowBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), blockPos, blockState);
         transformData = new ArrayList<>();
-        transformData.add(new TransformData());
+        transformData.add(new TransformBlockData());
         slot=0;
     }
     @Override

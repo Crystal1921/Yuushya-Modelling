@@ -4,7 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceLocation;
@@ -39,10 +39,10 @@ public class ShareUtils {
             Set<String> mods,
             List<ShareData> blocks
     ){
-        public static ShareInformation from(List<TransformData> transformDataList){
+        public static ShareInformation from(List<TransformBlockData> transformDataList){
             Set<String> modIds = new HashSet<>();
             List<ShareData> shareDataList = new ArrayList<>();
-            for(TransformData data: transformDataList){
+            for(TransformBlockData data: transformDataList){
                 String namespace = BuiltInRegistries.BLOCK.getKey(data.blockState.getBlock()).getNamespace();
                 if(!"minecraft".equals(namespace)) modIds.add(namespace);
                 shareDataList.add(ShareData.from(data));
@@ -50,7 +50,7 @@ public class ShareUtils {
             return new ShareInformation(modIds,shareDataList);
         }
 
-        public void transfer(List<TransformData> transformDataList){
+        public void transfer(List<TransformBlockData> transformDataList){
             if (!transformDataList.isEmpty()) transformDataList.clear();
             for(ShareData data:blocks){
                 transformDataList.add(data.transfer());
@@ -64,7 +64,7 @@ public class ShareUtils {
                 ShareBlockState blockState,
                 boolean isShown
         ){
-            public static ShareData from(TransformData data){
+            public static ShareData from(TransformBlockData data){
                 return new ShareData(
                         List.of(data.pos.x,data.pos.y,data.pos.z),
                         List.of(data.rot.x,data.rot.y,data.rot.z),
@@ -74,11 +74,11 @@ public class ShareUtils {
                 );
             }
 
-            public TransformData transfer(){
+            public TransformBlockData transfer(){
                 pos.add(0d);pos.add(0d);pos.add(0d);
                 rot.add(0f);rot.add(0f);rot.add(0f);
                 scales.add(1f);scales.add(1f);scales.add(1f);
-                return new TransformData(
+                return new TransformBlockData(
                         new Vector3d(pos.get(0),pos.get(1),pos.get(2)),
                         new Vector3f(rot.get(0),rot.get(1),rot.get(2)),
                         new Vector3f(scales.get(0),scales.get(1),scales.get(2)),
@@ -128,7 +128,7 @@ public class ShareUtils {
     }
 
 
-    public static String transfer(List<TransformData> transformDataList){
+    public static String transfer(List<TransformBlockData> transformDataList){
         ShareInformation shareInformation = ShareInformation.from(transformDataList);
         return GSON.toJson(shareInformation,ShareInformation.class);
     }

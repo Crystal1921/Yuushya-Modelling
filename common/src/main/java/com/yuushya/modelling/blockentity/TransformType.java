@@ -46,7 +46,7 @@ public enum TransformType {
     }
 
 
-    public double extract(TransformData transformData){
+    public double extract(TransformBlockData transformData){
         return switch (this){
             case POS_X -> transformData.pos.x();
             case POS_Y -> transformData.pos.y();
@@ -63,7 +63,7 @@ public enum TransformType {
         };
     }
 
-    public void modify(TransformData transformData, Double number){
+    public void modify(TransformBlockData transformData, Double number){
         switch (this){
             case POS_X -> transformData.pos.set(number,transformData.pos.y(),transformData.pos.z());
             case POS_Y -> transformData.pos.set(transformData.pos.x(),number,transformData.pos.z());

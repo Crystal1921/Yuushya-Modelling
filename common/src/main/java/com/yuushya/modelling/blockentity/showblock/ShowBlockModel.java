@@ -2,7 +2,7 @@ package com.yuushya.modelling.blockentity.showblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -37,7 +37,7 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
         this.backup = backup;
     }
 
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, List<TransformData> transformDatas) {
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, List<TransformBlockData> transformDatas) {
         int vertexSize = YuushyaUtils.vertexSize();
         BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
         List<BakedQuad> finalQuads = new ArrayList<>();
@@ -51,7 +51,7 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
         stack.translate(0.5f, 0.5f, 0.5f);
         stack.mulPose(Axis.YP.rotationDegrees(-f));
         stack.translate(-0.5f, -0.5f, -0.5f);
-        for (TransformData transformData : transformDatas)
+        for (TransformBlockData transformData : transformDatas)
             if (transformData.isShown) {
                 BlockState blockState = transformData.blockState;
                 BakedModel blockModel = blockRenderDispatcher.getBlockModel(blockState);

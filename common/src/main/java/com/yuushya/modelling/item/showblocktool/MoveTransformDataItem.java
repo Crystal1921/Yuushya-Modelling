@@ -1,6 +1,6 @@
 package com.yuushya.modelling.item.showblocktool;
 
-import com.yuushya.modelling.blockentity.TransformData;
+import com.yuushya.modelling.blockentity.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractToolItem;
@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class MoveTransformDataItem extends AbstractToolItem {
-    private final TransformData transformData=new TransformData();
+    private final TransformBlockData transformData=new TransformBlockData();
     public MoveTransformDataItem(Properties properties, Integer tipLines) {
         super(properties, tipLines);
     }
