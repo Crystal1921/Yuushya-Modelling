@@ -7,7 +7,7 @@ import net.minecraft.nbt.*;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class TransformBlockData {
+public class TransformBlockData implements ITransformDataProvider {
     public Vector3d pos;
     public Vector3f rot;
     public Vector3f scales;
@@ -66,4 +66,29 @@ public class TransformBlockData {
         compoundTag.put("isShown",ByteTag.valueOf(isShown));
     }
 
+    // ITransformDataProvider interface methods
+    @Override
+    public Vector3d getPosition() {
+        return pos;
+    }
+
+    @Override
+    public Vector3f getRotation() {
+        return rot;
+    }
+
+    @Override
+    public Vector3f getScale() {
+        return scales;
+    }
+
+    @Override
+    public boolean isShown() {
+        return isShown;
+    }
+
+    @Override
+    public void setShown(boolean shown) {
+        this.isShown = shown;
+    }
 }

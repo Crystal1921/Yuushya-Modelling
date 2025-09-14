@@ -10,7 +10,7 @@ import net.minecraft.world.item.Items;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
-public class TransformItemData {
+public class TransformItemData implements ITransformDataProvider {
     public Vector3d pos;
     public Vector3f rot;
     public Vector3f scales;
@@ -71,8 +71,35 @@ public class TransformItemData {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(), rot.y(), rot.z()));
         compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(), scales.y(), scales.z()));
-        itemStack.save(registries, compoundTag);
+        if (!itemStack.isEmpty()) {
+            itemStack.save(registries, compoundTag);
+        }
         compoundTag.put("isShown", ByteTag.valueOf(isShown));
     }
 
+    // ITransformDataProvider interface methods
+    @Override
+    public Vector3d getPosition() {
+        return pos;
+    }
+
+    @Override
+    public Vector3f getRotation() {
+        return rot;
+    }
+
+    @Override
+    public Vector3f getScale() {
+        return scales;
+    }
+
+    @Override
+    public boolean isShown() {
+        return isShown;
+    }
+
+    @Override
+    public void setShown(boolean shown) {
+        this.isShown = shown;
+    }
 }

@@ -1,5 +1,7 @@
 package com.yuushya.modelling;
 
+import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
+import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntityRender;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntityRender;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
@@ -19,7 +21,10 @@ import java.util.List;
 public class YuushyaClient {
     public static void onInitializeClient(){
         RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.SHOW_BLOCK.get());
+        RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.ITEM_BLOCK.get());
+        
         BlockEntityRendererRegistry.register((BlockEntityType<ShowBlockEntity>) YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), ShowBlockEntityRender::new);
+        BlockEntityRendererRegistry.register((BlockEntityType<ItemBlockEntity>) YuushyaRegistries.ITEM_BLOCK_ENTITY.get(), ItemBlockEntityRender::new);
 
         for (String s: List.of("rot_trans_item","pos_trans_item","micro_pos_trans_item","get_showblock_item"))
             ItemPropertiesRegistry.register(YuushyaRegistries.ITEMS.get(s).get(),ResourceLocation.parse("direction"),(itemStack, clientWorld, livingEntity, i) -> ((Integer)(itemStack.getOrDefault(YuushyaRegistries.TRANS_DIRECTION.get(),0)))*0.1F );
