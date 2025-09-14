@@ -71,7 +71,9 @@ public class TransformItemData implements ITransformDataProvider {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(), rot.y(), rot.z()));
         compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(), scales.y(), scales.z()));
-        itemStack.save(registries, compoundTag);
+        if (!itemStack.isEmpty()) {
+            itemStack.save(registries, compoundTag);
+        }
         compoundTag.put("isShown", ByteTag.valueOf(isShown));
     }
 
