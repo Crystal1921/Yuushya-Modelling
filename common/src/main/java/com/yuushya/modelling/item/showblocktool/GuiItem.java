@@ -1,9 +1,13 @@
 package com.yuushya.modelling.item.showblocktool;
 
+import com.yuushya.modelling.blockentity.itemblock.ItemBlock;
+import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
+import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.item.AbstractToolItem;
+import net.minecraft.world.item.Items;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.fabricmc.api.EnvType;
@@ -37,6 +41,8 @@ public class GuiItem  extends AbstractToolItem {
     @Environment(EnvType.CLIENT)
     public void openGuiScreen(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack){
         BlockState newBlockState = null;
+        ItemStack newItemStack = null;
+        
         for(ItemStack itemStack: player.getHandSlots()){
             if(itemStack.getItem() instanceof GetBlockStateItem){
                 newBlockState = itemStack.getOrDefault((DataComponentType<BlockState>) YuushyaRegistries.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
@@ -44,12 +50,21 @@ public class GuiItem  extends AbstractToolItem {
             else if(itemStack.getItem() instanceof BlockItem item){
                 newBlockState = item.getBlock().defaultBlockState();
             }
+            else if(!itemStack.isEmpty() && itemStack.getItem() != Items.AIR) {
+                newItemStack = itemStack.copy();
+            }
         }
 
         if(blockState.getBlock() instanceof ShowBlock) {
             ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
             Minecraft.getInstance().setScreen(
                     new ShowBlockScreen(showBlockEntity,newBlockState)
+            );
+        }
+        else if(blockState.getBlock() instanceof ItemBlock) {
+            ItemBlockEntity itemBlockEntity = (ItemBlockEntity) level.getBlockEntity(blockPos);
+            Minecraft.getInstance().setScreen(
+                    new ItemBlockScreen(itemBlockEntity, newItemStack)
             );
         }
     }
