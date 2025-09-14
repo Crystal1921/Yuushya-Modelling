@@ -37,6 +37,9 @@ public final class ItemTransformComponent {
         sliderButton.setStep(fine_tuneStep);
         sliderButton.setInitialValidatedValue(type.extract(blockEntity, slot));
         sliderButton.setStep(step);
+        if (editBox != null) {
+            editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
+        }
     }
 
     public void setSliderStep() {
@@ -48,49 +51,61 @@ public final class ItemTransformComponent {
     }
 
     public void initWidget(Font font) {
-        // Initialize edit-related widgets similar to TransformComponent
-        editBox = new EditBox(font, 0, 0, 80, 20, Component.empty());
-        editBox.visible = false;
-        
-        cancelButton = Button.builder(Component.literal("✖").withStyle(ChatFormatting.RED), (btn) -> {
-            triggerVisible(true);
-        }).size(10, 10).build();
-        cancelButton.visible = false;
-        
-        finishButton = Button.builder(Component.literal("✓").withStyle(ChatFormatting.GREEN), (btn) -> {
-            try {
-                double value = Double.parseDouble(editBox.getValue());
-                if (sliderButton instanceof ValidateRange<Double> validateRange) {
-                    if (validateRange.isValidValue(value)) {
-                        sliderButton.setInitialValidatedValue(value);
-                        triggerVisible(true);
-                    }
-                }
-            } catch (NumberFormatException e) {
-                // Invalid number, ignore
-            }
-        }).size(10, 10).build();
-        finishButton.visible = false;
-        
-        // Initialize increment/decrement buttons
+        // Position buttons relative to slider button (like the original TransformComponent)
         minusButton = Button.builder(Component.literal("-"), (btn) -> {
             double currentValue = sliderButton.getValidatedValue();
             double newValue = currentValue - sliderButton.getStep();
             sliderButton.setValidatedValue(newValue);
-        }).size(10, 10).build();
+        }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, 20).build();
         
         addButton = Button.builder(Component.literal("+"), (btn) -> {
             double currentValue = sliderButton.getValidatedValue();
             double newValue = currentValue + sliderButton.getStep();
             sliderButton.setValidatedValue(newValue);
-        }).size(10, 10).build();
+        }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY(), 10, 20).build();
+        
+        // Initialize edit box with proper positioning
+        editBox = new EditBox(font, sliderButton.getX(), sliderButton.getY(), sliderButton.getWidth(), 20, Component.empty());
+        editBox.setMaxLength(15);
+        editBox.visible = false;
+        
+        cancelButton = Button.builder(Component.literal("×").withStyle(ChatFormatting.RED), (btn) -> {
+            editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
+            triggerVisible(true);
+        }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, 20).build();
+        cancelButton.visible = false;
+        
+        finishButton = Button.builder(Component.literal("✓").withStyle(ChatFormatting.GREEN), (btn) -> {
+            saveEditBoxValue();
+            triggerVisible(true);
+        }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY(), 10, 20).build();
+        finishButton.visible = false;
+    }
+
+    private void saveEditBoxValue() {
+        double number;
+        try {
+            number = Double.parseDouble(editBox.getValue());
+        } catch (NumberFormatException ignored) {
+            number = sliderButton.getValidatedValue();
+        }
+        
+        // Handle validation if the slider button implements ValidateRange
+        if (sliderButton instanceof ValidateRange<Double> validateRange) {
+            if (validateRange.isValidValue(number)) {
+                sliderButton.setInitialValidatedValue(number);
+            }
+        } else {
+            sliderButton.setInitialValidatedValue(number);
+        }
+        editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
     }
 
     public void triggerVisible(boolean sliderVisible) {
         sliderButton.visible = sliderVisible;
         minusButton.visible = sliderVisible;
         addButton.visible = sliderVisible;
-        editBox.visible = !sliderVisible;
+        editBox.setVisible(!sliderVisible);
         cancelButton.visible = !sliderVisible;
         finishButton.visible = !sliderVisible;
         
