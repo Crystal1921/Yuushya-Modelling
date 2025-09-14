@@ -39,6 +39,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
 
     //释放blockQuads的是每次区块构建的时候生成的，所以直接修改自己，不用new新的
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
         ShowBlockEntity blockEntity=(ShowBlockEntity) blockView.getBlockEntity(pos);
         if (blockEntity==null) return;
@@ -50,13 +51,14 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
 
             @Override
             public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return super.getQuads(blockState,side,rand,blockEntity.getTransformDatas());
+                return super.getQuads(blockState,side,rand,blockEntity.getTransformData());
             }
         }, state, randomSupplier, context);
     }
 
     //释放itemQuads的只有一个showModel单例，这个单例会拿到各种stack，所以这里得用new
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public void emitItemQuads(ItemStack stack, Supplier<RandomSource> randomSupplier, RenderContext context) {
         CustomData data = stack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
         if(data == CustomData.EMPTY){

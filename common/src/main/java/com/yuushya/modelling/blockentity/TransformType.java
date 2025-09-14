@@ -1,7 +1,6 @@
 package com.yuushya.modelling.blockentity;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
-import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -91,11 +90,12 @@ public enum TransformType {
         return extract(showBlockEntity.getTransformData(slot));
     }
 
-    public ShowBlock.BlockShape extractShape(ShowBlockEntity showBlockEntity) {
+    public BlockShape extractShape(ShowBlockEntity showBlockEntity) {
         return showBlockEntity.getBlockState().getValue(SHAPES);
     }
 
     public void modify(ShowBlockEntity showBlockEntity, int slot, double number){
+        if (showBlockEntity.getLevel() == null) return;
         if(this == SUCCESS){
             showBlockEntity.saveChanged();
             return;
@@ -111,7 +111,7 @@ public enum TransformType {
         }
         if (this == SHAPE) {
             Level level = showBlockEntity.getLevel();
-            level.setBlock(showBlockEntity.getBlockPos(), showBlockEntity.getBlockState().setValue(SHAPES, ShowBlock.BlockShape.values()[(int) number]), 18);
+            level.setBlock(showBlockEntity.getBlockPos(), showBlockEntity.getBlockState().setValue(SHAPES, BlockShape.values()[(int) number]), 18);
             return;
         }
         showBlockEntity.setSlot(slot);

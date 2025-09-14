@@ -7,9 +7,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
@@ -18,7 +16,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,28 +33,20 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
     @Environment(EnvType.CLIENT)
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        if (level.getBlockState(pos).is(state.getBlock())){
+        if (level.getBlockState(pos).is(state.getBlock()) && level.getBlockEntity(pos) instanceof ShowBlockEntity showBlockEntity) {
+
             if(context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"gui_item")))){
-                ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
-                if(blockEntity!=null) {
-                    blockEntity.setShowFrame();
-                }
+                showBlockEntity.setShowFrame();
             }
             else if(context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"rot_trans_item")))){
-                ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
-                if(blockEntity!=null) {
-                    blockEntity.setShowRotAixs();
-                    blockEntity.setShowText();
-                }
+                showBlockEntity.setShowRotAxis();
+                showBlockEntity.setShowText();
             }
             else if(context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"pos_trans_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"micro_pos_trans_item")))
             ){
-                ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
-                if(blockEntity!=null) {
-                    blockEntity.setShowPosAixs();
-                    blockEntity.setShowText();
-                }
+                showBlockEntity.setShowPosAxis();
+                showBlockEntity.setShowText();
             }
             else if(context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"slot_trans_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"get_showblock_item")))
@@ -67,8 +56,7 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"debug_stick_item")))
                     ||context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"destroy_item")))
             ){
-                ShowBlockEntity blockEntity = (ShowBlockEntity) level.getBlockEntity(pos);
-                if(blockEntity!=null) blockEntity.setShowText();
+                showBlockEntity.setShowText();
             }
         }
         return super.getShape(state, level, pos, context);
@@ -101,21 +89,21 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
 
     @Override
     public @NotNull BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos){
-        ShowBlockEntity showBlockEntity= (ShowBlockEntity) worldIn.getBlockEntity(currentPos);
-        BlockState blockState=showBlockEntity.getTransformData(0).blockState;
-        Block block=blockState.getBlock();
+        if (worldIn.getBlockEntity(currentPos) instanceof ShowBlockEntity showBlockEntity) {
+            BlockState blockState=showBlockEntity.getTransformData(0).blockState;
+            Block block=blockState.getBlock();
 
-        if (facingState.getBlock() instanceof ShowBlock){
+            if (facingState.getBlock() instanceof ShowBlock){
+                showBlockEntity.saveChanged();
+                return stateIn;
+            }
+            if (!(block instanceof AirBlock)){
+                showBlockEntity.getTransformData(0).blockState=blockState.updateShape(facing,facingState,worldIn,currentPos,facingPos);
+                showBlockEntity.saveChanged();
+                return stateIn.setValue(POWERED,!stateIn.getValue(POWERED));
+            }
             showBlockEntity.saveChanged();
-            return stateIn;
-            //facingState= YuushyaUtils.getBlockState(facingState,worldIn,facingPos);
         }
-        if (!(block instanceof AirBlock)){
-            showBlockEntity.getTransformData(0).blockState=blockState.updateShape(facing,facingState,worldIn,currentPos,facingPos);
-            showBlockEntity.saveChanged();
-            return stateIn.setValue(POWERED,!stateIn.getValue(POWERED));
-        }
-        showBlockEntity.saveChanged();
         return stateIn.setValue(POWERED,!stateIn.getValue(POWERED));
     }
 
@@ -129,25 +117,4 @@ public class ShowBlock extends AbstractYuushyaBlock implements EntityBlock {
         return state.rotate(mirror.getRotation(state.getValue(HORIZONTAL_FACING)));
     }
 
-    public enum BlockShape implements StringRepresentable {
-        NONE(Shapes.empty()),
-        FENCE(Shapes.create(0.4375,0,0.4375,0.5625,1,0.5625)),
-        BOTTOM_HALF(Shapes.create(0,0,0,1,0.5,1)),
-        TOP_HALF(Shapes.create(0,0.5,0,1,1,1)),
-        BLOCK(Shapes.block());
-
-        final VoxelShape voxelShape;
-        BlockShape(VoxelShape voxelShape) {
-            this.voxelShape = voxelShape;
-        }
-
-        @Override
-        public @NotNull String getSerializedName() {
-            return name().toLowerCase();
-        }
-
-        public Component getSymbol(){
-            return Component.translatable("gui.showBlockScreen.shape." + name().toLowerCase());
-        }
-    }
 }

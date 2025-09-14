@@ -60,15 +60,15 @@ public interface ITransformDataInventory {
     }
 
     //作为lambda类型的唯一抽象方法 the unique abstract function of interface and provide the lambda type.
-    List<TransformData> getTransformDatas();
+    List<TransformData> getTransformData();
 
     //default function for control the inventory
     default int size() {
-        return getTransformDatas().size();
+        return getTransformData().size();
     }
 
     default boolean isEmpty() {
-        for (TransformData transformData : getTransformDatas()) {
+        for (TransformData transformData : getTransformData()) {
             if (!(transformData.blockState.getBlock() instanceof AirBlock)) return false;
         }
         return true;
@@ -77,20 +77,20 @@ public interface ITransformDataInventory {
     @NotNull
     default TransformData getTransformData(int slot) {
         if (slot < size())
-            return getTransformDatas().get(slot);
+            return getTransformData().get(slot);
         else
-            return getTransformDatas().get(Math.min(size() - 1, 0));
+            return getTransformData().get(Math.min(size() - 1, 0));
     }
 
     default void addTransformData(int slot, TransformData transformData) {
         if (slot < size())
-            getTransformDatas().add(slot, transformData);
+            getTransformData().add(slot, transformData);
         else
-            getTransformDatas().add(transformData);
+            getTransformData().add(transformData);
     }
 
     default void addTransformData(TransformData transformData) {
-        getTransformDatas().add(transformData);
+        getTransformData().add(transformData);
     }
 
     default void removeTransformData(int slot) {
@@ -114,6 +114,6 @@ public interface ITransformDataInventory {
     }
 
     default void clear() {
-        getTransformDatas().clear();
+        getTransformData().clear();
     }
 }

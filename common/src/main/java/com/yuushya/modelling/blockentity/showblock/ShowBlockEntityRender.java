@@ -141,8 +141,8 @@ public class ShowBlockEntityRender implements BlockEntityRenderer<ShowBlockEntit
                                     .append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", transformData.rot.z())).withStyle(ChatFormatting.BLUE)), 0.55f, matrixStack, multiBufferSource, light, camera);
                     renderText(font, Component.translatable("block.yuushya.showblock.scale_text", transformData.scales.x()), 0.3f, matrixStack, multiBufferSource, light, camera);
                     float high = 0.3f;
-                    for (TransformData everyTransformData : blockEntity.getTransformDatas()) {
-                        int slot = blockEntity.getTransformDatas().indexOf(everyTransformData);
+                    for (TransformData everyTransformData : blockEntity.getTransformData()) {
+                        int slot = blockEntity.getTransformData().indexOf(everyTransformData);
                         Style style = blockEntity.getSlot() == slot ? Style.EMPTY.withColor(ChatFormatting.GOLD).withBold(true)
                                 : everyTransformData.isShown ? Style.EMPTY.withColor(ChatFormatting.WHITE)
                                 : Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(true);

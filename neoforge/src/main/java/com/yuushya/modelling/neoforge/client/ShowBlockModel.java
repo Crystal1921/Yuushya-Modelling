@@ -53,7 +53,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
     public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData data, @Nullable RenderType renderType) {
         ShowBlockEntity blockEntity=data.get(BASE_BLOCK_ENTITY);
         if (blockEntity==null) return Collections.emptyList();
-        return super.getQuads(state,side,rand,blockEntity.getTransformDatas());
+        return super.getQuads(state,side,rand,blockEntity.getTransformData());
     }
 
     private static final Map<ItemStack,ShowBlockModel> itemModelCache = new HashMap<>();

@@ -4,6 +4,8 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.yuushya.modelling.blockentity.TransformData;
 import com.yuushya.modelling.blockentity.ITransformDataInventory;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -25,9 +27,9 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class ShowBlockEntity extends BlockEntity implements ITransformDataInventory {
 
-    private final List<TransformData> transformDatas;
-    @Override
-    public List<TransformData> getTransformDatas() {return transformDatas;}
+    @Getter
+    private final List<TransformData> transformData;
+
     @NotNull
     public TransformData getTransFormDataNow(){return getTransformData(slot);}
     public void removeTransFormDataNow(){removeTransformData(slot);}
@@ -38,9 +40,9 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     private Integer slot;
     public int getSlot(){return slot;}
     public void setSlot(int slot){
-        if (slot>=transformDatas.size()){
-            for (int i=slot-transformDatas.size()+1;i>0;i--)
-                transformDatas.add(new TransformData());
+        if (slot>= transformData.size()){
+            for (int i = slot- transformData.size()+1; i>0; i--)
+                transformData.add(new TransformData());
         }
         this.slot=slot;
     }
@@ -53,20 +55,21 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     //显示旋转的坐标轴
     private Integer showRotAxis =0;
     public boolean showRotAxis(){return showRotAxis >0;}
-    public void setShowRotAixs(){showRotAxis =5;  }
+    public void setShowRotAxis(){showRotAxis =5;  }
 
     //显示平移的坐标轴
     private Integer showPosAxis =0;
     public boolean showPosAxis(){return showPosAxis >0;}
-    public void setShowPosAixs(){showPosAxis =5;  }
+    public void setShowPosAxis(){showPosAxis =5;  }
 
     private Integer showText =0;
     public boolean showText(){return showText>0;}
     public void setShowText(){showText =5;}
 
+    @Setter
+    @Getter
     private Direction.Axis showAxis = null;
-    public Direction.Axis getShowAxis(){ return showAxis; }
-    public void setShowAxis(Direction.Axis axis){ showAxis = axis; }
+
     public void consumeShowAxis(){
         if (showRotAxis <= 0 && showPosAxis <= 0) showAxis = null;
     }
@@ -79,15 +82,15 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
 
     public ShowBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), blockPos, blockState);
-        transformDatas = new ArrayList<>();
-        transformDatas.add(new TransformData());
+        transformData = new ArrayList<>();
+        transformData.add(new TransformData());
         slot=0;
     }
     @Override
     //readNbt
     public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
         super.loadAdditional(compoundTag,registries);
-        ITransformDataInventory.load(compoundTag,transformDatas);
+        ITransformDataInventory.load(compoundTag, transformData);
         slot= (int) compoundTag.getByte("ControlSlot");
         //client chunk update
         if (this.getLevel() != null && this.getLevel().isClientSide){
@@ -98,7 +101,7 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     //writeNbt
     protected void saveAdditional(CompoundTag compoundTag,HolderLookup.Provider registries) {
         super.saveAdditional(compoundTag,registries);
-        ITransformDataInventory.saveAdditional(compoundTag,transformDatas);
+        ITransformDataInventory.saveAdditional(compoundTag, transformData);
         compoundTag.putByte("ControlSlot",slot.byteValue());
     }
 
@@ -107,7 +110,7 @@ public class ShowBlockEntity extends BlockEntity implements ITransformDataInvent
     public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         //saveChanged();
         CompoundTag compoundTag =  super.getUpdateTag(registries);
-        ITransformDataInventory.saveAdditional(compoundTag,transformDatas);
+        ITransformDataInventory.saveAdditional(compoundTag, transformData);
         return compoundTag;
     }
 
