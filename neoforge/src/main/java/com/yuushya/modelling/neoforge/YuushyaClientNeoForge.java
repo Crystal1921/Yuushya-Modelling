@@ -6,24 +6,17 @@ import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
 import com.yuushya.modelling.neoforge.client.ShowBlockModel;
 import com.yuushya.modelling.registries.YuushyaRegistries;
-import com.yuushya.modelling.utils.YuushyaUtils;
-import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -36,7 +29,7 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 
 @Mod(value = Yuushya.MOD_ID_USED, dist = Dist.CLIENT)
 public class YuushyaClientNeoForge {
-    public YuushyaClientNeoForge(IEventBus modBus){
+    public YuushyaClientNeoForge(IEventBus modBus) {
         if (FMLEnvironment.dist.isClient()) {
             modBus.addListener(this::onInitializeClient);
             modBus.addListener(this::onModelBaked);
@@ -46,24 +39,23 @@ public class YuushyaClientNeoForge {
         }
     }
 
-    public void onRegisterMenuScreensEvent(RegisterMenuScreensEvent event){
+    public void onRegisterMenuScreensEvent(RegisterMenuScreensEvent event) {
         event.register((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 
     public void onInitializeClient(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            YuushyaClient.onInitializeClient();
-        });
+        event.enqueueWork(YuushyaClient::onInitializeClient);
     }
 
-    public void onModelBaked(ModelEvent.ModifyBakingResult event){
-        ModelResourceLocation inventory =new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"showblock"),"inventory");
-        event.getModels().put(inventory, new ShowBlockModel(Direction.SOUTH,event.getModels().get(inventory)));
-        for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()){
+    public void onModelBaked(ModelEvent.ModifyBakingResult event) {
+        ModelResourceLocation inventory = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
+        event.getModels().put(inventory, new ShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
+        for (BlockState blockState : YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()) {
             ModelResourceLocation stateResourceLocation = BlockModelShaper.stateToModelLocation(blockState);
-            event.getModels().put(stateResourceLocation,new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING),event.getModels().get(stateResourceLocation)));
+            event.getModels().put(stateResourceLocation, new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateResourceLocation)));
         }
     }
+
     /**
      * getColor是对面片执行的，所以只需要知道这个面片事实上来自哪个方块就能知道颜色
      * 而且原版方块的tintIndex的值除了-1之外似乎设为多少都无所谓
@@ -93,7 +85,7 @@ public class YuushyaClientNeoForge {
                 (itemStack, i) -> {
                     BlockState blockState = itemStack.getOrDefault((DataComponentType<BlockState>) YuushyaRegistries.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
                     return event.getBlockColors().getColor(blockState, null, null, i);
-                },YuushyaRegistries.ITEMS.get("get_blockstate_item").get()
+                }, YuushyaRegistries.ITEMS.get("get_blockstate_item").get()
         );
         event.getItemColors().register(
                 (arg, tintIndex) -> {
@@ -106,7 +98,7 @@ public class YuushyaClientNeoForge {
                     } else {
                         return 0xFFFFFFFF;
                     }
-                },YuushyaRegistries.ITEMS.get("showblock").get()
+                }, YuushyaRegistries.ITEMS.get("showblock").get()
         );
     }
 

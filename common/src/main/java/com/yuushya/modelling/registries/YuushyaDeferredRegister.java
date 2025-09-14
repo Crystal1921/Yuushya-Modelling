@@ -20,11 +20,9 @@ public class YuushyaDeferredRegister<T>{
 
     private static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(Yuushya.MOD_ID_USED));
     private final Registrar<T>  REGISTER;
-//    private final DeferredRegister<T> REGISTER;
 
     public YuushyaDeferredRegister(ResourceKey<Registry<T>> key){
         REGISTER = REGISTRIES.get().get(key);
-        //REGISTER =DeferredRegister.create(MOD_ID,key);
     }
     //set
     public <I extends T> RegistrySupplier<T> register(String name, Supplier<I> sup){
