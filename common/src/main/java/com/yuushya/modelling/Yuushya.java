@@ -1,6 +1,6 @@
 package com.yuushya.modelling;
 
-import com.yuushya.modelling.blockentity.TransformDataNetwork;
+import com.yuushya.modelling.blockentity.transformData.TransformDataNetwork;
 import com.yuushya.modelling.gui.engrave.TransformDataListNetwork;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 

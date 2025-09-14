@@ -2,21 +2,16 @@ package com.yuushya.modelling.blockentity.showblock;
 
 
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
-import com.yuushya.modelling.blockentity.TransformBlockData;
-import com.yuushya.modelling.blockentity.ITransformDataInventory;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 

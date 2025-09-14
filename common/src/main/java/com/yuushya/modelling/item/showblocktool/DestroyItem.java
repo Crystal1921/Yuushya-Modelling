@@ -1,7 +1,7 @@
 package com.yuushya.modelling.item.showblocktool;
 
-import com.yuushya.modelling.blockentity.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;

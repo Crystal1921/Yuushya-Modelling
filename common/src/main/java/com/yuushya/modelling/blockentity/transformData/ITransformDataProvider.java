@@ -1,4 +1,4 @@
-package com.yuushya.modelling.blockentity;
+package com.yuushya.modelling.blockentity.transformData;
 
 /**
  * Common interface for objects that provide transform data information.

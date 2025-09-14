@@ -1,6 +1,6 @@
 package com.yuushya.modelling.gui.widget;
 
-import com.yuushya.modelling.blockentity.TransformType;
+import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;

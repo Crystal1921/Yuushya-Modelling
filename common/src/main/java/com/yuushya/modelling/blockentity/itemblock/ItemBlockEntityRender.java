@@ -1,7 +1,7 @@
 package com.yuushya.modelling.blockentity.itemblock;
 
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
-import com.yuushya.modelling.blockentity.TransformItemData;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 /**

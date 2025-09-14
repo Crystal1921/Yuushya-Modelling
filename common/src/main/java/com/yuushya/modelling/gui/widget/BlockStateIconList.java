@@ -1,7 +1,7 @@
 package com.yuushya.modelling.gui.widget;
 
 import com.mojang.math.Axis;
-import com.yuushya.modelling.blockentity.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.client.Minecraft;

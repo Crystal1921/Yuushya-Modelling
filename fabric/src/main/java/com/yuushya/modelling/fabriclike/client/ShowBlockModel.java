@@ -1,7 +1,7 @@
 package com.yuushya.modelling.fabriclike.client;
 
-import com.yuushya.modelling.blockentity.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;

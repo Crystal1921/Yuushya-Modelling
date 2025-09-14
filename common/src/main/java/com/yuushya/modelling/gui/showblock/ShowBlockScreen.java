@@ -2,9 +2,9 @@ package com.yuushya.modelling.gui.showblock;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.BlockShape;
-import com.yuushya.modelling.blockentity.TransformBlockData;
-import com.yuushya.modelling.blockentity.TransformDataNetwork;
-import com.yuushya.modelling.blockentity.TransformType;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.TransformDataNetwork;
+import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -40,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.*;
 
-import static com.yuushya.modelling.blockentity.TransformType.*;
+import static com.yuushya.modelling.blockentity.transformData.TransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 

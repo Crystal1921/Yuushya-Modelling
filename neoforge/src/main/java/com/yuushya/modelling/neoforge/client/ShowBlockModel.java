@@ -1,8 +1,8 @@
 package com.yuushya.modelling.neoforge.client;
 
 
-import com.yuushya.modelling.blockentity.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;

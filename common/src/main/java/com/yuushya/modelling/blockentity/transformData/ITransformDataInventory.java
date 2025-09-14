@@ -1,4 +1,4 @@
-package com.yuushya.modelling.blockentity;
+package com.yuushya.modelling.blockentity.transformData;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

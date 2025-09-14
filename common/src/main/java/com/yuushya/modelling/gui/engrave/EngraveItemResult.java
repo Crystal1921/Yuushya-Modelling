@@ -1,6 +1,6 @@
 package com.yuushya.modelling.gui.engrave;
 
-import com.yuushya.modelling.blockentity.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.core.component.DataComponents;

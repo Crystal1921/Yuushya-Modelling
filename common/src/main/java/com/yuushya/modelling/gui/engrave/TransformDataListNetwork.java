@@ -1,11 +1,8 @@
 package com.yuushya.modelling.gui.engrave;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.blockentity.TransformType;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.networking.NetworkManager;
-import io.netty.buffer.Unpooled;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -15,10 +12,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.level.Level;
 
 import java.util.HashMap;
 import java.util.HashSet;

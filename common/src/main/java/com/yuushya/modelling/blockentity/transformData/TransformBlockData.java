@@ -1,4 +1,4 @@
-package com.yuushya.modelling.blockentity;
+package com.yuushya.modelling.blockentity.transformData;
 
 import org.joml.Vector3d;
 import org.joml.Vector3f;

@@ -1,8 +1,8 @@
 package com.yuushya.modelling.blockentity.itemblock;
 
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
-import com.yuushya.modelling.blockentity.ITransformItemDataInventory;
-import com.yuushya.modelling.blockentity.TransformItemData;
+import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
