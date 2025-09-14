@@ -10,7 +10,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 
 public final class ItemTransformComponent {
     public ItemTransformType type;
@@ -57,24 +56,24 @@ public final class ItemTransformComponent {
             double newValue = currentValue - sliderButton.getStep();
             sliderButton.setValidatedValue(newValue);
         }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, 20).build();
-        
+
         addButton = Button.builder(Component.literal("+"), (btn) -> {
             double currentValue = sliderButton.getValidatedValue();
             double newValue = currentValue + sliderButton.getStep();
             sliderButton.setValidatedValue(newValue);
         }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY(), 10, 20).build();
-        
+
         // Initialize edit box with proper positioning
         editBox = new EditBox(font, sliderButton.getX(), sliderButton.getY(), sliderButton.getWidth(), 20, Component.empty());
         editBox.setMaxLength(15);
         editBox.visible = false;
-        
+
         cancelButton = Button.builder(Component.literal("×").withStyle(ChatFormatting.RED), (btn) -> {
             editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
             triggerVisible(true);
         }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, 20).build();
         cancelButton.visible = false;
-        
+
         finishButton = Button.builder(Component.literal("✓").withStyle(ChatFormatting.GREEN), (btn) -> {
             saveEditBoxValue();
             triggerVisible(true);
@@ -82,22 +81,32 @@ public final class ItemTransformComponent {
         finishButton.visible = false;
     }
 
-    private void saveEditBoxValue() {
+    public void saveEditBoxValue() {
         double number;
         try {
             number = Double.parseDouble(editBox.getValue());
         } catch (NumberFormatException ignored) {
             number = sliderButton.getValidatedValue();
         }
-        
-        // Handle validation if the slider button implements ValidateRange
-        if (sliderButton instanceof ValidateRange<Double> validateRange) {
-            if (validateRange.isValidValue(number)) {
-                sliderButton.setInitialValidatedValue(number);
+        ValidateRange<Double> validateRange = sliderButton.getValidateRange();
+        if (validateRange instanceof LazyDoubleRange doubleValidateRange) {
+            double min = doubleValidateRange.minInclusive();
+            double max = doubleValidateRange.maxInclusive();
+            if (number < min) {
+                double finalNumber = number;
+                doubleValidateRange.setMinInclusiveSupplier(() -> finalNumber);
             }
-        } else {
-            sliderButton.setInitialValidatedValue(number);
+
+            if (number > max) {
+                double finalNumber = number;
+                doubleValidateRange.setMaxInclusiveSupplier(() -> finalNumber);
+            }
         }
+        sliderButton.setValidatedValue(number);
+        setEditBoxInitial();
+    }
+
+    public void setEditBoxInitial() {
         editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
     }
 
@@ -108,7 +117,7 @@ public final class ItemTransformComponent {
         editBox.setVisible(!sliderVisible);
         cancelButton.visible = !sliderVisible;
         finishButton.visible = !sliderVisible;
-        
+
         if (!sliderVisible) {
             editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
         }

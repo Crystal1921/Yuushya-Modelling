@@ -15,20 +15,24 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Entry> {
 
     protected final List<TransformItemData> transformDataList;
     protected final List<Entry> chosen = new ArrayList<>();
     protected final ItemBlockScreen screen;
+    private final Map<Integer, MutableComponent> rememberDisplayName = new HashMap<>();
+    private final Map<Integer, List<String>> rememberItemProperties = new HashMap<>();
     private int itemHeight;
     private int itemWidth;
 
     public ItemStackIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
-                            List<TransformItemData> transformDataList, ItemBlockScreen itemBlockScreen) {
+                             List<TransformItemData> transformDataList, ItemBlockScreen itemBlockScreen) {
         super(minecraft, width, height, y0, itemHeight);
         this.setX(x);
         this.transformDataList = transformDataList;
@@ -40,7 +44,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         this.updateRenderList();
     }
 
-    private final Map<Integer, MutableComponent> rememberDisplayName = new HashMap<>();
     public MutableComponent updateRenderDisplayName(ItemStack itemStack) {
         return rememberDisplayName.computeIfAbsent(Item.getId(itemStack.getItem()),
                 (id) -> {
@@ -49,7 +52,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
                 });
     }
 
-    private final Map<Integer, List<String>> rememberItemProperties = new HashMap<>();
     public List<String> updateRenderItemProperties(ItemStack itemStack) {
         return rememberItemProperties.computeIfAbsent(Item.getId(itemStack.getItem()),
                 (id) -> {
@@ -99,7 +101,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
     @Override
     protected int getScrollbarPosition() {
-        return this.x1 - 6;
+        return this.getX() + this.getWidth() - 4;
     }
 
     public class Entry extends ObjectSelectionList.Entry<Entry> {
@@ -113,9 +115,9 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
         @Override
         public void render(GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
-                          int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+                           int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
             ItemStack itemStack = transformData.itemStack;
-            
+
             // Render item icon
             if (!itemStack.isEmpty()) {
                 BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
