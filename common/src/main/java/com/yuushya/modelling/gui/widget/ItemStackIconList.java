@@ -70,22 +70,29 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
     public void updateRenderList() {
         this.clearEntries();
-        this.chosen.clear();
         for (int i = 0; i < transformDataList.size(); i++) {
-            Entry entry = new Entry(transformDataList.get(i), i);
-            this.chosen.add(entry);
+            Entry entry = new Entry(this, i);
             this.addEntry(entry);
         }
     }
 
     public void addSlot() {
-        Entry entry = new Entry(new TransformItemData(), transformDataList.size());
-        this.chosen.add(entry);
-        this.addEntry(entry);
+        if (this.getSelected() != null && transformDataList.get(this.getSelected().slot).itemStack.isEmpty()) {
+            return;
+        }
+        if (children().size() == transformDataList.size()) {
+            ItemStackIconList.Entry entry = new ItemStackIconList.Entry(this, transformDataList.size());
+            this.addEntry(entry);
+            this.setSelected(entry);
+        }
     }
 
+    // getChosenOne 返回最后选中的 Entry 的 index
     public int getChosenOne() {
-        return this.getSelected() != null ? this.chosen.indexOf(this.getSelected()) : -1;
+        if (!this.chosen.isEmpty()) {
+            return this.chosen.getLast().slot;
+        }
+        return -1;
     }
 
     public void setSelectedSlot(int slot) {
@@ -105,18 +112,34 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
     }
 
     public class Entry extends ObjectSelectionList.Entry<Entry> {
-        private final TransformItemData transformData;
-        private final int index;
 
-        Entry(TransformItemData transformData, int index) {
-            this.transformData = transformData;
-            this.index = index;
+        private final ItemStackIconList parent;
+        private final int slot;
+        private final Minecraft minecraft;
+        private boolean chosen = false;
+
+        public Entry(ItemStackIconList parent, int slot) {
+            this.parent = parent;
+            this.minecraft = parent.minecraft;
+            this.slot = slot;
+        }
+
+        public TransformItemData getTransformData() {
+            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot) : new TransformItemData();
+        }
+
+        public ItemStack updateRenderState() {
+            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot).itemStack : Items.AIR.getDefaultInstance();
+        }
+
+        public boolean updateRenderShown() {
+            return parent.transformDataList.size() <= slot || parent.transformDataList.get(slot).isShown;
         }
 
         @Override
         public void render(GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-            ItemStack itemStack = transformData.itemStack;
+            ItemStack itemStack = updateRenderState();
 
             // Render item icon
             if (!itemStack.isEmpty()) {
@@ -135,7 +158,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
             // Render index number
             Font font = Minecraft.getInstance().font;
-            String indexStr = String.valueOf(this.index);
+            String indexStr = String.valueOf(this.slot);
             int textX = x + itemWidth - font.width(indexStr) - 2;
             int textY = y + 2;
             guiGraphics.drawString(font, indexStr, textX, textY, 0xFFFFFF, true);
@@ -148,14 +171,24 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            ItemStackIconList.this.setSelected(this);
-            screen.setSlot(this.index);
+            ItemStackIconList.Entry preSelected = this.parent.getSelected();
+            this.parent.setSelected(this);
+            if (preSelected == this) {
+                if (this.chosen) {
+                    this.chosen = false;
+                    this.parent.chosen.remove(this);
+                } else {
+                    this.chosen = true;
+                    this.parent.chosen.add(this);
+                }
+            }
+            //LOGGER.info("select "+this.slot);
             return true;
         }
 
         @Override
         public Component getNarration() {
-            return Component.translatable("narrator.select", this.index);
+            return Component.translatable("narrator.select", this.slot);
         }
     }
 }

@@ -63,7 +63,7 @@ public class TransformItemData implements ITransformDataProvider {
         this.rot.set(listTagRot.getFloat(0), listTagRot.getFloat(1), listTagRot.getFloat(2));
         this.scales.set(listTagScales.getFloat(0), listTagScales.getFloat(1), listTagScales.getFloat(2));
         this.isShown = compoundTag.getBoolean("isShown");
-        this.itemStack = ItemStack.parseOptional(registries, compoundTag);
+        this.itemStack = ItemStack.parseOptional(registries, compoundTag.getCompound("ItemStack"));
     }
 
     //writeNbt to compoundTag
@@ -71,9 +71,7 @@ public class TransformItemData implements ITransformDataProvider {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(), rot.y(), rot.z()));
         compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(), scales.y(), scales.z()));
-        if (!itemStack.isEmpty()) {
-            itemStack.save(registries, compoundTag);
-        }
+        compoundTag.put("ItemStack", YuushyaUtils.itemStackTag(itemStack, registries));
         compoundTag.put("isShown", ByteTag.valueOf(isShown));
     }
 
