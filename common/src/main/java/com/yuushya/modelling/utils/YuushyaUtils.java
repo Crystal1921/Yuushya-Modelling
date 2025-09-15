@@ -119,6 +119,7 @@ public class YuushyaUtils {
     }
 
     public static CompoundTag itemStackTag(ItemStack stack, HolderLookup.Provider registries) {
+        if (stack.isEmpty()) return new CompoundTag();
         CompoundTag compoundTag = new CompoundTag();
         return (CompoundTag) stack.save(registries, compoundTag);
     }

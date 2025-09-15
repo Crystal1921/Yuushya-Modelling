@@ -15,6 +15,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,10 +96,16 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         return -1;
     }
 
-    public void setSelectedSlot(int slot) {
-        if (slot >= 0 && slot < this.chosen.size()) {
-            this.setSelected(this.chosen.get(slot));
+    @Override
+    public void setSelected(@Nullable ItemStackIconList.Entry selected) {
+        super.setSelected(selected);
+        if (selected != null) {
+            this.screen.setSlot(selected.slot);
         }
+    }
+
+    public void setSelectedSlot(int slot){
+        this.setSelected(this.children().get(slot));
     }
 
     @Override
