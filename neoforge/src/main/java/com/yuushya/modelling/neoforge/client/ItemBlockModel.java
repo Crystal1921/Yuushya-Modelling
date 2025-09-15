@@ -1,14 +1,17 @@
 package com.yuushya.modelling.neoforge.client;
 
 
-import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
-import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
-import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
+import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
@@ -24,15 +27,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements IBakedModelExtension, BakedModel {
-    private static final Map<ItemStack, ShowBlockModel> itemModelCache = new HashMap<>();
-    public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
+public class ItemBlockModel extends com.yuushya.modelling.blockentity.itemblock.ItemBlockModel implements IBakedModelExtension, BakedModel {
+    private static final Map<ItemStack, ItemBlockModel> itemModelCache = new HashMap<>();
+    public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
-    public ShowBlockModel(Direction facing) {
+    public ItemBlockModel(Direction facing) {
         super(facing);
     }
 
-    public ShowBlockModel(Direction facing, BakedModel backup) {
+    public ItemBlockModel(Direction facing, BakedModel backup) {
         super(facing, backup);
     }
 
@@ -43,7 +46,7 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
             return ModelData.builder().build();
         } else {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof ShowBlockEntity blockEntity1)
+            if (blockEntity instanceof ItemBlockEntity blockEntity1)
                 return ModelData.builder().with(BASE_BLOCK_ENTITY, blockEntity1).build();
             else
                 return ModelData.builder().build();
@@ -52,28 +55,33 @@ public class ShowBlockModel extends com.yuushya.modelling.blockentity.showblock.
 
     @Override
     public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData data, @Nullable RenderType renderType) {
-        ShowBlockEntity blockEntity = data.get(BASE_BLOCK_ENTITY);
+        ItemBlockEntity blockEntity = data.get(BASE_BLOCK_ENTITY);
         if (blockEntity == null) return Collections.emptyList();
-        return super.getQuads(state, side, rand, blockEntity.getTransformData());
+        return super.getQuads(side, rand, blockEntity.getTransformData());
     }
 
     @Override
     public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
         CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            return Collections.emptyList();
+        }
+        RegistryAccess registryAccess = level.registryAccess();
         if (data == CustomData.EMPTY) {
             return List.of(backup);
         }
-        return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new ShowBlockModel(Direction.SOUTH) {
-            private final List<TransformBlockData> transformDatas;
+        return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new ItemBlockModel(Direction.SOUTH) {
+            private final List<TransformItemData> transformDatas;
 
             {
                 this.transformDatas = new ArrayList<>();
-                ITransformDataInventory.load(data.copyTag(), transformDatas);
+                ITransformItemDataInventory.load(data.copyTag(), transformDatas, registryAccess);
             }
 
             @Override
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return super.getQuads(blockState, side, rand, transformDatas);
+                return super.getQuads(side, rand, transformDatas);
             }
         }));
     }

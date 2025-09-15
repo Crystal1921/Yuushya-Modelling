@@ -4,6 +4,7 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaClient;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
+import com.yuushya.modelling.neoforge.client.ItemBlockModel;
 import com.yuushya.modelling.neoforge.client.ShowBlockModel;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -53,6 +54,13 @@ public class YuushyaClientNeoForge {
         for (BlockState blockState : YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates()) {
             ModelResourceLocation stateResourceLocation = BlockModelShaper.stateToModelLocation(blockState);
             event.getModels().put(stateResourceLocation, new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateResourceLocation)));
+        }
+
+        ModelResourceLocation inventory2 = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
+        event.getModels().put(inventory2, new ItemBlockModel(Direction.SOUTH, event.getModels().get(inventory2)));
+        for (BlockState blockState : YuushyaRegistries.BLOCKS.get("itemblock").get().getStateDefinition().getPossibleStates()) {
+            ModelResourceLocation stateResourceLocation = BlockModelShaper.stateToModelLocation(blockState);
+            event.getModels().put(stateResourceLocation, new ItemBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateResourceLocation)));
         }
     }
 
