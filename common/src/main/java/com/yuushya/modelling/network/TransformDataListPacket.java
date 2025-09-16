@@ -9,6 +9,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -28,16 +29,13 @@ public record TransformDataListPacket(
 ) implements CustomPacketPayload {
     public static final ResourceLocation TRANSFORM_DATA_LIST_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "transform_data_list_packet");
     public static final Type<TransformDataListPacket> TYPE = new Type<>(TRANSFORM_DATA_LIST_PACKET_ID);
-    public static final StreamCodec<FriendlyByteBuf, TransformDataListPacket> STREAM_CODEC = CustomPacketPayload.codec(TransformDataListPacket::encoder, TransformDataListPacket::decoder);
+    public static final StreamCodec<FriendlyByteBuf, TransformDataListPacket> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.COMPOUND_TAG,
+            TransformDataListPacket::tag,
+            TransformDataListPacket::new
+    );
     public static final Set<String> SendingCache = new HashSet<>();
     private static final Map<String,ItemStack> HandlingCache = new HashMap<>();
-
-    //buf -> pack
-    public static TransformDataListPacket decoder(FriendlyByteBuf buf) {
-        return new TransformDataListPacket(
-                buf.readNbt()
-        );
-    }
 
     public static void updateSendingCache(String name){
         SendingCache.remove(name);
@@ -57,11 +55,6 @@ public record TransformDataListPacket(
         }
         tag.putString("ItemName",name);
         NetworkManager.sendToServer(new TransformDataListPacket(tag));
-    }
-
-    //pack -> buf
-    public void encoder(FriendlyByteBuf buf) {
-        buf.writeNbt(tag);
     }
 
     //after receive
