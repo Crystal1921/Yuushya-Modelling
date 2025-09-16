@@ -35,25 +35,24 @@ public record TransformDataListPacket(
             TransformDataListPacket::new
     );
     public static final Set<String> SendingCache = new HashSet<>();
-    private static final Map<String,ItemStack> HandlingCache = new HashMap<>();
+    private static final Map<String, ItemStack> HandlingCache = new HashMap<>();
 
-    public static void updateSendingCache(String name){
+    public static void updateSendingCache(String name) {
         SendingCache.remove(name);
     }
 
     //architectury提供的另一种风格的api
-    public static void sendToServerSide(EngraveItemResult itemResult){
+    public static void sendToServerSide(EngraveItemResult itemResult) {
         String name = itemResult.getName();
         CompoundTag tag;
-        if(SendingCache.contains(name)){
+        if (SendingCache.contains(name)) {
             tag = new CompoundTag();
-        }
-        else{
+        } else {
             ItemStack itemStack = itemResult.getResultItem();
-            CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA,CustomData.EMPTY);
+            CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
             tag = data.copyTag();
         }
-        tag.putString("ItemName",name);
+        tag.putString("ItemName", name);
         NetworkManager.sendToServer(new TransformDataListPacket(tag));
     }
 

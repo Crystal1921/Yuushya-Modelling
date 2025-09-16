@@ -11,8 +11,10 @@ import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.ItemStackIconList;
 import com.yuushya.modelling.gui.widget.ItemTransformComponent;
+import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.utils.ShareUtils;
+import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
@@ -31,12 +33,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
@@ -55,13 +59,14 @@ public class ItemBlockScreen extends Screen {
     private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
     private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
     private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
-    
+
     private final ItemBlockEntity blockEntity;
     private final ItemStack newItemStack;
     private final Map<ItemTransformType, Double> storage = new HashMap<>();
     private final Map<ItemTransformType, ItemTransformComponent> panel = new LinkedHashMap<>();
     private final Map<ItemTransformType, EditBox> editBoxes = new HashMap<>();
     private int slot;
+    private ItemStack itemStack = ItemStack.EMPTY;
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private ItemStackIconList itemStackList;
@@ -86,6 +91,12 @@ public class ItemBlockScreen extends Screen {
         for (ItemTransformType key : this.storage.keySet()) {
             ItemTransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, key, this.storage.get(key));
         }
+
+        if (!itemStack.isEmpty()) {
+            NetworkManager.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
+        }
+
+        this.itemStack = ItemStack.EMPTY;
         this.storage.clear();
         this.slot = slot;
         this.blockEntity.setSlot(slot);
@@ -156,10 +167,10 @@ public class ItemBlockScreen extends Screen {
                         (btn) -> {
                             int chosen = this.itemStackList.getChosenOne();
                             if (chosen != -1 && chosen != slot) {
-                                updateTransformData(ITEM_STACK, (double) Item.getId(blockEntity.getTransformData(chosen).itemStack.getItem()));
+                                updateItemStack(blockEntity.getTransformData(chosen).itemStack);
                                 updateItemButtonVisible(true);
                             } else if (this.newItemStack != null) {
-                                updateTransformData(ITEM_STACK, (double) Item.getId(this.newItemStack.getItem()));
+                                updateItemStack(newItemStack);
                                 updateItemButtonVisible(true);
                             }
                         }
@@ -246,7 +257,7 @@ public class ItemBlockScreen extends Screen {
                         })
                 .bounds(RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
-        
+
         rightItemButton = Button.builder(Component.literal(">"),
                         (btn) -> {
                             // Could implement item cycling here if needed
@@ -276,7 +287,8 @@ public class ItemBlockScreen extends Screen {
                         (btn, mode) -> {
                             switch (mode) {
                                 case SLIDER -> panel.values().forEach(ItemTransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE -> panel.values().forEach(ItemTransformComponent::setSliderFineTune);
+                                case EDIT, FINE_TUNE ->
+                                        panel.values().forEach(ItemTransformComponent::setSliderFineTune);
                             }
                             switch (mode) {
                                 case SLIDER, FINE_TUNE -> panel.values().forEach((it) -> it.triggerVisible(true));
@@ -433,7 +445,7 @@ public class ItemBlockScreen extends Screen {
             MutableComponent displayItemState = Component.literal(properties.get(i));
             guiGraphics.drawString(this.font, displayItemState, RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT + this.font.lineHeight * (i + 1) + 1, 0xFFEBC6, false);
         }
-        
+
         if (modeButton.getValue() == Mode.EDIT) {
             for (ItemTransformComponent component : this.panel.values()) {
                 guiGraphics.drawString(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
@@ -502,8 +514,9 @@ public class ItemBlockScreen extends Screen {
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_X, data.scales.x());
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Y, data.scales.y());
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Z, data.scales.z());
-        ItemTransformDataOncePacket.sendToServerSide(pos, slot, ITEM_STACK, Item.getId(data.itemStack.getItem()));
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
+
+        NetworkManager.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));
     }
 
     private void updateTransformData(ItemTransformType type, Double number) {
@@ -513,7 +526,7 @@ public class ItemBlockScreen extends Screen {
     }
 
     private void updateItemStack(ItemStack itemStack) {
-        this.storage.put(ITEM_STACK, (double) Item.getId(itemStack.getItem()));
+        this.itemStack = itemStack.copy();
         ITEM_STACK.modify(blockEntity, slot, itemStack);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
     }

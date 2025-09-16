@@ -75,7 +75,6 @@ public enum ItemTransformType {
             case SCALE_X -> transformData.scales.set(number.floatValue(), transformData.scales.y(), transformData.scales.z());
             case SCALE_Y -> transformData.scales.set(transformData.scales.x(), number.floatValue(), transformData.scales.z());
             case SCALE_Z -> transformData.scales.set(transformData.scales.x(), transformData.scales.y(), number.floatValue());
-            case ITEM_STACK -> transformData.itemStack = new ItemStack(Item.byId((int) Math.round(number)));
             case SHOWN -> transformData.isShown = number != 0;
             case FAIL -> {
             }
