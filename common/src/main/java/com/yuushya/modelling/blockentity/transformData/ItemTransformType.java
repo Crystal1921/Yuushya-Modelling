@@ -82,6 +82,10 @@ public enum ItemTransformType {
         }
     }
 
+    public void modify(TransformItemData transformData, int slot, ItemStack stack){
+        transformData.itemStack = stack;
+    }
+
     public double extract(ItemBlockEntity itemBlockEntity, int slot){
         if(this == LIT){
             return itemBlockEntity.getBlockState().getValue(YuushyaBlockStates.LIT);
@@ -115,5 +119,11 @@ public enum ItemTransformType {
         }
         itemBlockEntity.setSlot(slot);
         modify(itemBlockEntity.getTransformData(slot), number);
+    }
+
+    public void modify(ItemBlockEntity itemBlockEntity, int slot, ItemStack itemStack){
+        if (itemBlockEntity.getLevel() == null) return;
+        itemBlockEntity.setSlot(slot);
+        modify(itemBlockEntity.getTransformData(slot), slot, itemStack);
     }
 }

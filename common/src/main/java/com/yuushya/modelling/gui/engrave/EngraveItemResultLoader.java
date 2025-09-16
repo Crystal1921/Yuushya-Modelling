@@ -1,10 +1,9 @@
 package com.yuushya.modelling.gui.engrave;
 
+import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import dev.architectury.platform.Platform;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -56,7 +55,7 @@ public class EngraveItemResultLoader {
     public static void save(String string,String name) throws IOException{
         ShareUtils.ShareInformation information = ShareUtils.from(string);
         SHOWBLOCK_ITEM_MAP.put(name,new EngraveItemResult(name, information));
-        TransformDataListNetwork.updateSendingCache(name);
+        TransformDataListPacket.updateSendingCache(name);
         Path out = PATH.resolve("./"+name+".json");
         if(!Files.exists(out)){
             if(!Files.exists(out.getParent())) Files.createDirectories(out.getParent());

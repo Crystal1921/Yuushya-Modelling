@@ -3,7 +3,6 @@ package com.yuushya.modelling.gui.showblock;
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
-import com.yuushya.modelling.blockentity.transformData.TransformDataNetwork;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
@@ -13,6 +12,7 @@ import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.BlockStateIconList;
 import com.yuushya.modelling.gui.widget.TransformComponent;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
+import com.yuushya.modelling.network.TransformDataOncePacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import dev.architectury.platform.Platform;
 import lombok.Getter;
@@ -87,7 +87,7 @@ public class ShowBlockScreen extends Screen {
 
     public void setSlot(int slot) {
         for (TransformType key : this.storage.keySet()) {
-            TransformDataNetwork.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, key, this.storage.get(key));
+            TransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, key, this.storage.get(key));
         }
         this.storage.clear();
         this.slot = slot;
@@ -137,7 +137,7 @@ public class ShowBlockScreen extends Screen {
                                 blockStateList.addSlot();
                                 blockEntity.getTransformData().add(new TransformBlockData());
                                 updateTransformDataServerImmediate(blockEntity.getTransformData(chosen), slot);
-                                TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
+                                TransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
                                 updateStateButtonVisible(true);
                             } else if (this.newBlockState != null) {
                                 blockStateList.addSlot();
@@ -471,10 +471,10 @@ public class ShowBlockScreen extends Screen {
     @Override
     public void removed() {
         for (TransformType key : storage.keySet()) {
-            TransformDataNetwork.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
+            TransformDataOncePacket.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
         }
         this.storage.clear();
-        TransformDataNetwork.sendToServerSideSuccess(blockEntity.getBlockPos());
+        TransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
     public void checkModLack(ShareUtils.ShareInformation shareInformation) {
@@ -490,7 +490,7 @@ public class ShowBlockScreen extends Screen {
         int currentSize = dataList.size();
         for (int slot = 0; slot < currentSize; slot++) {
             blockEntity.removeTransformData(slot);
-            TransformDataNetwork.sendToServerSide(pos, slot, REMOVE, 0.0);
+            TransformDataOncePacket.sendToServerSide(pos, slot, REMOVE, 0.0);
         }
 
         shareInformation.transfer(dataList);
@@ -502,7 +502,7 @@ public class ShowBlockScreen extends Screen {
             TransformBlockData data = dataList.get(slot);
             updateTransformDataServerImmediate(data, slot);
         }
-        TransformDataNetwork.sendToServerSideSuccess(pos);
+        TransformDataOncePacket.sendToServerSideSuccess(pos);
         for (int slot = nextSize - 1; slot < currentSize; slot++) {
             blockEntity.setSlot(slot);
         }
@@ -511,19 +511,19 @@ public class ShowBlockScreen extends Screen {
 
     private void updateTransformDataServerImmediate(TransformBlockData data, int slot) {
         BlockPos pos = blockEntity.getBlockPos();
-        TransformDataNetwork.sendToServerSide(pos, slot, POS_X, data.pos.x);
-        TransformDataNetwork.sendToServerSide(pos, slot, POS_Y, data.pos.y);
-        TransformDataNetwork.sendToServerSide(pos, slot, POS_Z, data.pos.z);
+        TransformDataOncePacket.sendToServerSide(pos, slot, POS_X, data.pos.x);
+        TransformDataOncePacket.sendToServerSide(pos, slot, POS_Y, data.pos.y);
+        TransformDataOncePacket.sendToServerSide(pos, slot, POS_Z, data.pos.z);
 
-        TransformDataNetwork.sendToServerSide(pos, slot, ROT_X, data.rot.x);
-        TransformDataNetwork.sendToServerSide(pos, slot, ROT_Y, data.rot.y);
-        TransformDataNetwork.sendToServerSide(pos, slot, ROT_Z, data.rot.z);
+        TransformDataOncePacket.sendToServerSide(pos, slot, ROT_X, data.rot.x);
+        TransformDataOncePacket.sendToServerSide(pos, slot, ROT_Y, data.rot.y);
+        TransformDataOncePacket.sendToServerSide(pos, slot, ROT_Z, data.rot.z);
 
-        TransformDataNetwork.sendToServerSide(pos, slot, SCALE_X, data.scales.x);
-        TransformDataNetwork.sendToServerSide(pos, slot, SCALE_Y, data.scales.y);
-        TransformDataNetwork.sendToServerSide(pos, slot, SCALE_Z, data.scales.z);
-        TransformDataNetwork.sendToServerSide(pos, slot, BLOCK_STATE, Block.getId(data.blockState));
-        TransformDataNetwork.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
+        TransformDataOncePacket.sendToServerSide(pos, slot, SCALE_X, data.scales.x);
+        TransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Y, data.scales.y);
+        TransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Z, data.scales.z);
+        TransformDataOncePacket.sendToServerSide(pos, slot, BLOCK_STATE, Block.getId(data.blockState));
+        TransformDataOncePacket.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
     }
 
     private void updateTransformData(TransformType type, Double number) {

@@ -3,7 +3,9 @@
 package com.yuushya.modelling.gui.engrave;
 
 import com.google.common.collect.Lists;
+import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import lombok.Getter;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
@@ -37,6 +39,7 @@ public class EngraveMenu
      */
     private final DataSlot selectedRecipeIndex = DataSlot.standalone();
     private final Level level;
+    @Getter
     private List<EngraveItemResult> recipes = Lists.newArrayList();
     /**
      * The {@linkplain net.minecraft.world.item.ItemStack} set in the input slot by the player.
@@ -120,10 +123,6 @@ public class EngraveMenu
         return this.selectedRecipeIndex.get();
     }
 
-    public List<EngraveItemResult> getRecipes() {
-        return this.recipes;
-    }
-
     public int getNumRecipes() {
         return this.recipes.size();
     }
@@ -165,7 +164,7 @@ public class EngraveMenu
         }
     }
 
-    void setupResultSlotServer(ItemStack resultItemStack){
+    public void setupResultSlotServer(ItemStack resultItemStack){
         ItemStack itemStack = resultItemStack.copy();
         if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
             //this.resultContainer.setRecipeUsed(recipeHolder);
@@ -183,7 +182,7 @@ public class EngraveMenu
                 ItemStack itemStack = recipeHolder.getResultItem().copy();
                 if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
                     //this.resultContainer.setRecipeUsed(recipeHolder);
-                    TransformDataListNetwork.sendToServerSide(recipeHolder);
+                    TransformDataListPacket.sendToServerSide(recipeHolder);
                     this.resultSlot.set(itemStack);
                 } else {
                     this.resultSlot.set(ItemStack.EMPTY);
