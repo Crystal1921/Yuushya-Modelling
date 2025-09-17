@@ -151,7 +151,7 @@ public class ItemBlockScreen extends Screen {
                                 updateItemButtonVisible(true);
                             }
                         })
-                .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.display.add")))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.add")))
                 .bounds(RIGHT_COLUMN_X, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button removeItemButton = Button.builder(Component.literal("×"),
@@ -160,7 +160,7 @@ public class ItemBlockScreen extends Screen {
                             updateItemButtonVisible(true);
                         }
                 )
-                .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.display.remove")))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.remove")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button replaceButton = Button.builder(Component.literal("⇄"),
@@ -175,7 +175,7 @@ public class ItemBlockScreen extends Screen {
                             }
                         }
                 )
-                .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.display.replace")))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.replace")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         shownStateButton = CycleButton.booleanBuilder(
@@ -183,7 +183,7 @@ public class ItemBlockScreen extends Screen {
                         Component.literal("👀"))//Component.translatable("gui.itemBlockScreen.display.off"))
                 .displayOnlyValue()
                 .withInitialValue(true)
-                .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.display.on") : Component.translatable("gui.itemBlockScreen.display.off")))
+                .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> updateTransformData(SHOWN, bl ? 1.0 : 0.0)
                 );
@@ -193,11 +193,11 @@ public class ItemBlockScreen extends Screen {
                             String res = ShareUtils.transferItems(blockEntity.getTransformData());
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
-                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.itemBlockScreen.workshop.copy_pass"), Component.translatable("gui.itemBlockScreen.workshop.share_hint"))
+                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                             );
                         }
                 )
-                .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.workshop.copy")))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.copy")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3 + 40, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button parseButton = Button.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),
@@ -209,33 +209,33 @@ public class ItemBlockScreen extends Screen {
                                 updateAllTransformData(shareInformation);
                                 updateItemButtonVisible(true);
                                 this.minecraft.getToasts().addToast(
-                                        new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.itemBlockScreen.workshop.paste_pass"), null)
+                                        new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
                                 );
                             } catch (Exception e) {
                                 this.minecraft.getToasts().addToast(
-                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.itemBlockScreen.workshop.error"), Component.literal(e.getMessage()))
+                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
                                 );
                             }
                         }
                 )
-                .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.workshop.paste")))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.paste")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3 + 60, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button saveButton = Button.builder(Component.literal("\uD83D\uDCBE").withStyle(ChatFormatting.BOLD),
                         (btn) -> this.minecraft.setScreen(new EditScreen(this,
-                                Component.translatable("gui.itemBlockScreen.workshop.save"),
-                                Component.translatable("gui.itemBlockScreen.workshop.save.tip"),
+                                Component.translatable("gui.showBlockScreen.workshop.save"),
+                                Component.translatable("gui.showBlockScreen.workshop.save.tip"),
                                 (string) -> {
                                     if (string != null) {
                                         String res = ShareUtils.transferItems(blockEntity.getTransformData());
                                         try {
                                             EngraveItemResultLoader.save(res, string);
                                             this.minecraft.getToasts().addToast(
-                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.itemBlockScreen.workshop.save_pass"), Component.translatable("gui.itemBlockScreen.workshop.share_hint"))
+                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                                             );
                                         } catch (IOException e) {
                                             this.minecraft.getToasts().addToast(
-                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.itemBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
+                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
                                             );
                                         }
                                         this.minecraft.setScreen(this);
@@ -246,7 +246,7 @@ public class ItemBlockScreen extends Screen {
                                 (string) -> true
                         ))
                 )
-                .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.workshop.save")))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.save")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4 + 60, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         itemStackList = new ItemStackIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
@@ -465,6 +465,11 @@ public class ItemBlockScreen extends Screen {
         for (ItemTransformType key : storage.keySet()) {
             ItemTransformDataOncePacket.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
         }
+        if (!itemStack.isEmpty()) {
+            NetworkManager.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
+        }
+
+        this.itemStack = ItemStack.EMPTY;
         this.storage.clear();
         ItemTransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
     }

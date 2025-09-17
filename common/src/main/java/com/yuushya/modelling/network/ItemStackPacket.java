@@ -1,7 +1,6 @@
 package com.yuushya.modelling.network;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.blockentity.itemblock.ItemBlock;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.core.BlockPos;
@@ -13,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
 
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.ITEM_STACK;
@@ -31,23 +29,19 @@ public record ItemStackPacket(BlockPos blockPos, int slot, ItemStack itemStack) 
             ItemStackPacket::new
     );
 
-    @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
-
     public static void handler(ItemStackPacket packet, NetworkManager.PacketContext ctx) {
         ctx.queue(() -> {
             Level level = ctx.getPlayer().level();
             if (level instanceof ServerLevel serverLevel && serverLevel.hasChunkAt(packet.blockPos)) {
-                if (serverLevel.getBlockState(packet.blockPos).getBlock() instanceof ItemBlock) {
-                    BlockEntity blockEntity = serverLevel.getBlockEntity(packet.blockPos);
-                    if (!(blockEntity instanceof ItemBlockEntity itemBlockEntity)) {
-                        return;
-                    }
-                    ITEM_STACK.modify(itemBlockEntity, packet.slot, packet.slot);
+                if (serverLevel.getBlockEntity(packet.blockPos) instanceof ItemBlockEntity itemBlockEntity) {
+                    ITEM_STACK.modify(itemBlockEntity, packet.slot, packet.itemStack);
                 }
             }
         });
+    }
+
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }
