@@ -1,5 +1,6 @@
 package com.yuushya.modelling.blockentity.transformData;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.block.AirBlock;
@@ -29,14 +30,14 @@ public interface ITransformDataInventory {
     }
 
     //writeNbt to compoundTag
-    static void saveAdditional(CompoundTag compoundTag, List<TransformBlockData> transformDatas) {
+    static void saveAdditional(CompoundTag compoundTag, List<TransformBlockData> transformDatas, HolderLookup.Provider registries) {
         ListTag listTag = new ListTag();
         int index = 0;
         for (TransformBlockData transformData : transformDatas) {
             //if(!(transformData.blockState.getBlock() instanceof AirBlock)){
             CompoundTag compoundTagTemp = new CompoundTag();
             compoundTagTemp.putByte("Slot", (byte) index);
-            transformData.saveAdditional(compoundTagTemp);
+            transformData.saveAdditional(compoundTagTemp, registries);
             listTag.add(compoundTagTemp);
             //}
             index++;
@@ -44,14 +45,14 @@ public interface ITransformDataInventory {
         if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
     }
 
-    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformBlockData> transformDatas) {
+    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformBlockData> transformDatas, HolderLookup.Provider registries) {
         ListTag listTag = new ListTag();
         int index = 0;
         for (TransformBlockData transformData : transformDatas) {
             if (!(transformData.blockState.getBlock() instanceof AirBlock)) {
                 CompoundTag compoundTagTemp = new CompoundTag();
                 compoundTagTemp.putByte("Slot", (byte) index);
-                transformData.saveAdditional(compoundTagTemp);
+                transformData.saveAdditional(compoundTagTemp, registries);
                 listTag.add(compoundTagTemp);
             }
             index++;

@@ -1,5 +1,8 @@
 package com.yuushya.modelling.blockentity.transformData;
 
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+
 /**
  * Common interface for objects that provide transform data information.
  * This interface allows for polymorphic access to position, rotation, and scale data
@@ -36,4 +39,6 @@ public interface ITransformDataProvider {
      * @param shown true to show, false to hide
      */
     void setShown(boolean shown);
+
+    void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries);
 }

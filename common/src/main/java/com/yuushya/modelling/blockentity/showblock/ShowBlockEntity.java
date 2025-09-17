@@ -59,14 +59,14 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     //writeNbt
     protected void saveAdditional(CompoundTag compoundTag,HolderLookup.Provider registries) {
         super.saveAdditional(compoundTag,registries);
-        ITransformDataInventory.saveAdditional(compoundTag, transformData);
+        ITransformDataInventory.saveAdditional(compoundTag, transformData, registries);
     }
 
     @Override
     //toInitialChunkDataNbt //When you first load world it writeNbt firstly
     public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         CompoundTag compoundTag =  super.getUpdateTag(registries);
-        ITransformDataInventory.saveAdditional(compoundTag, transformData);
+        ITransformDataInventory.saveAdditional(compoundTag, transformData, registries);
         return compoundTag;
     }
 

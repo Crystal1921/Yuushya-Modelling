@@ -1,5 +1,6 @@
 package com.yuushya.modelling.blockentity.transformData;
 
+import net.minecraft.core.HolderLookup;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -58,7 +59,7 @@ public class TransformBlockData implements ITransformDataProvider {
     }
 
     //writeNbt to compoundTag
-    public void saveAdditional(CompoundTag compoundTag) {
+    public void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x,pos.y,pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(),rot.y(),rot.z()));
         compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(),scales.y(),scales.z()));

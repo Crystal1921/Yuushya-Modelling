@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -41,6 +42,8 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
     }
 
     public abstract void setSlot(int slot);
+
+    public abstract void writeBlockState(ItemStack itemStack, BlockState blockState);
 
     // Display control methods
     public boolean showFrame() {

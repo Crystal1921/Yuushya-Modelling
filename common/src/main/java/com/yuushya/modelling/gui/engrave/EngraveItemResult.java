@@ -3,6 +3,9 @@ package com.yuushya.modelling.gui.engrave;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.ShareUtils;
+import lombok.Getter;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -14,18 +17,23 @@ import static com.yuushya.modelling.item.showblocktool.DestroyItem.saveToItem;
 
 public class EngraveItemResult {
     private final ItemStack resultItemStack;
+    @Getter
     private final String name;
-    public ItemStack getResultItem(){return resultItemStack;}
-    public EngraveItemResult(String name, ShareUtils.ShareInformation itemInfo){
+
+    public EngraveItemResult(String name, ShareUtils.ShareInformation itemInfo) {
         this.name = name;
         List<TransformBlockData> transformDataList = new ArrayList<>();
         itemInfo.transfer(transformDataList);
         resultItemStack = YuushyaRegistries.ITEMS.get("showblock").get().getDefaultInstance();
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
-        saveToItem(resultItemStack,transformDataList);
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            saveToItem(resultItemStack, transformDataList, level.registryAccess());
+        }
     }
 
-    public String getName() {
-        return name;
+    public ItemStack getResultItem() {
+        return resultItemStack;
     }
+
 }
