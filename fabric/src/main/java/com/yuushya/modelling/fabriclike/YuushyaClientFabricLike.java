@@ -2,7 +2,8 @@ package com.yuushya.modelling.fabriclike;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaClient;
-import com.yuushya.modelling.fabriclike.client.ShowBlockModel;
+import com.yuushya.modelling.fabriclike.client.FabricItemBlockModel;
+import com.yuushya.modelling.fabriclike.client.FabricShowBlockModel;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
@@ -25,18 +26,28 @@ import net.minecraft.world.level.block.state.BlockState;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class YuushyaClientFabricLike {
-    private static final ModelResourceLocation SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID,"showblock"),"inventory");
+    private static final ModelResourceLocation SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
+    private static final ModelResourceLocation ITEMBLOCK_ITEM_MODEL_RESOURCE_LOCATION = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
+
     public static void onInitializeClient() {
         YuushyaClient.onInitializeClient();
-        ModelLoadingPlugin.register((context)->{
-            context.modifyModelAfterBake().register((model,modelBakeAfterContext)->{
-                if(modelBakeAfterContext.topLevelId()!=null){
-                    if(modelBakeAfterContext.topLevelId().equals(SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION)){
-                        return new ShowBlockModel(Direction.SOUTH,model);
+        ModelLoadingPlugin.register((context) -> {
+            context.modifyModelAfterBake().register((model, modelBakeAfterContext) -> {
+                if (modelBakeAfterContext.topLevelId() != null) {
+                    if (modelBakeAfterContext.topLevelId().equals(SHOWBLOCK_ITEM_MODEL_RESOURCE_LOCATION)) {
+                        return new FabricShowBlockModel(Direction.SOUTH, model);
                     }
-                    for(BlockState blockState: YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())
+                    for (BlockState blockState : YuushyaRegistries.BLOCKS.get("showblock").get().getStateDefinition().getPossibleStates())
                         if (modelBakeAfterContext.topLevelId().equals(BlockModelShaper.stateToModelLocation(blockState))) {
-                            return new ShowBlockModel(blockState.getValue(HORIZONTAL_FACING),model);
+                            return new FabricShowBlockModel(blockState.getValue(HORIZONTAL_FACING), model);
+                        }
+
+                    if (modelBakeAfterContext.topLevelId().equals(ITEMBLOCK_ITEM_MODEL_RESOURCE_LOCATION)) {
+                        return new FabricItemBlockModel(Direction.SOUTH, model);
+                    }
+                    for (BlockState blockState : YuushyaRegistries.BLOCKS.get("itemblock").get().getStateDefinition().getPossibleStates())
+                        if (modelBakeAfterContext.topLevelId().equals(BlockModelShaper.stateToModelLocation(blockState))) {
+                            return new FabricItemBlockModel(blockState.getValue(HORIZONTAL_FACING), model);
                         }
                 }
                 return model;
@@ -63,7 +74,7 @@ public class YuushyaClientFabricLike {
             BlockColor blockColor = ColorProviderRegistry.BLOCK.get(blockState.getBlock());
             if (blockColor == null) return 0xFFFFFFFF;
             return blockColor.getColor(blockState, null, null, i);
-        },YuushyaRegistries.ITEMS.get("get_blockstate_item").get());
+        }, YuushyaRegistries.ITEMS.get("get_blockstate_item").get());
         ColorProviderRegistry.ITEM.register((itemStack, tintIndex) -> {
             if (tintIndex > -1) {
                 // decodeTintWithState
@@ -76,7 +87,7 @@ public class YuushyaClientFabricLike {
             } else {
                 return 0xFFFFFFFF;
             }
-        },YuushyaRegistries.ITEMS.get("showblock").get());
+        }, YuushyaRegistries.ITEMS.get("showblock").get());
 
 
         BuiltinItemRendererRegistry.INSTANCE.register(YuushyaRegistries.ITEMS.get("get_blockstate_item").get(), GetBlockStateItem::renderByItem);

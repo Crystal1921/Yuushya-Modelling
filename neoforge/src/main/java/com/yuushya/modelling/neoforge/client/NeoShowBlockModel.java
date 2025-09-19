@@ -2,6 +2,7 @@ package com.yuushya.modelling.neoforge.client;
 
 
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
+import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import net.minecraft.client.renderer.RenderType;
@@ -24,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class NeoShowBlockModel extends com.yuushya.modelling.blockentity.showblock.ShowBlockModel implements IBakedModelExtension, BakedModel {
+public class NeoShowBlockModel extends ShowBlockModel implements IBakedModelExtension, BakedModel {
     private static final Map<ItemStack, NeoShowBlockModel> itemModelCache = new HashMap<>();
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 

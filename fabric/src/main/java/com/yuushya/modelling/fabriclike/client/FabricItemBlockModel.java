@@ -1,5 +1,4 @@
-package com.yuushya.modelling.neoforge.client;
-
+package com.yuushya.modelling.fabriclike.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -8,13 +7,16 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.utils.YuushyaUtils;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
+import net.fabricmc.fabric.impl.renderer.VanillaModelEncoder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
@@ -23,62 +25,72 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.extensions.IBakedModelExtension;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
 
 import java.util.*;
+import java.util.function.Supplier;
 
-public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
-    private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new HashMap<>();
-    public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
+public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel, BakedModel, FabricBakedModel {
+    private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new HashMap<>();
 
-    public NeoItemBlockModel(Direction facing) {
+    public FabricItemBlockModel(Direction facing) {
         super(facing);
     }
 
-    public NeoItemBlockModel(Direction facing, BakedModel backup) {
+    public FabricItemBlockModel(Direction facing, BakedModel backup) {
         super(facing, backup);
     }
 
-    @NotNull
     @Override
-    public ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull ModelData modelData) {
-        if (level.getBlockEntity(pos) == null) {
-            return ModelData.builder().build();
-        } else {
-            BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof ItemBlockEntity blockEntity1)
-                return ModelData.builder().with(BASE_BLOCK_ENTITY, blockEntity1).build();
-            else
-                return ModelData.builder().build();
-        }
+    public boolean isVanillaAdapter() {
+        return false;
     }
 
     @Override
-    public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData data, @Nullable RenderType renderType) {
-        ItemBlockEntity blockEntity = data.get(BASE_BLOCK_ENTITY);
-        if (blockEntity == null) return Collections.emptyList();
-        return this.getQuads(side, rand, blockEntity.getTransformData());
+    @SuppressWarnings("UnstableApiUsage")
+    public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
+        ItemBlockEntity blockEntity = (ItemBlockEntity) blockView.getBlockEntity(pos);
+        if (blockEntity == null) return;
+
+        // 创建临时的 ItemBlockModel 用于处理块实体的渲染
+        VanillaModelEncoder.emitBlockQuads(new FabricItemBlockModel(facing) {
+            @Override
+            public boolean isVanillaAdapter() {
+                return true;
+            }
+
+            @Override
+            public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+                return FabricItemBlockModel.this.getQuads(side, rand, blockEntity.getTransformData());
+            }
+        }, state, randomSupplier, context);
     }
 
     @Override
-    public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
+    @SuppressWarnings("UnstableApiUsage")
+    public void emitItemQuads(ItemStack itemStack, Supplier<RandomSource> randomSupplier, RenderContext context) {
         CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
         ClientLevel level = Minecraft.getInstance().level;
+
         if (level == null) {
-            return Collections.emptyList();
+            return;
         }
+
         RegistryAccess registryAccess = level.registryAccess();
+
         if (data == CustomData.EMPTY) {
-            return List.of(backup);
+            // 使用备用模型进行渲染
+            if (backup != null) {
+                VanillaModelEncoder.emitItemQuads(backup, null, randomSupplier, context);
+            }
+            return;
         }
-        return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoItemBlockModel(Direction.SOUTH) {
+
+        // 获取缓存的模型并进行渲染
+        FabricItemBlockModel cachedModel = itemModelCache.computeIfAbsent(itemStack, (_stack) -> new FabricItemBlockModel(Direction.SOUTH) {
             private final List<TransformItemData> transformDatas;
 
             {
@@ -90,7 +102,9 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
                 return this.getQuads(side, rand, transformDatas);
             }
-        }));
+        });
+
+        VanillaModelEncoder.emitItemQuads(cachedModel, null, randomSupplier, context);
     }
 
     public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas) {
@@ -113,7 +127,14 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
             if (transformData.isShown) {
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
-                for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
+
+                // 在 Fabric 中，我们需要手动处理多个渲染通道
+                // 这里我们检查模型是否有多个渲染通道，如果没有就使用模型本身
+                List<BakedModel> renderPasses = new ArrayList<>();
+                // 对于 Fabric 模型，我们直接使用模型本身
+                renderPasses.add(blockModel);
+
+                for (BakedModel model : renderPasses) {
                     for (Direction value : directions) {
                         List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
                         for (BakedQuad bakedQuad : blockModelQuads) {

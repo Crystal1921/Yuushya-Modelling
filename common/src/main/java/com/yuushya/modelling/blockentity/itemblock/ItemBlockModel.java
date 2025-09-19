@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -33,7 +34,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+    public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
         if (backup != this) {
             return backup.getQuads(blockState, side, rand);
         }
@@ -73,7 +74,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public TextureAtlasSprite getParticleIcon() {
+    public @NotNull TextureAtlasSprite getParticleIcon() {
         if (backup != this) {
             return backup.getParticleIcon();
         }
@@ -82,7 +83,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public ItemTransforms getTransforms() {
+    public @NotNull ItemTransforms getTransforms() {
         if (backup != this) {
             return backup.getTransforms();
         }
@@ -90,7 +91,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public ItemOverrides getOverrides() {
+    public @NotNull ItemOverrides getOverrides() {
         if (backup != this) {
             return backup.getOverrides();
         }
@@ -98,7 +99,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public Collection<ResourceLocation> getDependencies() {
+    public @NotNull Collection<ResourceLocation> getDependencies() {
         return Collections.emptyList();
     }
 
