@@ -15,10 +15,13 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.BuiltInModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -35,8 +38,19 @@ import org.joml.Vector4f;
 import java.util.*;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
+    public static final ModelResourceLocation TRIDENT_IN_HAND_MODEL;
+    public static final ModelResourceLocation SPYGLASS_IN_HAND_MODEL;
     private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new HashMap<>();
+    private static final ModelResourceLocation TRIDENT_MODEL;
+    private static final ModelResourceLocation SPYGLASS_MODEL;
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
+
+    static {
+        TRIDENT_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("trident"));
+        TRIDENT_IN_HAND_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("trident_in_hand"));
+        SPYGLASS_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("spyglass"));
+        SPYGLASS_IN_HAND_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("spyglass_in_hand"));
+    }
 
     public NeoItemBlockModel(Direction facing) {
         super(facing);
@@ -95,9 +109,11 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
 
     public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas) {
         int vertexSize = YuushyaUtils.vertexSize();
-        LocalPlayer player = Minecraft.getInstance().player;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer player = mc.player;
+        ClientLevel level = mc.level;
         if (player == null) return Collections.emptyList();
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
+        ItemRenderer itemRenderer = mc.getItemRenderer();
         List<BakedQuad> finalQuads = new ArrayList<>();
         if (side != null) {
             return Collections.emptyList();
@@ -114,6 +130,9 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
                 for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
+                    if (model instanceof BuiltInModel) {
+                        model = itemRenderer.getItemModelShaper().getItemModel(itemStack);
+                    }
                     for (Direction value : directions) {
                         List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
                         for (BakedQuad bakedQuad : blockModelQuads) {

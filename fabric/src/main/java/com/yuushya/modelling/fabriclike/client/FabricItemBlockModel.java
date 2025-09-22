@@ -35,6 +35,13 @@ import java.util.function.Supplier;
 
 public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel, BakedModel, FabricBakedModel {
     private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new HashMap<>();
+    private static final long ITEM_RANDOM_SEED = 42L;
+    private final RandomSource random = RandomSource.create();
+    private final Supplier<RandomSource> randomSupplier = () -> {
+        random.setSeed(ITEM_RANDOM_SEED);
+        return random;
+    };
+
 
     public FabricItemBlockModel(Direction facing) {
         super(facing);
@@ -64,7 +71,7 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
 
             @Override
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return FabricItemBlockModel.this.getQuads(side, rand, blockEntity.getTransformData());
+                return FabricItemBlockModel.this.getQuads(side, rand, blockEntity.getTransformData(), context);
             }
         }, state, randomSupplier, context);
     }
@@ -100,14 +107,14 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
 
             @Override
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return this.getQuads(side, rand, transformDatas);
+                return this.getQuads(side, rand, transformDatas, context);
             }
         });
 
         VanillaModelEncoder.emitItemQuads(cachedModel, null, randomSupplier, context);
     }
 
-    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas) {
+    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas, RenderContext context) {
         int vertexSize = YuushyaUtils.vertexSize();
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return Collections.emptyList();
@@ -128,37 +135,33 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
 
-                // 在 Fabric 中，我们需要手动处理多个渲染通道
-                // 这里我们检查模型是否有多个渲染通道，如果没有就使用模型本身
-                List<BakedModel> renderPasses = new ArrayList<>();
-                // 对于 Fabric 模型，我们直接使用模型本身
-                renderPasses.add(blockModel);
+                if (!blockModel.isVanillaAdapter()) {
+                    blockModel.emitItemQuads(itemStack, randomSupplier, context);
+                }
 
-                for (BakedModel model : renderPasses) {
-                    for (Direction value : directions) {
-                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
-                        for (BakedQuad bakedQuad : blockModelQuads) {
-                            int[] vertex = bakedQuad.getVertices().clone();
-                            // 执行核心方块的位移和旋转
-                            stack.pushPose();
-                            {
-                                YuushyaUtils.scale(stack, transformData.scales);
-                                YuushyaUtils.translate(stack, transformData.pos);
-                                YuushyaUtils.rotate(stack, transformData.rot);
-                                for (int i = 0; i < 4; i++) {
-                                    Vector4f vector4f = new Vector4f(// 顶点的原坐标
-                                            Float.intBitsToFloat(vertex[vertexSize * i]),
-                                            Float.intBitsToFloat(vertex[vertexSize * i + 1]),
-                                            Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
-                                    stack.last().pose().transform(vector4f);
-                                    vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
-                                    vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
-                                    vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
-                                }
+                for (Direction value : directions) {
+                    List<BakedQuad> blockModelQuads = blockModel.getQuads(null, value, rand);
+                    for (BakedQuad bakedQuad : blockModelQuads) {
+                        int[] vertex = bakedQuad.getVertices().clone();
+                        // 执行核心方块的位移和旋转
+                        stack.pushPose();
+                        {
+                            YuushyaUtils.scale(stack, transformData.scales);
+                            YuushyaUtils.translate(stack, transformData.pos);
+                            YuushyaUtils.rotate(stack, transformData.rot);
+                            for (int i = 0; i < 4; i++) {
+                                Vector4f vector4f = new Vector4f(// 顶点的原坐标
+                                        Float.intBitsToFloat(vertex[vertexSize * i]),
+                                        Float.intBitsToFloat(vertex[vertexSize * i + 1]),
+                                        Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
+                                stack.last().pose().transform(vector4f);
+                                vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
+                                vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
+                                vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
                             }
-                            stack.popPose();
-                            finalQuads.add(new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade()));
                         }
+                        stack.popPose();
+                        finalQuads.add(new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade()));
                     }
                 }
             }
