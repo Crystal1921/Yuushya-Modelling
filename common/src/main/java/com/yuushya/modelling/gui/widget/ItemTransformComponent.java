@@ -122,4 +122,13 @@ public final class ItemTransformComponent {
             editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
         }
     }
+
+    public void triggerColor() {
+        sliderButton.visible = false;
+        minusButton.visible = false;
+        addButton.visible = false;
+        editBox.setVisible(false);
+        cancelButton.visible = false;
+        finishButton.visible = false;
+    }
 }

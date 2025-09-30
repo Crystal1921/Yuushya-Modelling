@@ -26,27 +26,6 @@ public enum ItemTransformType {
         type = i;
     }
 
-    public static ItemTransformType from(int i) {
-        return switch (i) {
-            case 0 -> POS_X;
-            case 1 -> POS_Y;
-            case 2 -> POS_Z;
-            case 3 -> ROT_X;
-            case 4 -> ROT_Y;
-            case 5 -> ROT_Z;
-            case 6 -> SCALE_X;
-            case 7 -> SCALE_Y;
-            case 8 -> SCALE_Z;
-            case 9 -> ITEM_STACK;
-            case 10 -> SHOWN;
-            case 11 -> LIT;
-            case 12 -> REMOVE;
-            case 13 -> SUCCESS;
-            case 15 -> SHAPE;
-            default -> FAIL;
-        };
-    }
-
     public double extract(TransformItemData transformData){
         return switch (this){
             case POS_X -> transformData.pos.x();
@@ -81,7 +60,7 @@ public enum ItemTransformType {
         }
     }
 
-    public void modify(TransformItemData transformData, int slot, ItemStack stack){
+    public void modifyItem(TransformItemData transformData, int slot, ItemStack stack){
         transformData.itemStack = stack;
     }
 
@@ -123,6 +102,6 @@ public enum ItemTransformType {
     public void modify(ItemBlockEntity itemBlockEntity, int slot, ItemStack itemStack){
         if (itemBlockEntity.getLevel() == null) return;
         itemBlockEntity.setSlot(slot);
-        modify(itemBlockEntity.getTransformData(slot), slot, itemStack);
+        modifyItem(itemBlockEntity.getTransformData(slot), slot, itemStack);
     }
 }

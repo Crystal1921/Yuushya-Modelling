@@ -14,6 +14,7 @@ public class TransformItemData implements ITransformDataProvider {
     public Vector3d pos;
     public Vector3f rot;
     public Vector3f scales;
+    public int color;
     public ItemStack itemStack;
     public boolean isShown;
 

@@ -5,6 +5,7 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntityRender;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntityRender;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.registry.client.rendering.BlockEntityRendererRegistry;
 import dev.architectury.registry.client.rendering.RenderTypeRegistry;
@@ -34,6 +35,7 @@ public class YuushyaClient {
             return 0;
         });
         EngraveItemResultLoader.load();
+        ColorTexture colorTexture = new ColorTexture();
         //MenuRegistry.registerScreenFactory((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 

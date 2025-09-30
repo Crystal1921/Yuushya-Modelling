@@ -158,9 +158,11 @@
   "gui.itemBlockScreen.mode.slider": "当前:一般模式",
   "gui.itemBlockScreen.mode.fine_tune": "当前:微调模式",
   "gui.itemBlockScreen.mode.edit": "当前:输入模式",
+  "gui.itemBlockScreen.mode.color": "当前:颜色模式",
   "gui.itemBlockScreen.mode.slider.tooltip": "一般模式：数值调整为固定增量",
   "gui.itemBlockScreen.mode.fine_tune.tooltip": "微调模式：解除增量限制（比如90.5度的旋转角、2.05的位移）",
   "gui.itemBlockScreen.mode.edit.tooltip": "输入模式：支持自行输入数值，按下右侧的按钮应用数值，按下左侧的按钮还原",
+    "gui.itemBlockScreen.mode.color.tooltip": "颜色模式：支持调整方块的颜色",
 
   "gui.yuushya.showBlockScreen.pos_text": "位移",
   "gui.yuushya.showBlockScreen.rot_text": "旋转",
@@ -171,6 +173,7 @@
   "gui.yuushya.itemBlockScreen.rot_text": "旋转",
   "gui.yuushya.itemBlockScreen.scale_text": "缩放 [%s]",
   "gui.yuushya.itemBlockScreen.brightness_text": "亮度",
+  "gui.yuushya.itemBlockScreen.color_text": "颜色",
 
   "item.yuushya.engrave_item": "\u00A7C建模凿子",
   "item.yuushya.engrave_item.line1": "\u00A79副手持[实体方块]，点击右键打开一个选择保存在本地的建模作品的界面",

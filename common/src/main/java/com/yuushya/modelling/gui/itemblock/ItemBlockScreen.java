@@ -9,6 +9,7 @@ import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
+import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.ItemStackIconList;
 import com.yuushya.modelling.gui.widget.ItemTransformComponent;
 import com.yuushya.modelling.network.ItemStackPacket;
@@ -36,6 +37,7 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -69,6 +71,7 @@ public class ItemBlockScreen extends Screen {
     private ItemStack itemStack = ItemStack.EMPTY;
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
+    private ColorWidget colorWidget;
     private ItemStackIconList itemStackList;
     private Button leftItemButton;
     private Button rightItemButton;
@@ -288,12 +291,21 @@ public class ItemBlockScreen extends Screen {
                         (btn, mode) -> {
                             switch (mode) {
                                 case SLIDER -> panel.values().forEach(ItemTransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE ->
-                                        panel.values().forEach(ItemTransformComponent::setSliderFineTune);
+                                case EDIT, FINE_TUNE -> panel.values().forEach(ItemTransformComponent::setSliderFineTune);
                             }
                             switch (mode) {
-                                case SLIDER, FINE_TUNE -> panel.values().forEach((it) -> it.triggerVisible(true));
-                                case EDIT -> panel.values().forEach((it) -> it.triggerVisible(false));
+                                case SLIDER, FINE_TUNE -> {
+                                    panel.values().forEach((it) -> it.triggerVisible(true));
+                                    this.colorWidget.visible = false;
+                                }
+                                case EDIT -> {
+                                    panel.values().forEach((it) -> it.triggerVisible(false));
+                                    this.colorWidget.visible = false;
+                                }
+                                case COLOR -> {
+                                    panel.values().forEach(ItemTransformComponent::triggerColor);
+                                    this.colorWidget.visible = true;
+                                }
                             }
                         }
                 );
@@ -407,6 +419,9 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
+        this.colorWidget = new ColorWidget(leftColumnX(), top(1, 30), 360, 20, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
+        this.colorWidget.visible = false;
+
         for (ItemTransformComponent component : this.panel.values()) {
             component.initWidget(this.font);
             this.addRenderableWidget(component.sliderButton);
@@ -428,6 +443,7 @@ public class ItemBlockScreen extends Screen {
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
         this.addRenderableWidget(saveButton);
+        this.addRenderableWidget(colorWidget);
 
         itemStackList.setSelectedSlot(slot);
     }

@@ -132,9 +132,11 @@
   "gui.itemBlockScreen.mode.slider": "Mode:Incremental",
   "gui.itemBlockScreen.mode.fine_tune": "Mode:Fine Tune",
   "gui.itemBlockScreen.mode.edit": "Mode:Input",
+  "gui.itemBlockScreen.mode.color": "Mode:Color",
   "gui.itemBlockScreen.mode.slider.tooltip": "Values are changed on a fixed scale",
   "gui.itemBlockScreen.mode.fine_tune.tooltip": "Removes incremental limits (e.g., 90.5-degree rotation, 2.05 displacement)",
   "gui.itemBlockScreen.mode.edit.tooltip": "Allows manual input of values. Press the button on the right to apply the values, and press the button on the left to reset them.",
+  "gui.itemBlockScreen.mode.color.tooltip": "Color Mode: Supports adjusting the color of the blocks",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",
@@ -145,6 +147,7 @@
   "gui.yuushya.itemBlockScreen.rot_text": "Rotation",
   "gui.yuushya.itemBlockScreen.scale_text": "Scale [%s]",
   "gui.yuushya.itemBlockScreen.brightness_text": "Brightness",
+  "gui.yuushya.itemBlockScreen.color_text": "Color",
 
   "item.yuushya.engrave_item": "\u00A7CModelling Chisel",
   "item.yuushya.engrave_item.line1": "\u00A79Hold [Entity Block] in the off-hand and right-click to open a screen for selecting saved local modelling works.",
