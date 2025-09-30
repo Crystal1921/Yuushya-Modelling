@@ -281,6 +281,7 @@ public class ItemBlockScreen extends Screen {
                             case SLIDER -> Component.translatable("gui.itemBlockScreen.mode.slider.tooltip");
                             case FINE_TUNE -> Component.translatable("gui.itemBlockScreen.mode.fine_tune.tooltip");
                             case EDIT -> Component.translatable("gui.itemBlockScreen.mode.edit.tooltip");
+                            case COLOR -> Component.translatable("gui.showBlockScreen.mode.color.tooltip");
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
@@ -547,7 +548,7 @@ public class ItemBlockScreen extends Screen {
     }
 
     public enum Mode implements StringRepresentable {
-        SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit");
+        SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit"), COLOR("color");
 
         private final String name;
         @Getter

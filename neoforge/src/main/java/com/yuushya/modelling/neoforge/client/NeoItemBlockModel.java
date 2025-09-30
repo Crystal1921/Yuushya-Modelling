@@ -35,7 +35,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
+
+import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
     public static final ModelResourceLocation TRIDENT_IN_HAND_MODEL;
@@ -155,7 +159,9 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                                 }
                             }
                             stack.popPose();
-                            finalQuads.add(new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade()));
+                            BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
+                            applyingColor(Color.RED.getRGB()).processInPlace(finalQuad);
+                            finalQuads.add(finalQuad);
                         }
                     }
                 }
