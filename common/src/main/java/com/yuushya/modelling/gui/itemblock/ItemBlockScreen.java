@@ -37,7 +37,6 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -291,7 +290,8 @@ public class ItemBlockScreen extends Screen {
                         (btn, mode) -> {
                             switch (mode) {
                                 case SLIDER -> panel.values().forEach(ItemTransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE -> panel.values().forEach(ItemTransformComponent::setSliderFineTune);
+                                case EDIT, FINE_TUNE ->
+                                        panel.values().forEach(ItemTransformComponent::setSliderFineTune);
                             }
                             switch (mode) {
                                 case SLIDER, FINE_TUNE -> {
@@ -419,7 +419,7 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
-        this.colorWidget = new ColorWidget(leftColumnX(), top(1, 30), 360, 20, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
+        this.colorWidget = new ColorWidget(leftColumnX(), top(1, 30), 360, 20, Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         this.colorWidget.visible = false;
 
         for (ItemTransformComponent component : this.panel.values()) {
@@ -541,7 +541,7 @@ public class ItemBlockScreen extends Screen {
         NetworkManager.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));
     }
 
-    private void updateTransformData(ItemTransformType type, Double number) {
+    public void updateTransformData(ItemTransformType type, Double number) {
         this.storage.put(type, number);
         type.modify(blockEntity, slot, number);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);

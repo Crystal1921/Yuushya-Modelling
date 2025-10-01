@@ -19,11 +19,18 @@ public class ColorTexture implements AutoCloseable {
         for (int x = 0; x < 256; x++) {
             // hue 范围 [0,1)，相当于色相环的 0°-360°
             float hue = x / 256.0f;
-            int rgb = java.awt.Color.HSBtoRGB(hue, 1.0f, 1.0f); // 饱和度=1，亮度=1
+            int rgb = java.awt.Color.HSBtoRGB(hue, 1.0f, 1.0f);
 
-            // HSBtoRGB 返回 0xAARRGGBB，但 A=FF；我们直接用就好
+// 交换 R 和 B
+            int a = (rgb >> 24) & 0xFF;
+            int r = (rgb >> 16) & 0xFF;
+            int g = (rgb >> 8) & 0xFF;
+            int b = (rgb) & 0xFF;
+
+            int abgr = (a << 24) | (b << 16) | (g << 8) | r;
+
             for (int y = 0; y < 16; y++) {
-                lightPixels.setPixelRGBA(x, y, rgb);
+                lightPixels.setPixelRGBA(x, y, abgr);
             }
         }
 
