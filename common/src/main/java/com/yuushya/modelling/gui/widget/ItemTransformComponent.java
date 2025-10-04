@@ -2,7 +2,6 @@ package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
-import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.validate.ValidateRange;
 import net.minecraft.ChatFormatting;

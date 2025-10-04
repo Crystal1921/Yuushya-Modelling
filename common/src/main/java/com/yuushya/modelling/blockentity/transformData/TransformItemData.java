@@ -22,7 +22,7 @@ public class TransformItemData implements ITransformDataProvider {
         this.pos = new Vector3d(0, 0, 0);
         this.rot = new Vector3f(0, 0, 0);
         this.scales = new Vector3f(1, 1, 1);
-        this.color = FastColor.ARGB32.color(0, 0, 0, 255);
+        this.color = FastColor.ARGB32.color(255, 255, 255, 255);
         this.itemStack = Items.AIR.getDefaultInstance();
         this.isShown = false;
     }

@@ -1,4 +1,4 @@
-package com.yuushya.modelling.gui;
+package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.gui.validate.ValidateRange;
 import lombok.Getter;
@@ -55,7 +55,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
     @Override
     protected void updateMessage() {
         T value = this.validateRange.fromSliderValue(this.value);
-        T object = this.validateRange.validateValue(value).orElseGet(() -> this.initialValue);
+        T object = this.validateRange.validateValue(value).orElse(this.initialValue);
         this.setMessage(captionBasedToString.toString(this.caption,object));
         this.setTooltip(this.tooltipSupplier.apply(object));
     }
@@ -168,7 +168,7 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
 
         public SliderButton<R> build(){
             validateRange.setStep(step);
-            return new SliderButton<R>(caption,x,y,width,height,tooltipSupplier,captionBasedToString,validateRange,initialValue, onMouseOver,onValueChanged);
+            return new SliderButton<>(caption, x, y, width, height, tooltipSupplier, captionBasedToString, validateRange, initialValue, onMouseOver, onValueChanged);
         }
     }
 

@@ -2,7 +2,6 @@ package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
-import com.yuushya.modelling.gui.SliderButton;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.validate.ValidateRange;

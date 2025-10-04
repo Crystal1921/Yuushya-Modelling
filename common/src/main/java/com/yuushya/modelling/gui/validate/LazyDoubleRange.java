@@ -1,6 +1,6 @@
 package com.yuushya.modelling.gui.validate;
 
-import com.yuushya.modelling.gui.SliderButton;
+import com.yuushya.modelling.gui.widget.SliderButton;
 import lombok.Setter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;

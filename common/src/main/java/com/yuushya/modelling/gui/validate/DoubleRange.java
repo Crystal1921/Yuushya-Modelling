@@ -1,6 +1,6 @@
 package com.yuushya.modelling.gui.validate;
 
-import com.yuushya.modelling.gui.SliderButton;
+import com.yuushya.modelling.gui.widget.SliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
@@ -32,7 +32,7 @@ public class DoubleRange implements ValidateRange<Double>, StepRange<Double> {
 
     @Override
     public Double fromSliderValue(double sliderValue) {
-        return Mth.map(sliderValue, 0.0, 1.0, (double) minInclusive, (double) maxInclusive);
+        return Mth.map(sliderValue, 0.0, 1.0, minInclusive, maxInclusive);
     }
 
     @Override

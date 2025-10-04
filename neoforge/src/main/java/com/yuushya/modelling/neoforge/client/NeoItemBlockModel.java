@@ -16,12 +16,10 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.BuiltInModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -40,19 +38,8 @@ import java.util.*;
 import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
-    public static final ModelResourceLocation TRIDENT_IN_HAND_MODEL;
-    public static final ModelResourceLocation SPYGLASS_IN_HAND_MODEL;
     private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new HashMap<>();
-    private static final ModelResourceLocation TRIDENT_MODEL;
-    private static final ModelResourceLocation SPYGLASS_MODEL;
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
-
-    static {
-        TRIDENT_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("trident"));
-        TRIDENT_IN_HAND_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("trident_in_hand"));
-        SPYGLASS_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("spyglass"));
-        SPYGLASS_IN_HAND_MODEL = ModelResourceLocation.inventory(ResourceLocation.withDefaultNamespace("spyglass_in_hand"));
-    }
 
     public NeoItemBlockModel(Direction facing) {
         super(facing);

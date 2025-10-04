@@ -23,6 +23,15 @@ import java.util.*;
 
 public class ShareUtils {
 
+    public static int getABGR(int rgb) {
+        int a = (rgb >> 24) & 0xFF;
+        int r = (rgb >> 16) & 0xFF;
+        int g = (rgb >> 8) & 0xFF;
+        int b = rgb & 0xFF;
+
+        return (a << 24) | (b << 16) | (g << 8) | r;
+    }
+
     public static class StringSerialization{
         public static CompoundTag transfer(String string) throws CommandSyntaxException {
             return TagParser.parseTag(string);

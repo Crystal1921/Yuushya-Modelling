@@ -419,7 +419,7 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
-        this.colorWidget = new ColorWidget(leftColumnX(), top(1, 30), 360, 20, Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
+        this.colorWidget = new ColorWidget(leftColumnX(), top(1, 30), 360, 20, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         this.colorWidget.visible = false;
 
         for (ItemTransformComponent component : this.panel.values()) {
