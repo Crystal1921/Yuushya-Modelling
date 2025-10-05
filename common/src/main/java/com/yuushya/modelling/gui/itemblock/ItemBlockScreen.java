@@ -21,6 +21,7 @@ import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -420,7 +421,7 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
-        this.colorWidget = new ColorWidget(leftColumnX(), top(-1, 30), 360, 360, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
+        this.colorWidget = new ColorWidget(leftColumnX(), top(-1, 30), 100, 180, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         this.colorWidget.visible = false;
 
         for (ItemTransformComponent component : this.panel.values()) {
@@ -562,6 +563,10 @@ public class ItemBlockScreen extends Screen {
         if (this.minecraft != null) {
             TextFieldHelper.setClipboardContents(this.minecraft, clipboardValue);
         }
+    }
+
+    public Font getFont() {
+        return this.font;
     }
 
     public enum Mode implements StringRepresentable {
