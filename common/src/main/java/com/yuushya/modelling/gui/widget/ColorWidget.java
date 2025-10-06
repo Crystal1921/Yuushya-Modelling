@@ -67,6 +67,17 @@ public class ColorWidget extends AbstractWidget {
         this.itemBlockScreen.setFocused(this);
         this.itemBlockScreen.setDragging(true);
 
+        changeColor(mouseX, mouseY);
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
+        super.onDrag(mouseX, mouseY, dragX, dragY);
+        changeColor(mouseX, mouseY);
+    }
+
+    private void changeColor(double mouseX, double mouseY) {
         mouseX = mouseX - getX();
         mouseY = mouseY - getY();
 
@@ -74,35 +85,11 @@ public class ColorWidget extends AbstractWidget {
             float hue = (float) ((mouseX - xPadding) / WIDTH);
             hsbVals[0] = hue;
             updateData();
-            return super.mouseClicked(mouseX, mouseY, button);
         }
 
-        if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= 65 && mouseY <= 65 + WIDTH) {
-            float brightness = 1.0f - (float) ((mouseY - xPadding) / WIDTH);
-            float saturation = (float) ((mouseX - 65) / WIDTH);
-            hsbVals[1] = saturation;
-            hsbVals[2] = brightness;
-            updateData();
-            return super.mouseClicked(mouseX, mouseY, button);
-        }
-
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        super.onDrag(mouseX, mouseY, dragX, dragY);
-        mouseX = mouseX - getX();
-        mouseY = mouseY - getY();
-
-        if (mouseX >= 5 && mouseX <= 95 && mouseY >= 35 && mouseY <= 55) {
-            float hue = (float) ((mouseX - 5) / 90.0);
-            hsbVals[0] = hue;
-            updateData();
-        }
-
-        if (mouseX >= 5 && mouseX <= 95 && mouseY >= 65 && mouseY <= 155) {
-            float brightness = 1.0f - (float) ((mouseY - 65) / 90.0);
-            float saturation = (float) ((mouseX - 5) / 90.0);
+        if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= 65 && mouseY <= 155) {
+            float brightness = 1.0f - (float) ((mouseY - 65) / WIDTH);
+            float saturation = (float) ((mouseX - xPadding) / WIDTH);
             hsbVals[1] = saturation;
             hsbVals[2] = brightness;
             updateData();

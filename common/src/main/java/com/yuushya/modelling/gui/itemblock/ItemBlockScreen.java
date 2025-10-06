@@ -526,6 +526,7 @@ public class ItemBlockScreen extends Screen {
     }
 
     private void updateTransformDataServerImmediate(TransformItemData data, int slot) {
+        if (data.itemStack.isEmpty()) {return;}
         BlockPos pos = blockEntity.getBlockPos();
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, POS_X, data.pos.x());
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, POS_Y, data.pos.y());

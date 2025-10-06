@@ -1,6 +1,8 @@
 package com.yuushya.modelling.fabriclike.client;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
@@ -37,6 +39,15 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
     private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new HashMap<>();
     private static final long ITEM_RANDOM_SEED = 42L;
     private final RandomSource random = RandomSource.create();
+
+    int STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
+    int POSITION = findOffset(VertexFormatElement.POSITION);
+    int COLOR = findOffset(VertexFormatElement.COLOR);
+    int UV0 = findOffset(VertexFormatElement.UV0);
+    int UV1 = findOffset(VertexFormatElement.UV1);
+    int UV2 = findOffset(VertexFormatElement.UV2);
+    int NORMAL = findOffset(VertexFormatElement.NORMAL);
+
     private final Supplier<RandomSource> randomSupplier = () -> {
         random.setSeed(ITEM_RANDOM_SEED);
         return random;
@@ -161,10 +172,29 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
                             }
                         }
                         stack.popPose();
-                        finalQuads.add(new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade()));
+
+                        final int fixedColor = toABGR(transformData.color);
+                        for (int i = 0; i < 4; i++) vertex[i * STRIDE + COLOR] = fixedColor;
+
+                        BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
+                        finalQuads.add(finalQuad);
                     }
                 }
             }
         return finalQuads;
+    }
+
+    private static int findOffset(VertexFormatElement element) {
+        if (DefaultVertexFormat.BLOCK.contains(element)) {
+            // Divide by 4 because we want the int offset
+            return DefaultVertexFormat.BLOCK.getOffset(element) / 4;
+        }
+        return -1;
+    }
+
+    public static int toABGR(int argb) {
+        return (argb & 0xFF00FF00) // alpha and green same spot
+                | ((argb >> 16) & 0x000000FF) // red moves to blue
+                | ((argb << 16) & 0x00FF0000); // blue moves to red
     }
 }
