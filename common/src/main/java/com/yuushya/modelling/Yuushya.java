@@ -6,10 +6,13 @@ import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.network.TransformDataOncePacket;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.networking.NetworkManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Yuushya {
     public static final String MOD_ID = "yuushya";
     public static final String MOD_ID_USED = "yuushya_modelling";
+    public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
     public static void init() {
         YuushyaRegistries.registerAll();
