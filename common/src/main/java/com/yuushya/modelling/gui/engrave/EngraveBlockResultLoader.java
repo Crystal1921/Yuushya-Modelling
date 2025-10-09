@@ -12,10 +12,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EngraveItemResultLoader {
+public class EngraveBlockResultLoader {
     public static final Path PATH = Platform.getModsFolder().resolve("../modellings");
 
-    public static final Map<String, EngraveItemResult> ITEMBLOCK_ITEM_MAP = new HashMap<>();
+    public static final Map<String, EngraveBlockResult> SHOWBLOCK_ITEM_MAP = new HashMap<>();
 
     public static void load() {
         if (Files.exists(PATH)) {
@@ -49,10 +49,10 @@ public class EngraveItemResultLoader {
                     String name = path.relativize(file).toString().replaceAll(".json", "");
                     String fileString = Files.readString(file);
                     try {
-                        ShareUtils.ShareItemInformation information = ShareUtils.fromItems(fileString);
-                        ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
+                        ShareUtils.ShareBlockInformation information = ShareUtils.from(fileString);
+                        SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Yuushya.LOGGER.error(e);
                     }
                 }
                 return FileVisitResult.CONTINUE;
@@ -60,9 +60,9 @@ public class EngraveItemResultLoader {
         });
     }
 
-    public static void saveItem(String string, String name) throws IOException {
-        ShareUtils.ShareItemInformation information = ShareUtils.fromItems(string);
-        ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
+    public static void saveBlock(String string, String name) throws IOException {
+        ShareUtils.ShareBlockInformation information = ShareUtils.from(string);
+        SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information));
         TransformDataListPacket.updateSendingCache(name);
         Path out = PATH.resolve("./" + name + ".json");
         if (!Files.exists(out)) {

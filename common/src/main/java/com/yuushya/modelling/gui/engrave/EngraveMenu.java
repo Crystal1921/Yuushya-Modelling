@@ -40,7 +40,7 @@ public class EngraveMenu
     private final DataSlot selectedRecipeIndex = DataSlot.standalone();
     private final Level level;
     @Getter
-    private List<EngraveItemResult> recipes = Lists.newArrayList();
+    private List<EngraveBlockResult> recipes = Lists.newArrayList();
     /**
      * The {@linkplain net.minecraft.world.item.ItemStack} set in the input slot by the player.
      */
@@ -160,7 +160,7 @@ public class EngraveMenu
         this.selectedRecipeIndex.set(-1);
         this.resultSlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
-            this.recipes = new ArrayList<>(EngraveItemResultLoader.SHOWBLOCK_ITEM_MAP.values().stream().toList()) ;
+            this.recipes = new ArrayList<>(EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.values().stream().toList()) ;
         }
     }
 
@@ -178,7 +178,7 @@ public class EngraveMenu
     void setupResultSlot() {
         if(level.isClientSide){
             if (!this.recipes.isEmpty() && this.isValidRecipeIndex(this.selectedRecipeIndex.get())) {
-                EngraveItemResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
+                EngraveBlockResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
                 ItemStack itemStack = recipeHolder.getResultItem().copy();
                 if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
                     //this.resultContainer.setRecipeUsed(recipeHolder);

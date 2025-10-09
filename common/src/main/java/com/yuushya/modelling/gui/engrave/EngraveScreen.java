@@ -14,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
 
 @Environment(value=EnvType.CLIENT)
 public class EngraveScreen
@@ -80,7 +79,7 @@ public class EngraveScreen
             int i = this.leftPos + RECIPES_X;
             int j = this.topPos + RECIPES_Y;
             int k = this.startIndex + SCROLLER_WIDTH;
-            List<EngraveItemResult> list = this.menu.getRecipes();
+            List<EngraveBlockResult> list = this.menu.getRecipes();
             for (int l = this.startIndex; l < k && l < this.menu.getNumRecipes(); ++l) {
                 int m = l - this.startIndex;
                 int n = i + m % RECIPES_COLUMNS * RECIPES_IMAGE_SIZE_WIDTH;
@@ -103,7 +102,7 @@ public class EngraveScreen
     }
 
     private void renderRecipes(GuiGraphics guiGraphics, int x, int y, int startIndex) {
-        List<EngraveItemResult> list = this.menu.getRecipes();
+        List<EngraveBlockResult> list = this.menu.getRecipes();
         for (int i = this.startIndex; i < startIndex && i < this.menu.getNumRecipes(); ++i) {
             int j = i - this.startIndex;
             int k = x + j % RECIPES_COLUMNS * RECIPES_IMAGE_SIZE_WIDTH;

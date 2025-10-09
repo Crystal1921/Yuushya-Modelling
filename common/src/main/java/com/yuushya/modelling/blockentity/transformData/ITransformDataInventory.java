@@ -30,10 +30,10 @@ public interface ITransformDataInventory {
     }
 
     //writeNbt to compoundTag
-    static void saveAdditional(CompoundTag compoundTag, List<TransformBlockData> transformDatas, HolderLookup.Provider registries) {
+    static void saveAdditional(CompoundTag compoundTag, List<? extends ITransformDataProvider> transformDatas, HolderLookup.Provider registries) {
         ListTag listTag = new ListTag();
         int index = 0;
-        for (TransformBlockData transformData : transformDatas) {
+        for (ITransformDataProvider transformData : transformDatas) {
             //if(!(transformData.blockState.getBlock() instanceof AirBlock)){
             CompoundTag compoundTagTemp = new CompoundTag();
             compoundTagTemp.putByte("Slot", (byte) index);

@@ -1,6 +1,6 @@
 package com.yuushya.modelling.gui.engrave;
 
-import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
@@ -15,16 +15,16 @@ import java.util.List;
 
 import static com.yuushya.modelling.item.showblocktool.DestroyItem.saveToItem;
 
-public class EngraveItemResult {
+public class EngraveBlockResult {
     private final ItemStack resultItemStack;
     @Getter
     private final String name;
 
-    public EngraveItemResult(String name, ShareUtils.ShareItemInformation itemInfo) {
+    public EngraveBlockResult(String name, ShareUtils.ShareBlockInformation itemInfo) {
         this.name = name;
-        List<TransformItemData> transformDataList = new ArrayList<>();
-        itemInfo.transferItems(transformDataList);
-        resultItemStack = YuushyaRegistries.ITEMS.get("itemblock").get().getDefaultInstance();
+        List<TransformBlockData> transformDataList = new ArrayList<>();
+        itemInfo.transfer(transformDataList);
+        resultItemStack = YuushyaRegistries.ITEMS.get("showblock").get().getDefaultInstance();
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {

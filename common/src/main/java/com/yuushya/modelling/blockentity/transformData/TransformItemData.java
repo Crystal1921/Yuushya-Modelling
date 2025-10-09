@@ -27,25 +27,27 @@ public class TransformItemData implements ITransformDataProvider {
         this.isShown = false;
     }
 
-    public TransformItemData(Vector3d pos, Vector3f rot, Vector3f scales, ItemStack ItemStack, boolean isShown) {
+    public TransformItemData(Vector3d pos, Vector3f rot, Vector3f scales, ItemStack ItemStack, int color, boolean isShown) {
         this();
         this.pos.set(pos);
         this.rot.set(rot.x(), rot.y(), rot.z());
         this.scales.set(scales.x(), scales.y(), scales.z());
         this.itemStack = ItemStack;
+        this.color = color;
         this.isShown = isShown;
     }
 
-    public void set(Vector3d pos, Vector3f rot, Vector3f scales, ItemStack ItemStack, boolean isShown) {
+    public void set(Vector3d pos, Vector3f rot, Vector3f scales, ItemStack ItemStack, int color, boolean isShown) {
         this.pos.set(pos);
         this.rot.set(rot.x(), rot.y(), rot.z());
         this.scales.set(scales.x(), scales.y(), scales.z());
         this.itemStack = ItemStack;
+        this.color = color;
         this.isShown = isShown;
     }
 
     public void set(TransformItemData old) {
-        set(old.pos, old.rot, old.scales, old.itemStack, old.isShown);
+        set(old.pos, old.rot, old.scales, old.itemStack, old.color, old.isShown);
     }
 
     public void set() {

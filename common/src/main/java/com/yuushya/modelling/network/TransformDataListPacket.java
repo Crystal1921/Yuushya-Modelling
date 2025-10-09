@@ -1,7 +1,7 @@
 package com.yuushya.modelling.network;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.gui.engrave.EngraveItemResult;
+import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.networking.NetworkManager;
@@ -42,7 +42,7 @@ public record TransformDataListPacket(
     }
 
     //architectury提供的另一种风格的api
-    public static void sendToServerSide(EngraveItemResult itemResult) {
+    public static void sendToServerSide(EngraveBlockResult itemResult) {
         String name = itemResult.getName();
         CompoundTag tag;
         if (SendingCache.contains(name)) {

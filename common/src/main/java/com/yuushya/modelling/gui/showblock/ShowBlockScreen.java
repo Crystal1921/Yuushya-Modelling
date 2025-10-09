@@ -2,10 +2,10 @@ package com.yuushya.modelling.gui.showblock;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.BlockShape;
+import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
-import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
-import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
@@ -71,6 +71,7 @@ public class ShowBlockScreen extends Screen {
     private Button rightPropertyButton;
     private Button leftStateButton;
     private Button rightStateButton;
+
     public ShowBlockScreen(ShowBlockEntity blockEntity, BlockState newBlockState) {
         super(GameNarrator.NO_TITLE);
         this.blockEntity = blockEntity;
@@ -200,9 +201,9 @@ public class ShowBlockScreen extends Screen {
                         (btn) -> {
                             String string = getClipboard();
                             try {
-                                ShareUtils.ShareInformation shareInformation = ShareUtils.from(string);
-                                checkModLack(shareInformation);
-                                updateAllTransformData(shareInformation);
+                                ShareUtils.ShareBlockInformation shareBlockInformation = ShareUtils.from(string);
+                                checkModLack(shareBlockInformation);
+                                updateAllTransformData(shareBlockInformation);
                                 updateStateButtonVisible(true);
                                 this.minecraft.getToasts().addToast(
                                         new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
@@ -225,7 +226,7 @@ public class ShowBlockScreen extends Screen {
                                     if (string != null) {
                                         String res = ShareUtils.transfer(blockEntity.getTransformData());
                                         try {
-                                            EngraveItemResultLoader.save(res, string);
+                                            EngraveBlockResultLoader.saveBlock(res, string);
                                             this.minecraft.getToasts().addToast(
                                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                                             );
@@ -477,14 +478,14 @@ public class ShowBlockScreen extends Screen {
         TransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
-    public void checkModLack(ShareUtils.ShareInformation shareInformation) {
-        List<String> unLoaded = shareInformation.mods().stream().filter(id -> !Platform.getModIds().contains(id)).toList();
+    public void checkModLack(ShareUtils.ShareBlockInformation shareBlockInformation) {
+        List<String> unLoaded = shareBlockInformation.mods().stream().filter(id -> !Platform.getModIds().contains(id)).toList();
         Minecraft.getInstance().getToasts().addToast(
                 SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ", unLoaded)))
         );
     }
 
-    private void updateAllTransformData(ShareUtils.ShareInformation shareInformation) {
+    private void updateAllTransformData(ShareUtils.ShareBlockInformation shareBlockInformation) {
         List<TransformBlockData> dataList = blockEntity.getTransformData();
         BlockPos pos = blockEntity.getBlockPos();
         int currentSize = dataList.size();
@@ -493,7 +494,7 @@ public class ShowBlockScreen extends Screen {
             TransformDataOncePacket.sendToServerSide(pos, slot, REMOVE, 0.0);
         }
 
-        shareInformation.transfer(dataList);
+        shareBlockInformation.transfer(dataList);
 
         int nextSize = dataList.size();
         this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);

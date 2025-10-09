@@ -3,6 +3,7 @@ package com.yuushya.modelling.item.showblocktool;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
 import com.yuushya.modelling.registries.YuushyaRegistries;
@@ -29,7 +30,7 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
     }
 
     public static void saveToItem(ItemStack itemStack, BlockState blockState, HolderLookup.Provider registries) {
-        List<TransformBlockData> transformDataList = new ArrayList<>();
+        List<ITransformDataProvider> transformDataList = new ArrayList<>();
         TransformBlockData data = new TransformBlockData();
         data.blockState = blockState;
         data.isShown = true;
@@ -37,7 +38,7 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
         saveToItem(itemStack, transformDataList, registries);
     }
 
-    public static void saveToItem(ItemStack itemStack, List<TransformBlockData> transformDataList, HolderLookup.Provider registries) {
+    public static void saveToItem(ItemStack itemStack, List<? extends ITransformDataProvider> transformDataList, HolderLookup.Provider registries) {
         CompoundTag compoundTag = new CompoundTag();
         ITransformDataInventory.saveAdditional(compoundTag, transformDataList, registries);
         BlockItem.setBlockEntityData(itemStack, YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), compoundTag);

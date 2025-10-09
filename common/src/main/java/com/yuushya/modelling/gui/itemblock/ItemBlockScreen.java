@@ -207,7 +207,7 @@ public class ItemBlockScreen extends Screen {
                         (btn) -> {
                             String string = getClipboard();
                             try {
-                                ShareUtils.ItemShareInformation shareInformation = ShareUtils.fromItems(string);
+                                ShareUtils.ShareItemInformation shareInformation = ShareUtils.fromItems(string);
                                 checkModLack(shareInformation);
                                 updateAllTransformData(shareInformation);
                                 updateItemButtonVisible(true);
@@ -232,7 +232,7 @@ public class ItemBlockScreen extends Screen {
                                     if (string != null) {
                                         String res = ShareUtils.transferItems(blockEntity.getTransformData());
                                         try {
-                                            EngraveItemResultLoader.save(res, string);
+                                            EngraveItemResultLoader.saveItem(res, string);
                                             this.minecraft.getToasts().addToast(
                                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                                             );
@@ -493,14 +493,14 @@ public class ItemBlockScreen extends Screen {
         ItemTransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
-    public void checkModLack(ShareUtils.ItemShareInformation shareInformation) {
+    public void checkModLack(ShareUtils.ShareItemInformation shareInformation) {
         List<String> unLoaded = shareInformation.mods().stream().filter(id -> !Platform.getModIds().contains(id)).toList();
         Minecraft.getInstance().getToasts().addToast(
                 SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ", unLoaded)))
         );
     }
 
-    private void updateAllTransformData(ShareUtils.ItemShareInformation shareInformation) {
+    private void updateAllTransformData(ShareUtils.ShareItemInformation shareInformation) {
         List<TransformItemData> dataList = blockEntity.getTransformData();
         BlockPos pos = blockEntity.getBlockPos();
         int currentSize = dataList.size();
@@ -526,7 +526,9 @@ public class ItemBlockScreen extends Screen {
     }
 
     private void updateTransformDataServerImmediate(TransformItemData data, int slot) {
-        if (data.itemStack.isEmpty()) {return;}
+        if (data.itemStack.isEmpty()) {
+            return;
+        }
         BlockPos pos = blockEntity.getBlockPos();
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, POS_X, data.pos.x());
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, POS_Y, data.pos.y());

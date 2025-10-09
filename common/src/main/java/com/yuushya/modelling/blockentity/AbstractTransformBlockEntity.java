@@ -19,15 +19,15 @@ import org.jetbrains.annotations.NotNull;
  * for display and axis control.
  */
 public abstract class AbstractTransformBlockEntity extends BlockEntity {
-    
+
     protected Integer slot = 0;
-    
+
     // Display control fields
     protected Integer showFrame = 0;
     protected Integer showRotAxis = 0;
     protected Integer showPosAxis = 0;
     protected Integer showText = 0;
-    
+
     @Setter
     @Getter
     protected Direction.Axis showAxis = null;
@@ -128,7 +128,7 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
     public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
         super.loadAdditional(compoundTag, registries);
         slot = (int) compoundTag.getByte("ControlSlot");
-        
+
         // Client chunk update
         if (this.getLevel() != null && this.getLevel().isClientSide) {
             this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
