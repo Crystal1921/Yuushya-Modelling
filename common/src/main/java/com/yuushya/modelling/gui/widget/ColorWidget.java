@@ -19,9 +19,10 @@ public class ColorWidget extends AbstractWidget {
     private final ItemBlockScreen itemBlockScreen;
     float[] hsbVals = new float[3];
 
-    private final int WIDTH = 90;
+    private final int WIDTH = 75;
     private final int xPadding = 5;
     private final int yPadding = 5;
+    private final int yHeight = 65;
 
     public ColorWidget(int posX, int posY, int width, int height, int finalColor, Component message, ItemBlockScreen itemBlockScreen) {
         super(posX, posY, width, height, message);
@@ -34,16 +35,16 @@ public class ColorWidget extends AbstractWidget {
     protected void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
         String hsv = String.format("H: %.2f S: %.2f V: %.2f", hsbVals[0], hsbVals[1], hsbVals[2]);
         guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), FastColor.ARGB32.color(128, 255, 255, 255));
-        guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 165, FastColor.ARGB32.color(255, 0, 0, 0), false);
+        guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 0, 0, 0), false);
         RenderSystem.enableBlend();
 
         guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, 90, 20, 90, 20);
         PoseStack pose = guiGraphics.pose();
 
-        this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + 65, getY() + 65 + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
+        this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
 
-        this.innerBlit(ColorTexture.getWhiteTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + 65, getY() + 65 + WIDTH);
-        this.innerBlit(ColorTexture.getBlackTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + 65, getY() + 65 + WIDTH);
+        this.innerBlit(ColorTexture.getWhiteTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
+        this.innerBlit(ColorTexture.getBlackTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
 
         guiGraphics.fill(getX() + xPadding, getY() + yPadding, getX() + 25, getY() + 25, Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2]));
 
@@ -54,7 +55,7 @@ public class ColorWidget extends AbstractWidget {
         drawCross(guiGraphics, hueX, hueY);
 
         int satX = (int) (getX() + xPadding + (hsbVals[1] * WIDTH));
-        int valY = (int) (getY() + 65 + ((1.0f - hsbVals[2]) * WIDTH));
+        int valY = (int) (getY() + yHeight + ((1.0f - hsbVals[2]) * WIDTH));
         drawCross(guiGraphics, satX, valY);
     }
 
@@ -87,8 +88,8 @@ public class ColorWidget extends AbstractWidget {
             updateData();
         }
 
-        if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= 65 && mouseY <= 155) {
-            float brightness = 1.0f - (float) ((mouseY - 65) / WIDTH);
+        if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= yHeight && mouseY <= yHeight + WIDTH) {
+            float brightness = 1.0f - (float) ((mouseY - yHeight) / WIDTH);
             float saturation = (float) ((mouseX - xPadding) / WIDTH);
             hsbVals[1] = saturation;
             hsbVals[2] = brightness;
@@ -98,6 +99,11 @@ public class ColorWidget extends AbstractWidget {
 
     private void updateData() {
         itemBlockScreen.updateTransformData(ItemTransformType.COLOR, (double) (Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2])));
+    }
+
+    public void setColor(int color) {
+        Color c = new Color(color);
+        Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), hsbVals);
     }
 
     @Override

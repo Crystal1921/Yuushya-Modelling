@@ -23,27 +23,26 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITransformItemDataInventory {
     @Getter
     private final List<TransformItemData> transformData;
-    
-    @NotNull
-    public TransformItemData getTransFormDataNow(){return getTransformData(slot);}
-    public void removeTransFormDataNow(){removeTransformData(slot);}
-    public void setTransformDataNow(TransformItemData transformData){setTransformData(slot,transformData);}
-    public void setSlotBlockStateNow(ItemStack itemStack){setSlotBlockState(slot,itemStack);}
-
-    @Override
-    public void setSlot(int slot){
-        if (slot>= transformData.size()){
-            for (int i = slot- transformData.size()+1; i>0; i--)
-                transformData.add(new TransformItemData());
-        }
-        this.slot=slot;
-    }
 
     public ItemBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(YuushyaRegistries.ITEM_BLOCK_ENTITY.get(), blockPos, blockState);
         transformData = new ArrayList<>();
         transformData.add(new TransformItemData());
         slot = 0;
+    }
+
+    @NotNull
+    public TransformItemData getTransFormDataNow() {
+        return getTransformData(slot);
+    }
+
+    @Override
+    public void setSlot(int slot) {
+        if (slot >= transformData.size()) {
+            for (int i = slot - transformData.size() + 1; i > 0; i--)
+                transformData.add(new TransformItemData());
+        }
+        this.slot = slot;
     }
 
     @Override

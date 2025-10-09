@@ -66,15 +66,15 @@ public class ItemBlockScreen extends Screen {
     private final ItemStack newItemStack;
     private final Map<ItemTransformType, Double> storage = new HashMap<>();
     private final Map<ItemTransformType, ItemTransformComponent> panel = new LinkedHashMap<>();
-    private final Map<ItemTransformType, EditBox> editBoxes = new HashMap<>();
     private int slot;
     private ItemStack itemStack = ItemStack.EMPTY;
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
-    private ColorWidget colorWidget;
     private ItemStackIconList itemStackList;
     private Button leftItemButton;
     private Button rightItemButton;
+    private ColorWidget colorWidget;
+    private EditBox colorEditBox;
 
     public ItemBlockScreen(ItemBlockEntity blockEntity, ItemStack newItemStack) {
         super(GameNarrator.NO_TITLE);
@@ -106,6 +106,10 @@ public class ItemBlockScreen extends Screen {
         for (ItemTransformComponent component : this.panel.values()) {
             component.setSliderInitial(this.blockEntity, this.slot);
         }
+
+        double extract = COLOR.extract(blockEntity, slot);
+        this.colorWidget.setColor((int) extract);
+
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
         updateItemButtonVisible(true);
     }
@@ -114,12 +118,11 @@ public class ItemBlockScreen extends Screen {
         return panel.computeIfAbsent(type, ItemTransformComponent::new);
     }
 
-    public boolean updateItemButtonVisible(boolean force) {
+    public void updateItemButtonVisible(boolean force) {
         ItemStack itemStack = getItemStack();
         boolean itemButtonVisible = !itemStack.isEmpty();
         leftItemButton.visible = itemButtonVisible;
         rightItemButton.visible = itemButtonVisible;
-        return itemButtonVisible;
     }
 
     public ItemStack getItemStack() {
@@ -285,6 +288,7 @@ public class ItemBlockScreen extends Screen {
                             case FINE_TUNE -> Component.translatable("gui.itemBlockScreen.mode.fine_tune.tooltip");
                             case EDIT -> Component.translatable("gui.itemBlockScreen.mode.edit.tooltip");
                             case COLOR -> Component.translatable("gui.showBlockScreen.mode.color.tooltip");
+                            case CUSTOM_SIZE -> Component.translatable("gui.itemBlockScreen.mode.custom_size.tooltip");
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
@@ -421,7 +425,9 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
-        this.colorWidget = new ColorWidget(leftColumnX(), top(-1, 30), 100, 180, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
+        this.colorWidget = new ColorWidget(leftColumnX() - 10, top(-2, 30), 110, 180, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
+        this.colorEditBox = new EditBox(this.font, leftColumnX() + 110, top(-2, 30), leftColumnWidth() - 110, PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
+
         this.colorWidget.visible = false;
 
         for (ItemTransformComponent component : this.panel.values()) {
@@ -446,6 +452,7 @@ public class ItemBlockScreen extends Screen {
         this.addRenderableWidget(parseButton);
         this.addRenderableWidget(saveButton);
         this.addRenderableWidget(colorWidget);
+        this.addRenderableWidget(colorEditBox);
 
         itemStackList.setSelectedSlot(slot);
     }
@@ -544,6 +551,8 @@ public class ItemBlockScreen extends Screen {
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
 
         NetworkManager.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));
+
+        ItemTransformDataOncePacket.sendToServerSide(pos, slot, COLOR, data.color);
     }
 
     public void updateTransformData(ItemTransformType type, Double number) {
@@ -573,7 +582,7 @@ public class ItemBlockScreen extends Screen {
     }
 
     public enum Mode implements StringRepresentable {
-        SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit"), COLOR("color");
+        SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit"), COLOR("color"), CUSTOM_SIZE("custom_size");
 
         private final String name;
         @Getter

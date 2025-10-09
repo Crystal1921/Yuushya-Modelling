@@ -159,10 +159,12 @@
   "gui.itemBlockScreen.mode.fine_tune": "当前:微调模式",
   "gui.itemBlockScreen.mode.edit": "当前:输入模式",
   "gui.itemBlockScreen.mode.color": "当前:颜色模式",
+  "gui.itemBlockScreen.mode.custom_size": "当前:自定义大小",
   "gui.itemBlockScreen.mode.slider.tooltip": "一般模式：数值调整为固定增量",
   "gui.itemBlockScreen.mode.fine_tune.tooltip": "微调模式：解除增量限制（比如90.5度的旋转角、2.05的位移）",
   "gui.itemBlockScreen.mode.edit.tooltip": "输入模式：支持自行输入数值，按下右侧的按钮应用数值，按下左侧的按钮还原",
-    "gui.itemBlockScreen.mode.color.tooltip": "颜色模式：支持调整方块的颜色",
+  "gui.itemBlockScreen.mode.color.tooltip": "颜色模式：支持调整方块的颜色",
+  "gui.itemBlockScreen.mode.custom_size.tooltip": "自定义大小模式：支持调整方块的自定义大小",
 
   "gui.yuushya.showBlockScreen.pos_text": "位移",
   "gui.yuushya.showBlockScreen.rot_text": "旋转",
