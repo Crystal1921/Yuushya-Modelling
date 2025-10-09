@@ -1,5 +1,6 @@
 package com.yuushya.modelling.gui.itemblock;
 
+import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
@@ -66,6 +67,8 @@ public class ItemBlockScreen extends Screen {
     private final ItemStack newItemStack;
     private final Map<ItemTransformType, Double> storage = new HashMap<>();
     private final Map<ItemTransformType, ItemTransformComponent> panel = new LinkedHashMap<>();
+    public EditBox colorEditBox;
+    public Button colorFinishButton;
     private int slot;
     private ItemStack itemStack = ItemStack.EMPTY;
     private CycleButton<Mode> modeButton;
@@ -74,7 +77,6 @@ public class ItemBlockScreen extends Screen {
     private Button leftItemButton;
     private Button rightItemButton;
     private ColorWidget colorWidget;
-    private EditBox colorEditBox;
 
     public ItemBlockScreen(ItemBlockEntity blockEntity, ItemStack newItemStack) {
         super(GameNarrator.NO_TITLE);
@@ -109,6 +111,7 @@ public class ItemBlockScreen extends Screen {
 
         double extract = COLOR.extract(blockEntity, slot);
         this.colorWidget.setColor((int) extract);
+        this.colorEditBox.setValue(String.format("#%06X", (0xFFFFFF & (int) extract)));
 
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
         updateItemButtonVisible(true);
@@ -123,6 +126,12 @@ public class ItemBlockScreen extends Screen {
         boolean itemButtonVisible = !itemStack.isEmpty();
         leftItemButton.visible = itemButtonVisible;
         rightItemButton.visible = itemButtonVisible;
+    }
+
+    private void updateColorVisible(boolean visible) {
+        this.colorWidget.visible = visible;
+        this.colorEditBox.visible = visible;
+        this.colorFinishButton.visible = visible;
     }
 
     public ItemStack getItemStack() {
@@ -301,16 +310,15 @@ public class ItemBlockScreen extends Screen {
                             switch (mode) {
                                 case SLIDER, FINE_TUNE -> {
                                     panel.values().forEach((it) -> it.triggerVisible(true));
-                                    this.colorWidget.visible = false;
+                                    updateColorVisible(false);
                                 }
-                                case EDIT -> {
+                                case EDIT, CUSTOM_SIZE -> {
                                     panel.values().forEach((it) -> it.triggerVisible(false));
-                                    this.colorWidget.visible = false;
+                                    updateColorVisible(false);
                                 }
                                 case COLOR -> {
                                     panel.values().forEach(ItemTransformComponent::triggerColor);
-                                    this.colorWidget.visible = true;
-                                    this.setFocused(colorWidget);
+                                    updateColorVisible(true);
                                 }
                             }
                         }
@@ -425,10 +433,25 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
-        this.colorWidget = new ColorWidget(leftColumnX() - 10, top(-2, 30), 110, 180, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
-        this.colorEditBox = new EditBox(this.font, leftColumnX() + 110, top(-2, 30), leftColumnWidth() - 110, PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
+        this.colorWidget = new ColorWidget(leftColumnX() - 10, top(-2, 30), 110, 160, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
+        this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
+        this.colorEditBox.setMaxLength(7);
+        this.colorFinishButton = Button.builder(Component.literal("✓").withStyle(ChatFormatting.GREEN), (button -> {
+            String text = colorEditBox.getValue();
+            if (text.startsWith("#")) {
+                try {
+                    int color = 0xFF000000 | Integer.parseInt(text.substring(1), 16);
+                    colorWidget.setColor(color);
+                    updateTransformData(COLOR, (double) color);
+                } catch (NumberFormatException ignored) {
+                    Yuushya.LOGGER.error("Invalid color number");
+                }
+            }
+        })).bounds(leftColumnX() + leftColumnWidth() - 5, top(6, 30), SMALL_BUTTON_WIDTH, PER_HEIGHT).build();
 
         this.colorWidget.visible = false;
+        this.colorEditBox.visible = false;
+        this.colorFinishButton.visible = false;
 
         for (ItemTransformComponent component : this.panel.values()) {
             component.initWidget(this.font);
@@ -453,6 +476,7 @@ public class ItemBlockScreen extends Screen {
         this.addRenderableWidget(saveButton);
         this.addRenderableWidget(colorWidget);
         this.addRenderableWidget(colorEditBox);
+        this.addRenderableWidget(colorFinishButton);
 
         itemStackList.setSelectedSlot(slot);
     }

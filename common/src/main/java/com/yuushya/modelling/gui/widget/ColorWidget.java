@@ -34,7 +34,7 @@ public class ColorWidget extends AbstractWidget {
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
         String hsv = String.format("H: %.2f S: %.2f V: %.2f", hsbVals[0], hsbVals[1], hsbVals[2]);
-        guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), FastColor.ARGB32.color(128, 255, 255, 255));
+        guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() + 25, FastColor.ARGB32.color(128, 255, 255, 255));
         guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 0, 0, 0), false);
         RenderSystem.enableBlend();
 
@@ -86,6 +86,7 @@ public class ColorWidget extends AbstractWidget {
             float hue = (float) ((mouseX - xPadding) / WIDTH);
             hsbVals[0] = hue;
             updateData();
+            setEditBox();
         }
 
         if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= yHeight && mouseY <= yHeight + WIDTH) {
@@ -94,7 +95,14 @@ public class ColorWidget extends AbstractWidget {
             hsbVals[1] = saturation;
             hsbVals[2] = brightness;
             updateData();
+            setEditBox();
         }
+    }
+
+    private void setEditBox() {
+        int rgb = Color.getHSBColor(hsbVals[0], hsbVals[1], hsbVals[2]).getRGB();
+        String hex = String.format("#%06X", (0xFFFFFF & rgb));
+        itemBlockScreen.colorEditBox.setValue(hex);
     }
 
     private void updateData() {
