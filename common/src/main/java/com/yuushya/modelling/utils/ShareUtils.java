@@ -239,7 +239,7 @@ public class ShareUtils {
                 public static ShareItemStack from(ItemStack stack) {
                     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
                     JsonElement json = ItemStack.OPTIONAL_CODEC
-                            .encodeStart(JsonOps.INSTANCE, stack)
+                            .encodeStart(JsonOps.COMPRESSED, stack)
                             .result()
                             .orElse(JsonNull.INSTANCE);
 
@@ -248,7 +248,8 @@ public class ShareUtils {
 
 
                 public ItemStack transfer() {
-                    Pair<ItemStack, JsonElement> itemStackJsonElementPair = ItemStack.OPTIONAL_CODEC.decode(JsonOps.INSTANCE, component)
+                    Pair<ItemStack, JsonElement> itemStackJsonElementPair = ItemStack.OPTIONAL_CODEC
+                            .decode(JsonOps.COMPRESSED, component)
                             .result()
                             .orElse(Pair.of(ItemStack.EMPTY, JsonNull.INSTANCE));
 
