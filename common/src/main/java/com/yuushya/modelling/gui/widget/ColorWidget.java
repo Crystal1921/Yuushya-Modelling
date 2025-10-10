@@ -17,12 +17,11 @@ import java.awt.*;
 
 public class ColorWidget extends AbstractWidget {
     private final ItemBlockScreen itemBlockScreen;
-    float[] hsbVals = new float[3];
-
     private final int WIDTH = 75;
     private final int xPadding = 5;
     private final int yPadding = 5;
     private final int yHeight = 65;
+    float[] hsbVals = new float[3];
 
     public ColorWidget(int posX, int posY, int width, int height, int finalColor, Component message, ItemBlockScreen itemBlockScreen) {
         super(posX, posY, width, height, message);
@@ -38,7 +37,7 @@ public class ColorWidget extends AbstractWidget {
         guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 0, 0, 0), false);
         RenderSystem.enableBlend();
 
-        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, 90, 20, 90, 20);
+        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, WIDTH, 20, 90, 20);
         PoseStack pose = guiGraphics.pose();
 
         this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
@@ -61,7 +60,7 @@ public class ColorWidget extends AbstractWidget {
 
     private void drawCross(GuiGraphics guiGraphics, int x, int y) {
         guiGraphics.hLine(x - 5, x + 5, y, FastColor.ARGB32.color(255, 0, 0, 0));
-        guiGraphics.vLine(x,y - 5, y + 5, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x, y - 5, y + 5, FastColor.ARGB32.color(255, 0, 0, 0));
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -79,6 +78,7 @@ public class ColorWidget extends AbstractWidget {
     }
 
     private void changeColor(double mouseX, double mouseY) {
+        if (!this.visible) return;
         mouseX = mouseX - getX();
         mouseY = mouseY - getY();
 

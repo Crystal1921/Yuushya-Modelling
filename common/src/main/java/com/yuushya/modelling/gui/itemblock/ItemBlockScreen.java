@@ -13,6 +13,7 @@ import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.ItemStackIconList;
 import com.yuushya.modelling.gui.widget.ItemTransformComponent;
+import com.yuushya.modelling.gui.widget.SizeTransformComponent;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.utils.ShareUtils;
@@ -67,6 +68,7 @@ public class ItemBlockScreen extends Screen {
     private final ItemStack newItemStack;
     private final Map<ItemTransformType, Double> storage = new HashMap<>();
     private final Map<ItemTransformType, ItemTransformComponent> panel = new LinkedHashMap<>();
+    private final Map<ItemTransformType, SizeTransformComponent> panelSize = new LinkedHashMap<>();
     public EditBox colorEditBox;
     public Button colorFinishButton;
     private int slot;
@@ -74,8 +76,6 @@ public class ItemBlockScreen extends Screen {
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private ItemStackIconList itemStackList;
-    private Button leftItemButton;
-    private Button rightItemButton;
     private ColorWidget colorWidget;
 
     public ItemBlockScreen(ItemBlockEntity blockEntity, ItemStack newItemStack) {
@@ -109,23 +109,23 @@ public class ItemBlockScreen extends Screen {
             component.setSliderInitial(this.blockEntity, this.slot);
         }
 
+        for (SizeTransformComponent size : this.panelSize.values()) {
+            size.setSliderInitial(this.blockEntity, this.slot);
+        }
+
         double extract = COLOR.extract(blockEntity, slot);
         this.colorWidget.setColor((int) extract);
         this.colorEditBox.setValue(String.format("#%06X", (0xFFFFFF & (int) extract)));
 
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
-        updateItemButtonVisible(true);
     }
 
     private ItemTransformComponent choose(ItemTransformType type) {
         return panel.computeIfAbsent(type, ItemTransformComponent::new);
     }
 
-    public void updateItemButtonVisible(boolean force) {
-        ItemStack itemStack = getItemStack();
-        boolean itemButtonVisible = !itemStack.isEmpty();
-        leftItemButton.visible = itemButtonVisible;
-        rightItemButton.visible = itemButtonVisible;
+    private SizeTransformComponent chooseSize(ItemTransformType type) {
+        return panelSize.computeIfAbsent(type, SizeTransformComponent::new);
     }
 
     private void updateColorVisible(boolean visible) {
@@ -158,22 +158,17 @@ public class ItemBlockScreen extends Screen {
                                 blockEntity.getTransformData().add(new TransformItemData());
                                 updateTransformDataServerImmediate(blockEntity.getTransformData(chosen), slot);
                                 ItemTransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
-                                updateItemButtonVisible(true);
                             } else if (this.newItemStack != null) {
                                 itemStackList.addSlot();
                                 updateItemStack(newItemStack);
                                 updateTransformData(SHOWN, 1.0);
-                                updateItemButtonVisible(true);
                             }
                         })
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.add")))
                 .bounds(RIGHT_COLUMN_X, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button removeItemButton = Button.builder(Component.literal("×"),
-                        (btn) -> {
-                            updateTransformData(REMOVE, 0.0);
-                            updateItemButtonVisible(true);
-                        }
+                        (btn) -> updateTransformData(REMOVE, 0.0)
                 )
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.remove")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
@@ -183,10 +178,8 @@ public class ItemBlockScreen extends Screen {
                             int chosen = this.itemStackList.getChosenOne();
                             if (chosen != -1 && chosen != slot) {
                                 updateItemStack(blockEntity.getTransformData(chosen).itemStack);
-                                updateItemButtonVisible(true);
                             } else if (this.newItemStack != null) {
                                 updateItemStack(newItemStack);
-                                updateItemButtonVisible(true);
                             }
                         }
                 )
@@ -222,7 +215,6 @@ public class ItemBlockScreen extends Screen {
                                 ShareUtils.ShareItemInformation shareInformation = ShareUtils.fromItems(string);
                                 checkModLack(shareInformation);
                                 updateAllTransformData(shareInformation);
-                                updateItemButtonVisible(true);
                                 this.minecraft.getToasts().addToast(
                                         new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
                                 );
@@ -266,20 +258,6 @@ public class ItemBlockScreen extends Screen {
 
         itemStackList = new ItemStackIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
-        leftItemButton = Button.builder(Component.literal("<"),
-                        (btn) -> {
-                            // Could implement item cycling here if needed
-                        })
-                .bounds(RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, SMALL_BUTTON_WIDTH, PER_HEIGHT)
-                .build();
-
-        rightItemButton = Button.builder(Component.literal(">"),
-                        (btn) -> {
-                            // Could implement item cycling here if needed
-                        })
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2 * 3, RIGHT_STATE_PANEL_Y, SMALL_BUTTON_WIDTH, PER_HEIGHT)
-                .build();
-
         CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
                 .displayOnlyValue()
                 .withValues(BlockShape.values())
@@ -310,15 +288,23 @@ public class ItemBlockScreen extends Screen {
                             switch (mode) {
                                 case SLIDER, FINE_TUNE -> {
                                     panel.values().forEach((it) -> it.triggerVisible(true));
+                                    panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(false);
                                 }
-                                case EDIT, CUSTOM_SIZE -> {
+                                case EDIT -> {
                                     panel.values().forEach((it) -> it.triggerVisible(false));
+                                    panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(false);
                                 }
                                 case COLOR -> {
-                                    panel.values().forEach(ItemTransformComponent::triggerColor);
+                                    panel.values().forEach(ItemTransformComponent::setInvisible);
+                                    panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(true);
+                                }
+                                case CUSTOM_SIZE -> {
+                                    panel.values().forEach(ItemTransformComponent::setInvisible);
+                                    panelSize.values().forEach((it) -> it.triggerVisible(true));
+                                    updateColorVisible(false);
                                 }
                             }
                         }
@@ -433,6 +419,39 @@ public class ItemBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
+        chooseSize(SCALE_X).sliderButton =
+                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                                (number) -> {
+                                    updateTransformData(SCALE_X, number);
+                                    choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
+                                })
+                        .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
+                        .step(chooseSize(SCALE_X).setStandardStep(0.1))
+                        .initial(SCALE_X.extract(blockEntity, slot))
+                        .bounds(leftColumnX(), top(0, 20), leftColumnWidth(), PER_HEIGHT).build();
+
+        chooseSize(SCALE_Y).sliderButton =
+                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                                (number) -> {
+                                    updateTransformData(SCALE_Y, number);
+                                    choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
+                                })
+                        .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
+                        .step(chooseSize(SCALE_Y).setStandardStep(0.1))
+                        .initial(SCALE_Y.extract(blockEntity, slot))
+                        .bounds(leftColumnX(), top(2, 20), leftColumnWidth(), PER_HEIGHT).build();
+
+        chooseSize(SCALE_Z).sliderButton =
+                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                                (number) -> {
+                                    updateTransformData(SCALE_Z, number);
+                                    choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
+                                })
+                        .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
+                        .step(chooseSize(SCALE_Z).setStandardStep(0.1))
+                        .initial(SCALE_Z.extract(blockEntity, slot))
+                        .bounds(leftColumnX(), top(4, 20), leftColumnWidth(), PER_HEIGHT).build();
+
         this.colorWidget = new ColorWidget(leftColumnX() - 10, top(-2, 30), 110, 160, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
         this.colorEditBox.setMaxLength(7);
@@ -462,6 +481,18 @@ public class ItemBlockScreen extends Screen {
             this.addRenderableWidget(component.cancelButton);
             this.addRenderableWidget(component.finishButton);
         }
+
+        for (SizeTransformComponent size : this.panelSize.values()) {
+            size.initWidget(this.font);
+            this.addRenderableWidget(size.sliderButton);
+            this.addRenderableWidget(size.minusButton);
+            this.addRenderableWidget(size.addButton);
+            this.addRenderableWidget(size.editBox);
+            this.addRenderableWidget(size.cancelButton);
+            this.addRenderableWidget(size.finishButton);
+            size.triggerVisible(false);
+        }
+
         this.addRenderableWidget(modeButton);
         this.addRenderableWidget(shapeButton);
         this.addWidget(this.itemStackList);
@@ -469,8 +500,6 @@ public class ItemBlockScreen extends Screen {
         this.addRenderableWidget(removeItemButton);
         this.addRenderableWidget(replaceButton);
         this.addRenderableWidget(shownStateButton);
-        this.addRenderableWidget(leftItemButton);
-        this.addRenderableWidget(rightItemButton);
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
         this.addRenderableWidget(saveButton);

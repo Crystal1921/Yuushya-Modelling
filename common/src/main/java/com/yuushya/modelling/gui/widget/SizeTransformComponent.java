@@ -10,7 +10,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 
-public final class ItemTransformComponent {
+public final class SizeTransformComponent {
     public ItemTransformType type;
     public double standardStep;
     public double fine_tuneStep = 0.001;
@@ -20,8 +20,9 @@ public final class ItemTransformComponent {
     public EditBox editBox;
     public Button cancelButton;
     public Button finishButton;
+    private final int PER_HEIGHT = 20;
 
-    public ItemTransformComponent(ItemTransformType type) {
+    public SizeTransformComponent(ItemTransformType type) {
         this.type = type;
     }
 
@@ -54,29 +55,29 @@ public final class ItemTransformComponent {
             double currentValue = sliderButton.getValidatedValue();
             double newValue = currentValue - sliderButton.getStep();
             sliderButton.setValidatedValue(newValue);
-        }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, 20).build();
+        }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, PER_HEIGHT).build();
 
         addButton = Button.builder(Component.literal("+"), (btn) -> {
             double currentValue = sliderButton.getValidatedValue();
             double newValue = currentValue + sliderButton.getStep();
             sliderButton.setValidatedValue(newValue);
-        }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY(), 10, 20).build();
+        }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY(), 10, PER_HEIGHT).build();
 
         // Initialize edit box with proper positioning
-        editBox = new EditBox(font, sliderButton.getX(), sliderButton.getY(), sliderButton.getWidth(), 20, Component.empty());
-        editBox.setMaxLength(15);
+        editBox = new EditBox(font, sliderButton.getX(), sliderButton.getY() + PER_HEIGHT, sliderButton.getWidth(), PER_HEIGHT, Component.empty());
+        editBox.setMaxLength(10);
         editBox.visible = false;
 
         cancelButton = Button.builder(Component.literal("×").withStyle(ChatFormatting.RED), (btn) -> {
             editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
             triggerVisible(true);
-        }).bounds(sliderButton.getX() - 10, sliderButton.getY(), 10, 20).build();
+        }).bounds(sliderButton.getX() - 10, sliderButton.getY() + PER_HEIGHT, 10, PER_HEIGHT).build();
         cancelButton.visible = false;
 
         finishButton = Button.builder(Component.literal("✓").withStyle(ChatFormatting.GREEN), (btn) -> {
             saveEditBoxValue();
             triggerVisible(true);
-        }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY(), 10, 20).build();
+        }).bounds(sliderButton.getX() + sliderButton.getWidth(), sliderButton.getY() + PER_HEIGHT, 10, PER_HEIGHT).build();
         finishButton.visible = false;
     }
 
@@ -113,21 +114,10 @@ public final class ItemTransformComponent {
         sliderButton.visible = sliderVisible;
         minusButton.visible = sliderVisible;
         addButton.visible = sliderVisible;
-        editBox.setVisible(!sliderVisible);
-        cancelButton.visible = !sliderVisible;
-        finishButton.visible = !sliderVisible;
+        editBox.visible = sliderVisible;
+        cancelButton.visible = sliderVisible;
+        finishButton.visible = sliderVisible;
 
-        if (!sliderVisible) {
-            editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
-        }
-    }
-
-    public void setInvisible() {
-        sliderButton.visible = false;
-        minusButton.visible = false;
-        addButton.visible = false;
-        editBox.setVisible(false);
-        cancelButton.visible = false;
-        finishButton.visible = false;
+        editBox.setValue(String.valueOf(sliderButton.getValidatedValue()));
     }
 }
