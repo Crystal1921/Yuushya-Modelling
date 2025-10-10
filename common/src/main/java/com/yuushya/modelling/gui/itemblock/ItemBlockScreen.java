@@ -423,6 +423,7 @@ public class ItemBlockScreen extends Screen {
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
                                     updateTransformData(SCALE_X, number);
+                                    chooseSize(SCALE_X).editBox.setValue(String.valueOf(number));
                                     choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
@@ -434,6 +435,7 @@ public class ItemBlockScreen extends Screen {
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
                                     updateTransformData(SCALE_Y, number);
+                                    chooseSize(SCALE_Y).editBox.setValue(String.valueOf(number));
                                     choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
@@ -445,6 +447,7 @@ public class ItemBlockScreen extends Screen {
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
                                     updateTransformData(SCALE_Z, number);
+                                    chooseSize(SCALE_Z).editBox.setValue(String.valueOf(number));
                                     choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
