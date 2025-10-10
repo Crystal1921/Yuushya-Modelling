@@ -15,7 +15,7 @@ import java.util.List;
 
 import static com.yuushya.modelling.item.showblocktool.DestroyItem.saveToItem;
 
-public class EngraveItemResult {
+public class EngraveItemResult implements IEngraveResult {
     private final ItemStack resultItemStack;
     @Getter
     private final String name;
