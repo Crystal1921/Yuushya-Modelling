@@ -17,6 +17,7 @@ public class Yuushya {
     public static void init() {
         YuushyaRegistries.registerAll();
         registerNetwork();
+        YuushyaClient.load();
     }
 
     private static void registerNetwork() {

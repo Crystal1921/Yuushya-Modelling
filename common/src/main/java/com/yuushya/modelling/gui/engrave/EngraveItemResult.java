@@ -20,13 +20,16 @@ public class EngraveItemResult implements IEngraveResult {
     @Getter
     private final String name;
 
-    public EngraveItemResult(String name, ShareUtils.ShareItemInformation itemInfo) {
+    public EngraveItemResult(String name, ShareUtils.ShareItemInformation itemInfo){
+        this(name, itemInfo, Minecraft.getInstance().level);
+    }
+
+    public EngraveItemResult(String name, ShareUtils.ShareItemInformation itemInfo, ClientLevel level) {
         this.name = name;
         List<TransformItemData> transformDataList = new ArrayList<>();
         itemInfo.transferItems(transformDataList);
         resultItemStack = YuushyaRegistries.ITEMS.get("itemblock").get().getDefaultInstance();
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
-        ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             saveToItem(resultItemStack, transformDataList, level.registryAccess());
         }

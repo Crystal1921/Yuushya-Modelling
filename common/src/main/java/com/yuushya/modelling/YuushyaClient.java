@@ -5,8 +5,10 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntityRender;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntityRender;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.registry.client.rendering.BlockEntityRendererRegistry;
 import dev.architectury.registry.client.rendering.RenderTypeRegistry;
 import dev.architectury.registry.item.ItemPropertiesRegistry;
@@ -20,24 +22,32 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 
 public class YuushyaClient {
-    @SuppressWarnings("unchecked")
-    public static void onInitializeClient(){
+    @SuppressWarnings({"unchecked", "resource"})
+    public static void onInitializeClient() {
         RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.SHOW_BLOCK.get());
         RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.ITEM_BLOCK.get());
-        
+
         BlockEntityRendererRegistry.register((BlockEntityType<ShowBlockEntity>) YuushyaRegistries.SHOW_BLOCK_ENTITY.get(), ShowBlockEntityRender::new);
         BlockEntityRendererRegistry.register((BlockEntityType<ItemBlockEntity>) YuushyaRegistries.ITEM_BLOCK_ENTITY.get(), ItemBlockEntityRender::new);
 
-        for (String s: List.of("rot_trans_item","pos_trans_item","micro_pos_trans_item","get_showblock_item"))
-            ItemPropertiesRegistry.register(YuushyaRegistries.ITEMS.get(s).get(),ResourceLocation.parse("direction"),(itemStack, clientWorld, livingEntity, i) -> ((Integer)(itemStack.getOrDefault(YuushyaRegistries.TRANS_DIRECTION.get(),0)))*0.1F );
-        ItemPropertiesRegistry.register(YuushyaRegistries.ITEMS.get("get_blockstate_item").get(),ResourceLocation.parse("direction"),(itemStack, clientWorld, livingEntity,i) -> {
+        for (String s : List.of("rot_trans_item", "pos_trans_item", "micro_pos_trans_item", "get_showblock_item"))
+            ItemPropertiesRegistry.register(YuushyaRegistries.ITEMS.get(s).get(), ResourceLocation.parse("direction"), (itemStack, clientWorld, livingEntity, i) -> ((Integer) (itemStack.getOrDefault(YuushyaRegistries.TRANS_DIRECTION.get(), 0))) * 0.1F);
+        ItemPropertiesRegistry.register(YuushyaRegistries.ITEMS.get("get_blockstate_item").get(), ResourceLocation.parse("direction"), (itemStack, clientWorld, livingEntity, i) -> {
             BlockState blockState = itemStack.getOrDefault((DataComponentType<BlockState>) YuushyaRegistries.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
-            if(!blockState.equals(Blocks.AIR.defaultBlockState())) return 1;
+            if (!blockState.equals(Blocks.AIR.defaultBlockState())) return 1;
             return 0;
         });
-        EngraveBlockResultLoader.load();
+
         ColorTexture colorTexture = new ColorTexture();
         //MenuRegistry.registerScreenFactory((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 
+    public static void load() {
+        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register((client) -> {
+            EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.clear();
+            EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.clear();
+            EngraveBlockResultLoader.load(client);
+            EngraveItemResultLoader.load(client);
+        });
+    }
 }

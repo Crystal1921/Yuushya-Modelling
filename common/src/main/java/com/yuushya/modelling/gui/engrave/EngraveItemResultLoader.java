@@ -4,6 +4,7 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import dev.architectury.platform.Platform;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,14 +14,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EngraveItemResultLoader {
-    public static final Path PATH = Platform.getModsFolder().resolve("../modellings");
+    public static final Path PATH = Platform.getModsFolder().resolve("../modellings/items");
 
     public static final Map<String, EngraveItemResult> ITEMBLOCK_ITEM_MAP = new HashMap<>();
 
-    public static void load() {
+    public static void load(ClientLevel level) {
         if (Files.exists(PATH)) {
             try {
-                load(PATH);
+                load(PATH, level);
             } catch (IOException e) {
                 Yuushya.LOGGER.error(e);
             }
@@ -31,26 +32,26 @@ public class EngraveItemResultLoader {
         return basePath.toString().endsWith(".zip");
     }
 
-    private static void loadZip(Path path) {
+    private static void loadZip(Path path, ClientLevel level) {
         try (FileSystem fileSystem = FileSystems.newFileSystem(path)) {
-            load(fileSystem.getPath("."));
+            load(fileSystem.getPath("."), level);
         } catch (IOException e) {
             Yuushya.LOGGER.error(e);
         }
     }
 
-    private static void load(Path path) throws IOException {
+    private static void load(Path path, ClientLevel level) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (isZip(file)) {
-                    loadZip(file);
+                    loadZip(file, level);
                 } else if (file.getFileName().toString().endsWith(".json")) {
                     String name = path.relativize(file).toString().replaceAll(".json", "");
                     String fileString = Files.readString(file);
                     try {
                         ShareUtils.ShareItemInformation information = ShareUtils.fromItems(fileString);
-                        ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
+                        ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information, level));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
