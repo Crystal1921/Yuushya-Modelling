@@ -29,6 +29,21 @@ subprojects {
 
     loom {
         silentMojangMappingsLicense()
+
+        runs {
+            client {
+                client()
+                runDir 'run/client'
+                // https://openjdk.org/jeps/400
+                property 'file.encoding', 'COMPAT'
+            }
+
+            server {
+                server()
+                runDir 'run/server'
+                property 'file.encoding', 'COMPAT'
+            }
+        }
     }
 
     dependencies {

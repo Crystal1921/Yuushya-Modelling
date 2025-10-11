@@ -176,5 +176,7 @@
   "gui.showBlockScreen.shape.fence": "Fence",
   "gui.showBlockScreen.shape.bottom_half": "Bottom Half",
   "gui.showBlockScreen.shape.top_half": "Top Half",
-  "gui.showBlockScreen.shape.block": "Block"
+  "gui.showBlockScreen.shape.block": "Block",
+
+  "command.yuushya_modelling.reload_succeed": "Modellings reloaded successfully"
 }

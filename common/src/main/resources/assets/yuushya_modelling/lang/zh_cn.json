@@ -203,5 +203,7 @@
   "gui.showBlockScreen.shape.fence": "栅栏",
   "gui.showBlockScreen.shape.bottom_half": "下半砖",
   "gui.showBlockScreen.shape.top_half": "上半砖",
-  "gui.showBlockScreen.shape.block": "完整方块"
+  "gui.showBlockScreen.shape.block": "完整方块",
+
+  "command.yuushya_modelling.reload_succeed": "建模作品重载成功"
 }
