@@ -15,18 +15,21 @@ import java.util.List;
 
 import static com.yuushya.modelling.item.showblocktool.DestroyItem.saveToItem;
 
-public class EngraveBlockResult {
+public class EngraveBlockResult implements IEngraveResult {
     private final ItemStack resultItemStack;
     @Getter
     private final String name;
 
     public EngraveBlockResult(String name, ShareUtils.ShareBlockInformation itemInfo) {
+        this(name, itemInfo, Minecraft.getInstance().level);
+    }
+
+    public EngraveBlockResult(String name, ShareUtils.ShareBlockInformation itemInfo, ClientLevel level) {
         this.name = name;
         List<TransformBlockData> transformDataList = new ArrayList<>();
         itemInfo.transfer(transformDataList);
         resultItemStack = YuushyaRegistries.ITEMS.get("showblock").get().getDefaultInstance();
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
-        ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             saveToItem(resultItemStack, transformDataList, level.registryAccess());
         }

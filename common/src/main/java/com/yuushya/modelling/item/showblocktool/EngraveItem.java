@@ -30,7 +30,7 @@ public class EngraveItem extends AbstractMultiPurposeToolItem {
         }
         ItemStack offhandItem = player.getOffhandItem();
         if(offhandItem.getItem() instanceof BlockItem blockItem){
-            if(blockItem.getBlock() instanceof ShowBlock){
+            if(blockItem.getBlock() instanceof ShowBlock || blockItem.getBlock() instanceof com.yuushya.modelling.blockentity.itemblock.ItemBlock){
                 ItemStack itemStack = offhandItem.copy();
                 if(player.isCreative()) player.setItemInHand(InteractionHand.OFF_HAND,ItemStack.EMPTY);
                 else player.getItemInHand(InteractionHand.OFF_HAND).setCount(0);

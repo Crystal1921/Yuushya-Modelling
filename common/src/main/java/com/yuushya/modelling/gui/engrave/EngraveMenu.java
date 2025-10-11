@@ -40,11 +40,15 @@ public class EngraveMenu
     private final DataSlot selectedRecipeIndex = DataSlot.standalone();
     private final Level level;
     @Getter
-    private List<EngraveBlockResult> recipes = Lists.newArrayList();
+    private List<IEngraveResult> recipes = Lists.newArrayList();
     /**
      * The {@linkplain net.minecraft.world.item.ItemStack} set in the input slot by the player.
      */
     private ItemStack input = ItemStack.EMPTY;
+    /**
+     * Determines whether to use block or item recipes based on the input item.
+     */
+    private boolean useItemRecipes = false;
     /**
      * Stores the game time of the last time the player took items from the the crafting result slot. This is used to prevent the sound from being played multiple times on the same tick.
      */
@@ -160,7 +164,16 @@ public class EngraveMenu
         this.selectedRecipeIndex.set(-1);
         this.resultSlot.set(ItemStack.EMPTY);
         if (!stack.isEmpty()) {
-            this.recipes = new ArrayList<>(EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.values().stream().toList()) ;
+            // Check if the input item is an itemblock or showblock
+            if (stack.getItem() instanceof net.minecraft.world.item.BlockItem blockItem) {
+                if (blockItem.getBlock() instanceof com.yuushya.modelling.blockentity.itemblock.ItemBlock) {
+                    this.useItemRecipes = true;
+                    this.recipes = new ArrayList<>(EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.values().stream().toList());
+                } else {
+                    this.useItemRecipes = false;
+                    this.recipes = new ArrayList<>(EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.values().stream().toList());
+                }
+            }
         }
     }
 
@@ -178,7 +191,7 @@ public class EngraveMenu
     void setupResultSlot() {
         if(level.isClientSide){
             if (!this.recipes.isEmpty() && this.isValidRecipeIndex(this.selectedRecipeIndex.get())) {
-                EngraveBlockResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
+                IEngraveResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
                 ItemStack itemStack = recipeHolder.getResultItem().copy();
                 if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
                     //this.resultContainer.setRecipeUsed(recipeHolder);
@@ -200,6 +213,10 @@ public class EngraveMenu
 
     public void registerUpdateListener(Runnable listener) {
         this.slotUpdateListener = listener;
+    }
+
+    public boolean isUsingItemRecipes() {
+        return this.useItemRecipes;
     }
 
     public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {

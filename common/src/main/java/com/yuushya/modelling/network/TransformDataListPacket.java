@@ -1,7 +1,7 @@
 package com.yuushya.modelling.network;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
+import com.yuushya.modelling.gui.engrave.IEngraveResult;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.networking.NetworkManager;
@@ -42,7 +42,7 @@ public record TransformDataListPacket(
     }
 
     //architectury提供的另一种风格的api
-    public static void sendToServerSide(EngraveBlockResult itemResult) {
+    public static void sendToServerSide(IEngraveResult itemResult) {
         String name = itemResult.getName();
         CompoundTag tag;
         if (SendingCache.contains(name)) {
@@ -70,7 +70,9 @@ public record TransformDataListPacket(
                 if (!packet.tag.contains("Blocks") && HandlingCache.containsKey(hash)) {
                     menu.setupResultSlotServer(HandlingCache.get(hash));
                 } else {
-                    ItemStack itemStack = YuushyaRegistries.ITEMS.get("showblock").get().getDefaultInstance();
+                    // Determine which item type to create based on the menu's recipe type
+                    String itemType = menu.isUsingItemRecipes() ? "itemblock" : "showblock";
+                    ItemStack itemStack = YuushyaRegistries.ITEMS.get(itemType).get().getDefaultInstance();
                     itemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
                     itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(packet.tag));
                     HandlingCache.put(hash, itemStack);
