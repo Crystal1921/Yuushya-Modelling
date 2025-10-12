@@ -15,8 +15,11 @@ description = '''
     Adore the life in a busy city?
     '''
 
-#[[mixins]]
-#config="yuushya_modelling.mixins.json"
+[[mixins]]
+config="yuushya_modelling.mixins.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
 
 [[dependencies.yuushya_modelling]]
 modId = "neoforge"

@@ -7,6 +7,7 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.neoforge.client.anvilcraft.rendering.CustomRenderInstance;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,6 +26,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.extensions.IBakedModelExtension;
@@ -69,7 +71,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
     public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, @NotNull ModelData data, @Nullable RenderType renderType) {
         ItemBlockEntity blockEntity = data.get(BASE_BLOCK_ENTITY);
         if (blockEntity == null) return Collections.emptyList();
-        return this.getQuads(side, rand, blockEntity.getTransformData());
+        return this.getQuads(side, rand, blockEntity.getTransformData(), blockEntity.getBlockPos());
     }
 
     @Override
@@ -93,12 +95,12 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
 
             @Override
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return this.getQuads(side, rand, transformDatas);
+                return this.getQuads(side, rand, transformDatas, null);
             }
         }));
     }
 
-    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas) {
+    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas,@Nullable BlockPos pos) {
         int vertexSize = YuushyaUtils.vertexSize();
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
@@ -122,6 +124,13 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
                 for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
                     if (model instanceof BuiltInModel builtInModel) {
+                        if (pos != null) {
+                            ChunkPos chunkPos = new ChunkPos(pos);
+                            HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
+                            orDefault.add(pos);
+                            CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
+                            CustomRenderInstance.getINSTANCE().dirty = true;
+                        }
                         return Collections.emptyList();
                     }
                     for (Direction value : directions) {

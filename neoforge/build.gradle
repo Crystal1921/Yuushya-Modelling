@@ -8,9 +8,8 @@ architectury {
 }
 
 loom {
-    accessWidenerPath = project(':common').loom.accessWidenerPath
-
-    neoForge {}
+    neoForge {
+    }
 
     runs {
         data {
