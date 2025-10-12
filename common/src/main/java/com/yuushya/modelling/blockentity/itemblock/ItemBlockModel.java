@@ -1,5 +1,6 @@
 package com.yuushya.modelling.blockentity.itemblock;
 
+import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public class ItemBlockModel implements BakedModel, UnbakedModel {
+    @Getter
     protected final Direction facing;
     protected final BakedModel backup;
 

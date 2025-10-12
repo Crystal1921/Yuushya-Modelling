@@ -15,6 +15,9 @@ description = '''
     Adore the life in a busy city?
     '''
 
+#[[mixins]]
+#config="yuushya_modelling.mixins.json"
+
 [[dependencies.yuushya_modelling]]
 modId = "neoforge"
 type = "required"

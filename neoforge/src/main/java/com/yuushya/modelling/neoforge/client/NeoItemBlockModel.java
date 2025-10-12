@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -39,6 +40,7 @@ import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
     private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new HashMap<>();
+    private static final ResourceLocation MISSING_TEXTURE_LOCATION = ResourceLocation.withDefaultNamespace("missingno");
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
     public NeoItemBlockModel(Direction facing) {
@@ -119,8 +121,8 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
                 for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
-                    if (model instanceof BuiltInModel) {
-                        model = itemRenderer.getItemModelShaper().getItemModel(itemStack);
+                    if (model instanceof BuiltInModel builtInModel) {
+                        return Collections.emptyList();
                     }
                     for (Direction value : directions) {
                         List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
