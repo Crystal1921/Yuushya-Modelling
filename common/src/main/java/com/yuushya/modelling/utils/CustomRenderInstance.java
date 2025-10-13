@@ -1,4 +1,4 @@
-package com.yuushya.modelling.neoforge.client.anvilcraft.rendering;
+package com.yuushya.modelling.utils;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;

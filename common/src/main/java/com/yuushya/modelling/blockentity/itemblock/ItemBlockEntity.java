@@ -4,6 +4,7 @@ import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.registries.YuushyaRegistries;
+import com.yuushya.modelling.utils.CustomRenderInstance;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -69,5 +70,10 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
         itemStack.set(DataComponents.BLOCK_STATE, blockItemStateProperties
                 .with(LIT, blockState.getValue(LIT))
                 .with(SHAPES, blockState.getValue(SHAPES)));
+    }
+
+    public void setRemoved() {
+        CustomRenderInstance.getINSTANCE().dirty = true;
+        super.setRemoved();
     }
 }

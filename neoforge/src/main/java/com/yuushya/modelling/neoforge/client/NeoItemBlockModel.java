@@ -7,7 +7,7 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
-import com.yuushya.modelling.neoforge.client.anvilcraft.rendering.CustomRenderInstance;
+import com.yuushya.modelling.utils.CustomRenderInstance;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -100,7 +100,12 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
         }));
     }
 
-    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas,@Nullable BlockPos pos) {
+    /**
+     * 获取物品的BakedQuad </br>
+     * 物品渲染时pos为null，不会走自定义渲染管道 </br>
+     * 方块渲染时pos不为null，若出现BuiltInModel，则返回空列表，并标记为使用自定义渲染管道 </br>
+     */
+    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas, @Nullable BlockPos pos) {
         int vertexSize = YuushyaUtils.vertexSize();
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
