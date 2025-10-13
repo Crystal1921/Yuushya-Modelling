@@ -4,18 +4,18 @@ import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CustomRenderInstance {
     @Getter
     private static final CustomRenderInstance INSTANCE = new CustomRenderInstance();
     @Getter
     private final Map<ChunkPos, HashSet<BlockPos>> cachedModeData;
-    public boolean dirty = false;
+    public volatile boolean dirty = false;
 
     private CustomRenderInstance() {
-        cachedModeData = new HashMap<>();
+        cachedModeData = new ConcurrentHashMap<>();
     }
 }
