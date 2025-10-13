@@ -21,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -42,7 +41,6 @@ import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
     private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new HashMap<>();
-    private static final ResourceLocation MISSING_TEXTURE_LOCATION = ResourceLocation.withDefaultNamespace("missingno");
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
     public NeoItemBlockModel(Direction facing) {
@@ -136,33 +134,33 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                             CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
                             CustomRenderInstance.getINSTANCE().dirty = true;
                         }
-                        return Collections.emptyList();
-                    }
-                    for (Direction value : directions) {
-                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
-                        for (BakedQuad bakedQuad : blockModelQuads) {
-                            int[] vertex = bakedQuad.getVertices().clone();
-                            // 执行核心方块的位移和旋转
-                            stack.pushPose();
-                            {
-                                YuushyaUtils.scale(stack, transformData.scales);
-                                YuushyaUtils.translate(stack, transformData.pos);
-                                YuushyaUtils.rotate(stack, transformData.rot);
-                                for (int i = 0; i < 4; i++) {
-                                    Vector4f vector4f = new Vector4f(// 顶点的原坐标
-                                            Float.intBitsToFloat(vertex[vertexSize * i]),
-                                            Float.intBitsToFloat(vertex[vertexSize * i + 1]),
-                                            Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
-                                    stack.last().pose().transform(vector4f);
-                                    vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
-                                    vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
-                                    vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
+                    } else {
+                        for (Direction value : directions) {
+                            List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
+                            for (BakedQuad bakedQuad : blockModelQuads) {
+                                int[] vertex = bakedQuad.getVertices().clone();
+                                // 执行核心方块的位移和旋转
+                                stack.pushPose();
+                                {
+                                    YuushyaUtils.scale(stack, transformData.scales);
+                                    YuushyaUtils.translate(stack, transformData.pos);
+                                    YuushyaUtils.rotate(stack, transformData.rot);
+                                    for (int i = 0; i < 4; i++) {
+                                        Vector4f vector4f = new Vector4f(// 顶点的原坐标
+                                                Float.intBitsToFloat(vertex[vertexSize * i]),
+                                                Float.intBitsToFloat(vertex[vertexSize * i + 1]),
+                                                Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
+                                        stack.last().pose().transform(vector4f);
+                                        vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
+                                        vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
+                                        vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
+                                    }
                                 }
+                                stack.popPose();
+                                BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
+                                applyingColor(transformData.color).processInPlace(finalQuad);
+                                finalQuads.add(finalQuad);
                             }
-                            stack.popPose();
-                            BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
-                            applyingColor(transformData.color).processInPlace(finalQuad);
-                            finalQuads.add(finalQuad);
                         }
                     }
                 }

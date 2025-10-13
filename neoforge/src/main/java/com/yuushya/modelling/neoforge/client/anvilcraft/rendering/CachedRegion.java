@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.BuiltInModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -28,6 +29,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.*;
+
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 /**
  * @author ZhuRuoLing
@@ -222,6 +225,7 @@ public class CachedRegion {
                         return;
                     }
                     ItemRenderer renderer = mc.getItemRenderer();
+                    float f = itemBlockEntity.getBlockState().getValue(HORIZONTAL_FACING).toYRot();
                     List<TransformItemData> transformDatas = itemBlockEntity.getTransformData();
                     Level level = be.getLevel();
                     int packedLight = LevelRenderer.getLightColor(level, be.getBlockPos());
@@ -232,20 +236,22 @@ public class CachedRegion {
                             ItemStack itemStack = transformData.itemStack;
                             BakedModel blockModel = renderer.getModel(itemStack, null, null, localPlayer.getId());
                             for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
-                                poseStack.pushPose();
-                                {
-                                    poseStack.translate(
-                                            pos.getX(),
-                                            pos.getY(),
-                                            pos.getZ()
-                                    );
-                                    YuushyaUtils.scale(poseStack, transformData.scales);
-                                    YuushyaUtils.translate(poseStack, transformData.pos);
-                                    YuushyaUtils.rotate(poseStack, transformData.rot);
-                                    poseStack.translate(0.5f, 0.5f, 0.5f);
+                                if (model instanceof BuiltInModel) {
+                                    poseStack.pushPose();
+                                    {
+                                        poseStack.translate(
+                                                pos.getX(),
+                                                pos.getY(),
+                                                pos.getZ()
+                                        );
+                                        YuushyaUtils.scale(poseStack, transformData.scales);
+                                        YuushyaUtils.translate(poseStack, transformData.pos);
+                                        YuushyaUtils.rotate(poseStack, transformData.rot);
+                                        poseStack.translate(0.5f, 0.5f, 0.5f);
+                                    }
+                                    renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, 15728880, model);
+                                    poseStack.popPose();
                                 }
-                                renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, 15728880, model);
-                                poseStack.popPose();
                             }
                         }
                 }
