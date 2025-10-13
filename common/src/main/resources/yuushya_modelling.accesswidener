@@ -4,6 +4,7 @@ accessible method net/minecraft/client/renderer/RenderType$CompositeRenderType s
 accessible field net/minecraft/client/renderer/RenderType mode Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;
 accessible field net/minecraft/client/renderer/RenderType affectsCrumbling Z
 accessible field net/minecraft/client/renderer/RenderType sortOnUpload Z
+accessible field net/minecraft/client/renderer/RenderType format Lcom/mojang/blaze3d/vertex/VertexFormat;
 accessible field net/minecraft/client/renderer/RenderType$CompositeState cullState Lnet/minecraft/client/renderer/RenderStateShard$CullStateShard;
 accessible field net/minecraft/client/renderer/RenderType$CompositeState outputState Lnet/minecraft/client/renderer/RenderStateShard$OutputStateShard;
 accessible field net/minecraft/client/renderer/RenderType$CompositeState textureState Lnet/minecraft/client/renderer/RenderStateShard$EmptyTextureStateShard;

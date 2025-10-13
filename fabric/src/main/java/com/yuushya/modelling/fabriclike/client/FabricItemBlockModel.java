@@ -8,6 +8,7 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.utils.CustomRenderInstance;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
@@ -18,6 +19,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.BuiltInModel;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,6 +29,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -82,7 +85,7 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
 
             @Override
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return FabricItemBlockModel.this.getQuads(side, rand, blockEntity.getTransformData(), context);
+                return FabricItemBlockModel.this.getQuads(side, rand, blockEntity.getTransformData(), context, blockEntity.getBlockPos());
             }
         }, state, randomSupplier, context);
     }
@@ -118,14 +121,14 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
 
             @Override
             public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return this.getQuads(side, rand, transformDatas, context);
+                return this.getQuads(side, rand, transformDatas, context, null);
             }
         });
 
         VanillaModelEncoder.emitItemQuads(cachedModel, null, randomSupplier, context);
     }
 
-    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas, RenderContext context) {
+    public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas, RenderContext context, @Nullable BlockPos pos) {
         int vertexSize = YuushyaUtils.vertexSize();
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return Collections.emptyList();
@@ -146,40 +149,51 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
 
-                if (!blockModel.isVanillaAdapter()) {
-                    blockModel.emitItemQuads(itemStack, randomSupplier, context);
-                }
+                if (blockModel instanceof BuiltInModel) {
+                    if (pos != null) {
+                        ChunkPos chunkPos = new ChunkPos(pos);
+                        HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
+                        orDefault.add(pos);
+                        CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
+                        CustomRenderInstance.getINSTANCE().dirty = true;
+                    }
+                } else {
+                    if (!blockModel.isVanillaAdapter()) {
+                        blockModel.emitItemQuads(itemStack, randomSupplier, context);
+                    }
 
-                for (Direction value : directions) {
-                    List<BakedQuad> blockModelQuads = blockModel.getQuads(null, value, rand);
-                    for (BakedQuad bakedQuad : blockModelQuads) {
-                        int[] vertex = bakedQuad.getVertices().clone();
-                        // 执行核心方块的位移和旋转
-                        stack.pushPose();
-                        {
-                            YuushyaUtils.scale(stack, transformData.scales);
-                            YuushyaUtils.translate(stack, transformData.pos);
-                            YuushyaUtils.rotate(stack, transformData.rot);
-                            for (int i = 0; i < 4; i++) {
-                                Vector4f vector4f = new Vector4f(// 顶点的原坐标
-                                        Float.intBitsToFloat(vertex[vertexSize * i]),
-                                        Float.intBitsToFloat(vertex[vertexSize * i + 1]),
-                                        Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
-                                stack.last().pose().transform(vector4f);
-                                vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
-                                vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
-                                vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
+                    for (Direction value : directions) {
+                        List<BakedQuad> blockModelQuads = blockModel.getQuads(null, value, rand);
+                        for (BakedQuad bakedQuad : blockModelQuads) {
+                            int[] vertex = bakedQuad.getVertices().clone();
+                            // 执行核心方块的位移和旋转
+                            stack.pushPose();
+                            {
+                                YuushyaUtils.scale(stack, transformData.scales);
+                                YuushyaUtils.translate(stack, transformData.pos);
+                                YuushyaUtils.rotate(stack, transformData.rot);
+                                for (int i = 0; i < 4; i++) {
+                                    Vector4f vector4f = new Vector4f(// 顶点的原坐标
+                                            Float.intBitsToFloat(vertex[vertexSize * i]),
+                                            Float.intBitsToFloat(vertex[vertexSize * i + 1]),
+                                            Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
+                                    stack.last().pose().transform(vector4f);
+                                    vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
+                                    vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
+                                    vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
+                                }
                             }
+                            stack.popPose();
+
+                            final int fixedColor = toABGR(transformData.color);
+                            for (int i = 0; i < 4; i++) vertex[i * STRIDE + COLOR] = fixedColor;
+
+                            BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
+                            finalQuads.add(finalQuad);
                         }
-                        stack.popPose();
-
-                        final int fixedColor = toABGR(transformData.color);
-                        for (int i = 0; i < 4; i++) vertex[i * STRIDE + COLOR] = fixedColor;
-
-                        BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
-                        finalQuads.add(finalQuad);
                     }
                 }
+
             }
         return finalQuads;
     }

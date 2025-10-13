@@ -7,5 +7,6 @@ public class YuushyaFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         YuushyaFabricLike.init();
+        YuushyaFabricLike.initResource();
     }
 }

@@ -4,6 +4,7 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaClient;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
+import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.neoforge.client.NeoItemBlockModel;
 import com.yuushya.modelling.neoforge.client.NeoShowBlockModel;
 import com.yuushya.modelling.registries.YuushyaRegistries;
@@ -44,8 +45,10 @@ public class YuushyaClientNeoForge {
         event.register((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 
+    @SuppressWarnings("resource")
     public void onInitializeClient(FMLClientSetupEvent event) {
         event.enqueueWork(YuushyaClient::onInitializeClient);
+        ColorTexture colorTexture = new ColorTexture();
     }
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event) {

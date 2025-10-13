@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_21",
+  "package": "com.yuushya.modelling.fabric.mixin",
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "chisel.refmap.json",
+  "client": [
+    "LevelRendererMixin",
+    "MinecraftMixin"
+  ]
+}

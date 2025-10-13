@@ -6,7 +6,6 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntityRender;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
-import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.registry.client.rendering.BlockEntityRendererRegistry;
@@ -22,7 +21,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 
 public class YuushyaClient {
-    @SuppressWarnings({"unchecked", "resource"})
+    @SuppressWarnings("unchecked")
     public static void onInitializeClient() {
         RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.SHOW_BLOCK.get());
         RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.ITEM_BLOCK.get());
@@ -37,9 +36,6 @@ public class YuushyaClient {
             if (!blockState.equals(Blocks.AIR.defaultBlockState())) return 1;
             return 0;
         });
-
-        ColorTexture colorTexture = new ColorTexture();
-        //MenuRegistry.registerScreenFactory((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 
     public static void load() {
