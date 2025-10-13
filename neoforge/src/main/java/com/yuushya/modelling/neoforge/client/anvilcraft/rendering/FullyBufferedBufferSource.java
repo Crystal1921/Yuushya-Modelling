@@ -15,8 +15,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.minecraft.client.renderer.RenderStateShard.LIGHTMAP;
-import static net.minecraft.client.renderer.RenderStateShard.RENDERTYPE_TRANSLUCENT_SHADER;
+import static net.minecraft.client.renderer.RenderStateShard.*;
 
 /**
  * @author ZhuRuoLing
@@ -76,7 +75,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
                 RenderType.CompositeState.builder()
                         .setCullState(state.cullState)
                         .setOutputState(state.outputState)
-                        .setShaderState(RENDERTYPE_TRANSLUCENT_SHADER)
+                        .setShaderState(RENDERTYPE_CUTOUT_SHADER)
                         .setOutputState(state.outputState)
                         .setTextureState(state.textureState)
                         .setLightmapState(LIGHTMAP)
