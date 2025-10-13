@@ -38,6 +38,7 @@ public class YuushyaRegistries {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Yuushya.MOD_ID_USED, Registries.CREATIVE_MODE_TAB);
 
     public static final RegistrySupplier<CreativeModeTab> YUUSHYA_MODELLING = TABS.register("modelling", () -> CreativeTabRegistry.create(Component.translatable("itemGroup.yuushya.modelling"), () -> new ItemStack(ITEMS.getInstanceOrDefault("pos_trans_item", Items.APPLE))));
+    public static final RegistrySupplier<CreativeModeTab> YUUSHYA_PRIMITIVE = TABS.register("primitive", () -> CreativeTabRegistry.create(Component.translatable("itemGroup.yuushya.primitive"), () -> new ItemStack(ITEMS.getInstanceOrDefault("chibi_0", Items.APPLE))));
     public static RegistrySupplier<Item> GET_BLOCKSTATE_ITEM = null;
     public static RegistrySupplier<Block> SHOW_BLOCK = null;
     public static RegistrySupplier<Block> ITEM_BLOCK = null;
@@ -69,6 +70,18 @@ public class YuushyaRegistries {
         ITEMS.register("sprouting_dirt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("floating_bloom", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("sparking_flame", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
+
+        ITEMS.register("chibi_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_3", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_4", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_5", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_6", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_7", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_8", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_9", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_10", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
 
         CreativeTabRegistry.appendStack(YUUSHYA_MODELLING, () -> new ItemStack(ITEMS.get("get_blockstate_item").get()));
 
