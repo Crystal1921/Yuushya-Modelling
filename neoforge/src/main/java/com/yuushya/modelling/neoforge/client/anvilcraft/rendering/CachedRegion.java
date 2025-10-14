@@ -15,10 +15,14 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.BuiltInModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
@@ -28,7 +32,9 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
@@ -41,6 +47,7 @@ public class CachedRegion {
     private final Set<BlockEntity> blockEntities = new HashSet<>();
     private final CacheableBERenderingPipeline pipeline;
     private final Minecraft minecraft = Minecraft.getInstance();
+    private final RandomSource random = RandomSource.create();
     private Map<RenderType, VertexBuffer> buffers = new HashMap<>();
     private Map<RenderType, MeshData.SortState> meshSortings = new HashMap<>();
     private Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
@@ -214,6 +221,7 @@ public class CachedRegion {
         @Override
         public void run() {
             lastRebuildTask = this;
+            int vertexSize = YuushyaUtils.vertexSize();
             PoseStack poseStack = new PoseStack();
             CachedRegion.this.isEmpty = true;
             FullyBufferedBufferSource bufferSource = new FullyBufferedBufferSource();
@@ -225,6 +233,8 @@ public class CachedRegion {
                         return;
                     }
                     ItemRenderer renderer = mc.getItemRenderer();
+                    ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+                    directions.add(null); // 加个null
                     float f = itemBlockEntity.getBlockState().getValue(HORIZONTAL_FACING).toYRot();
                     List<TransformItemData> transformDatas = itemBlockEntity.getTransformData();
                     Level level = be.getLevel();
@@ -249,8 +259,30 @@ public class CachedRegion {
                                         YuushyaUtils.rotate(poseStack, transformData.rot);
                                         poseStack.translate(0.5f, 0.5f, 0.5f);
                                     }
-                                    renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, 15728880, model);
+                                    renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
                                     poseStack.popPose();
+                                } else {
+                                    for (Direction value : directions) {
+                                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, random);
+                                        for (BakedQuad bakedQuad : blockModelQuads) {
+                                            poseStack.pushPose();
+                                            {
+                                                poseStack.translate(
+                                                        pos.getX(),
+                                                        pos.getY(),
+                                                        pos.getZ()
+                                                );
+                                                YuushyaUtils.scale(poseStack, transformData.scales);
+                                                YuushyaUtils.translate(poseStack, transformData.pos);
+                                                YuushyaUtils.rotate(poseStack, transformData.rot);
+                                                Color color = new Color(transformData.color);
+                                                float[] colorComponents = new float[3];
+                                                color.getColorComponents(colorComponents);
+                                                bufferSource.getBuffer(RenderType.TRANSLUCENT).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
+                                            }
+                                            poseStack.popPose();
+                                        }
+                                    }
                                 }
                             }
                         }

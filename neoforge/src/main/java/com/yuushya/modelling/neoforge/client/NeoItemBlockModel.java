@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.BuiltInModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
@@ -101,8 +100,8 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
 
     /**
      * 获取物品的BakedQuad </br>
-     * 物品渲染时pos为null，不会走自定义渲染管道 </br>
-     * 方块渲染时pos不为null，若出现BuiltInModel，则返回空列表，并标记为使用自定义渲染管道 </br>
+     * 物品渲染时pos为null，则为普通物品渲染， </br>
+     * 方块渲染时pos不为null，标记为使用自定义渲染管道 </br>
      */
     public List<BakedQuad> getQuads(@Nullable Direction side, @NotNull RandomSource rand, List<TransformItemData> transformDatas, @Nullable BlockPos pos) {
         int vertexSize = YuushyaUtils.vertexSize();
@@ -127,41 +126,39 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
                 for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
-                    if (model instanceof BuiltInModel) {
-                        if (pos != null) {
-                            ChunkPos chunkPos = new ChunkPos(pos);
-                            HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
-                            orDefault.add(pos);
-                            CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
-                            CustomRenderInstance.getINSTANCE().dirty = true;
-                        }
-                    } else {
-                        for (Direction value : directions) {
-                            List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
-                            for (BakedQuad bakedQuad : blockModelQuads) {
-                                int[] vertex = bakedQuad.getVertices().clone();
-                                // 执行核心方块的位移和旋转
-                                stack.pushPose();
-                                {
-                                    YuushyaUtils.scale(stack, transformData.scales);
-                                    YuushyaUtils.translate(stack, transformData.pos);
-                                    YuushyaUtils.rotate(stack, transformData.rot);
-                                    for (int i = 0; i < 4; i++) {
-                                        Vector4f vector4f = new Vector4f(// 顶点的原坐标
-                                                Float.intBitsToFloat(vertex[vertexSize * i]),
-                                                Float.intBitsToFloat(vertex[vertexSize * i + 1]),
-                                                Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
-                                        stack.last().pose().transform(vector4f);
-                                        vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
-                                        vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
-                                        vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
-                                    }
+                    if (pos != null) {
+                        ChunkPos chunkPos = new ChunkPos(pos);
+                        HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
+                        orDefault.add(pos);
+                        CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
+                        CustomRenderInstance.getINSTANCE().dirty = true;
+                        return Collections.emptyList();
+                    }
+                    for (Direction value : directions) {
+                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
+                        for (BakedQuad bakedQuad : blockModelQuads) {
+                            int[] vertex = bakedQuad.getVertices().clone();
+                            // 执行核心方块的位移和旋转
+                            stack.pushPose();
+                            {
+                                YuushyaUtils.scale(stack, transformData.scales);
+                                YuushyaUtils.translate(stack, transformData.pos);
+                                YuushyaUtils.rotate(stack, transformData.rot);
+                                for (int i = 0; i < 4; i++) {
+                                    Vector4f vector4f = new Vector4f(// 顶点的原坐标
+                                            Float.intBitsToFloat(vertex[vertexSize * i]),
+                                            Float.intBitsToFloat(vertex[vertexSize * i + 1]),
+                                            Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
+                                    stack.last().pose().transform(vector4f);
+                                    vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
+                                    vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
+                                    vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
                                 }
-                                stack.popPose();
-                                BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
-                                applyingColor(transformData.color).processInPlace(finalQuad);
-                                finalQuads.add(finalQuad);
                             }
+                            stack.popPose();
+                            BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
+                            applyingColor(transformData.color).processInPlace(finalQuad);
+                            finalQuads.add(finalQuad);
                         }
                     }
                 }
