@@ -47,8 +47,10 @@ public class YuushyaClientNeoForge {
 
     @SuppressWarnings("resource")
     public void onInitializeClient(FMLClientSetupEvent event) {
-        event.enqueueWork(YuushyaClient::onInitializeClient);
-        ColorTexture colorTexture = new ColorTexture();
+        event.enqueueWork(() -> {
+            YuushyaClient.onInitializeClient();
+            ColorTexture colorTexture = new ColorTexture();
+        });
     }
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event) {
@@ -75,7 +77,7 @@ public class YuushyaClientNeoForge {
      * 前24位为原方块的blockState，后8位为原方块的tint（若其为正）
      */
     public void handleBlockColor(RegisterColorHandlersEvent.Block event) {
-        event.getBlockColors().register(
+        event.register(
                 (state, view, pos, tintIndex) -> {
                     if (tintIndex > -1) {
                         // decodeTintWithState
@@ -92,13 +94,13 @@ public class YuushyaClientNeoForge {
     }
 
     public void handleItemColor(RegisterColorHandlersEvent.Item event) {
-        event.getItemColors().register(
+        event.register(
                 (itemStack, i) -> {
                     BlockState blockState = itemStack.getOrDefault((DataComponentType<BlockState>) YuushyaRegistries.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
                     return event.getBlockColors().getColor(blockState, null, null, i);
                 }, YuushyaRegistries.ITEMS.get("get_blockstate_item").get()
         );
-        event.getItemColors().register(
+        event.register(
                 (arg, tintIndex) -> {
                     if (tintIndex > -1) {
                         // decodeTintWithState

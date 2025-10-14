@@ -36,11 +36,12 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
-    private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new HashMap<>();
+    private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
     public NeoItemBlockModel(Direction facing) {
@@ -126,7 +127,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
                 for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
-                    if (model instanceof BuiltInModel builtInModel) {
+                    if (model instanceof BuiltInModel) {
                         if (pos != null) {
                             ChunkPos chunkPos = new ChunkPos(pos);
                             HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());

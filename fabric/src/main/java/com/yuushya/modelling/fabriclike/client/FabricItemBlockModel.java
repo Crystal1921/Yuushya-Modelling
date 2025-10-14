@@ -36,10 +36,11 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel, BakedModel, FabricBakedModel {
-    private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new HashMap<>();
+    private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
     private static final long ITEM_RANDOM_SEED = 42L;
     private final RandomSource random = RandomSource.create();
 
