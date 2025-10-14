@@ -66,7 +66,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     ) {
         RenderType.CompositeState state = renderType.state();
         return RenderType.create(
-                "powertool:generated",
+                "yuushya_modelling:generated",
                 DefaultVertexFormat.BLOCK,
                 renderType.mode,
                 786432,
@@ -74,9 +74,8 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
                 renderType.sortOnUpload,
                 RenderType.CompositeState.builder()
                         .setCullState(state.cullState)
-                        .setOutputState(state.outputState)
+                        .setOutputState(MAIN_TARGET)
                         .setShaderState(RENDERTYPE_CUTOUT_SHADER)
-                        .setOutputState(state.outputState)
                         .setTextureState(state.textureState)
                         .setLightmapState(LIGHTMAP)
                         .setTransparencyState(state.transparencyState)
