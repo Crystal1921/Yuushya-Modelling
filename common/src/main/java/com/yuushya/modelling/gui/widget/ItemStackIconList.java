@@ -10,25 +10,19 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Entry> {
 
     protected final List<TransformItemData> transformDataList;
     protected final List<Entry> chosen = new ArrayList<>();
     protected final ItemBlockScreen screen;
-    private final Map<Integer, MutableComponent> rememberDisplayName = new HashMap<>();
-    private final Map<Integer, List<String>> rememberItemProperties = new HashMap<>();
     private int itemHeight;
     private int itemWidth;
 
@@ -43,30 +37,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         this.itemWidth = itemWidth;
         this.itemHeight = itemHeight;
         this.updateRenderList();
-    }
-
-    public MutableComponent updateRenderDisplayName(ItemStack itemStack) {
-        return rememberDisplayName.computeIfAbsent(Item.getId(itemStack.getItem()),
-                (id) -> {
-                    Item item = Item.byId(id);
-                    return (MutableComponent) item.getName(item.getDefaultInstance());
-                });
-    }
-
-    public List<String> updateRenderItemProperties(ItemStack itemStack) {
-        return rememberItemProperties.computeIfAbsent(Item.getId(itemStack.getItem()),
-                (id) -> {
-                    // For items, we can show basic properties like count, damage, etc.
-                    List<String> properties = new ArrayList<>();
-                    Item item = Item.byId(id);
-                    if (item != Items.AIR) {
-                        properties.add("Count: " + itemStack.getCount());
-                        if (itemStack.isDamageableItem()) {
-                            properties.add("Damage: " + itemStack.getDamageValue() + "/" + itemStack.getMaxDamage());
-                        }
-                    }
-                    return properties;
-                });
     }
 
     public void updateRenderList() {
@@ -104,7 +74,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         }
     }
 
-    public void setSelectedSlot(int slot){
+    public void setSelectedSlot(int slot) {
         this.setSelected(this.children().get(slot));
     }
 

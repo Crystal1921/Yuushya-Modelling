@@ -165,6 +165,7 @@
   "gui.itemBlockScreen.mode.edit.tooltip": "输入模式：支持自行输入数值，按下右侧的按钮应用数值，按下左侧的按钮还原",
   "gui.itemBlockScreen.mode.color.tooltip": "颜色模式：支持调整方块的颜色",
   "gui.itemBlockScreen.mode.custom_size.tooltip": "自定义大小模式：支持调整方块的自定义大小",
+  "gui.itemBlockScreen.mirror.tip": "镜像: %s",
 
   "gui.yuushya.showBlockScreen.pos_text": "位移",
   "gui.yuushya.showBlockScreen.rot_text": "旋转",
@@ -193,6 +194,7 @@
   "gui.showBlockScreen.workshop.save.tip": "将建模作品以此文件名保存在[./版本文件夹/modelling]下",
   "gui.showBlockScreen.workshop.save_pass": "已将建模作品保存至[./版本文件夹/modelling]下！",
   "gui.showBlockScreen.display.add": "添加副手的方块状态到列表",
+  "gui.showBlockScreen.display.copy": "复制选中的方块状态",
   "gui.showBlockScreen.display.remove": "删除选中的方块状态",
   "gui.showBlockScreen.display.replace": "用副手的方块状态来替换选中的方块状态",
   "gui.showBlockScreen.display.on": "切换当前层为隐藏",

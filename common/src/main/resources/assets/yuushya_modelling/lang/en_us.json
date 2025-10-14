@@ -139,6 +139,7 @@
   "gui.itemBlockScreen.mode.edit.tooltip": "Allows manual input of values. Press the button on the right to apply the values, and press the button on the left to reset them.",
   "gui.itemBlockScreen.mode.color.tooltip": "Color Mode: Supports adjusting the color of the blocks",
   "gui.itemBlockScreen.mode.custom_size.tooltip": "Mode:Support Custom Size",
+  "gui.itemBlockScreen.mirror.tip": "Mirror : %s",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",
@@ -167,6 +168,7 @@
   "gui.showBlockScreen.workshop.save_pass": "Modelling work saved to [./Version Folder/modelling]!",
   "gui.showBlockScreen.display.add": "Add block or blockstate in the offhand to list",
   "gui.showBlockScreen.display.remove": "Remove selected block or blockstate",
+  "gui.showBlockScreen.display.copy": "Copy selected block or blockstate",
   "gui.showBlockScreen.display.replace": "Replace selected block or blockstate with in the off hand",
   "gui.showBlockScreen.display.on": "Switch to hidden",
   "gui.showBlockScreen.display.off": "Switch to visible",

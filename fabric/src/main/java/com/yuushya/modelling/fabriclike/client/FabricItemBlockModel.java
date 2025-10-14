@@ -43,7 +43,10 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
     private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
     private static final long ITEM_RANDOM_SEED = 42L;
     private final RandomSource random = RandomSource.create();
-
+    private final Supplier<RandomSource> randomSupplier = () -> {
+        random.setSeed(ITEM_RANDOM_SEED);
+        return random;
+    };
     int STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
     int POSITION = findOffset(VertexFormatElement.POSITION);
     int COLOR = findOffset(VertexFormatElement.COLOR);
@@ -52,11 +55,6 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
     int UV2 = findOffset(VertexFormatElement.UV2);
     int NORMAL = findOffset(VertexFormatElement.NORMAL);
 
-    private final Supplier<RandomSource> randomSupplier = () -> {
-        random.setSeed(ITEM_RANDOM_SEED);
-        return random;
-    };
-
 
     public FabricItemBlockModel(Direction facing) {
         super(facing);
@@ -64,6 +62,20 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
 
     public FabricItemBlockModel(Direction facing, BakedModel backup) {
         super(facing, backup);
+    }
+
+    private static int findOffset(VertexFormatElement element) {
+        if (DefaultVertexFormat.BLOCK.contains(element)) {
+            // Divide by 4 because we want the int offset
+            return DefaultVertexFormat.BLOCK.getOffset(element) / 4;
+        }
+        return -1;
+    }
+
+    public static int toABGR(int argb) {
+        return (argb & 0xFF00FF00) // alpha and green same spot
+                | ((argb >> 16) & 0x000000FF) // red moves to blue
+                | ((argb << 16) & 0x00FF0000); // blue moves to red
     }
 
     @Override
@@ -150,66 +162,51 @@ public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel
                 ItemStack itemStack = transformData.itemStack;
                 BakedModel blockModel = itemRenderer.getModel(itemStack, null, null, player.getId());
 
-                if (blockModel instanceof BuiltInModel) {
-                    if (pos != null) {
-                        ChunkPos chunkPos = new ChunkPos(pos);
-                        HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
-                        orDefault.add(pos);
-                        CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
-                        CustomRenderInstance.getINSTANCE().dirty = true;
-                    }
-                } else {
-                    if (!blockModel.isVanillaAdapter()) {
-                        blockModel.emitItemQuads(itemStack, randomSupplier, context);
-                    }
+                if (pos != null) {
+                    ChunkPos chunkPos = new ChunkPos(pos);
+                    HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
+                    orDefault.add(pos);
+                    CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
+                    CustomRenderInstance.getINSTANCE().dirty = true;
+                    return Collections.emptyList();
+                }
+                if (!blockModel.isVanillaAdapter()) {
+                    blockModel.emitItemQuads(itemStack, randomSupplier, context);
+                }
 
-                    for (Direction value : directions) {
-                        List<BakedQuad> blockModelQuads = blockModel.getQuads(null, value, rand);
-                        for (BakedQuad bakedQuad : blockModelQuads) {
-                            int[] vertex = bakedQuad.getVertices().clone();
-                            // 执行核心方块的位移和旋转
-                            stack.pushPose();
-                            {
-                                YuushyaUtils.scale(stack, transformData.scales);
-                                YuushyaUtils.translate(stack, transformData.pos);
-                                YuushyaUtils.rotate(stack, transformData.rot);
-                                for (int i = 0; i < 4; i++) {
-                                    Vector4f vector4f = new Vector4f(// 顶点的原坐标
-                                            Float.intBitsToFloat(vertex[vertexSize * i]),
-                                            Float.intBitsToFloat(vertex[vertexSize * i + 1]),
-                                            Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
-                                    stack.last().pose().transform(vector4f);
-                                    vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
-                                    vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
-                                    vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
-                                }
+                for (Direction value : directions) {
+                    List<BakedQuad> blockModelQuads = blockModel.getQuads(null, value, rand);
+                    for (BakedQuad bakedQuad : blockModelQuads) {
+                        int[] vertex = bakedQuad.getVertices().clone();
+                        // 执行核心方块的位移和旋转
+                        stack.pushPose();
+                        {
+                            YuushyaUtils.scale(stack, transformData.scales);
+                            YuushyaUtils.translate(stack, transformData.pos);
+                            YuushyaUtils.rotate(stack, transformData.rot);
+                            for (int i = 0; i < 4; i++) {
+                                Vector4f vector4f = new Vector4f(// 顶点的原坐标
+                                        Float.intBitsToFloat(vertex[vertexSize * i]),
+                                        Float.intBitsToFloat(vertex[vertexSize * i + 1]),
+                                        Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
+                                stack.last().pose().transform(vector4f);
+                                vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
+                                vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
+                                vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
                             }
-                            stack.popPose();
-
-                            final int fixedColor = toABGR(transformData.color);
-                            for (int i = 0; i < 4; i++) vertex[i * STRIDE + COLOR] = fixedColor;
-
-                            BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
-                            finalQuads.add(finalQuad);
                         }
+                        stack.popPose();
+
+                        final int fixedColor = toABGR(transformData.color);
+                        for (int i = 0; i < 4; i++) vertex[i * STRIDE + COLOR] = fixedColor;
+
+                        BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
+                        finalQuads.add(finalQuad);
                     }
                 }
 
+
             }
         return finalQuads;
-    }
-
-    private static int findOffset(VertexFormatElement element) {
-        if (DefaultVertexFormat.BLOCK.contains(element)) {
-            // Divide by 4 because we want the int offset
-            return DefaultVertexFormat.BLOCK.getOffset(element) / 4;
-        }
-        return -1;
-    }
-
-    public static int toABGR(int argb) {
-        return (argb & 0xFF00FF00) // alpha and green same spot
-                | ((argb >> 16) & 0x000000FF) // red moves to blue
-                | ((argb << 16) & 0x00FF0000); // blue moves to red
     }
 }

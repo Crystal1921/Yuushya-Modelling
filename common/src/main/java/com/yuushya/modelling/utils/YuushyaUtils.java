@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.StateHolder;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
@@ -83,6 +84,34 @@ public class YuushyaUtils {
                 arg.mulPose(Axis.XP.rotationDegrees(pitch));
             arg.translate(-0.5, -0.5, -0.5);
         }
+    }
+
+    public static void mirror(Vector3d pos, Quaternionf rot, MirrorFace face) {
+        switch (face) {
+            case MirrorFace.X: // YZ 平面镜像
+                pos.x = -pos.x;
+                rot.x = -rot.x;
+                rot.w = -rot.w;
+                break;
+            case MirrorFace.Y: // XZ 平面镜像
+                pos.y = -pos.y;
+                rot.y = -rot.y;
+                rot.w = -rot.w;
+                break;
+            case MirrorFace.Z: // XY 平面镜像
+                pos.z = -pos.z;
+                rot.z = -rot.z;
+                rot.w = -rot.w;
+                break;
+        }
+    }
+
+    public static double normalizeAngle(double degrees) {
+        degrees = degrees % 360;    // 先取模
+        if (degrees < 0) {
+            degrees += 360;         // 如果是负数，加上360
+        }
+        return degrees;
     }
 
     public static int encodeTintWithState(int tint, BlockState state) {
@@ -151,4 +180,7 @@ public class YuushyaUtils {
         return optional.map(t -> stateHolder.setValue(property, t)).orElse(stateHolder);
     }
 
+    public enum MirrorFace {
+        X,Y,Z
+    }
 }
