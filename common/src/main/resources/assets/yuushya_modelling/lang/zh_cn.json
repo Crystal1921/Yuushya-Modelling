@@ -166,6 +166,8 @@
   "gui.itemBlockScreen.mode.color.tooltip": "颜色模式：支持调整方块的颜色",
   "gui.itemBlockScreen.mode.custom_size.tooltip": "自定义大小模式：支持调整方块的自定义大小",
   "gui.itemBlockScreen.mirror.tip": "镜像: %s",
+  "gui.itemBlockScreen.ambientOcclusion.on": "启用环境光遮蔽",
+  "gui.itemBlockScreen.ambientOcclusion.off": "禁用环境光遮蔽",
 
   "gui.yuushya.showBlockScreen.pos_text": "位移",
   "gui.yuushya.showBlockScreen.rot_text": "旋转",

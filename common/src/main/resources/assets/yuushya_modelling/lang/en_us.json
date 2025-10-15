@@ -140,6 +140,8 @@
   "gui.itemBlockScreen.mode.color.tooltip": "Color Mode: Supports adjusting the color of the blocks",
   "gui.itemBlockScreen.mode.custom_size.tooltip": "Mode:Support Custom Size",
   "gui.itemBlockScreen.mirror.tip": "Mirror : %s",
+  "gui.itemBlockScreen.ambientOcclusion.on": "Enable Ambient Occlusion",
+  "gui.itemBlockScreen.ambientOcclusion.off": "Disable Ambient Occlusion",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",

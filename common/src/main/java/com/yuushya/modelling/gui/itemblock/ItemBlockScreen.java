@@ -274,6 +274,7 @@ public class ItemBlockScreen extends Screen {
                 .booleanBuilder(Component.literal("●"), Component.literal("☀"))
                 .displayOnlyValue()
                 .withInitialValue(blockEntity.getBlockState().getValue(DISABLE_AO))
+                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.ambientOcclusion.on") : Component.translatable("gui.itemBlockScreen.ambientOcclusion.off"))))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 9, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, enableAO) -> {
                             BlockState blockState = blockEntity.getBlockState();
