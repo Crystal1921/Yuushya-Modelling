@@ -157,6 +157,7 @@ public class ItemBlockScreen extends Screen {
         Button addItemButton = Button.builder(Component.literal("+"),
                         (btn) -> {
                             if (this.newItemStack != null) {
+                                if(this.newItemStack.isEmpty()) return;
                                 itemStackList.addSlot();
                                 updateItemStack(newItemStack);
                                 updateTransformData(SHOWN, 1.0);
@@ -188,8 +189,12 @@ public class ItemBlockScreen extends Screen {
                         (btn) -> {
                             int chosen = this.itemStackList.getChosenOne();
                             if (chosen != -1 && chosen != slot) {
-                                updateItemStack(blockEntity.getTransformData(chosen).itemStack);
+                                ItemStack item = blockEntity.getTransformData(chosen).itemStack;
+                                if(item == null) return;
+                                if(item.isEmpty()) return;
+                                updateItemStack(item);
                             } else if (this.newItemStack != null) {
+                                if(this.newItemStack.isEmpty()) return;
                                 updateItemStack(newItemStack);
                             }
                         }
@@ -480,11 +485,11 @@ public class ItemBlockScreen extends Screen {
         this.colorWidget = new ColorWidget(leftColumnX() - 10, top(-2, 30), 110, 160, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
         this.colorEditBox.setMaxLength(7);
-        this.colorFinishButton = Button.builder(Component.literal("✓").withStyle(ChatFormatting.GREEN), (button -> {
+        this.colorFinishButton = Button.builder(Component.literal("√").withStyle(ChatFormatting.GREEN), (button -> {
             String text = colorEditBox.getValue();
             if (text.startsWith("#")) {
                 try {
-                    int color = 0xFF000000 | Integer.parseInt(text.substring(1), 16);
+                    int color = 0xFFFFFFFF | Integer.parseInt(text.substring(1), 16);
                     colorWidget.setColor(color);
                     updateTransformData(COLOR, (double) color);
                 } catch (NumberFormatException ignored) {
@@ -604,6 +609,8 @@ public class ItemBlockScreen extends Screen {
 
     public void checkModLack(ShareUtils.ShareItemInformation shareInformation) {
         List<String> unLoaded = shareInformation.mods().stream().filter(id -> !Platform.getModIds().contains(id)).toList();
+        if(unLoaded.isEmpty()) return;
+        if(unLoaded.contains("yuushya")) return;
         Minecraft.getInstance().getToasts().addToast(
                 SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ", unLoaded)))
         );

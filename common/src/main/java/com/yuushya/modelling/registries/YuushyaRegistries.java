@@ -83,6 +83,15 @@ public class YuushyaRegistries {
         ITEMS.register("chibi_9", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("chibi_10", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
 
+        ITEMS.register("cube_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_3", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_4", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+
+        ITEMS.register("cylinder_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cylinder_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+
         CreativeTabRegistry.appendStack(YUUSHYA_MODELLING, () -> new ItemStack(ITEMS.get("get_blockstate_item").get()));
 
         SHOW_BLOCK = BLOCKS.register("showblock", () -> new ShowBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 1));

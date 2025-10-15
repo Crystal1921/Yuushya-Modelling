@@ -33,25 +33,30 @@ public class ColorWidget extends AbstractWidget {
     @Override
     protected void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
         String hsv = String.format("H: %.2f S: %.2f V: %.2f", hsbVals[0], hsbVals[1], hsbVals[2]);
-        guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() + 25, FastColor.ARGB32.color(128, 255, 255, 255));
-        guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 0, 0, 0), false);
+        guiGraphics.fill(getX() - 1, getY() - 1, getX() + getWidth() + 1, getY()+ getHeight()+26,FastColor.ARGB32.color(72, 0, 0, 0));
+        guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() + 25, FastColor.ARGB32.color(72, 0, 0, 0));
+
+        guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 255, 255, 255), false);
         RenderSystem.enableBlend();
 
-        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, WIDTH, 20, 90, 20);
+//        guiGraphics.fill(getX() + yPadding - 1, getY() + 35 + 1, getX() + 25 + 1, getY() + 25 + 1, FastColor.ARGB32.color(72, 255, 255, 255));
+        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, WIDTH, 10, 90, 10);
         PoseStack pose = guiGraphics.pose();
 
+        this.renderSolidColor(pose, getX() + xPadding -1, getX() + xPadding + WIDTH + 1 , getY()+ yHeight -1, getY() + yHeight + WIDTH + 1, FastColor.ARGB32.color(72, 255, 255, 255));
         this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
 
         this.innerBlit(ColorTexture.getWhiteTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
         this.innerBlit(ColorTexture.getBlackTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
 
+        guiGraphics.fill(getX() + xPadding - 1, getY() + yPadding - 1, getX() + 25 + 1, getY() + 25 + 1, FastColor.ARGB32.color(72, 255, 255, 255));
         guiGraphics.fill(getX() + xPadding, getY() + yPadding, getX() + 25, getY() + 25, Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2]));
 
         RenderSystem.disableBlend();
 
         int hueX = (int) (getX() + xPadding + (hsbVals[0] * WIDTH));
-        int hueY = getY() + 45;
-        drawCross(guiGraphics, hueX, hueY);
+        int hueY = getY() + 35;
+        drawArrow(guiGraphics, hueX, hueY);
 
         int satX = (int) (getX() + xPadding + (hsbVals[1] * WIDTH));
         int valY = (int) (getY() + yHeight + ((1.0f - hsbVals[2]) * WIDTH));
@@ -59,8 +64,24 @@ public class ColorWidget extends AbstractWidget {
     }
 
     private void drawCross(GuiGraphics guiGraphics, int x, int y) {
-        guiGraphics.hLine(x - 5, x + 5, y, FastColor.ARGB32.color(255, 0, 0, 0));
-        guiGraphics.vLine(x, y - 5, y + 5, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.hLine(x - 2, x + 2 , y, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x, y - 3, y + 3, FastColor.ARGB32.color(255, 0, 0, 0));
+    }
+
+    private void drawArrow(GuiGraphics guiGraphics, int x, int y){
+        guiGraphics.vLine(x, y - 4, y + 4, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x - 1, y - 4, y + 3, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x + 1, y - 4, y + 3, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x - 2, y - 4, y + 2, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x + 2, y - 4, y + 2, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x - 3, y - 4, y + 1, FastColor.ARGB32.color(255, 0, 0, 0));
+        guiGraphics.vLine(x + 3, y - 4, y + 1, FastColor.ARGB32.color(255, 0, 0, 0));
+
+        guiGraphics.vLine(x, y - 3, y + 3, FastColor.ARGB32.color(255, 255, 255, 255));
+        guiGraphics.vLine(x - 1, y - 3, y + 2, FastColor.ARGB32.color(255, 255, 255, 255));
+        guiGraphics.vLine(x + 1, y - 3, y + 2, FastColor.ARGB32.color(255, 255, 255, 255));
+        guiGraphics.vLine(x - 2, y - 3, y + 1, FastColor.ARGB32.color(255, 255, 255, 255));
+        guiGraphics.vLine(x + 2, y - 3, y + 1, FastColor.ARGB32.color(255, 255, 255, 255));
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
