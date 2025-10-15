@@ -81,6 +81,10 @@
   "item.yuushya.move_transformdata_item.offhand.success": "Pasted",
   "item.yuushya.move_transformdata_item.mainhand.success": "Cut",
   "item.yuushya.move_transformdata_item.mainhand.pass": "No content for this [Layer]!",
+
+  "item.yuushya.color_picker_item": "Color Picker",
+  "item.yuushya.color_picker.none": "None Color",
+
   "item.yuushya.the_encyclopedia": "\u00A7c「The Encyclopedia」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“The world is watching you”",
   "item.yuushya.shimmering_pearl": "\u00A79Shimmering Pearl",
@@ -140,6 +144,8 @@
   "gui.itemBlockScreen.mode.color.tooltip": "Color Mode: Supports adjusting the color of the blocks",
   "gui.itemBlockScreen.mode.custom_size.tooltip": "Mode:Support Custom Size",
   "gui.itemBlockScreen.mirror.tip": "Mirror : %s",
+  "gui.itemBlockScreen.ambientOcclusion.on": "Enable Ambient Occlusion",
+  "gui.itemBlockScreen.ambientOcclusion.off": "Disable Ambient Occlusion",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",

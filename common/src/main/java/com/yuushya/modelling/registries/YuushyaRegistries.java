@@ -47,6 +47,7 @@ public class YuushyaRegistries {
     public static RegistrySupplier<DataComponentType<?>> TRANS_DIRECTION = null;
     public static RegistrySupplier<DataComponentType<?>> BLOCKSTATE = null;
     public static RegistrySupplier<DataComponentType<?>> TRANSFORM_DATA = null;
+    public static RegistrySupplier<DataComponentType<?>> COLOR_DATA = null;
     public static RegistrySupplier<MenuType<?>> ENGRAVE_MENU = null;
 
     @SuppressWarnings("UnstableApiUsage")
@@ -63,6 +64,7 @@ public class YuushyaRegistries {
         ITEMS.register("destroy_item", () -> new DestroyItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1).durability(384), 2));
         ITEMS.register("gui_item", () -> new GuiItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 2));
         ITEMS.register("engrave_item", () -> new EngraveItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 3));
+        ITEMS.register("color_picker_item", () -> new ColorPickerItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 1));
 
         ITEMS.register("the_encyclopedia", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("shimmering_pearl", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
@@ -104,6 +106,7 @@ public class YuushyaRegistries {
         TRANS_DIRECTION = DATA_COMPONENTS.register("trans", () -> DataComponentType.<Integer>builder().persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
         BLOCKSTATE = DATA_COMPONENTS.register("blockstate", () -> DataComponentType.<BlockState>builder().persistent(BlockState.CODEC).build());
         TRANSFORM_DATA = DATA_COMPONENTS.register("transfrom_data", () -> DataComponentType.<CustomData>builder().persistent(CustomData.CODEC).build());
+        COLOR_DATA = DATA_COMPONENTS.register("color_data", () -> DataComponentType.<Integer>builder().persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
 
         ENGRAVE_MENU = MENU_TYPE.register("engrave", () -> new MenuType<>(EngraveMenu::new, FeatureFlags.DEFAULT_FLAGS));
 

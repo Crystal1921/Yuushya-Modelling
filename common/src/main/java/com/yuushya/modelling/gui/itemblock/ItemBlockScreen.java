@@ -38,6 +38,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
@@ -49,6 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.DISABLE_AO;
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
@@ -271,6 +274,21 @@ public class ItemBlockScreen extends Screen {
                 )
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.save")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 8, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
+
+        CycleButton<Boolean> ambientOcclusionButton = CycleButton
+                .booleanBuilder(Component.literal("●"), Component.literal("☀"))
+                .displayOnlyValue()
+                .withInitialValue(blockEntity.getBlockState().getValue(DISABLE_AO))
+                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.ambientOcclusion.on") : Component.translatable("gui.itemBlockScreen.ambientOcclusion.off"))))
+                .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 9, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, enableAO) -> {
+                            BlockState blockState = blockEntity.getBlockState();
+                            Level level = blockEntity.getLevel();
+                            if (level != null) {
+                                level.setBlock(blockEntity.getBlockPos(), blockEntity.getBlockState().setValue(DISABLE_AO, enableAO), 18);
+                                level.sendBlockUpdated(blockEntity.getBlockPos(), blockState, blockState, net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+                            }
+                        });
 
         Button xMirror = Button.builder(Component.literal("x"), (button -> mirror(YuushyaUtils.MirrorFace.X)))
                 .bounds(RIGHT_COLUMN_X, RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT + 5, RIGHT_BAR_WIDTH, PER_HEIGHT).tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.mirror.tip", "X"))).build();
@@ -534,6 +552,7 @@ public class ItemBlockScreen extends Screen {
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
         this.addRenderableWidget(saveButton);
+        this.addRenderableWidget(ambientOcclusionButton);
         this.addRenderableWidget(xMirror);
         this.addRenderableWidget(yMirror);
         this.addRenderableWidget(zMirror);
@@ -700,9 +719,10 @@ public class ItemBlockScreen extends Screen {
         return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
     }
 
-    private void setClipboard(String clipboardValue) {
-        if (this.minecraft != null) {
-            TextFieldHelper.setClipboardContents(this.minecraft, clipboardValue);
+    public static void setClipboard(String clipboardValue) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null) {
+            TextFieldHelper.setClipboardContents(mc, clipboardValue);
         }
     }
 

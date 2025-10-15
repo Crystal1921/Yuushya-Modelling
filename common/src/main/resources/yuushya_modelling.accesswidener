@@ -11,3 +11,4 @@ accessible field net/minecraft/client/renderer/RenderType$CompositeState texture
 accessible field net/minecraft/client/renderer/RenderType$CompositeState transparencyState Lnet/minecraft/client/renderer/RenderStateShard$TransparencyStateShard;
 accessible field com/mojang/blaze3d/vertex/BufferBuilder vertices I
 accessible method net/minecraft/client/renderer/RenderStateShard$TextureStateShard cutoutTexture ()Ljava/util/Optional;
+accessible method net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase asState ()Lnet/minecraft/world/level/block/state/BlockState;
