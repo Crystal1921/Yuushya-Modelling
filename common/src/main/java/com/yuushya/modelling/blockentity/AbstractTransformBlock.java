@@ -2,7 +2,6 @@ package com.yuushya.modelling.blockentity;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.block.AbstractYuushyaBlock;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -13,6 +12,7 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import org.jetbrains.annotations.NotNull;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
@@ -25,7 +25,8 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
  * for both ShowBlock and ItemBlock implementations.
  */
 public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implements EntityBlock {
-    
+    public static final BooleanProperty DISABLE_AO = BooleanProperty.create("enable_ao");
+
     public AbstractTransformBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
         this.registerDefaultState(defaultBlockState()
@@ -36,7 +37,7 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES);
+        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES).add(DISABLE_AO);
     }
 
     @Override
@@ -44,9 +45,11 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
         if (blockPlaceContext.getPlayer() != null && 
             blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(
                 ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
+            BlockState blockState = this.defaultBlockState();
+            blockState.setValue(DISABLE_AO, true);
             return blockPlaceContext.getClickedFace().getAxis() == Direction.Axis.Y
-                    ? this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
-                    : this.defaultBlockState().setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());
+                    ? blockState.setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
+                    : blockState.setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());
         } else {
             return super.getStateForPlacement(blockPlaceContext);
         }
