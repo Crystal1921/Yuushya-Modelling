@@ -712,9 +712,10 @@ public class ItemBlockScreen extends Screen {
         return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
     }
 
-    private void setClipboard(String clipboardValue) {
-        if (this.minecraft != null) {
-            TextFieldHelper.setClipboardContents(this.minecraft, clipboardValue);
+    public static void setClipboard(String clipboardValue) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null) {
+            TextFieldHelper.setClipboardContents(mc, clipboardValue);
         }
     }
 
