@@ -11,6 +11,15 @@ architectury {
 allprojects {
     group = rootProject.maven_group
     version = rootProject.mod_version
+
+    repositories {
+        maven {
+            name = 'ParchmentMC'
+            url = 'https://maven.parchmentmc.org'
+        }
+
+        mavenCentral()
+    }
 }
 
 subprojects {
@@ -51,7 +60,10 @@ subprojects {
         annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
-        mappings loom.officialMojangMappings()
+        mappings loom.layered() {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${project.parchment_minecraft_version}:${project.parchment_version}@zip")
+        }
     }
 
     java {
