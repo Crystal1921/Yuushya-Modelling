@@ -44,6 +44,9 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
  * @author ZhuRuoLing
  */
 public class CachedRegion {
+    public static final RenderType TRANSLUCENT_MAIN = RenderType.create(
+            "translucent_main", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
+    );
     private final ChunkPos chunkPos;
     private final Map<RenderType, ByteBufferBuilder> sortBuffers = new HashMap<>();
     private final Set<BlockEntity> blockEntities = new HashSet<>();
@@ -55,12 +58,21 @@ public class CachedRegion {
     private Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
     @Nullable
     private RebuildTask lastRebuildTask;
-
     private boolean isEmpty = true;
 
     public CachedRegion(ChunkPos chunkPos, CacheableBERenderingPipeline pipeline) {
         this.chunkPos = chunkPos;
         this.pipeline = pipeline;
+    }
+
+    private static RenderType.CompositeState translucentState(RenderStateShard.ShaderStateShard state) {
+        return RenderType.CompositeState.builder()
+                .setLightmapState(LIGHTMAP)
+                .setShaderState(state)
+                .setTextureState(BLOCK_SHEET_MIPPED)
+                .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                .setOutputState(MAIN_TARGET)
+                .createCompositeState(true);
     }
 
     /**
@@ -304,19 +316,5 @@ public class CachedRegion {
         void cancel() {
             cancelled = true;
         }
-    }
-
-    public static final RenderType TRANSLUCENT_MAIN = RenderType.create(
-            "translucent_main", DefaultVertexFormat.BLOCK, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
-    );
-
-    private static RenderType.CompositeState translucentState(RenderStateShard.ShaderStateShard state) {
-        return RenderType.CompositeState.builder()
-                .setLightmapState(LIGHTMAP)
-                .setShaderState(state)
-                .setTextureState(BLOCK_SHEET_MIPPED)
-                .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
-                .setOutputState(MAIN_TARGET)
-                .createCompositeState(true);
     }
 }
