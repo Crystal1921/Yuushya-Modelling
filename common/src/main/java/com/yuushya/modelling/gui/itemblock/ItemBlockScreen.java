@@ -232,6 +232,11 @@ public class ItemBlockScreen extends Screen {
                             String string = getClipboard();
                             try {
                                 ShareUtils.ShareItemInformation shareInformation = ShareUtils.fromItems(string);
+                                if (shareInformation.items().isEmpty()) {
+                                    this.minecraft.getToasts().addToast(
+                                            SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No item data found")));
+                                    return;
+                                }
                                 checkModLack(shareInformation);
                                 updateAllTransformData(shareInformation);
                                 this.minecraft.getToasts().addToast(

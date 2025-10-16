@@ -202,6 +202,11 @@ public class ShowBlockScreen extends Screen {
                             String string = getClipboard();
                             try {
                                 ShareUtils.ShareBlockInformation shareBlockInformation = ShareUtils.from(string);
+                                if (shareBlockInformation.blocks().isEmpty()) {
+                                    this.minecraft.getToasts().addToast(
+                                            SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No block data found")));
+                                    return;
+                                }
                                 checkModLack(shareBlockInformation);
                                 updateAllTransformData(shareBlockInformation);
                                 updateStateButtonVisible(true);
