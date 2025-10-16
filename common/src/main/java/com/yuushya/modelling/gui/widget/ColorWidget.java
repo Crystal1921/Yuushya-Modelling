@@ -103,16 +103,26 @@ public class ColorWidget extends AbstractWidget {
         mouseX = mouseX - getX();
         mouseY = mouseY - getY();
 
-        if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= 35 && mouseY <= 55) {
-            float hue = (float) ((mouseX - xPadding) / WIDTH);
+        final int MARGIN = 4; // 允许超出的像素范围
+
+        if (mouseY >= 35 && mouseY <= 55 && mouseX >= xPadding - MARGIN &&
+                mouseX <= xPadding + WIDTH + MARGIN) {
+            double clampedX = Math.max(xPadding, Math.min(mouseX, xPadding + WIDTH));
+            float hue = (float) ((clampedX - xPadding) / WIDTH);
             hsbVals[0] = hue;
             updateData();
             setEditBox();
         }
 
-        if (mouseX >= xPadding && mouseX <= (xPadding + WIDTH) && mouseY >= yHeight && mouseY <= yHeight + WIDTH) {
-            float brightness = 1.0f - (float) ((mouseY - yHeight) / WIDTH);
-            float saturation = (float) ((mouseX - xPadding) / WIDTH);
+        if (mouseY >= yHeight - MARGIN && mouseY <= yHeight + WIDTH + MARGIN &&
+                mouseX >= xPadding - MARGIN && mouseX <= xPadding + WIDTH + MARGIN) {
+
+            double clampedX = Math.max(xPadding, Math.min(mouseX, xPadding + WIDTH));
+            double clampedY = Math.max(yHeight, Math.min(mouseY, yHeight + WIDTH));
+
+            float brightness = 1.0f - (float) ((clampedY - yHeight) / WIDTH);
+            float saturation = (float) ((clampedX - xPadding) / WIDTH);
+
             hsbVals[1] = saturation;
             hsbVals[2] = brightness;
             updateData();
