@@ -61,11 +61,11 @@ public class TransformItemData implements ITransformDataProvider {
     //readNbt from compoundTag
     public void load(CompoundTag compoundTag, HolderLookup.Provider registries) {
         ListTag listTagPos = compoundTag.getList("ShowPos", 6);//6 means Double
-        ListTag listTagRot = compoundTag.getList("ShowRotation", 5);//5 means Float
-        ListTag listTagScales = compoundTag.getList("ShowScales", 5);//5 means Float
+        ListTag listTagRot = compoundTag.getList("ShowRotation", 6);//5 means Float
+        ListTag listTagScales = compoundTag.getList("ShowScales", 6);//5 means Float
         this.pos.set(listTagPos.getDouble(0), listTagPos.getDouble(1), listTagPos.getDouble(2));
-        this.rot.set(listTagRot.getFloat(0), listTagRot.getFloat(1), listTagRot.getFloat(2));
-        this.scales.set(listTagScales.getFloat(0), listTagScales.getFloat(1), listTagScales.getFloat(2));
+        this.rot.set(listTagRot.getDouble(0), listTagRot.getDouble(1), listTagRot.getDouble(2));
+        this.scales.set(listTagScales.getDouble(0), listTagScales.getDouble(1), listTagScales.getDouble(2));
         this.itemStack = ItemStack.parseOptional(registries, compoundTag.getCompound("ItemStack"));
         this.color = (compoundTag.getInt("Color"));
         this.isShown = compoundTag.getBoolean("isShown");
@@ -74,8 +74,8 @@ public class TransformItemData implements ITransformDataProvider {
     //writeNbt to compoundTag
     public void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
-        compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(), rot.y(), rot.z()));
-        compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(), scales.y(), scales.z()));
+        compoundTag.put("ShowRotation", YuushyaUtils.toDoubleListTag(rot));
+        compoundTag.put("ShowScales", YuushyaUtils.toDoubleListTag(scales));
         compoundTag.put("ItemStack", YuushyaUtils.itemStackTag(itemStack, registries));
         compoundTag.putInt("Color", color);
         compoundTag.putBoolean("isShown", isShown);

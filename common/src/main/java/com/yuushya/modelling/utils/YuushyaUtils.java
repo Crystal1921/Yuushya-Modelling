@@ -147,6 +147,14 @@ public class YuushyaUtils {
         return listTag;
     }
 
+    public static ListTag toDoubleListTag(Vector3f values) {
+        ListTag listTag = new ListTag();
+        listTag.add(DoubleTag.valueOf(values.x()));
+        listTag.add(DoubleTag.valueOf(values.y()));
+        listTag.add(DoubleTag.valueOf(values.z()));
+        return listTag;
+    }
+
     public static CompoundTag itemStackTag(ItemStack stack, HolderLookup.Provider registries) {
         if (stack.isEmpty()) return new CompoundTag();
         CompoundTag compoundTag = new CompoundTag();

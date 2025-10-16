@@ -3,11 +3,14 @@ package com.yuushya.modelling.utils;
 import com.google.gson.*;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -53,6 +56,12 @@ public class ShareUtils {
 
     public static ShareItemInformation fromItems(String json) {
         return GSON.fromJson(json, ShareItemInformation.class);
+    }
+
+    // JsonElement → CompoundTag
+    public static CompoundTag jsonToCompoundTag(JsonElement json) {
+        DataResult<CompoundTag> result = CompoundTag.CODEC.parse(JsonOps.INSTANCE, json);
+        return result.result().orElse(new CompoundTag());
     }
 
     public static class StringSerialization {
@@ -234,24 +243,35 @@ public class ShareUtils {
 
             public record ShareItemStack(
                     String name,
-                    JsonElement component
+                    JsonElement jsonElement
             ) {
                 public static ShareItemStack from(ItemStack stack) {
                     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-                    JsonElement json = ItemStack.OPTIONAL_CODEC
-                            .encodeStart(JsonOps.COMPRESSED, stack)
+                    Tag tag = ItemStack.OPTIONAL_CODEC
+                            .encodeStart(NbtOps.INSTANCE, stack)
                             .result()
-                            .orElse(JsonNull.INSTANCE);
+                            .orElse(new CompoundTag());
 
-                    return new ShareItemStack(itemId.toString(), json);
+                    String asString = tag.getAsString();
+                    JsonPrimitive jsonPrimitive = new JsonPrimitive(asString);
+
+                    return new ShareItemStack(itemId.toString(), jsonPrimitive);
                 }
 
 
                 public ItemStack transfer() {
-                    Pair<ItemStack, JsonElement> itemStackJsonElementPair = ItemStack.OPTIONAL_CODEC
-                            .decode(JsonOps.COMPRESSED, component)
+                    String snbtFromJson = jsonElement.getAsJsonPrimitive().getAsString();
+                    CompoundTag compoundTag;
+                    try {
+                        compoundTag = TagParser.parseTag(snbtFromJson);
+                    } catch (Exception e) {
+                        compoundTag = new CompoundTag();
+                    }
+
+                    Pair<ItemStack, Tag> itemStackJsonElementPair = ItemStack.OPTIONAL_CODEC
+                            .decode(NbtOps.INSTANCE, compoundTag)
                             .result()
-                            .orElse(Pair.of(ItemStack.EMPTY, JsonNull.INSTANCE));
+                            .orElse(Pair.of(ItemStack.EMPTY, new CompoundTag()));
 
                     return itemStackJsonElementPair.getFirst();
                 }
