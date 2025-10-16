@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +19,13 @@ import org.lwjgl.opengl.GL11;
 import java.awt.*;
 import java.nio.ByteBuffer;
 
+import static com.yuushya.modelling.registries.YuushyaRegistries.COLOR_DATA;
+
 public class PickColorOverlay implements LayeredDraw.Layer {
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, @NotNull DeltaTracker deltaTracker) {
         Minecraft minecraft = Minecraft.getInstance();
         ClientLevel world = minecraft.level;
-        Font font = minecraft.font;
         Options options = minecraft.options;
         Player player = minecraft.player;
         if (player == null || world == null || options.hideGui) {
@@ -59,6 +61,12 @@ public class PickColorOverlay implements LayeredDraw.Layer {
 
             guiGraphics.fill(guiWidth - 35, guiHeight - 35, guiWidth - 10, guiHeight - 10, Color.LIGHT_GRAY.getRGB());
             guiGraphics.fill(guiWidth - 33, guiHeight - 33, guiWidth - 12, guiHeight - 12, color);
+
+            Integer i = mainHandItem.get((DataComponentType<Integer>) COLOR_DATA.get());
+            if (i != null) {
+                guiGraphics.fill(guiWidth + 10, guiHeight - 35, guiWidth + 35, guiHeight - 10, Color.LIGHT_GRAY.getRGB());
+                guiGraphics.fill(guiWidth + 12, guiHeight - 33, guiWidth + 33, guiHeight - 12, i | 0xFF000000);
+            }
 
         }
     }

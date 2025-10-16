@@ -53,7 +53,7 @@ public class ColorPickerItem extends AbstractToolItem {
 
             handItemStack.set((DataComponentType<Integer>) COLOR_DATA.get(), color);
 
-            setClipboard(String.format("#%08X", color));
+            setClipboard(String.format("#%06X", color));
         }
     }
 

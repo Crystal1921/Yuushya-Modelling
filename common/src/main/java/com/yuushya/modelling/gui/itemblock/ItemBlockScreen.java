@@ -512,7 +512,7 @@ public class ItemBlockScreen extends Screen {
             String text = colorEditBox.getValue();
             if (text.startsWith("#")) {
                 try {
-                    int color = 0xFFFFFFFF | Integer.parseInt(text.substring(1), 16);
+                    int color = Integer.parseInt(text.substring(1), 16);
                     colorWidget.setColor(color);
                     updateTransformData(COLOR, (double) color);
                 } catch (NumberFormatException ignored) {
@@ -726,9 +726,7 @@ public class ItemBlockScreen extends Screen {
 
     public static void setClipboard(String clipboardValue) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null) {
-            TextFieldHelper.setClipboardContents(mc, clipboardValue);
-        }
+        TextFieldHelper.setClipboardContents(mc, clipboardValue);
     }
 
     public Font getFont() {
