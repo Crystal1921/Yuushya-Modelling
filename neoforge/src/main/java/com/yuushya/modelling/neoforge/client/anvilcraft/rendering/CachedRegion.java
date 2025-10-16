@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.neoforge.client.NeoItemBlockModel;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
@@ -30,6 +31,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.model.IQuadTransformer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
@@ -39,6 +41,7 @@ import java.util.List;
 
 import static net.minecraft.client.renderer.RenderStateShard.*;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
+import static net.neoforged.neoforge.client.model.QuadTransformers.toABGR;
 
 /**
  * @author ZhuRuoLing
@@ -290,6 +293,12 @@ public class CachedRegion {
                                                 YuushyaUtils.translate(poseStack, transformData.pos);
                                                 YuushyaUtils.rotate(poseStack, transformData.rot);
                                                 Color color = new Color(transformData.color);
+
+                                                if (model instanceof NeoItemBlockModel) {
+                                                    int[] vertices = bakedQuad.getVertices();
+                                                    color = new Color(toABGR(vertices[IQuadTransformer.STRIDE + IQuadTransformer.COLOR]));
+                                                }
+
                                                 float[] colorComponents = new float[3];
                                                 color.getColorComponents(colorComponents);
                                                 bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
