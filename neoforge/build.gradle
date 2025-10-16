@@ -20,6 +20,12 @@ loom {
             programArgs '--existing', file('../nbtedit-common/src/main/resources').absolutePath
         }
     }
+
+    dependencies {
+        compileOnly("maven.modrinth:sodium:mc1.21.1-0.6.3-neoforge")
+        compileOnly("maven.modrinth:embeddium:1.0.11+mc1.21.1")
+        compileOnly("maven.modrinth:iris:1.8.1+1.21.1-neoforge")
+    }
 }
 
 configurations {

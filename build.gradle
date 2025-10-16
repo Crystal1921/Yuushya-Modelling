@@ -18,6 +18,14 @@ allprojects {
             url = 'https://maven.parchmentmc.org'
         }
 
+        maven { // Embeddium, Sodium, Iris
+            name = "Modrinth Maven"
+            url = "https://api.modrinth.com/maven"
+            content {
+                includeGroup "maven.modrinth"
+            }
+        }
+
         mavenCentral()
     }
 }

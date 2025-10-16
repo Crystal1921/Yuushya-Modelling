@@ -255,7 +255,6 @@ public class CachedRegion {
                     float f = itemBlockEntity.getBlockState().getValue(HORIZONTAL_FACING).toYRot();
                     List<TransformItemData> transformDatas = itemBlockEntity.getTransformData();
                     Level level = be.getLevel();
-                    int packedLight = LevelRenderer.getLightColor(level, be.getBlockPos());
                     BlockPos pos = be.getBlockPos();
 
                     for (TransformItemData transformData : transformDatas)
@@ -276,6 +275,7 @@ public class CachedRegion {
                                         YuushyaUtils.rotate(poseStack, transformData.rot);
                                         poseStack.translate(0.5f, 0.5f, 0.5f);
                                     }
+                                    int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
                                     renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
                                     poseStack.popPose();
                                 } else {
@@ -301,6 +301,7 @@ public class CachedRegion {
 
                                                 float[] colorComponents = new float[3];
                                                 color.getColorComponents(colorComponents);
+                                                int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
                                                 bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
                                             }
                                             poseStack.popPose();

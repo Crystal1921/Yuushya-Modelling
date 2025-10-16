@@ -8,8 +8,12 @@
   },
   "refmap": "chisel.refmap.json",
   "client": [
+    "BlockBehaviourMixin",
     "LevelRendererMixin",
-    "MinecraftMixin",
-    "BlockBehaviourMixin"
+    "MinecraftMixin"
+  ],
+  "mixins": [
+    "compat.EmbeddiumWorldRenderMixin",
+    "compat.SodiumWorldRenderMixin"
   ]
 }
