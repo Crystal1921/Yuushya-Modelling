@@ -78,6 +78,7 @@ public class ItemBlockScreen extends Screen {
     private final Map<ItemTransformType, SizeTransformComponent> panelSize = new LinkedHashMap<>();
     public EditBox colorEditBox;
     public Button colorFinishButton;
+    public CycleButton<ApplyColor> colorApplyButton;
     private int slot;
     private ItemStack itemStack = ItemStack.EMPTY;
     private CycleButton<Mode> modeButton;
@@ -139,6 +140,7 @@ public class ItemBlockScreen extends Screen {
         this.colorWidget.visible = visible;
         this.colorEditBox.visible = visible;
         this.colorFinishButton.visible = visible;
+        this.colorApplyButton.visible = visible;
     }
 
     public ItemStack getItemStack() {
@@ -160,7 +162,7 @@ public class ItemBlockScreen extends Screen {
         Button addItemButton = Button.builder(Component.literal("+"),
                         (btn) -> {
                             if (this.newItemStack != null) {
-                                if(this.newItemStack.isEmpty()) return;
+                                if (this.newItemStack.isEmpty()) return;
                                 itemStackList.addSlot();
                                 updateItemStack(newItemStack);
                                 updateTransformData(SHOWN, 1.0);
@@ -193,11 +195,11 @@ public class ItemBlockScreen extends Screen {
                             int chosen = this.itemStackList.getChosenOne();
                             if (chosen != -1 && chosen != slot) {
                                 ItemStack item = blockEntity.getTransformData(chosen).itemStack;
-                                if(item == null) return;
-                                if(item.isEmpty()) return;
+                                if (item == null) return;
+                                if (item.isEmpty()) return;
                                 updateItemStack(item);
                             } else if (this.newItemStack != null) {
-                                if(this.newItemStack.isEmpty()) return;
+                                if (this.newItemStack.isEmpty()) return;
                                 updateItemStack(newItemStack);
                             }
                         }
@@ -521,9 +523,33 @@ public class ItemBlockScreen extends Screen {
             }
         })).bounds(leftColumnX() + leftColumnWidth() - 5, top(6, 30), SMALL_BUTTON_WIDTH, PER_HEIGHT).build();
 
+        colorApplyButton = CycleButton.builder(ApplyColor::getSymbol)
+                .displayOnlyValue()
+                .withValues(ApplyColor.values())
+                .withInitialValue(ApplyColor.PRE_APPLY)
+                .withTooltip((mode) -> Tooltip.create(mode.getDescription()))
+                .create(leftColumnX() + 30, top(-2, 30) + 5, 50, PER_HEIGHT, Component.literal("TYPE"),
+                        (button, mode) -> {
+                            switch (mode) {
+                                case PRE_APPLY, APPLY -> {
+                                }
+                                case DONE -> {
+                                    int color = (int) COLOR.extract(blockEntity, slot);
+                                    for (int i = 0; i < blockEntity.getTransformData().size(); i++) {
+                                        if (i == slot) continue;
+                                        updateTransformData(COLOR, (double) color, i);
+                                    }
+                                    this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+                                    this.colorApplyButton.setValue(ApplyColor.PRE_APPLY);
+                                }
+                            }
+                        }
+                );
+
         this.colorWidget.visible = false;
         this.colorEditBox.visible = false;
         this.colorFinishButton.visible = false;
+        this.colorApplyButton.visible = false;
 
         for (ItemTransformComponent component : this.panel.values()) {
             component.initWidget(this.font);
@@ -564,6 +590,7 @@ public class ItemBlockScreen extends Screen {
         this.addRenderableWidget(colorWidget);
         this.addRenderableWidget(colorEditBox);
         this.addRenderableWidget(colorFinishButton);
+        this.addRenderableWidget(colorApplyButton);
 
         itemStackList.setSelectedSlot(slot);
     }
@@ -633,8 +660,8 @@ public class ItemBlockScreen extends Screen {
 
     public void checkModLack(ShareUtils.ShareItemInformation shareInformation) {
         List<String> unLoaded = shareInformation.mods().stream().filter(id -> !Platform.getModIds().contains(id)).toList();
-        if(unLoaded.isEmpty()) return;
-        if(unLoaded.contains("yuushya")) return;
+        if (unLoaded.isEmpty()) return;
+        if (unLoaded.contains("yuushya")) return;
         Minecraft.getInstance().getToasts().addToast(
                 SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ", unLoaded)))
         );
@@ -714,6 +741,11 @@ public class ItemBlockScreen extends Screen {
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
     }
 
+    public void updateTransformData(ItemTransformType type, Double number, int slot) {
+        type.modify(blockEntity, slot, number);
+        ItemTransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), slot, type, number);
+    }
+
     private void updateItemStack(ItemStack itemStack) {
         this.itemStack = itemStack.copy();
         ITEM_STACK.modify(blockEntity, slot, itemStack);
@@ -748,6 +780,20 @@ public class ItemBlockScreen extends Screen {
         @Override
         public @NotNull String getSerializedName() {
             return name;
+        }
+    }
+
+    public enum ApplyColor {
+        PRE_APPLY,
+        APPLY,
+        DONE;
+
+        public Component getSymbol() {
+            return Component.translatable("gui.itemBlockScreen.apply." + name().toLowerCase());
+        }
+
+        public Component getDescription() {
+            return Component.translatable("gui.itemBlockScreen.apply.tip." + name().toLowerCase());
         }
     }
 }

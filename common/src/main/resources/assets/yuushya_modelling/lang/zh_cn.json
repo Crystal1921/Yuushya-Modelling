@@ -102,6 +102,8 @@
 
   "item.yuushya.color_picker_item": "取色器",
   "item.yuushya.color_picker.none": "没有颜色",
+  "item.yuushya.color_picker_item.line1": "\u00A79右键获取其颜色到剪切板并储存",
+  "item.yuushya.color_picker_item.line2": "\u00A79左键获取其颜色到剪切板",
 
   "item.yuushya.the_encyclopedia": "\u00A7c「世界的证明」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“你已被世界认可”",
@@ -171,6 +173,12 @@
   "gui.itemBlockScreen.mirror.tip": "镜像: %s",
   "gui.itemBlockScreen.ambientOcclusion.on": "启用环境光遮蔽",
   "gui.itemBlockScreen.ambientOcclusion.off": "禁用环境光遮蔽",
+  "gui.itemBlockScreen.apply.pre_apply": "预应用",
+  "gui.itemBlockScreen.apply.tip.pre_apply": "将该层的调整预应用到所有层",
+  "gui.itemBlockScreen.apply.apply": "确认应用",
+  "gui.itemBlockScreen.apply.tip.apply": "再次点击以应用当前的调整",
+  "gui.itemBlockScreen.apply.done": "完成",
+  "gui.itemBlockScreen.apply.tip.done": "点击复位该按钮",
 
   "gui.yuushya.showBlockScreen.pos_text": "位移",
   "gui.yuushya.showBlockScreen.rot_text": "旋转",

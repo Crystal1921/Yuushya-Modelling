@@ -90,6 +90,8 @@ public class ColorWidget extends AbstractWidget {
 
         changeColor(mouseX, mouseY);
 
+        itemBlockScreen.colorApplyButton.mouseClicked(mouseX, mouseY, button);
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -105,7 +107,7 @@ public class ColorWidget extends AbstractWidget {
 
         final int MARGIN = 4; // 允许超出的像素范围
 
-        if (mouseY >= 35 && mouseY <= 55 && mouseX >= xPadding - MARGIN &&
+        if (mouseY >= 35 && mouseY <= 45 && mouseX >= xPadding - MARGIN &&
                 mouseX <= xPadding + WIDTH + MARGIN) {
             double clampedX = Math.max(xPadding, Math.min(mouseX, xPadding + WIDTH));
             float hue = (float) ((clampedX - xPadding) / WIDTH);

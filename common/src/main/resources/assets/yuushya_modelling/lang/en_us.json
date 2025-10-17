@@ -83,7 +83,9 @@
   "item.yuushya.move_transformdata_item.mainhand.pass": "No content for this [Layer]!",
 
   "item.yuushya.color_picker_item": "Color Picker",
-  "item.yuushya.color_picker.none": "None Color",
+  "item.yuushya.color_picker_item.line1": "\u00A79Right click to pick a color to clipboard and store",
+  "item.yuushya.color_picker_item.line2": "\u00A79Left click to get the stored color to clipboard",
+  "item.yuushya.color_picker.none": "No Color",
 
   "item.yuushya.the_encyclopedia": "\u00A7c「The Encyclopedia」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“The world is watching you”",
@@ -146,6 +148,12 @@
   "gui.itemBlockScreen.mirror.tip": "Mirror : %s",
   "gui.itemBlockScreen.ambientOcclusion.on": "Enable Ambient Occlusion",
   "gui.itemBlockScreen.ambientOcclusion.off": "Disable Ambient Occlusion",
+  "gui.itemBlockScreen.apply.pre_apply": "PreApply",
+  "gui.itemBlockScreen.apply.tip.pre_apply": "When enabled, changes will be applied to all layers simultaneously.",
+  "gui.itemBlockScreen.apply.apply": "Apply",
+  "gui.itemBlockScreen.apply.tip.apply": "Confirm and apply the changes made to all layers.",
+  "gui.itemBlockScreen.apply.done": "Done",
+  "gui.itemBlockScreen.apply.tip.done": "Click to reset the button state.",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",

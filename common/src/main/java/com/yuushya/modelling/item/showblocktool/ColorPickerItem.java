@@ -68,6 +68,15 @@ public class ColorPickerItem extends AbstractToolItem {
         return InteractionResult.SUCCESS;
     }
 
+    //对方块主手左键
+    public InteractionResult inMainHandLeftClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack){
+        Integer i = handItemStack.get((DataComponentType<Integer>) COLOR_DATA.get());
+        if (i != null) {
+            setClipboard(String.format("#%06X", i));
+        }
+        return InteractionResult.PASS;
+    }
+
     @Override
     public void appendHoverText(@NotNull ItemStack itemStack, Item.TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag tooltipFlag) {
         Integer i = itemStack.get((DataComponentType<Integer>) COLOR_DATA.get());
@@ -77,5 +86,7 @@ public class ColorPickerItem extends AbstractToolItem {
         } else {
             tooltips.add(Component.translatable("item.yuushya.color_picker.none").withColor(Color.LIGHT_GRAY.getRGB()));
         }
+
+        super.appendHoverText(itemStack, context, tooltips, tooltipFlag);
     }
 }
