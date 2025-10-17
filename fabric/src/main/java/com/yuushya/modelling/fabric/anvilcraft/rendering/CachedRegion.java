@@ -1,4 +1,4 @@
-package com.yuushya.modelling.fabric.rendering;
+package com.yuushya.modelling.fabric.anvilcraft.rendering;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.fabriclike.client.FabricItemBlockModel;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
@@ -36,12 +37,17 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import static com.yuushya.modelling.fabriclike.client.FabricItemBlockModel.toABGR;
+import static net.minecraft.client.renderer.RenderStateShard.*;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 /**
  * @author ZhuRuoLing
  */
 public class CachedRegion {
+    public static final RenderType TRANSLUCENT_MAIN = RenderType.create(
+            "translucent_main", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
+    );
     private final ChunkPos chunkPos;
     private final Map<RenderType, ByteBufferBuilder> sortBuffers = new HashMap<>();
     private final Set<BlockEntity> blockEntities = new HashSet<>();
@@ -59,6 +65,16 @@ public class CachedRegion {
     public CachedRegion(ChunkPos chunkPos, CacheableBERenderingPipeline pipeline) {
         this.chunkPos = chunkPos;
         this.pipeline = pipeline;
+    }
+
+    private static RenderType.CompositeState translucentState(ShaderStateShard state) {
+        return RenderType.CompositeState.builder()
+                .setLightmapState(LIGHTMAP)
+                .setShaderState(state)
+                .setTextureState(BLOCK_SHEET_MIPPED)
+                .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                .setOutputState(MAIN_TARGET)
+                .createCompositeState(true);
     }
 
     /**
@@ -221,6 +237,7 @@ public class CachedRegion {
         @Override
         public void run() {
             lastRebuildTask = this;
+            int vertexSize = YuushyaUtils.vertexSize();
             PoseStack poseStack = new PoseStack();
             CachedRegion.this.isEmpty = true;
             FullyBufferedBufferSource bufferSource = new FullyBufferedBufferSource();
@@ -237,51 +254,58 @@ public class CachedRegion {
                     float f = itemBlockEntity.getBlockState().getValue(HORIZONTAL_FACING).toYRot();
                     List<TransformItemData> transformDatas = itemBlockEntity.getTransformData();
                     Level level = be.getLevel();
-                    int packedLight = LevelRenderer.getLightColor(level, be.getBlockPos());
                     BlockPos pos = be.getBlockPos();
 
                     for (TransformItemData transformData : transformDatas)
                         if (transformData.isShown) {
                             ItemStack itemStack = transformData.itemStack;
-                            BakedModel blockModel = renderer.getModel(itemStack, null, null, localPlayer.getId());
-                            if (blockModel instanceof BuiltInModel) {
-                                poseStack.pushPose();
-                                {
-                                    poseStack.translate(
-                                            pos.getX(),
-                                            pos.getY(),
-                                            pos.getZ()
-                                    );
-                                    YuushyaUtils.scale(poseStack, transformData.scales);
-                                    YuushyaUtils.translate(poseStack, transformData.pos);
-                                    YuushyaUtils.rotate(poseStack, transformData.rot);
-                                    poseStack.translate(0.5f, 0.5f, 0.5f);
-                                }
-                                renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, 15728880, blockModel);
-                                poseStack.popPose();
-                            } else {
-                                for (Direction value : directions) {
-                                    List<BakedQuad> blockModelQuads = blockModel.getQuads(null, value, random);
-                                    for (BakedQuad bakedQuad : blockModelQuads) {
-                                        poseStack.pushPose();
-                                        {
-                                            poseStack.translate(
-                                                    pos.getX(),
-                                                    pos.getY(),
-                                                    pos.getZ()
-                                            );
-                                            YuushyaUtils.scale(poseStack, transformData.scales);
-                                            YuushyaUtils.translate(poseStack, transformData.pos);
-                                            YuushyaUtils.rotate(poseStack, transformData.rot);
-                                            Color color = new Color(transformData.color);
-                                            float[] colorComponents = new float[3];
-                                            color.getColorComponents(colorComponents);
-                                            bufferSource.getBuffer(RenderType.translucent()).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
+                            BakedModel model = renderer.getModel(itemStack, null, null, localPlayer.getId());
+                                if (model instanceof BuiltInModel) {
+                                    poseStack.pushPose();
+                                    {
+                                        poseStack.translate(
+                                                pos.getX(),
+                                                pos.getY(),
+                                                pos.getZ()
+                                        );
+                                        YuushyaUtils.scale(poseStack, transformData.scales);
+                                        YuushyaUtils.translate(poseStack, transformData.pos);
+                                        YuushyaUtils.rotate(poseStack, transformData.rot);
+                                        poseStack.translate(0.5f, 0.5f, 0.5f);
+                                    }
+                                    int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
+                                    renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
+                                    poseStack.popPose();
+                                } else {
+                                    for (Direction value : directions) {
+                                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, random);
+                                        for (BakedQuad bakedQuad : blockModelQuads) {
+                                            poseStack.pushPose();
+                                            {
+                                                poseStack.translate(
+                                                        pos.getX(),
+                                                        pos.getY(),
+                                                        pos.getZ()
+                                                );
+                                                YuushyaUtils.scale(poseStack, transformData.scales);
+                                                YuushyaUtils.translate(poseStack, transformData.pos);
+                                                YuushyaUtils.rotate(poseStack, transformData.rot);
+                                                Color color = new Color(transformData.color);
+
+                                                if (model instanceof FabricItemBlockModel) {
+                                                    int[] vertices = bakedQuad.getVertices();
+                                                    color = new Color(toABGR(vertices[FabricItemBlockModel.STRIDE + FabricItemBlockModel.COLOR]));
+                                                }
+
+                                                float[] colorComponents = new float[3];
+                                                color.getColorComponents(colorComponents);
+                                                int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
+                                                bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
+                                            }
+                                            poseStack.popPose();
                                         }
-                                        poseStack.popPose();
                                     }
                                 }
-                            }
 
                         }
                 }

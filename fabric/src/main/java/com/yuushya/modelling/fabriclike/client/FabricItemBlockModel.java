@@ -19,7 +19,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.BuiltInModel;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -42,18 +41,18 @@ import java.util.function.Supplier;
 public class FabricItemBlockModel extends ItemBlockModel implements UnbakedModel, BakedModel, FabricBakedModel {
     private static final Map<ItemStack, FabricItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
     private static final long ITEM_RANDOM_SEED = 42L;
+    public static int STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
+    public static int POSITION = findOffset(VertexFormatElement.POSITION);
+    public static int COLOR = findOffset(VertexFormatElement.COLOR);
+    public static int UV0 = findOffset(VertexFormatElement.UV0);
+    public static int UV1 = findOffset(VertexFormatElement.UV1);
+    public static int UV2 = findOffset(VertexFormatElement.UV2);
+    public static int NORMAL = findOffset(VertexFormatElement.NORMAL);
     private final RandomSource random = RandomSource.create();
     private final Supplier<RandomSource> randomSupplier = () -> {
         random.setSeed(ITEM_RANDOM_SEED);
         return random;
     };
-    int STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
-    int POSITION = findOffset(VertexFormatElement.POSITION);
-    int COLOR = findOffset(VertexFormatElement.COLOR);
-    int UV0 = findOffset(VertexFormatElement.UV0);
-    int UV1 = findOffset(VertexFormatElement.UV1);
-    int UV2 = findOffset(VertexFormatElement.UV2);
-    int NORMAL = findOffset(VertexFormatElement.NORMAL);
 
 
     public FabricItemBlockModel(Direction facing) {

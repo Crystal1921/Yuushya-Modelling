@@ -9,6 +9,10 @@ architectury {
 
 loom {
     accessWidenerPath = project(':common').loom.accessWidenerPath
+
+    dependencies {
+        compileOnly("maven.modrinth:sodium:mc1.21.1-0.6.13-fabric")
+    }
 }
 
 configurations {

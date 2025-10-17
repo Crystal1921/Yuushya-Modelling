@@ -1,4 +1,4 @@
-package com.yuushya.modelling.fabric.rendering;
+package com.yuushya.modelling.fabric.anvilcraft.rendering;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;

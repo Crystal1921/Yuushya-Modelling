@@ -1,4 +1,4 @@
-package com.yuushya.modelling.fabric.rendering;
+package com.yuushya.modelling.fabric.anvilcraft.rendering;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -23,8 +23,26 @@ public class CacheableBERenderingPipeline {
     private final Map<ChunkPos, CachedRegion> regions = new HashMap<>();
     private boolean valid = true;
 
+    public CachedRegion getRenderRegion(ChunkPos chunkPos) {
+        if (regions.containsKey(chunkPos)) {
+            return regions.get(chunkPos);
+        }
+        CachedRegion region = new CachedRegion(chunkPos, this);
+        regions.put(chunkPos, region);
+        return region;
+    }
+
     public CacheableBERenderingPipeline(ClientLevel level) {
         this.level = level;
+    }
+
+    public void runTasks() {
+        while (!pendingCompiles.isEmpty() && valid) {
+            pendingCompiles.poll().run();
+        }
+        while (!pendingUploads.isEmpty() && valid) {
+            pendingUploads.poll().run();
+        }
     }
 
     /**
@@ -40,35 +58,6 @@ public class CacheableBERenderingPipeline {
     }
 
     /**
-     * Retrieves the current instance of the CacheableBERenderingPipeline.
-     *
-     * @return The current instance of the CacheableBERenderingPipeline,
-     * or null if there has no {@link ClientLevel} in current {@link Minecraft} client.
-     */
-    @Nullable
-    public static CacheableBERenderingPipeline getInstance() {
-        return instance;
-    }
-
-    public CachedRegion getRenderRegion(ChunkPos chunkPos) {
-        if (regions.containsKey(chunkPos)) {
-            return regions.get(chunkPos);
-        }
-        CachedRegion region = new CachedRegion(chunkPos, this);
-        regions.put(chunkPos, region);
-        return region;
-    }
-
-    public void runTasks() {
-        while (!pendingCompiles.isEmpty() && valid) {
-            pendingCompiles.poll().run();
-        }
-        while (!pendingUploads.isEmpty() && valid) {
-            pendingUploads.poll().run();
-        }
-    }
-
-    /**
      * Notifies the pipeline that a {@link BlockEntity} has been removed.
      * This method will be automatically called when a {@link BlockEntity} has been removed.
      *
@@ -76,8 +65,8 @@ public class CacheableBERenderingPipeline {
      */
     public void blockRemoved(BlockEntity be) {
         BlockEntityRenderer<?> renderer = Minecraft.getInstance()
-                .getBlockEntityRenderDispatcher()
-                .getRenderer(be);
+            .getBlockEntityRenderDispatcher()
+            .getRenderer(be);
         if (renderer == null) return;
         ChunkPos chunkPos = new ChunkPos(be.getBlockPos());
         getRenderRegion(chunkPos).blockRemoved(be);
@@ -94,8 +83,8 @@ public class CacheableBERenderingPipeline {
      */
     public void update(BlockEntity be) {
         BlockEntityRenderer<?> renderer = Minecraft.getInstance()
-                .getBlockEntityRenderDispatcher()
-                .getRenderer(be);
+            .getBlockEntityRenderDispatcher()
+            .getRenderer(be);
         if (renderer == null) return;
         ChunkPos chunkPos = new ChunkPos(be.getBlockPos());
         getRenderRegion(chunkPos).update(be);
@@ -119,6 +108,17 @@ public class CacheableBERenderingPipeline {
 
     public void render(Matrix4f frustumMatrix, Matrix4f projectionMatrix) {
         regions.values().forEach(it -> it.render(frustumMatrix, projectionMatrix));
+    }
+
+    /**
+     * Retrieves the current instance of the CacheableBERenderingPipeline.
+     *
+     * @return The current instance of the CacheableBERenderingPipeline,
+     *         or null if there has no {@link ClientLevel} in current {@link Minecraft} client.
+     */
+    @Nullable
+    public static CacheableBERenderingPipeline getInstance() {
+        return instance;
     }
 
     public void forcedUpdate(BlockPos pos) {

@@ -1,4 +1,4 @@
-package com.yuushya.modelling.fabric.rendering;
+package com.yuushya.modelling.fabric.anvilcraft.rendering;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -14,8 +14,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.minecraft.client.renderer.RenderStateShard.LIGHTMAP;
-import static net.minecraft.client.renderer.RenderStateShard.RENDERTYPE_CUTOUT_SHADER;
+import static net.minecraft.client.renderer.RenderStateShard.*;
 
 /**
  * @author ZhuRuoLing
@@ -65,7 +64,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     ) {
         RenderType.CompositeState state = renderType.state();
         return RenderType.create(
-                "powertool:generated",
+                "yuushya_modelling:generated",
                 DefaultVertexFormat.BLOCK,
                 renderType.mode,
                 786432,
@@ -73,9 +72,8 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
                 renderType.sortOnUpload,
                 RenderType.CompositeState.builder()
                         .setCullState(state.cullState)
-                        .setOutputState(state.outputState)
+                        .setOutputState(MAIN_TARGET)
                         .setShaderState(RENDERTYPE_CUTOUT_SHADER)
-                        .setOutputState(state.outputState)
                         .setTextureState(state.textureState)
                         .setLightmapState(LIGHTMAP)
                         .setTransparencyState(state.transparencyState)

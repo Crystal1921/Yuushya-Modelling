@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "package": "com.yuushya.modelling.fabric.mixin",
   "mixins": [
+    "BlockBehaviourMixin"
   ],
   "injectors": {
     "defaultRequire": 1
