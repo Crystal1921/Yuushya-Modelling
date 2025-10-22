@@ -28,16 +28,20 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.extensions.IBakedModelExtension;
+import net.neoforged.neoforge.client.model.IQuadTransformer;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor;
+import static net.neoforged.neoforge.client.model.QuadTransformers.toABGR;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
     private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
@@ -156,8 +160,14 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                                 }
                             }
                             stack.popPose();
+
+                            int color = transformData.color;
+                            if (model instanceof NeoItemBlockModel) {
+                                int[] vertices = bakedQuad.getVertices();
+                                color = new Color(toABGR(vertices[IQuadTransformer.STRIDE + IQuadTransformer.COLOR])).getRGB();
+                            }
                             BakedQuad finalQuad = new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade());
-                            applyingColor(transformData.color).processInPlace(finalQuad);
+                            applyingColor(color).processInPlace(finalQuad);
                             finalQuads.add(finalQuad);
                         }
                     }
