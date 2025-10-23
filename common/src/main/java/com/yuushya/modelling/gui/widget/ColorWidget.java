@@ -139,7 +139,7 @@ public class ColorWidget extends AbstractWidget {
     }
 
     private void updateData() {
-        itemBlockScreen.updateTransformData(ItemTransformType.COLOR, (double) (Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2])));
+        itemBlockScreen.updateTransformDataClient(ItemTransformType.COLOR, (double) (Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2])));
     }
 
     public void setColor(int color) {

@@ -74,6 +74,7 @@ public class YuushyaRegistries {
         ITEMS.register("sparking_flame", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
 
         ITEMS.register("chibi_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_0_alt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("chibi_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("chibi_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("chibi_3", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
@@ -85,14 +86,35 @@ public class YuushyaRegistries {
         ITEMS.register("chibi_9", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("chibi_10", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
 
+        ITEMS.register("anatomy_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("anatomy_0_alt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("anatomy_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("anatomy_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+
         ITEMS.register("cube_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
         ITEMS.register("cube_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
         ITEMS.register("cube_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
         ITEMS.register("cube_3", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
         ITEMS.register("cube_4", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_5", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_6", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_7", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_8", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_9", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_10", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("cube_11", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+
+        ITEMS.register("triangle_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("triangle_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
 
         ITEMS.register("cylinder_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
         ITEMS.register("cylinder_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+
+        ITEMS.register("circle_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("circle_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("circle_hollow_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("circle_hollow_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+
 
         CreativeTabRegistry.appendStack(YUUSHYA_MODELLING, () -> new ItemStack(ITEMS.get("get_blockstate_item").get()));
 

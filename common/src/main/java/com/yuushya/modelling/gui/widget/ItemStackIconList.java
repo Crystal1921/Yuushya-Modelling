@@ -2,6 +2,7 @@ package com.yuushya.modelling.gui.widget;
 
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
 import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -95,6 +96,15 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         private final Minecraft minecraft;
         private boolean chosen = false;
 
+        // Animation state for the popup effect
+        private boolean animating = false;
+        private long animStartMs = 0L;
+        private static final long PHASE_MS = 80L;
+        private static final long TOTAL_MS = PHASE_MS * 2L;
+        private float cachedScaleX = 1f;
+        private float cachedScaleY = 1f;
+        private float cachedScaleZ = 1f;
+
         public Entry(ItemStackIconList parent, int slot) {
             this.parent = parent;
             this.minecraft = parent.minecraft;
@@ -113,9 +123,58 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
             return parent.transformDataList.size() <= slot || parent.transformDataList.get(slot).isShown;
         }
 
+        private void startPopupAnimation() {
+            TransformItemData td = getTransformData();
+            // Cache current scales (use the transform data's values at click start)
+            this.cachedScaleX = td.scales.x();
+            this.cachedScaleY = td.scales.y();
+            this.cachedScaleZ = td.scales.z();
+            this.animStartMs = System.currentTimeMillis();
+            this.animating = true;
+
+//            if (!level.isClientSide){
+//                level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS,1f,0.2f);
+//            }
+        }
+
+        private void applyAnimationIfNeeded() {
+            if (!this.animating) return;
+
+            long elapsed = System.currentTimeMillis() - this.animStartMs;
+
+            if (elapsed >= TOTAL_MS) {
+                // End animation, restore cached scale via ItemBlockScreen.updateTransformData
+                // Use ItemTransformType to update SCALE_X/Y/Z back to cached values.
+                screen.updateTransformDataClient(ItemTransformType.SCALE_X, (double) this.cachedScaleX);
+                screen.updateTransformDataClient(ItemTransformType.SCALE_Y, (double) this.cachedScaleY);
+                screen.updateTransformDataClient(ItemTransformType.SCALE_Z, (double) this.cachedScaleZ);
+                this.animating = false;
+                return;
+            }
+
+            float scaleFactor;
+            if (elapsed < PHASE_MS) {
+                // First phase: grow from 1.0 to 1.1 linearly
+                float p = (float) elapsed / (float) PHASE_MS;
+                scaleFactor = 1.0f + 0.1f * p; // 1.0 -> 1.1
+            } else {
+                // Second phase: shrink from 1.1 back to 1.0 linearly
+                float p = (float) (elapsed - PHASE_MS) / (float) PHASE_MS;
+                scaleFactor = 1.1f - 0.1f * p; // 1.1 -> 1.0
+            }
+
+            // Apply intermediate scale via ItemBlockScreen.updateTransformData so the block preview updates
+            screen.updateTransformDataClient(ItemTransformType.SCALE_X, (double) (this.cachedScaleX * scaleFactor));
+            screen.updateTransformDataClient(ItemTransformType.SCALE_Y, (double) (this.cachedScaleY * scaleFactor));
+            screen.updateTransformDataClient(ItemTransformType.SCALE_Z, (double) (this.cachedScaleZ * scaleFactor));
+        }
+
         @Override
         public void render(GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+            // Advance and apply animation (if running) BEFORE rendering so the preview sees updated values
+            applyAnimationIfNeeded();
+
             ItemStack itemStack = updateRenderState();
 
             // Render item icon
@@ -123,7 +182,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
                 BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(x + itemWidth / 2.0f, y + itemHeight / 2.0f, 100.0f);
-                guiGraphics.pose().scale(16.0f, -16.0f, 16.0f);
+                guiGraphics.pose().scale(24.0f, -24.0f, 24.0f);
                 boolean flatItem = !bakedModel.usesBlockLight();
                 if (flatItem) {
                     guiGraphics.pose().mulPose(Axis.YP.rotationDegrees(180.0f));
@@ -148,9 +207,16 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            ItemStackIconList.Entry preSelected = this.parent.getSelected();
+            ItemStackIconList.Entry previousSelected = this.parent.getSelected();
+            if(previousSelected != this){
+                // Start popup animation when clicked (indicate selection)
+                // setSelected above will call screen.setSlot(selected.slot) so the screen's current slot will be this.slot
+                startPopupAnimation();
+            }
+
             this.parent.setSelected(this);
-            if (preSelected == this) {
+
+            if (previousSelected == this) {
                 if (this.chosen) {
                     this.chosen = false;
                     this.parent.chosen.remove(this);
@@ -159,6 +225,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
                     this.parent.chosen.add(this);
                 }
             }
+
             //LOGGER.info("select "+this.slot);
             return true;
         }

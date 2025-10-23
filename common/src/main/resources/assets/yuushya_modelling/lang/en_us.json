@@ -188,7 +188,7 @@
   "gui.showBlockScreen.display.off": "Switch to visible",
   "gui.showBlockScreen.display.on.button": "Hide",
   "gui.showBlockScreen.display.off.button": "Show",
-  "gui.showBlockScreen.shape.none": "None",
+  "gui.showBlockScreen.shape.none": "No Collision",
   "gui.showBlockScreen.shape.fence": "Fence",
   "gui.showBlockScreen.shape.bottom_half": "Bottom Half",
   "gui.showBlockScreen.shape.top_half": "Top Half",
