@@ -39,7 +39,6 @@ public class ColorWidget extends AbstractWidget {
         guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 255, 255, 255), false);
         RenderSystem.enableBlend();
 
-//        guiGraphics.fill(getX() + yPadding - 1, getY() + 35 + 1, getX() + 25 + 1, getY() + 25 + 1, FastColor.ARGB32.color(72, 255, 255, 255));
         guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, WIDTH, 10, 90, 10);
         PoseStack pose = guiGraphics.pose();
 
