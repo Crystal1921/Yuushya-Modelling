@@ -1,27 +1,27 @@
 {
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
-	"ambientocclusion": false,
-	"texture_size": [64, 64],
+	"texture_size": [32, 32],
 	"textures": {
-		"1": "yuushya:item/primitive/anatomy"
+		"0": "yuushya:item/primitive/primitive",
+		"1": "yuushya:item/primitive/primitive_",
+		"particle": "yuushya:item/primitive/primitive"
 	},
 	"elements": [
 		{
-			"from": [6, 6, 14],
-			"to": [10, 13, 14],
-			"rotation": {"angle": 0, "axis": "y", "origin": [3, 7, 14]},
+			"from": [0, 4, 0],
+			"to": [16, 12, 16],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 4, 0]},
 			"faces": {
-				"north": {"uv": [8.5, 1.75, 9.5, 3.5], "texture": "#1"},
-				"east": {"uv": [8.5, 1.75, 9.5, 3.5], "texture": "#1"},
-				"south": {"uv": [8.5, 1.75, 9.5, 3.5], "texture": "#1"},
-				"west": {"uv": [8.5, 1.75, 9.5, 3.5], "texture": "#1"},
-				"up": {"uv": [8.5, 1.75, 9.5, 3.5], "texture": "#1"},
-				"down": {"uv": [8.5, 1.75, 9.5, 3.5], "texture": "#1"}
+				"north": {"uv": [7, 0, 15, 4], "texture": "#1"},
+				"east": {"uv": [7, 0, 15, 4], "texture": "#1"},
+				"south": {"uv": [7, 0, 15, 4], "texture": "#1"},
+				"west": {"uv": [7, 0, 15, 4], "texture": "#1"},
+				"up": {"uv": [5.5, 8, 13.5, 16], "texture": "#0"},
+				"down": {"uv": [5.5, 0, 13.5, 8], "texture": "#0"}
 			}
 		}
 	],
-	"gui_light": "front",
 	"display": {
 		"thirdperson_righthand": {
 			"rotation": [75, 45, 0],
@@ -46,7 +46,8 @@
 			"scale": [0.25, 0.25, 0.25]
 		},
 		"gui": {
-			"translation": [0, -4.5, 0]
+			"rotation": [30, 45, 0],
+			"scale": [0.625, 0.625, 0.625]
 		},
 		"fixed": {
 			"scale": [0.5, 0.5, 0.5]

@@ -165,7 +165,7 @@ public class ItemBlockScreen extends Screen {
                                 if (this.newItemStack.isEmpty()) return;
                                 itemStackList.addSlot();
                                 updateItemStack(newItemStack);
-                                updateTransformData(SHOWN, 1.0);
+                                updateTransformDataClient(SHOWN, 1.0);
                             }
                         })
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.add")))
@@ -176,7 +176,7 @@ public class ItemBlockScreen extends Screen {
                             ItemStackIconList.Entry selected = this.itemStackList.getSelected();
                             if (selected != null) {
                                 itemStackList.addSlot();
-                                updateTransformData(selected.getTransformData());
+                                updateTransformDataClient(selected.getTransformData());
                                 itemStackList.setSelectedSlot(slot);
                             }
                         }
@@ -185,7 +185,7 @@ public class ItemBlockScreen extends Screen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button removeItemButton = Button.builder(Component.literal("×"),
-                        (btn) -> updateTransformData(REMOVE, 0.0)
+                        (btn) -> updateTransformDataClient(REMOVE, 0.0)
                 )
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.remove")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 2, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
@@ -214,7 +214,7 @@ public class ItemBlockScreen extends Screen {
                 .withInitialValue(true)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
-                        (btn, bl) -> updateTransformData(SHOWN, bl ? 1.0 : 0.0)
+                        (btn, bl) -> updateTransformDataClient(SHOWN, bl ? 1.0 : 0.0)
                 );
 
         Button copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),
@@ -315,7 +315,7 @@ public class ItemBlockScreen extends Screen {
                 .withValues(BlockShape.values())
                 .withInitialValue(SHAPE.extractShape(blockEntity))
                 .create(leftColumnX() - 50, TOP, 40, PER_HEIGHT, Component.literal("shape"),
-                        (button, shape) -> updateTransformData(SHAPE, (double) shape.ordinal()));
+                        (button, shape) -> updateTransformDataClient(SHAPE, (double) shape.ordinal()));
 
         modeButton = CycleButton.builder(Mode::getSymbol)
                 .displayOnlyValue()
@@ -370,7 +370,7 @@ public class ItemBlockScreen extends Screen {
                                 () -> -posX,
                                 () -> posX,
                                 () -> getStep(posX),
-                                (number) -> updateTransformData(POS_X, number))
+                                (number) -> updateTransformDataClient(POS_X, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(POS_X).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
@@ -386,7 +386,7 @@ public class ItemBlockScreen extends Screen {
                                 () -> -posY,
                                 () -> posY,
                                 () -> getStep(posY),
-                                (number) -> updateTransformData(POS_Y, number))
+                                (number) -> updateTransformDataClient(POS_Y, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(POS_Y).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
@@ -402,7 +402,7 @@ public class ItemBlockScreen extends Screen {
                                 () -> -posZ,
                                 () -> posZ,
                                 () -> getStep(posZ),
-                                (number) -> updateTransformData(POS_Z, number))
+                                (number) -> updateTransformDataClient(POS_Z, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(POS_Z).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
@@ -414,7 +414,7 @@ public class ItemBlockScreen extends Screen {
 
         choose(ROT_X).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.itemBlockScreen.rot_text"), 0.0, 360.0,
-                                (number) -> updateTransformData(ROT_X, number))
+                                (number) -> updateTransformDataClient(ROT_X, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(ROT_X).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
@@ -426,7 +426,7 @@ public class ItemBlockScreen extends Screen {
 
         choose(ROT_Y).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.itemBlockScreen.rot_text"), 0.0, 360.0,
-                                (number) -> updateTransformData(ROT_Y, number))
+                                (number) -> updateTransformDataClient(ROT_Y, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(ROT_Y).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
@@ -438,7 +438,7 @@ public class ItemBlockScreen extends Screen {
 
         choose(ROT_Z).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.itemBlockScreen.rot_text"), 0.0, 360.0,
-                                (number) -> updateTransformData(ROT_Z, number))
+                                (number) -> updateTransformDataClient(ROT_Z, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(ROT_Z).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
@@ -451,9 +451,9 @@ public class ItemBlockScreen extends Screen {
         choose(SCALE_X).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
-                                    updateTransformData(SCALE_X, number);
-                                    updateTransformData(SCALE_Y, number);
-                                    updateTransformData(SCALE_Z, number);
+                                    updateTransformDataClient(SCALE_X, number);
+                                    updateTransformDataClient(SCALE_Y, number);
+                                    updateTransformDataClient(SCALE_Z, number);
                                     choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
                                     choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
                                     choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
@@ -465,7 +465,7 @@ public class ItemBlockScreen extends Screen {
 
         choose(LIT).sliderButton =
                 DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.itemBlockScreen.brightness_text"), 0.0, 15.0,
-                                (number) -> updateTransformData(LIT, number))
+                                (number) -> updateTransformDataClient(LIT, number))
                         .text(LazyDoubleRange::captionToString)
                         .step(choose(LIT).setStandardStep(1))
                         .initial(LIT.extract(blockEntity, slot))
@@ -474,7 +474,7 @@ public class ItemBlockScreen extends Screen {
         chooseSize(SCALE_X).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
-                                    updateTransformData(SCALE_X, number);
+                                    updateTransformDataClient(SCALE_X, number);
                                     chooseSize(SCALE_X).editBox.setValue(String.valueOf(number));
                                     choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
                                 })
@@ -486,7 +486,7 @@ public class ItemBlockScreen extends Screen {
         chooseSize(SCALE_Y).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
-                                    updateTransformData(SCALE_Y, number);
+                                    updateTransformDataClient(SCALE_Y, number);
                                     chooseSize(SCALE_Y).editBox.setValue(String.valueOf(number));
                                     choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
                                 })
@@ -498,7 +498,7 @@ public class ItemBlockScreen extends Screen {
         chooseSize(SCALE_Z).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
-                                    updateTransformData(SCALE_Z, number);
+                                    updateTransformDataClient(SCALE_Z, number);
                                     chooseSize(SCALE_Z).editBox.setValue(String.valueOf(number));
                                     choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
                                 })
@@ -516,7 +516,7 @@ public class ItemBlockScreen extends Screen {
                 try {
                     int color = Integer.parseInt(text.substring(1), 16);
                     colorWidget.setColor(color);
-                    updateTransformData(COLOR, (double) color);
+                    updateTransformDataClient(COLOR, (double) color);
                 } catch (NumberFormatException ignored) {
                     Yuushya.LOGGER.error("Invalid color number");
                 }
@@ -537,7 +537,7 @@ public class ItemBlockScreen extends Screen {
                                     int color = (int) COLOR.extract(blockEntity, slot);
                                     for (int i = 0; i < blockEntity.getTransformData().size(); i++) {
                                         if (i == slot) continue;
-                                        updateTransformData(COLOR, (double) color, i);
+                                        updateTransformDataSever(COLOR, (double) color, i);
                                     }
                                     this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
                                     this.colorApplyButton.setValue(ApplyColor.PRE_APPLY);
@@ -608,14 +608,14 @@ public class ItemBlockScreen extends Screen {
 
         YuushyaUtils.mirror(pos, rot, face);
 
-        updateTransformData(POS_X, pos.x);
-        updateTransformData(POS_Y, pos.y);
-        updateTransformData(POS_Z, pos.z);
+        updateTransformDataClient(POS_X, pos.x);
+        updateTransformDataClient(POS_Y, pos.y);
+        updateTransformDataClient(POS_Z, pos.z);
 
         Vector3f euler = rot.getEulerAnglesXYZ(new Vector3f());
-        updateTransformData(ROT_X, normalizeAngle(Math.toDegrees(euler.x)));
-        updateTransformData(ROT_Y, normalizeAngle(Math.toDegrees(euler.y)));
-        updateTransformData(ROT_Z, normalizeAngle(Math.toDegrees(euler.z)));
+        updateTransformDataClient(ROT_X, normalizeAngle(Math.toDegrees(euler.x)));
+        updateTransformDataClient(ROT_Y, normalizeAngle(Math.toDegrees(euler.y)));
+        updateTransformDataClient(ROT_Z, normalizeAngle(Math.toDegrees(euler.z)));
 
         this.itemStackList.setSelectedSlot(slot);
     }
@@ -716,32 +716,32 @@ public class ItemBlockScreen extends Screen {
 
     }
 
-    private void updateTransformData(TransformItemData data) {
-        updateTransformData(POS_X, data.pos.x);
-        updateTransformData(POS_Y, data.pos.y);
-        updateTransformData(POS_Z, data.pos.z);
+    private void updateTransformDataClient(TransformItemData data) {
+        updateTransformDataClient(POS_X, data.pos.x);
+        updateTransformDataClient(POS_Y, data.pos.y);
+        updateTransformDataClient(POS_Z, data.pos.z);
 
-        updateTransformData(ROT_X, (double) data.rot.x);
-        updateTransformData(ROT_Y, (double) data.rot.y);
-        updateTransformData(ROT_Z, (double) data.rot.z);
+        updateTransformDataClient(ROT_X, (double) data.rot.x);
+        updateTransformDataClient(ROT_Y, (double) data.rot.y);
+        updateTransformDataClient(ROT_Z, (double) data.rot.z);
 
-        updateTransformData(SCALE_X, (double) data.scales.x);
-        updateTransformData(SCALE_Y, (double) data.scales.y);
-        updateTransformData(SCALE_Z, (double) data.scales.z);
+        updateTransformDataClient(SCALE_X, (double) data.scales.x);
+        updateTransformDataClient(SCALE_Y, (double) data.scales.y);
+        updateTransformDataClient(SCALE_Z, (double) data.scales.z);
 
-        updateTransformData(SHOWN, data.isShown ? 1.0 : 0.0);
-        updateTransformData(COLOR, (double) data.color);
+        updateTransformDataClient(SHOWN, data.isShown ? 1.0 : 0.0);
+        updateTransformDataClient(COLOR, (double) data.color);
 
         updateItemStack(data.itemStack);
     }
 
-    public void updateTransformData(ItemTransformType type, Double number) {
+    public void updateTransformDataClient(ItemTransformType type, Double number) {
         this.storage.put(type, number);
         type.modify(blockEntity, slot, number);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
     }
 
-    public void updateTransformData(ItemTransformType type, Double number, int slot) {
+    public void updateTransformDataSever(ItemTransformType type, Double number, int slot) {
         type.modify(blockEntity, slot, number);
         ItemTransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), slot, type, number);
     }
