@@ -1,6 +1,5 @@
 package com.yuushya.modelling.gui.widget;
 
-import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.registries.YuushyaRegistries;
@@ -33,9 +32,14 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     protected final List<TransformBlockData> transformDataList;
     protected final List<Entry> chosen = new ArrayList<>();
     protected final ShowBlockScreen screen;
+    private final Map<Integer, MutableComponent> rememberDisplayName = new HashMap<>();
+    private final Map<Integer, List<String>> rememberBlockStateProperties = new HashMap<>();
+    private final Map<Integer, ItemStack> rememberItemStack = new HashMap<>();
+    private final Map<Integer, Collection<Property<?>>> rememberProperties = new HashMap<>();
     private int itemHeight;
     private int itemWidth;
-    public BlockStateIconList(Minecraft minecraft, int width, int height, int x , int y0, int itemWidth, int itemHeight,
+
+    public BlockStateIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                               List<TransformBlockData> transformDataList, ShowBlockScreen showBlockScreen
     ) {
         super(minecraft, width, height, y0, itemHeight);
@@ -43,63 +47,63 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         this.transformDataList = transformDataList;
         this.screen = showBlockScreen;
         this.centerListVertically = false;
-        this.setRenderHeader(false,0);
+        this.setRenderHeader(false, 0);
         this.itemWidth = itemWidth;
         this.itemHeight = itemHeight;
         this.updateRenderList();
     }
 
-
-    private final Map<Integer,MutableComponent> rememberDisplayName = new HashMap<>();
-    public MutableComponent updateRenderDisplayName(BlockState blockState){
+    public MutableComponent updateRenderDisplayName(BlockState blockState) {
         return rememberDisplayName.computeIfAbsent(Block.getId(blockState),
-                (id)->{
+                (id) -> {
                     BlockState blockState1 = Block.stateById(id);
                     Item item = blockState1.getBlock().asItem();
-                    return (item== Items.AIR) ? blockState1.getBlock().getName() : (MutableComponent)item.getName(item.getDefaultInstance());
+                    return (item == Items.AIR) ? blockState1.getBlock().getName() : (MutableComponent) item.getName(item.getDefaultInstance());
                 });
     }
-    private final Map<Integer,List<String>> rememberBlockStateProperties = new HashMap<>();
-    public List<String> updateRenderBlockStateProperties(BlockState blockState){
+
+    public List<String> updateRenderBlockStateProperties(BlockState blockState) {
         return rememberBlockStateProperties.computeIfAbsent(Block.getId(blockState),
-                (id)->Block.stateById(id).getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).toList());
+                (id) -> Block.stateById(id).getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).toList());
     }
-    private final Map<Integer,ItemStack> rememberItemStack = new HashMap<>();
-    public ItemStack updateRenderItemstack(BlockState blockState){
-        return rememberItemStack.computeIfAbsent(Block.getId(blockState),(id)->{
+
+    public ItemStack updateRenderItemstack(BlockState blockState) {
+        return rememberItemStack.computeIfAbsent(Block.getId(blockState), (id) -> {
             ItemStack itemStack = YuushyaRegistries.ITEMS.get("get_blockstate_item").get().getDefaultInstance();
-            itemStack.set((DataComponentType<BlockState>)YuushyaRegistries.BLOCKSTATE.get(), Block.stateById(id));
+            itemStack.set((DataComponentType<BlockState>) YuushyaRegistries.BLOCKSTATE.get(), Block.stateById(id));
             return itemStack;
         });
     }
-    private final Map<Integer, Collection<Property<?>>> rememberProperties = new HashMap<>();
-    public Collection<Property<?>> updateRenderProperties(BlockState blockState){
-        return rememberProperties.computeIfAbsent(Block.getId(blockState),(id)->
+
+    public Collection<Property<?>> updateRenderProperties(BlockState blockState) {
+        return rememberProperties.computeIfAbsent(Block.getId(blockState), (id) ->
                 Block.stateById(id).getBlock().getStateDefinition().getProperties());
     }
 
     @Override
-    public int getRowWidth() { return itemWidth; }
+    public int getRowWidth() {
+        return itemWidth;
+    }
 
     @Override
     protected int getScrollbarPosition() {
-        return this.getX()+this.getWidth() - 4;
+        return this.getX() + this.getWidth() - 4;
     }
 
-    public void updateRenderList(){
+    public void updateRenderList() {
         this.clearEntries();
-        for(int i=0;i<transformDataList.size();i++){
-            this.addEntry(new Entry(this,i));
+        for (int i = 0; i < transformDataList.size(); i++) {
+            this.addEntry(new Entry(this, i));
         }
         this.notifyListUpdated();
     }
 
-    public void addSlot(){
-        if( this.getSelected()!= null && transformDataList.get(this.getSelected().slot).blockState.getBlock() == Blocks.AIR){
+    public void addSlot() {
+        if (this.getSelected() != null && transformDataList.get(this.getSelected().slot).blockState.getBlock() == Blocks.AIR) {
             return;
         }
-        if(children().size() == transformDataList.size()){
-            Entry entry = new Entry(this,transformDataList.size());
+        if (children().size() == transformDataList.size()) {
+            Entry entry = new Entry(this, transformDataList.size());
             this.addEntry(entry);
             this.setSelected(entry);
         }
@@ -108,7 +112,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     private void notifyListUpdated() {
     }
 
-    public void setSelectedSlot(int slot){
+    public void setSelectedSlot(int slot) {
         this.setSelected(this.children().get(slot));
     }
 
@@ -121,54 +125,58 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     }
 
 
-    public int getChosenOne(){
-        if(!this.chosen.isEmpty()){
+    public int getChosenOne() {
+        if (!this.chosen.isEmpty()) {
             return chosen.getLast().slot;
         }
         return -1;
     }
+
     public void setChosenCurrent() {
         Entry selected = this.getSelected();
-        if(selected!=null){
+        if (selected != null) {
             selected.chosen = true;
             this.chosen.add(selected);
         }
     }
-    public void clearChosen(){
-        for(Entry entry:this.chosen){
+
+    public void clearChosen() {
+        for (Entry entry : this.chosen) {
             entry.chosen = false;
         }
         this.chosen.clear();
     }
 
-    public static final class Entry extends ObjectSelectionList.Entry<Entry>{
+    public static final class Entry extends ObjectSelectionList.Entry<Entry> {
 
         private final BlockStateIconList parent;
         private final int slot;
         private final Minecraft minecraft;
         private boolean chosen = false;
-        public TransformBlockData getTransformData(){
-            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot) : new TransformBlockData();
-        }
-        public BlockState updateRenderState(){
-            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot).blockState : Blocks.AIR.defaultBlockState();
-        }
 
-        public boolean updateRenderShown(){
-            return (parent.transformDataList.size() > slot)? parent.transformDataList.get(slot).isShown : true;
-        }
-
-        public Entry(BlockStateIconList parent,int slot){
+        public Entry(BlockStateIconList parent, int slot) {
             this.parent = parent;
             this.minecraft = parent.minecraft;
             this.slot = slot;
+        }
+
+        public TransformBlockData getTransformData() {
+            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot) : new TransformBlockData();
+        }
+
+        public BlockState updateRenderState() {
+            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot).blockState : Blocks.AIR.defaultBlockState();
+        }
+
+        public boolean updateRenderShown() {
+            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot).isShown : true;
         }
 
         @Override
         public Component getNarration() {
             BlockState blockState = updateRenderState();
             Item item = blockState.getBlock().asItem();
-            MutableComponent displayName = (item== Items.AIR) ? blockState.getBlock().getName() : (MutableComponent)item.getName(item.getDefaultInstance());
+            MutableComponent displayName = (item == Items.AIR) ? blockState.getBlock().getName() : (MutableComponent) item.getName(item.getDefaultInstance());
             return displayName;
         }
 
@@ -176,12 +184,11 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             Entry preSelected = this.parent.getSelected();
             this.parent.setSelected(this);
-            if(preSelected == this){
-                if(this.chosen){
+            if (preSelected == this) {
+                if (this.chosen) {
                     this.chosen = false;
                     this.parent.chosen.remove(this);
-                }
-                else{
+                } else {
                     this.chosen = true;
                     this.parent.chosen.add(this);
                 }
@@ -206,14 +213,13 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 //                MutableComponent displayBlockState = Component.literal(properties.get(i));
 //                guiGraphics.drawString(this.minecraft.font, displayBlockState, left + 32 + 3, top + this.minecraft.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
 //            }
-            if(updateRenderShown())
+            if (updateRenderShown())
                 guiGraphics.fill(left, top, left + 32 + 4, top + fontHeight + 32, -1601138544);
-            if(chosen)
+            if (chosen)
                 guiGraphics.fill(left, top, left + 32 + 4, top + fontHeight + 32, 0x5FD85C2F);
             guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(left + 16, top  + 16, 32);
-            guiGraphics.pose().scale(32.0f, 32.0f, 32.0f);
-            guiGraphics.pose().mulPose(Axis.ZP.rotationDegrees(180));
+            guiGraphics.pose().translate(left + 16, top + 16, 32);
+            guiGraphics.pose().scale(32.0f, -32.0f, 32.0f);
             //
             //BlockRenderDispatcher blockRenderDispatcher = this.minecraft.getBlockRenderer();
             //BakedModel model = blockRenderDispatcher.getBlockModel(blockState);
