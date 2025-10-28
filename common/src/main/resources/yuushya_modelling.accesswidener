@@ -12,3 +12,6 @@ accessible field net/minecraft/client/renderer/RenderType$CompositeState transpa
 accessible field com/mojang/blaze3d/vertex/BufferBuilder vertices I
 accessible method net/minecraft/client/renderer/RenderStateShard$TextureStateShard cutoutTexture ()Ljava/util/Optional;
 accessible method net/minecraft/world/level/block/state/BlockBehaviour$BlockStateBase asState ()Lnet/minecraft/world/level/block/state/BlockState;
+accessible class net/minecraft/client/renderer/block/ModelBlockRenderer$AmbientOcclusionFace
+accessible field net/minecraft/client/renderer/block/ModelBlockRenderer$AmbientOcclusionFace brightness [F
+accessible field net/minecraft/client/renderer/block/ModelBlockRenderer$AmbientOcclusionFace lightmap [I

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.neoforge.client.NeoItemBlockModel;
@@ -17,6 +18,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -27,11 +29,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.model.IQuadTransformer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
@@ -39,6 +44,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.DISABLE_AO;
 import static net.minecraft.client.renderer.RenderStateShard.*;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 import static net.neoforged.neoforge.client.model.QuadTransformers.toABGR;
@@ -59,6 +65,8 @@ public class CachedRegion {
     private Map<RenderType, VertexBuffer> buffers = new HashMap<>();
     private Map<RenderType, MeshData.SortState> meshSortings = new HashMap<>();
     private Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
+    private ModelBlockRenderer.AmbientOcclusionFace aoFace = new ModelBlockRenderer.AmbientOcclusionFace();
+    private static final Direction[] DIRECTIONS = Direction.values();
     @Nullable
     private RebuildTask lastRebuildTask;
     private boolean isEmpty = true;
@@ -256,12 +264,14 @@ public class CachedRegion {
                     List<TransformItemData> transformDatas = itemBlockEntity.getTransformData();
                     Level level = be.getLevel();
                     BlockPos pos = be.getBlockPos();
+                    Boolean disableAO = be.getBlockState().getValue(DISABLE_AO);
 
                     for (TransformItemData transformData : transformDatas)
                         if (transformData.isShown) {
                             ItemStack itemStack = transformData.itemStack;
                             BakedModel blockModel = renderer.getModel(itemStack, null, null, localPlayer.getId());
                             for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
+                                BlockPos offset = pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16));
                                 if (model instanceof BuiltInModel) {
                                     poseStack.pushPose();
                                     {
@@ -275,11 +285,12 @@ public class CachedRegion {
                                         YuushyaUtils.rotate(poseStack, transformData.rot);
                                         poseStack.translate(0.5f, 0.5f, 0.5f);
                                     }
-                                    int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
+                                    int packedLight = LevelRenderer.getLightColor(level, offset);
                                     renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
                                     poseStack.popPose();
                                 } else {
                                     for (Direction value : directions) {
+                                        float[] afloat = new float[DIRECTIONS.length * 2];
                                         List<BakedQuad> blockModelQuads = model.getQuads(null, value, random);
                                         for (BakedQuad bakedQuad : blockModelQuads) {
                                             poseStack.pushPose();
@@ -289,20 +300,26 @@ public class CachedRegion {
                                                         pos.getY(),
                                                         pos.getZ()
                                                 );
+
+                                                poseStack.translate(0.5f, 0.5f, 0.5f);
+                                                poseStack.mulPose(Axis.YP.rotationDegrees(-f));
+                                                poseStack.translate(-0.5f, -0.5f, -0.5f);
+
                                                 YuushyaUtils.scale(poseStack, transformData.scales);
                                                 YuushyaUtils.translate(poseStack, transformData.pos);
                                                 YuushyaUtils.rotate(poseStack, transformData.rot);
-                                                Color color = new Color(transformData.color);
 
-                                                if (model instanceof NeoItemBlockModel) {
-                                                    int[] vertices = bakedQuad.getVertices();
-                                                    color = new Color(toABGR(vertices[IQuadTransformer.STRIDE + IQuadTransformer.COLOR]));
+                                                float[] colorComponents = getColorComponents(transformData, model, bakedQuad);
+                                                BitSet bitset = new BitSet(3);
+                                                calculateShape(level, be.getBlockState(), offset, bakedQuad.getVertices(), bakedQuad.getDirection(), afloat, bitset);
+                                                aoFace.calculate(level, be.getBlockState(), offset, bakedQuad.getDirection(), afloat, bitset, bakedQuad.isShade());
+
+                                                if (disableAO) {
+                                                    bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, aoFace.brightness,colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, aoFace.lightmap, OverlayTexture.NO_OVERLAY, true);
+                                                } else {
+                                                    int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
+                                                    bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
                                                 }
-
-                                                float[] colorComponents = new float[3];
-                                                color.getColorComponents(colorComponents);
-                                                int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
-                                                bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
                                             }
                                             poseStack.popPose();
                                         }
@@ -326,5 +343,84 @@ public class CachedRegion {
         void cancel() {
             cancelled = true;
         }
+    }
+
+    private static float @NotNull [] getColorComponents(TransformItemData transformData, BakedModel model, BakedQuad bakedQuad) {
+        Color color = new Color(transformData.color);
+
+        if (model instanceof NeoItemBlockModel) {
+            int[] vertices = bakedQuad.getVertices();
+            color = new Color(toABGR(vertices[IQuadTransformer.STRIDE + IQuadTransformer.COLOR]));
+        }
+
+        float[] colorComponents = new float[3];
+        color.getColorComponents(colorComponents);
+        return colorComponents;
+    }
+
+    private void calculateShape(BlockAndTintGetter level, BlockState state, BlockPos pos, int[] vertices, Direction direction, @javax.annotation.Nullable float[] shape, BitSet shapeFlags) {
+        float f = 32.0F;
+        float f1 = 32.0F;
+        float f2 = 32.0F;
+        float f3 = -32.0F;
+        float f4 = -32.0F;
+        float f5 = -32.0F;
+
+        for(int i = 0; i < 4; ++i) {
+            float f6 = Float.intBitsToFloat(vertices[i * 8]);
+            float f7 = Float.intBitsToFloat(vertices[i * 8 + 1]);
+            float f8 = Float.intBitsToFloat(vertices[i * 8 + 2]);
+            f = Math.min(f, f6);
+            f1 = Math.min(f1, f7);
+            f2 = Math.min(f2, f8);
+            f3 = Math.max(f3, f6);
+            f4 = Math.max(f4, f7);
+            f5 = Math.max(f5, f8);
+        }
+
+        if (shape != null) {
+            shape[Direction.WEST.get3DDataValue()] = f;
+            shape[Direction.EAST.get3DDataValue()] = f3;
+            shape[Direction.DOWN.get3DDataValue()] = f1;
+            shape[Direction.UP.get3DDataValue()] = f4;
+            shape[Direction.NORTH.get3DDataValue()] = f2;
+            shape[Direction.SOUTH.get3DDataValue()] = f5;
+            int j = DIRECTIONS.length;
+            shape[Direction.WEST.get3DDataValue() + j] = 1.0F - f;
+            shape[Direction.EAST.get3DDataValue() + j] = 1.0F - f3;
+            shape[Direction.DOWN.get3DDataValue() + j] = 1.0F - f1;
+            shape[Direction.UP.get3DDataValue() + j] = 1.0F - f4;
+            shape[Direction.NORTH.get3DDataValue() + j] = 1.0F - f2;
+            shape[Direction.SOUTH.get3DDataValue() + j] = 1.0F - f5;
+        }
+
+        float f9 = 1.0E-4F;
+        float f10 = 0.9999F;
+        switch (direction) {
+            case DOWN:
+                shapeFlags.set(1, f >= 1.0E-4F || f2 >= 1.0E-4F || f3 <= 0.9999F || f5 <= 0.9999F);
+                shapeFlags.set(0, f1 == f4 && (f1 < 1.0E-4F || state.isCollisionShapeFullBlock(level, pos)));
+                break;
+            case UP:
+                shapeFlags.set(1, f >= 1.0E-4F || f2 >= 1.0E-4F || f3 <= 0.9999F || f5 <= 0.9999F);
+                shapeFlags.set(0, f1 == f4 && (f4 > 0.9999F || state.isCollisionShapeFullBlock(level, pos)));
+                break;
+            case NORTH:
+                shapeFlags.set(1, f >= 1.0E-4F || f1 >= 1.0E-4F || f3 <= 0.9999F || f4 <= 0.9999F);
+                shapeFlags.set(0, f2 == f5 && (f2 < 1.0E-4F || state.isCollisionShapeFullBlock(level, pos)));
+                break;
+            case SOUTH:
+                shapeFlags.set(1, f >= 1.0E-4F || f1 >= 1.0E-4F || f3 <= 0.9999F || f4 <= 0.9999F);
+                shapeFlags.set(0, f2 == f5 && (f5 > 0.9999F || state.isCollisionShapeFullBlock(level, pos)));
+                break;
+            case WEST:
+                shapeFlags.set(1, f1 >= 1.0E-4F || f2 >= 1.0E-4F || f4 <= 0.9999F || f5 <= 0.9999F);
+                shapeFlags.set(0, f == f3 && (f < 1.0E-4F || state.isCollisionShapeFullBlock(level, pos)));
+                break;
+            case EAST:
+                shapeFlags.set(1, f1 >= 1.0E-4F || f2 >= 1.0E-4F || f4 <= 0.9999F || f5 <= 0.9999F);
+                shapeFlags.set(0, f == f3 && (f3 > 0.9999F || state.isCollisionShapeFullBlock(level, pos)));
+        }
+
     }
 }
