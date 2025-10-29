@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.yuushya.modelling.blockentity.AbstractTransformBlock.DISABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 
 @Mixin(BlockBehaviour.BlockStateBase.class)
 public abstract class BlockBehaviourMixin {
@@ -18,7 +18,7 @@ public abstract class BlockBehaviourMixin {
     private void isCollisionShapeFullBlock(BlockGetter level, BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         BlockState state = ((BlockBehaviour.BlockStateBase)(Object)this).asState();
         if(state.is(YuushyaRegistries.BLOCKS.get("itemblock").get())) {
-            boolean isFull = state.getValue(DISABLE_AO);
+            boolean isFull = state.getValue(ENABLE_AO);
             cir.setReturnValue(isFull);
         }
     }

@@ -16,6 +16,7 @@ import com.yuushya.modelling.gui.widget.ItemTransformComponent;
 import com.yuushya.modelling.gui.widget.SizeTransformComponent;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
+import com.yuushya.modelling.network.UpdateAOPacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import dev.architectury.networking.NetworkManager;
@@ -39,7 +40,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
@@ -51,7 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.yuushya.modelling.blockentity.AbstractTransformBlock.DISABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
@@ -285,15 +285,13 @@ public class ItemBlockScreen extends Screen {
         CycleButton<Boolean> ambientOcclusionButton = CycleButton
                 .booleanBuilder(Component.literal("●"), Component.literal("☀"))
                 .displayOnlyValue()
-                .withInitialValue(blockEntity.getBlockState().getValue(DISABLE_AO))
-                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.ambientOcclusion.on") : Component.translatable("gui.itemBlockScreen.ambientOcclusion.off"))))
+                .withInitialValue(blockEntity.getBlockState().getValue(ENABLE_AO))
+                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.ambientOcclusion.off") : Component.translatable("gui.itemBlockScreen.ambientOcclusion.on"))))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 9, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, enableAO) -> {
-                            BlockState blockState = blockEntity.getBlockState();
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                level.setBlock(blockEntity.getBlockPos(), blockEntity.getBlockState().setValue(DISABLE_AO, enableAO), 18);
-                                level.sendBlockUpdated(blockEntity.getBlockPos(), blockState, blockState, net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+                                NetworkManager.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockPos()));
                             }
                         });
 

@@ -29,5 +29,6 @@ public class Yuushya {
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, TransformDataListPacket.TYPE, TransformDataListPacket.STREAM_CODEC, TransformDataListPacket::handler);
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, ItemStackPacket.TYPE, ItemStackPacket.STREAM_CODEC, ItemStackPacket::handler);
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, ReloadModelPacket.TYPE, ReloadModelPacket.STREAM_CODEC, ReloadModelPacket::handler);
+        NetworkManager.registerReceiver(NetworkManager.Side.C2S, UpdateAOPacket.TYPE, UpdateAOPacket.STREAM_CODEC, UpdateAOPacket::handler);
     }
 }

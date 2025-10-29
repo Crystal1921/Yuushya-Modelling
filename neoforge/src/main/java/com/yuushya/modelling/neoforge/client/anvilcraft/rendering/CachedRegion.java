@@ -44,7 +44,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import static com.yuushya.modelling.blockentity.AbstractTransformBlock.DISABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static net.minecraft.client.renderer.RenderStateShard.*;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 import static net.neoforged.neoforge.client.model.QuadTransformers.toABGR;
@@ -264,7 +264,7 @@ public class CachedRegion {
                     List<TransformItemData> transformDatas = itemBlockEntity.getTransformData();
                     Level level = be.getLevel();
                     BlockPos pos = be.getBlockPos();
-                    Boolean disableAO = be.getBlockState().getValue(DISABLE_AO);
+                    Boolean disableAO = be.getBlockState().getValue(ENABLE_AO);
 
                     for (TransformItemData transformData : transformDatas)
                         if (transformData.isShown) {

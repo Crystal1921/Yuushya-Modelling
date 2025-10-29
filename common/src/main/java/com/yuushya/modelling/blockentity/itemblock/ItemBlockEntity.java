@@ -10,16 +10,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 
 public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITransformItemDataInventory {
     @Getter
@@ -59,17 +62,22 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     @Override
-    public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag compoundTag = super.getUpdateTag(registries);
-        ITransformItemDataInventory.saveAdditional(compoundTag, transformData, registries);
-        return compoundTag;
+    @Nullable
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 
     public void writeBlockState(ItemStack itemStack, BlockState blockState) {
         BlockItemStateProperties blockItemStateProperties = BlockItemStateProperties.EMPTY;
         itemStack.set(DataComponents.BLOCK_STATE, blockItemStateProperties
                 .with(LIT, blockState.getValue(LIT))
-                .with(SHAPES, blockState.getValue(SHAPES)));
+                .with(SHAPES, blockState.getValue(SHAPES))
+                .with(ENABLE_AO, blockState.getValue(ENABLE_AO)));
     }
 
     public void setRemoved() {
