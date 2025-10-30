@@ -53,6 +53,14 @@ subprojects {
                 runDir 'run/client'
                 // https://openjdk.org/jeps/400
                 property 'file.encoding', 'COMPAT'
+                programArgs '--username', 'Crystal1921'
+            }
+
+            client2 {
+                client()
+                runDir 'run/client2'
+                // https://openjdk.org/jeps/400
+                property 'file.encoding', 'COMPAT'
             }
 
             server {

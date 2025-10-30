@@ -12,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
@@ -32,7 +31,6 @@ public record UpdateAOPacket(boolean enableAO, BlockPos blockPos) implements Cus
         ctx.queue(() -> {
             Level level = ctx.getPlayer().level();
             if (level instanceof ServerLevel serverLevel) {
-                BlockState blockState = serverLevel.getBlockState(packet.blockPos);
                 BlockEntity blockEntity = serverLevel.getBlockEntity(packet.blockPos);
                 if (blockEntity instanceof ItemBlockEntity) {
                     level.setBlockAndUpdate(blockEntity.getBlockPos(), blockEntity.getBlockState().setValue(ENABLE_AO, packet.enableAO));

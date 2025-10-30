@@ -80,7 +80,7 @@ public enum ItemTransformType {
     public void modify(ItemBlockEntity itemBlockEntity, int slot, double number){
         if (itemBlockEntity.getLevel() == null) return;
         if(this == SUCCESS){
-            itemBlockEntity.setChanged();
+            itemBlockEntity.saveChanged();
             return;
         }
         if(this == LIT){
