@@ -1,4 +1,4 @@
-package com.yuushya.modelling.neoforge.client.event;
+package com.yuushya.modelling.neoforge.event;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.neoforge.client.gui.PickColorOverlay;

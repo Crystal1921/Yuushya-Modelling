@@ -129,7 +129,7 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public TextureAtlasSprite getParticleIcon() {
+    public @NotNull TextureAtlasSprite getParticleIcon() {
         if (backup != this) {
             return backup.getParticleIcon();
         }
@@ -138,7 +138,7 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public ItemTransforms getTransforms() {
+    public @NotNull ItemTransforms getTransforms() {
         if (backup != this) {
             return backup.getTransforms();
         }
@@ -146,7 +146,7 @@ public class ShowBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public ItemOverrides getOverrides() {
+    public @NotNull ItemOverrides getOverrides() {
         if (backup != this) {
             return backup.getOverrides();
         }
