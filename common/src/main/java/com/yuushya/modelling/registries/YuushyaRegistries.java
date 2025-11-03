@@ -73,23 +73,19 @@ public class YuushyaRegistries {
         ITEMS.register("floating_bloom", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("sparking_flame", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
 
-        ITEMS.register("chibi_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_0_alt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_3", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_4", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_5", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_6", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_7", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_8", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_9", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("chibi_10", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("chibi_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_0_alt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_3", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_4", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_5", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("chibi_6", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
 
-        ITEMS.register("anatomy_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("anatomy_0_alt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("anatomy_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
-        ITEMS.register("anatomy_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 1));
+        ITEMS.register("anatomy_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("anatomy_0_alt", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("anatomy_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
+        ITEMS.register("anatomy_2", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
 
         ITEMS.register("cube_0", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
         ITEMS.register("cube_1", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_PRIMITIVE).stacksTo(16).rarity(Rarity.RARE), 0));
@@ -118,7 +114,7 @@ public class YuushyaRegistries {
 
         CreativeTabRegistry.appendStack(YUUSHYA_MODELLING, () -> new ItemStack(ITEMS.get("get_blockstate_item").get()));
 
-        SHOW_BLOCK = BLOCKS.register("showblock", () -> new ShowBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 1));
+        SHOW_BLOCK = BLOCKS.register("showblock", () -> new ShowBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 0));
         ITEM_BLOCK = BLOCKS.register("itemblock", () -> new ItemBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 1));
         ITEMS.register("showblock", () -> new BlockItem(BLOCKS.get("showblock").get(), new Item.Properties().arch$tab(YUUSHYA_MODELLING)));
         ITEMS.register("itemblock", () -> new BlockItem(BLOCKS.get("itemblock").get(), new Item.Properties().arch$tab(YUUSHYA_MODELLING)));
