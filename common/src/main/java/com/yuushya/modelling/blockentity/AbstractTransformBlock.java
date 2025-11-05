@@ -27,13 +27,15 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implements EntityBlock {
     public static final BooleanProperty ENABLE_AO = BooleanProperty.create("enable_ao");
 
+    public static final Boolean DEFAULT_ENABLE_AO = false;
+
     public AbstractTransformBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
         this.registerDefaultState(defaultBlockState()
                 .setValue(POWERED, false)
                 .setValue(LIT, 0)
                 .setValue(HORIZONTAL_FACING, Direction.SOUTH)
-                .setValue(ENABLE_AO, true));
+                .setValue(ENABLE_AO, DEFAULT_ENABLE_AO));
     }
 
     @Override
@@ -47,7 +49,7 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
             blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(
                 ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
             BlockState blockState = this.defaultBlockState();
-            blockState.setValue(ENABLE_AO, true);
+            blockState.setValue(ENABLE_AO, DEFAULT_ENABLE_AO);
             return blockPlaceContext.getClickedFace().getAxis() == Direction.Axis.Y
                     ? blockState.setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
                     : blockState.setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());
