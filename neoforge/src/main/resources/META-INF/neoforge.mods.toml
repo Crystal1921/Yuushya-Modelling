@@ -5,14 +5,14 @@ license = "MIT"
 
 [[mods]]
 modId = "yuushya_modelling"
-version = "2.2.0"
+version = "2.3.0"
 displayName = "Yuushya Modelling"
 logoFile = "pack.png"
 displayURL = "https://yuushya.com/townscape/"
-credits = "${mod_credits}"
-authors = "Coco, Xiao2 or XiLaiTL, SQwatermark, XieZai, Hikari"
+credits = "Solid support from the team and the community!"
+authors = "Coco, Xiao2 or XiLaiTL, SQwatermark, XieZai, Hikari, LD_Anvil, Little Panda, Crystal1921"
 description = '''
-    Adore the life in a busy city?
+    Added several tools to move, rotate or resize blocks like doing 3D modelling
     '''
 
 [[mixins]]
