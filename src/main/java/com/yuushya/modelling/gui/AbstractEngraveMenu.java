@@ -77,6 +77,16 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
         }
     };
 
+    /**
+     * Constructor for client-side menu creation from network data.
+     * The extraData parameter is provided by the IMenuTypeExtension interface for network-based menu creation,
+     * but is not used in this implementation as all data is derived from the player's inventory and level.
+     * 
+     * @param menuType The menu type
+     * @param containerId The container ID
+     * @param playerInventory The player's inventory
+     * @param extraData Extra data from network buffer (unused, required by IMenuTypeExtension interface)
+     */
     public AbstractEngraveMenu(MenuType<?> menuType, int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(menuType, containerId, playerInventory, ContainerLevelAccess.NULL);
     }
@@ -248,14 +258,16 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
                 slot.onQuickCraft(itemStack2, itemStack);
-            } else if (index == INPUT_SLOT
-                    ? !this.moveItemStackTo(itemStack2, INV_SLOT_START, USE_ROW_SLOT_END, false)
-                    : (true
-                    ? !this.moveItemStackTo(itemStack2, 0, 1, false)
-                    : (index >= INV_SLOT_START && index < INV_SLOT_END
-                    ? !this.moveItemStackTo(itemStack2, USE_ROW_SLOT_START, USE_ROW_SLOT_END, false)
-                    : index >= USE_ROW_SLOT_START && index < USE_ROW_SLOT_END && !this.moveItemStackTo(itemStack2, INV_SLOT_START, INV_SLOT_END, false)))) {
-                return ItemStack.EMPTY;
+            } else if (index == INPUT_SLOT) {
+                // Move from input slot to player inventory
+                if (!this.moveItemStackTo(itemStack2, INV_SLOT_START, USE_ROW_SLOT_END, false)) {
+                    return ItemStack.EMPTY;
+                }
+            } else {
+                // Move from player inventory to input slot
+                if (!this.moveItemStackTo(itemStack2, 0, 1, false)) {
+                    return ItemStack.EMPTY;
+                }
             }
             if (itemStack2.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
