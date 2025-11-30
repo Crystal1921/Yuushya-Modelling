@@ -6,6 +6,8 @@ import com.yuushya.modelling.fabriclike.client.FabricItemBlockModel;
 import com.yuushya.modelling.fabriclike.client.FabricShowBlockModel;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
+import com.yuushya.modelling.gui.history.HistoryMenu;
+import com.yuushya.modelling.gui.history.HistoryScreen;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
@@ -91,6 +93,5 @@ public class YuushyaClientFabricLike {
 
 
         BuiltinItemRendererRegistry.INSTANCE.register(YuushyaRegistries.ITEMS.get("get_blockstate_item").get(), GetBlockStateItem::renderByItem);
-        MenuScreens.register((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
     }
 }

@@ -3,8 +3,10 @@ package com.yuushya.modelling.blockentity.itemblock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import com.yuushya.modelling.utils.CustomRenderInstance;
+import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -23,6 +25,7 @@ import java.util.List;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
+import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP;
 
 public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITransformItemDataInventory {
     @Getter
@@ -82,6 +85,12 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
 
     public void setRemoved() {
         CustomRenderInstance.getINSTANCE().dirty = true;
+        String res = ShareUtils.transferItems(this.getTransformData());
+        ShareUtils.ShareItemInformation information = ShareUtils.fromItems(res);
+        if (this.level != null) {
+            String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
+            HISTORY_ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
+        }
         super.setRemoved();
     }
 }

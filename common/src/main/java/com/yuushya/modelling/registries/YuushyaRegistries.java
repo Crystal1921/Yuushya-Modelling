@@ -7,10 +7,12 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
+import com.yuushya.modelling.gui.history.HistoryMenu;
 import com.yuushya.modelling.item.AbstractYuushyaItem;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.item.showblocktool.*;
 import dev.architectury.registry.CreativeTabRegistry;
+import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.core.component.DataComponentType;
@@ -18,7 +20,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.util.ExtraCodecs;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.CustomData;
@@ -33,7 +34,7 @@ public class YuushyaRegistries {
     public static final YuushyaDeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = new YuushyaDeferredRegister<>(Registries.BLOCK_ENTITY_TYPE);
     public static final YuushyaDeferredRegister<DataComponentType<?>> DATA_COMPONENTS = new YuushyaDeferredRegister<>(Registries.DATA_COMPONENT_TYPE);
 
-    public static final YuushyaDeferredRegister<MenuType<?>> MENU_TYPE = new YuushyaDeferredRegister<>(Registries.MENU);
+    public static final DeferredRegister<MenuType<?>> MENU_TYPE = DeferredRegister.create(Yuushya.MOD_ID, Registries.MENU);
 
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Yuushya.MOD_ID_USED, Registries.CREATIVE_MODE_TAB);
 
@@ -48,7 +49,9 @@ public class YuushyaRegistries {
     public static RegistrySupplier<DataComponentType<?>> BLOCKSTATE = null;
     public static RegistrySupplier<DataComponentType<?>> TRANSFORM_DATA = null;
     public static RegistrySupplier<DataComponentType<?>> COLOR_DATA = null;
-    public static RegistrySupplier<MenuType<?>> ENGRAVE_MENU = null;
+
+    public static RegistrySupplier<MenuType<EngraveMenu>> ENGRAVE_MENU = MENU_TYPE.register("engrave", () -> MenuRegistry.ofExtended(EngraveMenu::new));
+    public static RegistrySupplier<MenuType<HistoryMenu>> HISTORY_MENU = MENU_TYPE.register("history", () -> MenuRegistry.ofExtended(HistoryMenu::new));
 
     @SuppressWarnings("UnstableApiUsage")
     public static void registerAll() {
@@ -65,6 +68,7 @@ public class YuushyaRegistries {
         ITEMS.register("gui_item", () -> new GuiItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 2));
         ITEMS.register("engrave_item", () -> new EngraveItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 3));
         ITEMS.register("color_picker_item", () -> new ColorPickerItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 2));
+        ITEMS.register("history_item", () -> new HistoryItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(1), 1));
 
         ITEMS.register("the_encyclopedia", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
         ITEMS.register("shimmering_pearl", () -> new AbstractYuushyaItem(new Item.Properties().arch$tab(YUUSHYA_MODELLING).stacksTo(16).rarity(Rarity.RARE), 1));
@@ -126,9 +130,6 @@ public class YuushyaRegistries {
         TRANSFORM_DATA = DATA_COMPONENTS.register("transfrom_data", () -> DataComponentType.<CustomData>builder().persistent(CustomData.CODEC).build());
         COLOR_DATA = DATA_COMPONENTS.register("color_data", () -> DataComponentType.<Integer>builder().persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
 
-        ENGRAVE_MENU = MENU_TYPE.register("engrave", () -> new MenuType<>(EngraveMenu::new, FeatureFlags.DEFAULT_FLAGS));
-
         TABS.register();
     }
-
 }

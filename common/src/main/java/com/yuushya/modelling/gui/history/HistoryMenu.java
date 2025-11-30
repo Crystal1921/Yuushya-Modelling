@@ -1,8 +1,11 @@
 //all right reserved
 
-package com.yuushya.modelling.gui.engrave;
+package com.yuushya.modelling.gui.history;
 
 import com.google.common.collect.Lists;
+import com.yuushya.modelling.YuushyaClient;
+import com.yuushya.modelling.gui.engrave.IEngraveResult;
+import com.yuushya.modelling.item.showblocktool.HistoryItem;
 import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import lombok.Getter;
@@ -13,20 +16,16 @@ import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.DataSlot;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.ResultContainer;
-import net.minecraft.world.inventory.Slot;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class EngraveMenu
+public class HistoryMenu
         extends AbstractContainerMenu {
     public static final int INPUT_SLOT = 0;
     public static final int RESULT_SLOT = 1;
@@ -34,56 +33,57 @@ public class EngraveMenu
     private static final int INV_SLOT_END = 29;
     private static final int USE_ROW_SLOT_START = 29;
     private static final int USE_ROW_SLOT_END = 38;
+    final Slot inputSlot;
+    /**
+     * The inventory slot that stores the output of the crafting recipe.
+     */
+    final Slot resultSlot;
+    /**
+     * The inventory that stores the output of the crafting recipe.
+     */
+    final ResultContainer resultContainer = new ResultContainer();
     private final ContainerLevelAccess access;
     /**
      * The index of the selected recipe in the GUI.
      */
     private final DataSlot selectedRecipeIndex = DataSlot.standalone();
     private final Level level;
+    /**
+     * Stores the game time of the last time the player took items from the the crafting result slot. This is used to prevent the sound from being played multiple times on the same tick.
+     */
+    long lastSoundTime;
+    Runnable slotUpdateListener = () -> {
+    };
     @Getter
     private List<IEngraveResult> recipes = Lists.newArrayList();
     /**
-     * The {@linkplain net.minecraft.world.item.ItemStack} set in the input slot by the player.
+     * The {@linkplain ItemStack} set in the input slot by the player.
      */
     private ItemStack input = ItemStack.EMPTY;
     /**
      * Determines whether to use block or item recipes based on the input item.
      */
     private boolean useItemRecipes = false;
-    /**
-     * Stores the game time of the last time the player took items from the the crafting result slot. This is used to prevent the sound from being played multiple times on the same tick.
-     */
-    long lastSoundTime;
-    final Slot inputSlot;
-    /**
-     * The inventory slot that stores the output of the crafting recipe.
-     */
-    final Slot resultSlot;
-    Runnable slotUpdateListener = () -> {};
-    public final Container container = new SimpleContainer(1){
+    public final Container container = new SimpleContainer(1) {
 
         public void setChanged() {
             super.setChanged();
-            EngraveMenu.this.slotsChanged(this);
-            EngraveMenu.this.slotUpdateListener.run();
+            HistoryMenu.this.slotsChanged(this);
+            HistoryMenu.this.slotUpdateListener.run();
         }
     };
-    /**
-     * The inventory that stores the output of the crafting recipe.
-     */
-    final ResultContainer resultContainer = new ResultContainer();
 
-    public EngraveMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+    public HistoryMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(containerId, playerInventory, ContainerLevelAccess.NULL);
     }
 
-    public EngraveMenu(int containerId, Inventory playerInventory, final ContainerLevelAccess access) {
-        super(YuushyaRegistries.ENGRAVE_MENU.get(), containerId);
+    public HistoryMenu(int containerId, Inventory playerInventory, final ContainerLevelAccess access) {
+        super(YuushyaRegistries.HISTORY_MENU.get(), containerId);
         int i;
         this.access = access;
         this.level = playerInventory.player.level();
         this.inputSlot = this.addSlot(new Slot(this.container, INPUT_SLOT, 20, 33));
-        this.resultSlot = this.addSlot(new Slot(this.resultContainer, RESULT_SLOT, 143, 33){
+        this.resultSlot = this.addSlot(new Slot(this.resultContainer, RESULT_SLOT, 143, 33) {
 
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -92,22 +92,22 @@ public class EngraveMenu
             public void onTake(Player player, ItemStack stack) {
                 stack.onCraftedBy(player.level(), player, stack.getCount());
                 //EngraveMenu.this.resultContainer.awardUsedRecipes(player, this.getRelevantItems());
-                ItemStack itemStack = EngraveMenu.this.inputSlot.remove(1);
+                ItemStack itemStack = HistoryMenu.this.inputSlot.remove(1);
                 if (!itemStack.isEmpty()) {
-                    EngraveMenu.this.setupResultSlotServer(stack);
+                    HistoryMenu.this.setupResultSlotServer(stack);
                 }
                 access.execute((level, blockPos) -> {
                     long l = level.getGameTime();
-                    if (EngraveMenu.this.lastSoundTime != l) {
+                    if (HistoryMenu.this.lastSoundTime != l) {
                         level.playSound(null, blockPos, SoundEvents.UI_STONECUTTER_TAKE_RESULT, SoundSource.BLOCKS, 1.0f, 1.0f);
-                        EngraveMenu.this.lastSoundTime = l;
+                        HistoryMenu.this.lastSoundTime = l;
                     }
                 });
                 super.onTake(player, stack);
             }
 
             private List<ItemStack> getRelevantItems() {
-                return List.of(EngraveMenu.this.inputSlot.getItem());
+                return List.of(HistoryMenu.this.inputSlot.getItem());
             }
         });
         for (i = 0; i < 3; ++i) {
@@ -169,16 +169,16 @@ public class EngraveMenu
             if (stack.getItem() instanceof net.minecraft.world.item.BlockItem blockItem) {
                 if (blockItem.getBlock() instanceof com.yuushya.modelling.blockentity.itemblock.ItemBlock) {
                     this.useItemRecipes = true;
-                    this.recipes = new ArrayList<>(EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.values().stream().toList());
+                    this.recipes = new ArrayList<>(HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP.values().stream().toList());
                 } else {
                     this.useItemRecipes = false;
-                    this.recipes = new ArrayList<>(EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.values().stream().toList());
+                    this.recipes = new ArrayList<>(HistoryItem.HISTORY_SHOWBLOCK_MAP.values().stream().toList());
                 }
             }
         }
     }
 
-    public void setupResultSlotServer(ItemStack resultItemStack){
+    public void setupResultSlotServer(ItemStack resultItemStack) {
         ItemStack itemStack = resultItemStack.copy();
         if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
             //this.resultContainer.setRecipeUsed(recipeHolder);
@@ -190,7 +190,7 @@ public class EngraveMenu
     }
 
     void setupResultSlot() {
-        if(level.isClientSide){
+        if (level.isClientSide) {
             if (!this.recipes.isEmpty() && this.isValidRecipeIndex(this.selectedRecipeIndex.get())) {
                 IEngraveResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
                 ItemStack itemStack = recipeHolder.getResultItem().copy();
@@ -208,8 +208,8 @@ public class EngraveMenu
         }
     }
 
-    public MenuType<?> getType() {
-        return YuushyaRegistries.ENGRAVE_MENU.get();
+    public @NotNull MenuType<?> getType() {
+        return YuushyaRegistries.HISTORY_MENU.get();
     }
 
     public void registerUpdateListener(Runnable listener) {
@@ -238,12 +238,12 @@ public class EngraveMenu
                 }
                 slot.onQuickCraft(itemStack2, itemStack);
             } else if (index == INPUT_SLOT
-                        ? !this.moveItemStackTo(itemStack2, INV_SLOT_START, USE_ROW_SLOT_END, false)
+                    ? !this.moveItemStackTo(itemStack2, INV_SLOT_START, USE_ROW_SLOT_END, false)
                     : (true//(this.level.getRecipeManager().getRecipeFor(RecipeType.STONECUTTING, new SingleRecipeInput(itemStack2), this.level).isPresent()
-                        ? !this.moveItemStackTo(itemStack2, 0, 1, false)
+                    ? !this.moveItemStackTo(itemStack2, 0, 1, false)
                     : (index >= INV_SLOT_START && index < INV_SLOT_END
-                        ? !this.moveItemStackTo(itemStack2, USE_ROW_SLOT_START, USE_ROW_SLOT_END, false)
-                        : index >= USE_ROW_SLOT_START && index < USE_ROW_SLOT_END && !this.moveItemStackTo(itemStack2, INV_SLOT_START, INV_SLOT_END, false)))) {
+                    ? !this.moveItemStackTo(itemStack2, USE_ROW_SLOT_START, USE_ROW_SLOT_END, false)
+                    : index >= USE_ROW_SLOT_START && index < USE_ROW_SLOT_END && !this.moveItemStackTo(itemStack2, INV_SLOT_START, INV_SLOT_END, false)))) {
                 return ItemStack.EMPTY;
             }
             if (itemStack2.isEmpty()) {

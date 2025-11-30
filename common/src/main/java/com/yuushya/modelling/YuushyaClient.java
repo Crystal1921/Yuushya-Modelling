@@ -6,11 +6,14 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntityRender;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveScreen;
+import com.yuushya.modelling.gui.history.HistoryScreen;
 import com.yuushya.modelling.registries.YuushyaRegistries;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.registry.client.rendering.BlockEntityRendererRegistry;
 import dev.architectury.registry.client.rendering.RenderTypeRegistry;
 import dev.architectury.registry.item.ItemPropertiesRegistry;
+import dev.architectury.registry.menu.MenuRegistry;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceLocation;
@@ -20,7 +23,17 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
+import static com.yuushya.modelling.registries.YuushyaRegistries.ENGRAVE_MENU;
+import static com.yuushya.modelling.registries.YuushyaRegistries.HISTORY_MENU;
+
 public class YuushyaClient {
+    public static void init() {
+        ClientLifecycleEvent.CLIENT_SETUP.register(minecraft -> {
+            MenuRegistry.registerScreenFactory(ENGRAVE_MENU.get(), EngraveScreen::new);
+            MenuRegistry.registerScreenFactory(HISTORY_MENU.get(), HistoryScreen::new);
+        });
+    }
+
     @SuppressWarnings("unchecked")
     public static void onInitializeClient() {
         RenderTypeRegistry.register(RenderType.cutout(), YuushyaRegistries.SHOW_BLOCK.get());

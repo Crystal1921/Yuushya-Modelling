@@ -4,6 +4,8 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaClient;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
+import com.yuushya.modelling.gui.history.HistoryMenu;
+import com.yuushya.modelling.gui.history.HistoryScreen;
 import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.neoforge.client.NeoItemBlockModel;
 import com.yuushya.modelling.neoforge.client.NeoShowBlockModel;
@@ -32,17 +34,10 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 @Mod(value = Yuushya.MOD_ID_USED, dist = Dist.CLIENT)
 public class YuushyaClientNeoForge {
     public YuushyaClientNeoForge(IEventBus modBus) {
-        if (FMLEnvironment.dist.isClient()) {
-            modBus.addListener(this::onInitializeClient);
-            modBus.addListener(this::onModelBaked);
-            modBus.addListener(this::handleBlockColor);
-            modBus.addListener(this::handleItemColor);
-            modBus.addListener(this::onRegisterMenuScreensEvent);
-        }
-    }
-
-    public void onRegisterMenuScreensEvent(RegisterMenuScreensEvent event) {
-        event.register((MenuType<EngraveMenu>) YuushyaRegistries.ENGRAVE_MENU.get(), EngraveScreen::new);
+        modBus.addListener(this::onInitializeClient);
+        modBus.addListener(this::onModelBaked);
+        modBus.addListener(this::handleBlockColor);
+        modBus.addListener(this::handleItemColor);
     }
 
     @SuppressWarnings("resource")
