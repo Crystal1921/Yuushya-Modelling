@@ -1,6 +1,5 @@
 package com.yuushya.modelling.gui.showblock;
 
-import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -14,13 +13,12 @@ import java.util.function.Predicate;
 
 public class EditScreen extends Screen {
 
-    private Button selectButton;
-
-    private EditBox editBox;
     private final Component editBoxLabel;
     private final Consumer<String> callback;
     private final Predicate<String> isValidText;
     private final Screen lastScreen;
+    private Button selectButton;
+    private EditBox editBox;
 
     public EditScreen(Screen lastScreen, Component title, Component editBoxLabel, Consumer<String> callback, Predicate<String> isValidText) {
         super(title);

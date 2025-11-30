@@ -7,15 +7,11 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DebugStickItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DebugStickState;
 import net.minecraft.world.level.Level;
@@ -30,6 +26,10 @@ import java.util.Collection;
 public class YuushyaDebugStickItem extends AbstractToolItem {
     public YuushyaDebugStickItem(Properties properties, Integer tipLines) {
         super(properties, tipLines);
+    }
+
+    public static <T extends Comparable<T>> String getNameHelper(BlockState blockState, Property<T> property) {
+        return property.getName(blockState.getValue(property));
     }
 
     //对方块主手右键
@@ -83,9 +83,5 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
             player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".select", property.getName(), getNameHelper(stateClicked, property)), true);
         }
         return true;
-    }
-
-    public static <T extends Comparable<T>> String getNameHelper(BlockState blockState, Property<T> property) {
-        return property.getName(blockState.getValue(property));
     }
 }
