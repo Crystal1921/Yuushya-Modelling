@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_21",
+  "package": "com.yuushya.modelling.mixin",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "chisel.refmap.json",
+  "client": [
+    "BlockBehaviourMixin",
+    "LevelRendererMixin",
+    "MinecraftMixin"
+  ],
+  "mixins": [
+    "compat.EmbeddiumWorldRenderMixin",
+    "compat.SodiumWorldRenderMixin"
+  ]
+}
