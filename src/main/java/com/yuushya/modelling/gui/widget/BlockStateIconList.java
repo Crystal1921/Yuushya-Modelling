@@ -1,5 +1,7 @@
 package com.yuushya.modelling.gui.widget;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.registries.DataComponentRegistry;
@@ -8,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
@@ -204,29 +207,21 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
             Font font = this.minecraft.font;
             int fontHeight = font.lineHeight;
             guiGraphics.drawString(font, displayName, left + 3, top + 32, 0xFFFFFF, false);
-            //guiGraphics.drawString(this.minecraft.font, displayName, left + 32 + 3, top + 1, 0xFFFFFF, false);
-            //MutableComponent displayBlockState = Component.literal(YuushyaUtils.getBlockStateProperties(blockState));
-            //guiGraphics.drawString(this.minecraft.font, displayBlockState, left + 32 + 3, top + this.minecraft.font.lineHeight+1, 0xFFEBC6, false);
-//            List<String> properties = this.parent.updateRenderBlockStateProperties(blockState);
-//            for(int i=0;i<properties.size();i++){
-//                if(this.parent.itemHeight < this.minecraft.font.lineHeight*(i+2)) break;
-//                MutableComponent displayBlockState = Component.literal(properties.get(i));
-//                guiGraphics.drawString(this.minecraft.font, displayBlockState, left + 32 + 3, top + this.minecraft.font.lineHeight*(i+1)+1, 0xFFEBC6, false);
-//            }
+
             if (updateRenderShown())
                 guiGraphics.fill(left, top, left + 32 + 4, top + fontHeight + 32, -1601138544);
             if (chosen)
                 guiGraphics.fill(left, top, left + 32 + 4, top + fontHeight + 32, 0x5FD85C2F);
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(left + 16, top + 16, 32);
-            guiGraphics.pose().scale(32.0f, -32.0f, 32.0f);
-            //
-            //BlockRenderDispatcher blockRenderDispatcher = this.minecraft.getBlockRenderer();
-            //BakedModel model = blockRenderDispatcher.getBlockModel(blockState);
-            ItemStack itemStack = this.parent.updateRenderItemstack(blockState);
-            BakedModel model = this.minecraft.getItemRenderer().getModel(itemStack, this.minecraft.level, null, this.minecraft.player.getId());
-            this.minecraft.getItemRenderer().render(itemStack, ItemDisplayContext.GUI, false, guiGraphics.pose(), guiGraphics.bufferSource(), 0xF000F0, OverlayTexture.NO_OVERLAY, model);
-            guiGraphics.pose().popPose();
+            PoseStack pose = guiGraphics.pose();
+            pose.pushPose();
+            pose.translate(left + 8, top + 24, 100);
+            pose.scale(16.0f, -16.0f, 16.0f);
+            pose.mulPose(Axis.XP.rotationDegrees(30));
+            pose.mulPose(Axis.YP.rotationDegrees(45));
+
+            BakedModel blockModel = this.minecraft.getBlockRenderer().getBlockModel(blockState);
+            this.minecraft.getBlockRenderer().getModelRenderer().renderModel(pose.last(), guiGraphics.bufferSource().getBuffer(RenderType.TRANSLUCENT), blockState, blockModel, 1.0f, 1.0f, 1.0f, 0xF000F0, OverlayTexture.NO_OVERLAY);
+            pose.popPose();
         }
 
     }

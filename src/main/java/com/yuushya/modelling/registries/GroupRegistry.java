@@ -82,9 +82,6 @@ public class GroupRegistry {
                 output.accept(ItemRegistry.CIRCLE_1.get());
                 output.accept(ItemRegistry.CIRCLE_HOLLOW_0.get());
                 output.accept(ItemRegistry.CIRCLE_HOLLOW_1.get());
-
-                output.accept(ItemRegistry.SHOW_BLOCK.get());
-                output.accept(ItemRegistry.ITEM_BLOCK.get());
             }).build());
 
     public static void register(IEventBus bus) {

@@ -95,11 +95,13 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void setRemoved() {
-        String res = ShareUtils.transfer(this.getTransformData());
-        ShareUtils.ShareBlockInformation information = ShareUtils.from(res);
-        if (this.level != null) {
-            String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
-            HISTORY_SHOWBLOCK_MAP.put(name, new EngraveBlockResult(name, information));
+        if (!this.isEmpty()) {
+            String res = ShareUtils.transfer(this.getTransformData());
+            ShareUtils.ShareBlockInformation information = ShareUtils.from(res);
+            if (this.level != null) {
+                String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
+                HISTORY_SHOWBLOCK_MAP.put(name, new EngraveBlockResult(name, information));
+            }
         }
         super.setRemoved();
     }

@@ -1,5 +1,6 @@
 package com.yuushya.modelling.gui.widget;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
@@ -180,16 +181,18 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
             // Render item icon
             if (!itemStack.isEmpty()) {
                 BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(x + itemWidth / 2.0f, y + itemHeight / 2.0f, 100.0f);
-                guiGraphics.pose().scale(24.0f, -24.0f, 24.0f);
+                PoseStack pose = guiGraphics.pose();
+                pose.pushPose();
+                pose.translate(x + itemWidth / 2.0f, y + itemHeight / 2.0f, 100.0f);
+                pose.scale(24.0f, -24.0f, 24.0f);
+
                 boolean flatItem = !bakedModel.usesBlockLight();
                 if (flatItem) {
-                    guiGraphics.pose().mulPose(Axis.YP.rotationDegrees(180.0f));
+                    pose.mulPose(Axis.YP.rotationDegrees(180.0f));
                 }
                 Minecraft.getInstance().getItemRenderer().render(itemStack, ItemDisplayContext.GUI, false,
-                        guiGraphics.pose(), guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
-                guiGraphics.pose().popPose();
+                        pose, guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
+                pose.popPose();
             }
 
             // Render index number
