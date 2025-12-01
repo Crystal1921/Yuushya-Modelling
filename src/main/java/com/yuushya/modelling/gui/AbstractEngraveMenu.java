@@ -4,6 +4,8 @@ package com.yuushya.modelling.gui;
 
 import com.google.common.collect.Lists;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlock;
+import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
+import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.gui.engrave.IEngraveResult;
 import com.yuushya.modelling.network.TransformDataListPacket;
 import lombok.Getter;
@@ -194,16 +196,18 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
     /**
      * Gets the list of recipes for ShowBlock items.
      * Subclasses must implement this to provide their specific recipe source.
+     *
      * @return List of engrave results for ShowBlock
      */
-    protected abstract List<IEngraveResult> getShowBlockRecipes();
+    protected abstract List<EngraveBlockResult> getShowBlockRecipes();
 
     /**
      * Gets the list of recipes for ItemBlock items.
      * Subclasses must implement this to provide their specific recipe source.
+     *
      * @return List of engrave results for ItemBlock
      */
-    protected abstract List<IEngraveResult> getItemBlockRecipes();
+    protected abstract List<EngraveItemResult> getItemBlockRecipes();
 
     public void setupResultSlotServer(ItemStack resultItemStack) {
         ItemStack itemStack = resultItemStack.copy();

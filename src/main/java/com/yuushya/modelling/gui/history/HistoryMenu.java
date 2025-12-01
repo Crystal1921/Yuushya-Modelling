@@ -3,7 +3,8 @@
 package com.yuushya.modelling.gui.history;
 
 import com.yuushya.modelling.gui.AbstractEngraveMenu;
-import com.yuushya.modelling.gui.engrave.IEngraveResult;
+import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
+import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.item.showblocktool.HistoryItem;
 import com.yuushya.modelling.registries.MenuRegistry;
 import net.minecraft.network.FriendlyByteBuf;
@@ -29,12 +30,12 @@ public class HistoryMenu extends AbstractEngraveMenu {
     }
 
     @Override
-    protected List<IEngraveResult> getShowBlockRecipes() {
+    protected List<EngraveBlockResult> getShowBlockRecipes() {
         return HistoryItem.HISTORY_SHOWBLOCK_MAP.values().stream().toList();
     }
 
     @Override
-    protected List<IEngraveResult> getItemBlockRecipes() {
+    protected List<EngraveItemResult> getItemBlockRecipes() {
         return HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP.values().stream().toList();
     }
 

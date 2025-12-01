@@ -26,12 +26,12 @@ public class EngraveMenu extends AbstractEngraveMenu {
     }
 
     @Override
-    protected List<IEngraveResult> getShowBlockRecipes() {
+    protected List<EngraveBlockResult> getShowBlockRecipes() {
         return EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.values().stream().toList();
     }
 
     @Override
-    protected List<IEngraveResult> getItemBlockRecipes() {
+    protected List<EngraveItemResult> getItemBlockRecipes() {
         return EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.values().stream().toList();
     }
 

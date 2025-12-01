@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EngraveItemResultLoader {
-    public static final Path PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("../modellings/items");
+    public static final Path PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("modellings").resolve("blocks");
 
     public static final Map<String, EngraveItemResult> ITEMBLOCK_ITEM_MAP = new HashMap<>();
 
@@ -65,7 +65,7 @@ public class EngraveItemResultLoader {
         ShareUtils.ShareItemInformation information = ShareUtils.fromItems(string);
         ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
         TransformDataListPacket.updateSendingCache(name);
-        Path out = PATH.resolve("./" + name + ".json");
+        Path out = PATH.resolve(name + ".json");
         if (!Files.exists(out)) {
             if (!Files.exists(out.getParent())) Files.createDirectories(out.getParent());
             Files.createFile(out);
