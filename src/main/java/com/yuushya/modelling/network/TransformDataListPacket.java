@@ -1,6 +1,7 @@
 package com.yuushya.modelling.network;
 
 import com.yuushya.modelling.Yuushya;
+import com.yuushya.modelling.gui.AbstractEngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.gui.engrave.IEngraveResult;
 import net.minecraft.core.component.DataComponents;
@@ -61,7 +62,7 @@ public record TransformDataListPacket(
         ctx.enqueueWork(() -> {
             Player player = ctx.player();
             AbstractContainerMenu abstractContainerMenu = player.containerMenu;
-            if (abstractContainerMenu instanceof EngraveMenu menu) {
+            if (abstractContainerMenu instanceof AbstractEngraveMenu menu) {
                 if (!menu.stillValid(player)) {
                     return;
                 }

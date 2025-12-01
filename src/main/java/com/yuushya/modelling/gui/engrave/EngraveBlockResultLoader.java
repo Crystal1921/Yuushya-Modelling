@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EngraveBlockResultLoader {
-    public static final Path PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("../modellings/blocks");
+    public static final Path PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("modellings").resolve("blocks");
 
     public static final Map<String, EngraveBlockResult> SHOWBLOCK_ITEM_MAP = new HashMap<>();
 
@@ -65,7 +65,7 @@ public class EngraveBlockResultLoader {
         ShareUtils.ShareBlockInformation information = ShareUtils.from(string);
         SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information));
         TransformDataListPacket.updateSendingCache(name);
-        Path out = PATH.resolve("./" + name + ".json");
+        Path out = PATH.resolve(name + ".json");
         if (!Files.exists(out)) {
             if (!Files.exists(out.getParent())) Files.createDirectories(out.getParent());
             Files.createFile(out);
