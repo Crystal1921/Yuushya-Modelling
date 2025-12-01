@@ -89,6 +89,7 @@
 
   "item.yuushya.history_item": "History List",
   "item.yuushya.history_item.line1": "\u00A79Open the history list of the model blocks you break recently",
+  "item.yuushya.history_item.line2": "\u00A79The secondary hand holds [entity block/item block] to open the corresponding list",
 
   "item.yuushya.the_encyclopedia": "\u00A7c「The Encyclopedia」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“The world is watching you”",

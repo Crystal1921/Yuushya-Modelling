@@ -29,7 +29,7 @@ public class ItemRegistry {
     public static final DeferredItem<Item> GUI_ITEM = ITEMS.register("gui_item", () -> new GuiItem(new Item.Properties().stacksTo(1), 2));
     public static final DeferredItem<Item> ENGRAVE_ITEM = ITEMS.register("engrave_item", () -> new EngraveItem(new Item.Properties().stacksTo(1), 3));
     public static final DeferredItem<Item> COLOR_PICKER_ITEM = ITEMS.register("color_picker_item", () -> new ColorPickerItem(new Item.Properties().stacksTo(1), 2));
-    public static final DeferredItem<Item> HISTORY_ITEM = ITEMS.register("history_item", () -> new HistoryItem(new Item.Properties().stacksTo(1), 1));
+    public static final DeferredItem<Item> HISTORY_ITEM = ITEMS.register("history_item", () -> new HistoryItem(new Item.Properties().stacksTo(1), 2));
 
     // Special Items
     public static final DeferredItem<Item> THE_ENCYCLOPEDIA = ITEMS.register("the_encyclopedia", () -> new AbstractYuushyaItem(new Item.Properties().stacksTo(16).rarity(Rarity.RARE), 1));
