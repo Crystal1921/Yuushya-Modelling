@@ -5,6 +5,7 @@ import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.RegistryAccess;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,10 +19,10 @@ public class EngraveBlockResultLoader {
 
     public static final Map<String, EngraveBlockResult> SHOWBLOCK_ITEM_MAP = new HashMap<>();
 
-    public static void load(ClientLevel level) {
+    public static void load(RegistryAccess registryAccess) {
         if (Files.exists(PATH)) {
             try {
-                load(PATH, level);
+                load(PATH, registryAccess);
             } catch (IOException e) {
                 Yuushya.LOGGER.error(e);
             }
@@ -32,26 +33,26 @@ public class EngraveBlockResultLoader {
         return basePath.toString().endsWith(".zip");
     }
 
-    private static void loadZip(Path path, ClientLevel level) {
+    private static void loadZip(Path path, RegistryAccess registryAccess) {
         try (FileSystem fileSystem = FileSystems.newFileSystem(path)) {
-            load(fileSystem.getPath("."), level);
+            load(fileSystem.getPath("."), registryAccess);
         } catch (IOException e) {
             Yuushya.LOGGER.error(e);
         }
     }
 
-    private static void load(Path path, ClientLevel level) throws IOException {
+    private static void load(Path path, RegistryAccess registryAccess) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (isZip(file)) {
-                    loadZip(file, level);
+                    loadZip(file, registryAccess);
                 } else if (file.getFileName().toString().endsWith(".json")) {
                     String name = path.relativize(file).toString().replaceAll(".json", "");
                     String fileString = Files.readString(file);
                     try {
                         ShareUtils.ShareBlockInformation information = ShareUtils.from(fileString);
-                        SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information, level));
+                        SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information, registryAccess));
                     } catch (Exception e) {
                         Yuushya.LOGGER.error(e);
                     }

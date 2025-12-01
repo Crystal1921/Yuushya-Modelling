@@ -42,7 +42,6 @@ public record TransformDataListPacket(
         SendingCache.remove(name);
     }
 
-    //architectury提供的另一种风格的api
     public static void sendToServerSide(IEngraveResult itemResult) {
         String name = itemResult.getName();
         CompoundTag tag;
