@@ -15,6 +15,8 @@ public class YuushyaModellingNetwork {
 
         registrar.playToServer(TransformDataOncePacket.TYPE, TransformDataOncePacket.STREAM_CODEC, TransformDataOncePacket::handler);
         registrar.playToServer(ItemTransformDataOncePacket.TYPE, ItemTransformDataOncePacket.STREAM_CODEC, ItemTransformDataOncePacket::handler);
+        registrar.playToServer(TextTransformDataOncePacket.TYPE, TextTransformDataOncePacket.STREAM_CODEC, TextTransformDataOncePacket::handler);
+        registrar.playToServer(TextLinesPacket.TYPE, TextLinesPacket.STREAM_CODEC, TextLinesPacket::handler);
         registrar.playToServer(TransformDataListPacket.TYPE, TransformDataListPacket.STREAM_CODEC, TransformDataListPacket::handler);
         registrar.playToServer(ItemStackPacket.TYPE, ItemStackPacket.STREAM_CODEC, ItemStackPacket::handler);
         registrar.playToClient(ReloadModelPacket.TYPE, ReloadModelPacket.STREAM_CODEC, ReloadModelPacket::handler);
