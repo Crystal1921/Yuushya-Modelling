@@ -2,8 +2,10 @@ package com.yuushya.modelling.item.showblocktool;
 
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
+import com.yuushya.modelling.blockentity.textblock.TextBlockEntity;
 import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
+import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import com.yuushya.modelling.item.AbstractToolItem;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import net.minecraft.client.Minecraft;
@@ -17,6 +19,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GuiItem extends AbstractToolItem {
     public GuiItem(Properties properties, Integer tipLines) {
@@ -52,6 +57,12 @@ public class GuiItem extends AbstractToolItem {
         } else if (blockEntity instanceof ItemBlockEntity itemBlockEntity) {
             Minecraft.getInstance().setScreen(
                     new ItemBlockScreen(itemBlockEntity, newItemStack)
+            );
+        } else if (blockEntity instanceof TextBlockEntity textBlockEntity) {
+            // For TextBlockEntity, we can optionally pass initial text lines
+            List<String> newTextLines = new ArrayList<>();
+            Minecraft.getInstance().setScreen(
+                    new TextBlockScreen(textBlockEntity, newTextLines)
             );
         }
     }

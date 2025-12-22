@@ -1,4 +1,4 @@
-package com.yuushya.modelling.client.gui;
+package com.yuushya.modelling.gui;
 
 import com.mojang.blaze3d.platform.Window;
 import com.yuushya.modelling.registries.DataComponentRegistry;

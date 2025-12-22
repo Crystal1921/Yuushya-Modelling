@@ -1,7 +1,7 @@
 package com.yuushya.modelling.event;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.client.gui.PickColorOverlay;
+import com.yuushya.modelling.gui.PickColorOverlay;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;

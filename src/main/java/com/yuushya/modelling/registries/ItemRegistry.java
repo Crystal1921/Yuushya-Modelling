@@ -86,6 +86,7 @@ public class ItemRegistry {
     // BlockItems
     public static final DeferredItem<Item> SHOW_BLOCK = ITEMS.register("showblock", () -> new BlockItem(BlockRegistry.SHOW_BLOCK.get(), new Item.Properties()));
     public static final DeferredItem<Item> ITEM_BLOCK = ITEMS.register("itemblock", () -> new BlockItem(BlockRegistry.ITEM_BLOCK.get(), new Item.Properties()));
+    public static final DeferredItem<Item> TEXT_BLOCK = ITEMS.register("textblock", () -> new BlockItem(BlockRegistry.TEXT_BLOCK.get(), new Item.Properties()));
 
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
