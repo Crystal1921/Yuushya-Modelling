@@ -7,6 +7,7 @@ import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
+import com.yuushya.modelling.gui.widget.StyledMultiLineEditBox;
 import com.yuushya.modelling.gui.widget.TextIconList;
 import com.yuushya.modelling.gui.widget.TextTransformComponent;
 import com.yuushya.modelling.network.TextLinesPacket;
@@ -55,7 +56,7 @@ public class TextBlockScreen extends Screen {
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private TextIconList textIconList;
-    private MultiLineEditBox textEditBox;
+    private StyledMultiLineEditBox textEditBox;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -167,11 +168,11 @@ public class TextBlockScreen extends Screen {
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
         // Text editing section
-        textEditBox = new MultiLineEditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT * 3, Component.literal(""), Component.literal("Text"));
+        textEditBox = new StyledMultiLineEditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT * 3, Component.literal(""), Component.literal("Text"));
 //        textEditBox = new EditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT, Component.literal("Text"));
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
-            textEditBox.setValue(currentLines.get(0));
+            textEditBox.setValue(currentLines.getFirst());
         }
 
         CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
