@@ -15,10 +15,7 @@ import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -58,9 +55,7 @@ public class TextBlockScreen extends Screen {
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private TextIconList textIconList;
-    private EditBox textEditBox;
-    private Button addLineButton;
-    private Button removeLineButton;
+    private MultiLineEditBox textEditBox;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -172,36 +167,12 @@ public class TextBlockScreen extends Screen {
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
         // Text editing section
-        textEditBox = new EditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT, Component.literal("Text"));
-        textEditBox.setMaxLength(256);
+        textEditBox = new MultiLineEditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT * 3, Component.literal(""), Component.literal("Text"));
+//        textEditBox = new EditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT, Component.literal("Text"));
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
             textEditBox.setValue(currentLines.get(0));
         }
-
-        addLineButton = Button.builder(Component.literal("+"),
-                        (btn) -> {
-                            String newLine = textEditBox.getValue();
-                            if (!newLine.isEmpty()) {
-                                List<String> lines = new ArrayList<>(blockEntity.getTransformData(slot).textLines);
-                                lines.add(newLine);
-                                updateTextLines(lines);
-                                textEditBox.setValue("");
-                            }
-                        })
-                .tooltip(Tooltip.create(Component.literal("Add text line")))
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 105, RIGHT_STATE_PANEL_Y, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
-
-        removeLineButton = Button.builder(Component.literal("-"),
-                        (btn) -> {
-                            List<String> lines = new ArrayList<>(blockEntity.getTransformData(slot).textLines);
-                            if (!lines.isEmpty()) {
-                                lines.remove(lines.size() - 1);
-                                updateTextLines(lines);
-                            }
-                        })
-                .tooltip(Tooltip.create(Component.literal("Remove last text line")))
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 105 + RIGHT_BAR_WIDTH, RIGHT_STATE_PANEL_Y, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
                 .displayOnlyValue()
@@ -361,8 +332,6 @@ public class TextBlockScreen extends Screen {
         this.addRenderableWidget(copyTextButton);
         this.addRenderableWidget(shownStateButton);
         this.addRenderableWidget(textEditBox);
-        this.addRenderableWidget(addLineButton);
-        this.addRenderableWidget(removeLineButton);
 
         textIconList.setSelectedSlot(slot);
     }

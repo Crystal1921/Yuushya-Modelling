@@ -33,6 +33,7 @@ public class GroupRegistry {
                 output.accept(ItemRegistry.HISTORY_ITEM.get());
                 output.accept(ItemRegistry.SHOW_BLOCK.get());
                 output.accept(ItemRegistry.ITEM_BLOCK.get());
+                output.accept(ItemRegistry.TEXT_BLOCK.get());
                 output.accept(ItemRegistry.THE_ENCYCLOPEDIA.get());
                 output.accept(ItemRegistry.SHIMMERING_PEARL.get());
                 output.accept(ItemRegistry.EVERLASTING_WOOD.get());
