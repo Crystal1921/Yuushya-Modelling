@@ -126,6 +126,7 @@
   "block.yuushya.modelframe": "实体方块",
   "block.yuushya.showblock": "实体方块",
   "block.yuushya.itemblock": "物品方块",
+  "block.yuushya.textblock": "文本方块",
   "block.yuushya.mixedblock": "融合方块",
   "block.yuushya.showblock.pos_text": "位置: ",
   "block.yuushya.showblock.rot_text": "旋转: ",

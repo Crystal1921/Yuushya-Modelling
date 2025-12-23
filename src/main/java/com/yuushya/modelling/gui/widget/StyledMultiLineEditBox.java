@@ -78,6 +78,10 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.textField.setValue(List.of(Component.literal(fullText)));
     }
 
+    public void setValue(List<Component> components) {
+        this.textField.setValue(components);
+    }
+
     /**
      * 获取带样式的 Component 列表
      */
@@ -408,6 +412,9 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     }
 
     public void setTextStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
+        }
         this.textField.applyStyleToSelection(
                 Style.EMPTY
                         .withBold(boldButton.getValue())
