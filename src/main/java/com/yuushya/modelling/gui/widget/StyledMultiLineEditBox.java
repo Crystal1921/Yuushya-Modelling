@@ -1,19 +1,20 @@
 package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
-import net.minecraft. Util;
-import net.minecraft. client.gui.Font;
+import net.minecraft.Util;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft. client.gui.components.AbstractScrollWidget;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractScrollWidget;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api. distmarker.OnlyIn;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -30,13 +31,12 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     private final Font font;
     private final Component placeholder;
     private final StyledMultilineTextField textField;
+    private final CycleButton<Boolean> boldButton;
+    private final CycleButton<Boolean> italicButton;
+    private final CycleButton<Boolean> underlineButton;
+    private final CycleButton<Boolean> strikethroughButton;
+    private final CycleButton<Boolean> obfuscatedButton;
     private long focusedTime = Util.getMillis();
-
-    private final Button boldButton;
-    private final Button italicButton;
-    private final Button underlineButton;
-    private final Button strikethroughButton;
-    private final Button obfuscatedButton;
 
     public StyledMultiLineEditBox(Font font, int x, int y, int width, int height, Component placeholder, Component message, TextBlockScreen textBlockScreen) {
         super(x, y, width, height, message);
@@ -62,6 +62,13 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     }
 
     /**
+     * 获取纯文本值
+     */
+    public String getValue() {
+        return this.textField.getPlainText();
+    }
+
+    /**
      * 设置纯文本值（自动转换为无样式 Component）
      */
     public void setValue(String fullText) {
@@ -69,24 +76,17 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     }
 
     /**
+     * 获取带样式的 Component 列表
+     */
+    public List<Component> getStyledValue() {
+        return this.textField.getComponents();
+    }
+
+    /**
      * 设置带样式的 Component 列表
      */
     public void setStyledValue(List<Component> components) {
         this.textField.setValue(components);
-    }
-
-    /**
-     * 获取纯文本值
-     */
-    public String getValue() {
-        return this. textField.getPlainText();
-    }
-
-    /**
-     * 获取带样式的 Component 列表
-     */
-    public List<Component> getStyledValue() {
-        return this.textField. getComponents();
     }
 
     // ==================== 渲染与交互 ====================
@@ -132,7 +132,15 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         if (this.visible && this.isFocused() && StringUtil.isAllowedChatCharacter(codePoint)) {
-            this.textField.insertText(Character.toString(codePoint));
+            String string = Character.toString(codePoint);
+            Component component = Component.literal(string)
+                    .withStyle(Style.EMPTY
+                            .withBold(boldButton.getValue())
+                            .withItalic(italicButton.getValue())
+                            .withUnderlined(underlineButton.getValue())
+                            .withStrikethrough(strikethroughButton.getValue())
+                            .withObfuscated(obfuscatedButton.getValue()));
+            this.textField.insertStyledText(component);
             return true;
         } else {
             return false;
@@ -144,7 +152,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         String plainText = this.textField.getPlainText();
         List<Component> components = this.textField.getComponents();
 
-        if (plainText.isEmpty() && ! this.isFocused()) {
+        if (plainText.isEmpty() && !this.isFocused()) {
             // 渲染占位符
             guiGraphics.drawWordWrap(
                     this.font,
@@ -186,7 +194,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                     lastLineY = currentY;
 
                     // 如果光标在当前行，计算光标的 X 坐标
-                    if (! cursorFound && cursor >= lineView.beginIndex() && cursor <= lineView.endIndex()) {
+                    if (!cursorFound && cursor >= lineView.beginIndex() && cursor <= lineView.endIndex()) {
                         if (cursor == lineView.endIndex() && cursor < plainText.length() && plainText.charAt(cursor) == '\n') {
                             // 光标在行尾且下一个字符是换行符
                             cursorX = lineEndX;
@@ -208,7 +216,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                 if (cursorInText && cursorFound) {
                     // 光标在文本中间
                     guiGraphics.fill(cursorX, cursorY - 1, cursorX + CURSOR_INSERT_WIDTH, cursorY + 10, CURSOR_INSERT_COLOR);
-                } else if (! cursorInText && this.withinContentAreaTopBottom(lastLineY, lastLineY + 9)) {
+                } else if (!cursorInText && this.withinContentAreaTopBottom(lastLineY, lastLineY + 9)) {
                     // 光标在文本末尾
                     guiGraphics.drawString(this.font, CURSOR_APPEND_CHARACTER, lastLineEndX, lastLineY, CURSOR_INSERT_COLOR);
                 }
@@ -263,7 +271,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
             String renderText = componentText.substring(renderStart, renderEnd);
 
             // 渲染带样式的文本
-            if (! renderText.isEmpty()) {
+            if (!renderText.isEmpty()) {
                 Component styledSegment = Component.literal(renderText).setStyle(component.getStyle());
                 currentX = guiGraphics.drawString(this.font, styledSegment, currentX, y, TEXT_COLOR);
             }
@@ -282,7 +290,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         int baseX = this.getX() + this.innerPadding();
         int currentY = this.getY() + this.innerPadding();
 
-        for (StyledMultilineTextField. StringView lineView : this.textField.iterateLines()) {
+        for (StyledMultilineTextField.StringView lineView : this.textField.iterateLines()) {
             // 如果选择区域在当前行之后，移动到下一行
             if (selection.beginIndex() > lineView.endIndex()) {
                 currentY += 9;
@@ -348,7 +356,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
 
     @Override
     protected boolean scrollbarVisible() {
-        return (double)this.textField.getLineCount() > this.getDisplayableLineCount();
+        return (double) this.textField.getLineCount() > this.getDisplayableLineCount();
     }
 
     @Override
@@ -362,16 +370,16 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
 
     private void scrollToCursor() {
         double scrollAmount = this.scrollAmount();
-        StyledMultilineTextField.StringView topLine = this.textField.getLineView((int)(scrollAmount / 9.0));
+        StyledMultilineTextField.StringView topLine = this.textField.getLineView((int) (scrollAmount / 9.0));
 
-        if (this.textField. cursor() <= topLine.beginIndex()) {
-            scrollAmount = (double)(this.textField.getLineAtCursor() * 9);
+        if (this.textField.cursor() <= topLine.beginIndex()) {
+            scrollAmount = this.textField.getLineAtCursor() * 9;
         } else {
-            StyledMultilineTextField.StringView bottomLine = this.textField. getLineView(
-                    (int)((scrollAmount + (double)this.height) / 9.0) - 1
+            StyledMultilineTextField.StringView bottomLine = this.textField.getLineView(
+                    (int) ((scrollAmount + (double) this.height) / 9.0) - 1
             );
             if (this.textField.cursor() > bottomLine.endIndex()) {
-                scrollAmount = (double)(this.textField.getLineAtCursor() * 9 - this.height + 9 + this.totalInnerPadding());
+                scrollAmount = this.textField.getLineAtCursor() * 9 - this.height + 9 + this.totalInnerPadding();
             }
         }
 
@@ -379,12 +387,12 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     }
 
     private double getDisplayableLineCount() {
-        return (double)(this.height - this. totalInnerPadding()) / 9.0;
+        return (double) (this.height - this.totalInnerPadding()) / 9.0;
     }
 
     private void seekCursorScreen(double mouseX, double mouseY) {
-        double relativeX = mouseX - (double)this.getX() - (double)this.innerPadding();
-        double relativeY = mouseY - (double)this.getY() - (double)this.innerPadding() + this.scrollAmount();
+        double relativeX = mouseX - (double) this.getX() - (double) this.innerPadding();
+        double relativeY = mouseY - (double) this.getY() - (double) this.innerPadding() + this.scrollAmount();
         this.textField.seekCursorToPoint(relativeX, relativeY);
     }
 
@@ -393,6 +401,14 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         super.setFocused(focused);
         if (focused) {
             this.focusedTime = Util.getMillis();
+        }
+    }
+
+    public void setTextStyle() {
+        int cursor = this.textField.cursor();
+        String plainText = this.textField.getPlainText();
+        if (cursor < plainText.length()) {
+
         }
     }
 }

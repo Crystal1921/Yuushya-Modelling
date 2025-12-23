@@ -26,7 +26,9 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
@@ -57,11 +59,11 @@ public class TextBlockScreen extends Screen {
     private TextIconList textIconList;
     private StyledMultiLineEditBox textEditBox;
 
-    public Button boldButton;
-    public Button italicButton;
-    public Button underlineButton;
-    public Button strikethroughButton;
-    public Button obfuscatedButton;
+    public CycleButton<Boolean> boldButton;
+    public CycleButton<Boolean> italicButton;
+    public CycleButton<Boolean> underlineButton;
+    public CycleButton<Boolean> strikethroughButton;
+    public CycleButton<Boolean> obfuscatedButton;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -171,14 +173,6 @@ public class TextBlockScreen extends Screen {
                 );
 
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
-
-        // Text editing section
-        textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);
-        textEditBox.visible = false;
-        List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
-        if (!currentLines.isEmpty()) {
-            textEditBox.setValue(currentLines.getFirst());
-        }
 
         CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
                 .displayOnlyValue()
@@ -336,41 +330,64 @@ public class TextBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
-        boldButton = Button.builder(Component.literal("B").withStyle(Style.EMPTY.withBold(true)),
-                        (btn) -> {
+        boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
+                .displayOnlyValue()
+                .withInitialValue(Boolean.FALSE)
+                .withTooltip((on) -> Tooltip.create(Component.empty()))
+                .create(leftColumnX(), top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> {
+                            this.textEditBox.setTextStyle();
+                        });
 
-                        })
-                .bounds(leftColumnX(), top(0, 0), 20, PER_HEIGHT).build();
+        italicButton = CycleButton.booleanBuilder(Component.literal("I").withStyle(Style.EMPTY.withItalic(true).withColor(Color.RED.getRGB())), Component.literal("I").withStyle(Style.EMPTY.withItalic(true)))
+                .displayOnlyValue()
+                .withInitialValue(Boolean.FALSE)
+                .withTooltip((on) -> Tooltip.create(Component.empty()))
+                .create(leftColumnX() + RIGHT_BAR_WIDTH, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> {
+                            this.textEditBox.setTextStyle();
+                        });
 
-        italicButton = Button.builder(Component.literal("I").withStyle(Style.EMPTY.withItalic(true)),
-                        (btn) -> {
+        underlineButton = CycleButton.booleanBuilder(Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true).withColor(Color.RED.getRGB())), Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true)))
+                .displayOnlyValue()
+                .withInitialValue(Boolean.FALSE)
+                .withTooltip((on) -> Tooltip.create(Component.empty()))
+                .create(leftColumnX() + RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> {
+                            this.textEditBox.setTextStyle();
+                        });
 
-                        })
-                .bounds(leftColumnX() + RIGHT_BAR_WIDTH, top(0, 0), 20, PER_HEIGHT).build();
+        strikethroughButton = CycleButton.booleanBuilder(Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true).withColor(Color.RED.getRGB())), Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true)))
+                .displayOnlyValue()
+                .withInitialValue(Boolean.FALSE)
+                .withTooltip((on) -> Tooltip.create(Component.empty()))
+                .create(leftColumnX() + RIGHT_BAR_WIDTH * 3, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> {
+                            this.textEditBox.setTextStyle();
+                        });
 
-        underlineButton = Button.builder(Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true)),
-                        (btn) -> {
-
-                        })
-                .bounds(leftColumnX() + RIGHT_BAR_WIDTH * 2, top(0, 0), 20, PER_HEIGHT).build();
-
-        strikethroughButton = Button.builder(Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true)),
-                        (btn) -> {
-
-                        })
-                .bounds(leftColumnX() + RIGHT_BAR_WIDTH * 3, top(0, 0), 20, PER_HEIGHT).build();
-
-        obfuscatedButton = Button.builder(Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true)),
-                        (btn) -> {
-
-                        })
-                .bounds(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), 20, PER_HEIGHT).build();
+        obfuscatedButton = CycleButton.booleanBuilder(Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true).withColor(Color.RED.getRGB())), Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true)))
+                .displayOnlyValue()
+                .withInitialValue(Boolean.FALSE)
+                .withTooltip((on) -> Tooltip.create(Component.empty()))
+                .create(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> {
+                            this.textEditBox.setTextStyle();
+                        });
 
         boldButton.visible = false;
         italicButton.visible = false;
         underlineButton.visible = false;
         strikethroughButton.visible = false;
         obfuscatedButton.visible = false;
+
+        // Text editing section
+        textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);
+        textEditBox.visible = false;
+        List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
+        if (!currentLines.isEmpty()) {
+            textEditBox.setValue(currentLines.getFirst());
+        }
 
         for (TextTransformComponent component : this.panel.values()) {
             component.initWidget(this.font);

@@ -457,7 +457,6 @@ public class StyledMultilineTextField {
                 merged.add(comp);
             } else {
                 Component last = merged.get(merged.size() - 1);
-                // 这里假设 getStyle().equals 比较的是样式内容
                 if (last.getStyle().equals(comp.getStyle())) {
                     String newText = last.getString() + comp.getString();
                     last = Component.literal(newText).setStyle(last.getStyle());
