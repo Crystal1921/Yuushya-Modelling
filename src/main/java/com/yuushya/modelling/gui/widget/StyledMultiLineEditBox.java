@@ -146,7 +146,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                     this.font,
                     this.placeholder,
                     this.getX() + this.innerPadding(),
-                    this. getY() + this.innerPadding(),
+                    this.getY() + this.innerPadding(),
                     this.width - this.totalInnerPadding(),
                     PLACEHOLDER_TEXT_COLOR
             );
@@ -156,66 +156,62 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
             boolean cursorInText = cursor < plainText.length();
 
             int cursorX = 0;
+            int cursorY = 0;
+            int lastLineEndX = 0;
             int lastLineY = 0;
             int currentY = this.getY() + this.innerPadding();
+            boolean cursorFound = false;
 
+            // 先渲染所有文本，同时记录光标位置
             for (StyledMultilineTextField.StringView lineView : this.textField.iterateLines()) {
                 boolean isLineVisible = this.withinContentAreaTopBottom(currentY, currentY + 9);
 
-                // 渲染光标（如果在文本中间）
-                if (shouldShowCursor && cursorInText && cursor >= lineView.beginIndex() && cursor <= lineView.endIndex()) {
-                    if (isLineVisible) {
-                        // 渲染光标前的文本
-                        cursorX = this.renderStyledTextSegment(
-                                guiGraphics,
-                                components,
-                                plainText,
-                                lineView. beginIndex(),
-                                cursor,
-                                this.getX() + this.innerPadding(),
-                                currentY
-                        ) - 1;
+                if (isLineVisible) {
+                    // 完整渲染整行文本（不分割）
+                    int lineEndX = this.renderStyledTextSegment(
+                            guiGraphics,
+                            components,
+                            plainText,
+                            lineView.beginIndex(),
+                            lineView.endIndex(),
+                            this.getX() + this.innerPadding(),
+                            currentY
+                    ) - 1;
 
-                        // 渲染光标
-                        guiGraphics.fill(cursorX, currentY - 1, cursorX + CURSOR_INSERT_WIDTH, currentY + 10, CURSOR_INSERT_COLOR);
-
-                        // 渲染光标后的文本
-                        this.renderStyledTextSegment(
-                                guiGraphics,
-                                components,
-                                plainText,
-                                cursor,
-                                lineView.endIndex(),
-                                cursorX,
-                                currentY
-                        );
-                    }
-                } else {
-                    // 正常渲染整行
-                    if (isLineVisible) {
-                        cursorX = this.renderStyledTextSegment(
-                                guiGraphics,
-                                components,
-                                plainText,
-                                lineView.beginIndex(),
-                                lineView.endIndex(),
-                                this.getX() + this.innerPadding(),
-                                currentY
-                        ) - 1;
-                    }
+                    lastLineEndX = lineEndX;
                     lastLineY = currentY;
+
+                    // 如果光标在当前行，计算光标的 X 坐标
+                    if (! cursorFound && cursor >= lineView.beginIndex() && cursor <= lineView.endIndex()) {
+                        if (cursor == lineView.endIndex() && cursor < plainText.length() && plainText.charAt(cursor) == '\n') {
+                            // 光标在行尾且下一个字符是换行符
+                            cursorX = lineEndX;
+                        } else {
+                            // 计算光标前的文本宽度
+                            String textBeforeCursor = plainText.substring(lineView.beginIndex(), cursor);
+                            cursorX = this.getX() + this.innerPadding() + this.font.width(textBeforeCursor);
+                        }
+                        cursorY = currentY;
+                        cursorFound = true;
+                    }
                 }
 
                 currentY += 9;
             }
 
-            // 渲染末尾光标
-            if (shouldShowCursor && ! cursorInText && this.withinContentAreaTopBottom(lastLineY, lastLineY + 9)) {
-                guiGraphics.drawString(this.font, CURSOR_APPEND_CHARACTER, cursorX, lastLineY, CURSOR_INSERT_COLOR);
+            // 渲染光标（在文本之后，作为覆盖层）
+            if (shouldShowCursor) {
+                if (cursorInText && cursorFound) {
+                    // 光标在文本中间
+                    guiGraphics.fill(cursorX, cursorY - 1, cursorX + CURSOR_INSERT_WIDTH, cursorY + 10, CURSOR_INSERT_COLOR);
+                } else if (! cursorInText && this.withinContentAreaTopBottom(lastLineY, lastLineY + 9)) {
+                    // 光标在文本末尾
+                    guiGraphics.drawString(this.font, CURSOR_APPEND_CHARACTER, lastLineEndX, lastLineY, CURSOR_INSERT_COLOR);
+                }
             }
 
-            // 渲染选择高亮
-            if (this. textField.hasSelection()) {
+            // 渲染选择高亮（在光标之后，确保高亮在最上层）
+            if (this.textField.hasSelection()) {
                 this.renderSelection(guiGraphics, plainText);
             }
         }

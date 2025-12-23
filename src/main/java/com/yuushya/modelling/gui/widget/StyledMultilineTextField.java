@@ -2,6 +2,8 @@ package com.yuushya.modelling.gui.widget;
 
 import com.google.common.annotations. VisibleForTesting;
 import com.google.common.collect.Lists;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client. Minecraft;
 import net.minecraft. client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,15 +31,19 @@ public class StyledMultilineTextField {
     // 核心：使用 List<Component> 替代 String
     private final List<Component> components;
     private MutableComponent combinedText;
+    @Getter
     private String plainText; // 缓存的纯文本，用于光标位置计算
 
     private int cursor;
     private int selectCursor;
+    @Setter
     private boolean selecting;
     private int characterLimit = Integer.MAX_VALUE;
     private final int width;
 
+    @Setter
     private Consumer<List<Component>> valueListener = components -> {};
+    @Setter
     private Runnable cursorListener = () -> {};
 
     public StyledMultilineTextField(Font font, int width) {
@@ -66,14 +72,6 @@ public class StyledMultilineTextField {
         return this.characterLimit != Integer.MAX_VALUE;
     }
 
-    public void setValueListener(Consumer<List<Component>> valueListener) {
-        this.valueListener = valueListener;
-    }
-
-    public void setCursorListener(Runnable cursorListener) {
-        this.cursorListener = cursorListener;
-    }
-
     // ==================== 值操作 ====================
 
     public void setValue(List<Component> components) {
@@ -88,10 +86,6 @@ public class StyledMultilineTextField {
 
     public List<Component> getComponents() {
         return new ArrayList<>(this.components);
-    }
-
-    public String getPlainText() {
-        return this.plainText;
     }
 
     // ==================== 文本编辑 ====================
@@ -202,10 +196,6 @@ public class StyledMultilineTextField {
 
     public int cursor() {
         return this.cursor;
-    }
-
-    public void setSelecting(boolean selecting) {
-        this.selecting = selecting;
     }
 
     public StringView getSelected() {
@@ -319,76 +309,85 @@ public class StyledMultilineTextField {
             return true;
         }
 
-        switch (keyCode) {
-            case 257: // Enter
-            case 335: // Numpad Enter
+        return switch (keyCode) { // Enter
+            case 257, 335 -> {
                 this.insertText("\n");
-                return true;
-            case 259: // Backspace
+                yield true;
+            }
+            case 259 -> {
                 if (Screen.hasControlDown()) {
                     StringView word = this.getPreviousWord();
                     this.deleteText(word.beginIndex - this.cursor);
                 } else {
                     this.deleteText(-1);
                 }
-                return true;
-            case 261: // Delete
+                yield true;
+            }
+            case 261 -> {
                 if (Screen.hasControlDown()) {
                     StringView word = this.getNextWord();
                     this.deleteText(word.beginIndex - this.cursor);
                 } else {
-                    this. deleteText(1);
+                    this.deleteText(1);
                 }
-                return true;
-            case 262: // Right Arrow
+                yield true;
+            }
+            case 262 -> {
                 if (Screen.hasControlDown()) {
                     StringView word = this.getNextWord();
-                    this.seekCursor(Whence. ABSOLUTE, word.beginIndex);
+                    this.seekCursor(Whence.ABSOLUTE, word.beginIndex);
                 } else {
                     this.seekCursor(Whence.RELATIVE, 1);
                 }
-                return true;
-            case 263: // Left Arrow
+                yield true;
+            }
+            case 263 -> {
                 if (Screen.hasControlDown()) {
                     StringView word = this.getPreviousWord();
-                    this.seekCursor(Whence. ABSOLUTE, word.beginIndex);
+                    this.seekCursor(Whence.ABSOLUTE, word.beginIndex);
                 } else {
                     this.seekCursor(Whence.RELATIVE, -1);
                 }
-                return true;
-            case 264: // Down Arrow
-                if (! Screen.hasControlDown()) {
+                yield true;
+            }
+            case 264 -> {
+                if (!Screen.hasControlDown()) {
                     this.seekCursorLine(1);
                 }
-                return true;
-            case 265: // Up Arrow
+                yield true;
+            }
+            case 265 -> {
                 if (!Screen.hasControlDown()) {
                     this.seekCursorLine(-1);
                 }
-                return true;
-            case 266: // Page Up
+                yield true;
+            }
+            case 266 -> {
                 this.seekCursor(Whence.ABSOLUTE, 0);
-                return true;
-            case 267: // Page Down
+                yield true;
+            }
+            case 267 -> {
                 this.seekCursor(Whence.END, 0);
-                return true;
-            case 268: // Home
+                yield true;
+            }
+            case 268 -> {
                 if (Screen.hasControlDown()) {
                     this.seekCursor(Whence.ABSOLUTE, 0);
                 } else {
                     this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().beginIndex);
                 }
-                return true;
-            case 269: // End
+                yield true;
+            }
+            case 269 -> {
                 if (Screen.hasControlDown()) {
                     this.seekCursor(Whence.END, 0);
                 } else {
                     this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().endIndex);
                 }
-                return true;
-            default:
-                return false;
-        }
+                yield true;
+            }
+            default -> false;
+        };
     }
 
     // ==================== 工具方法 ====================

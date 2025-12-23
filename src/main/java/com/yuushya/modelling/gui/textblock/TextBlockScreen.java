@@ -16,18 +16,17 @@ import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.*;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
@@ -57,6 +56,12 @@ public class TextBlockScreen extends Screen {
     private CycleButton<Boolean> shownStateButton;
     private TextIconList textIconList;
     private StyledMultiLineEditBox textEditBox;
+
+    private Button boldButton;
+    private Button italicButton;
+    private Button underlineButton;
+    private Button strikethroughButton;
+    private Button obfuscatedButton;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -90,7 +95,7 @@ public class TextBlockScreen extends Screen {
         }
 
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
-        
+
         // Update text edit box with first line of current slot
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
@@ -168,8 +173,8 @@ public class TextBlockScreen extends Screen {
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
         // Text editing section
-        textEditBox = new StyledMultiLineEditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT * 3, Component.literal(""), Component.literal("Text"));
-//        textEditBox = new EditBox(this.font, RIGHT_COLUMN_X, RIGHT_STATE_PANEL_Y, RIGHT_LIST_WIDTH + 100, PER_HEIGHT, Component.literal("Text"));
+        textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"));
+        textEditBox.visible = false;
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
             textEditBox.setValue(currentLines.getFirst());
@@ -191,17 +196,33 @@ public class TextBlockScreen extends Screen {
                             case SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
                             case FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
                             case EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
+                            case TEXT -> Component.translatable("gui.showBlockScreen.mode.text.tooltip");
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
                         (btn, mode) -> {
+                            var values = panel.values();
                             switch (mode) {
-                                case SLIDER -> panel.values().forEach(TextTransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE -> panel.values().forEach(TextTransformComponent::setSliderFineTune);
-                            }
-                            switch (mode) {
-                                case SLIDER, FINE_TUNE -> panel.values().forEach((it) -> it.triggerVisible(true));
-                                case EDIT -> panel.values().forEach((it) -> it.triggerVisible(false));
+                                case SLIDER -> values.forEach(it -> {
+                                    it.setSliderStep();
+                                    it.triggerVisible(true);
+                                    setTextInputVisible(false);
+                                });
+                                case EDIT -> values.forEach(it -> {
+                                    it.setSliderFineTune();
+                                    it.triggerVisible(false);
+                                    setTextInputVisible(false);
+                                });
+                                case FINE_TUNE -> values.forEach(it -> {
+                                    it.setSliderFineTune();
+                                    it.triggerVisible(true);
+                                    setTextInputVisible(false);
+                                });
+
+                                case TEXT -> values.forEach(textTransformComponent -> {
+                                    textTransformComponent.setInvisible();
+                                    setTextInputVisible(true);
+                                });
                             }
                         }
                 );
@@ -315,6 +336,42 @@ public class TextBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
+        boldButton = Button.builder(Component.literal("B").withStyle(Style.EMPTY.withBold(true)),
+                        (btn) -> {
+
+                        })
+                .bounds(leftColumnX(), top(0, 0), 20, PER_HEIGHT).build();
+
+        italicButton = Button.builder(Component.literal("I").withStyle(Style.EMPTY.withItalic(true)),
+                        (btn) -> {
+
+                        })
+                .bounds(leftColumnX() + RIGHT_BAR_WIDTH, top(0, 0), 20, PER_HEIGHT).build();
+
+        underlineButton = Button.builder(Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true)),
+                        (btn) -> {
+
+                        })
+                .bounds(leftColumnX() + RIGHT_BAR_WIDTH * 2, top(0, 0), 20, PER_HEIGHT).build();
+
+        strikethroughButton = Button.builder(Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true)),
+                        (btn) -> {
+
+                        })
+                .bounds(leftColumnX() + RIGHT_BAR_WIDTH * 3, top(0, 0), 20, PER_HEIGHT).build();
+
+        obfuscatedButton = Button.builder(Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true)),
+                        (btn) -> {
+
+                        })
+                .bounds(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), 20, PER_HEIGHT).build();
+
+        boldButton.visible = false;
+        italicButton.visible = false;
+        underlineButton.visible = false;
+        strikethroughButton.visible = false;
+        obfuscatedButton.visible = false;
+
         for (TextTransformComponent component : this.panel.values()) {
             component.initWidget(this.font);
             this.addRenderableWidget(component.sliderButton);
@@ -333,6 +390,11 @@ public class TextBlockScreen extends Screen {
         this.addRenderableWidget(copyTextButton);
         this.addRenderableWidget(shownStateButton);
         this.addRenderableWidget(textEditBox);
+        this.addRenderableWidget(boldButton);
+        this.addRenderableWidget(italicButton);
+        this.addRenderableWidget(underlineButton);
+        this.addRenderableWidget(strikethroughButton);
+        this.addRenderableWidget(obfuscatedButton);
 
         textIconList.setSelectedSlot(slot);
     }
@@ -344,11 +406,11 @@ public class TextBlockScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.textIconList.render(guiGraphics, mouseX, mouseY, partialTick);
-        
+
         // Render text lines info
         List<String> lines = getTextLines();
         guiGraphics.drawString(this.font, Component.literal("Lines: " + lines.size()), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
-        
+
         // Render first few lines as preview
         int previewY = TOP + 6 + PER_HEIGHT + this.font.lineHeight + 2;
         for (int i = 0; i < Math.min(lines.size(), 5); i++) {
@@ -420,8 +482,17 @@ public class TextBlockScreen extends Screen {
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
     }
 
+    private void setTextInputVisible(boolean visible) {
+        this.textEditBox.visible = visible;
+        this.boldButton.visible = visible;
+        this.italicButton.visible = visible;
+        this.underlineButton.visible = visible;
+        this.strikethroughButton.visible = visible;
+        this.obfuscatedButton.visible = visible;
+    }
+
     public enum Mode implements StringRepresentable {
-        SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit");
+        SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit"), TEXT("text");
 
         private final String name;
         @Getter
