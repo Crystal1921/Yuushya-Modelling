@@ -1,22 +1,22 @@
 package com.yuushya.modelling.gui.widget;
 
-import com.google.common.annotations. VisibleForTesting;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client. Minecraft;
-import net.minecraft. client.gui.Font;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util. Mth;
-import net.minecraft. util.StringUtil;
+import net.minecraft.util.Mth;
+import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker. OnlyIn;
+import net.neoforged.api.distmarker.OnlyIn;
 
-import java.util. ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -30,23 +30,23 @@ public class StyledMultilineTextField {
 
     // 核心：使用 List<Component> 替代 String
     private final List<Component> components;
+    private final int width;
     private MutableComponent combinedText;
     @Getter
     private String plainText; // 缓存的纯文本，用于光标位置计算
-
     private int cursor;
     private int selectCursor;
     @Setter
     private boolean selecting;
     private int characterLimit = Integer.MAX_VALUE;
-    private final int width;
-
     @Setter
-    private Consumer<List<Component>> valueListener = components -> {};
+    private Consumer<List<Component>> valueListener = components -> {
+    };
     @Setter
-    private Runnable cursorListener = () -> {};
+    private Runnable cursorListener = () -> {
+    };
 
-    public StyledMultilineTextField(Font font, int width) {
+    public StyledMultilineTextField(Font font, int width, TextBlockScreen textBlockScreen) {
         this.font = font;
         this.width = width;
         this.components = new ArrayList<>();
@@ -75,8 +75,8 @@ public class StyledMultilineTextField {
     // ==================== 值操作 ====================
 
     public void setValue(List<Component> components) {
-        this.components. clear();
-        this.components. addAll(components);
+        this.components.clear();
+        this.components.addAll(mergeSameStyle(components)); // << 修改点：加合并
         rebuildCombinedText();
 
         this.cursor = this.plainText.length();
@@ -95,7 +95,7 @@ public class StyledMultilineTextField {
     }
 
     public void insertStyledText(Component component) {
-        if (component. getString().isEmpty() && ! this.hasSelection()) {
+        if (component.getString().isEmpty() && !this.hasSelection()) {
             return;
         }
 
@@ -137,7 +137,7 @@ public class StyledMultilineTextField {
             }
 
             // 当前 Component 与选择范围有交集
-            if (! inserted) {
+            if (!inserted) {
                 // 添加选择前的部分
                 if (currentIndex < selection.beginIndex) {
                     int beforeLen = selection.beginIndex - currentIndex;
@@ -146,15 +146,15 @@ public class StyledMultilineTextField {
                 }
 
                 // 插入新文本（保留原有样式或使用新 Component 的样式）
-                if (! insertText.isEmpty()) {
-                    newComponents.add(Component. literal(insertText).setStyle(component.getStyle()));
+                if (!insertText.isEmpty()) {
+                    newComponents.add(Component.literal(insertText).setStyle(component.getStyle()));
                 }
 
                 // 添加选择后的部分
                 if (compEnd > selection.endIndex) {
                     int afterStart = selection.endIndex - currentIndex;
                     String afterText = compText.substring(afterStart);
-                    newComponents. add(Component.literal(afterText).setStyle(comp.getStyle()));
+                    newComponents.add(Component.literal(afterText).setStyle(comp.getStyle()));
                 }
 
                 inserted = true;
@@ -163,7 +163,7 @@ public class StyledMultilineTextField {
                 if (compEnd > selection.endIndex) {
                     int afterStart = selection.endIndex - currentIndex;
                     String afterText = compText.substring(afterStart);
-                    newComponents.add(Component. literal(afterText).setStyle(comp.getStyle()));
+                    newComponents.add(Component.literal(afterText).setStyle(comp.getStyle()));
                 }
             }
 
@@ -171,12 +171,12 @@ public class StyledMultilineTextField {
         }
 
         // 如果在末尾插入
-        if (!inserted && ! insertText.isEmpty()) {
-            newComponents.add(Component.literal(insertText).setStyle(component. getStyle()));
+        if (!inserted && !insertText.isEmpty()) {
+            newComponents.add(Component.literal(insertText).setStyle(component.getStyle()));
         }
 
-        this.components. clear();
-        this.components.addAll(newComponents);
+        this.components.clear();
+        this.components.addAll(mergeSameStyle(newComponents)); // << 修改点：加合并
 
         this.cursor = selection.beginIndex + insertText.length();
         this.selectCursor = this.cursor;
@@ -187,7 +187,7 @@ public class StyledMultilineTextField {
 
     public void deleteText(int length) {
         if (!this.hasSelection()) {
-            this.selectCursor = Mth.clamp(this. cursor + length, 0, this.plainText.length());
+            this.selectCursor = Mth.clamp(this.cursor + length, 0, this.plainText.length());
         }
         this.insertText("");
     }
@@ -220,7 +220,7 @@ public class StyledMultilineTextField {
         this.cursor = Mth.clamp(this.cursor, 0, this.plainText.length());
         this.cursorListener.run();
 
-        if (! this.selecting) {
+        if (!this.selecting) {
             this.selectCursor = this.cursor;
         }
     }
@@ -236,20 +236,20 @@ public class StyledMultilineTextField {
                     pixelPos
             ).length();
 
-            this. seekCursor(Whence.ABSOLUTE, targetLine.beginIndex + charOffset);
+            this.seekCursor(Whence.ABSOLUTE, targetLine.beginIndex + charOffset);
         }
     }
 
     public void seekCursorToPoint(double x, double y) {
         int lineIndex = Mth.clamp(Mth.floor(y / 9.0), 0, this.displayLines.size() - 1);
-        StringView line = this.displayLines. get(lineIndex);
+        StringView line = this.displayLines.get(lineIndex);
 
         int charOffset = this.font.plainSubstrByWidth(
-                this. plainText.substring(line.beginIndex, line.endIndex),
+                this.plainText.substring(line.beginIndex, line.endIndex),
                 Mth.floor(x)
         ).length();
 
-        this.seekCursor(Whence.ABSOLUTE, line. beginIndex + charOffset);
+        this.seekCursor(Whence.ABSOLUTE, line.beginIndex + charOffset);
     }
 
     // ==================== 行操作 ====================
@@ -273,7 +273,7 @@ public class StyledMultilineTextField {
     }
 
     public Iterable<StringView> iterateLines() {
-        return this. displayLines;
+        return this.displayLines;
     }
 
     private StringView getCursorLineView() {
@@ -283,7 +283,7 @@ public class StyledMultilineTextField {
     private StringView getCursorLineView(int offset) {
         int lineIndex = this.getLineAtCursor();
         if (lineIndex < 0) {
-            throw new IllegalStateException("Cursor is not within text (cursor = " + this.cursor + ", length = " + this.plainText. length() + ")");
+            throw new IllegalStateException("Cursor is not within text (cursor = " + this.cursor + ", length = " + this.plainText.length() + ")");
         }
         return this.displayLines.get(Mth.clamp(lineIndex + offset, 0, this.displayLines.size() - 1));
     }
@@ -294,7 +294,7 @@ public class StyledMultilineTextField {
         this.selecting = Screen.hasShiftDown();
 
         if (Screen.isSelectAll(keyCode)) {
-            this. cursor = this.plainText.length();
+            this.cursor = this.plainText.length();
             this.selectCursor = 0;
             return true;
         } else if (Screen.isCopy(keyCode)) {
@@ -393,28 +393,28 @@ public class StyledMultilineTextField {
     // ==================== 工具方法 ====================
 
     public boolean hasSelection() {
-        return this. selectCursor != this.cursor;
+        return this.selectCursor != this.cursor;
     }
 
     @VisibleForTesting
     public String getSelectedText() {
         StringView selection = this.getSelected();
-        return this.plainText.substring(selection. beginIndex, selection.endIndex);
+        return this.plainText.substring(selection.beginIndex, selection.endIndex);
     }
 
     @VisibleForTesting
     public StringView getPreviousWord() {
         if (this.plainText.isEmpty()) {
-            return StringView. EMPTY;
+            return StringView.EMPTY;
         }
 
-        int i = Mth.clamp(this. cursor, 0, this.plainText. length() - 1);
+        int i = Mth.clamp(this.cursor, 0, this.plainText.length() - 1);
 
-        while (i > 0 && Character.isWhitespace(this.plainText. charAt(i - 1))) {
+        while (i > 0 && Character.isWhitespace(this.plainText.charAt(i - 1))) {
             i--;
         }
 
-        while (i > 0 && ! Character.isWhitespace(this.plainText.charAt(i - 1))) {
+        while (i > 0 && !Character.isWhitespace(this.plainText.charAt(i - 1))) {
             i--;
         }
 
@@ -427,9 +427,9 @@ public class StyledMultilineTextField {
             return StringView.EMPTY;
         }
 
-        int i = Mth.clamp(this.cursor, 0, this. plainText.length() - 1);
+        int i = Mth.clamp(this.cursor, 0, this.plainText.length() - 1);
 
-        while (i < this.plainText.length() && ! Character.isWhitespace(this.plainText.charAt(i))) {
+        while (i < this.plainText.length() && !Character.isWhitespace(this.plainText.charAt(i))) {
             i++;
         }
 
@@ -448,14 +448,36 @@ public class StyledMultilineTextField {
         return i;
     }
 
+    // ==================== 合并相同样式Component的辅助方法 ====================
+
+    private static List<Component> mergeSameStyle(List<Component> list) {
+        List<Component> merged = new ArrayList<>();
+        for (Component comp : list) {
+            if (merged.isEmpty()) {
+                merged.add(comp);
+            } else {
+                Component last = merged.get(merged.size() - 1);
+                // 这里假设 getStyle().equals 比较的是样式内容
+                if (last.getStyle().equals(comp.getStyle())) {
+                    String newText = last.getString() + comp.getString();
+                    last = Component.literal(newText).setStyle(last.getStyle());
+                    merged.set(merged.size() - 1, last);
+                } else {
+                    merged.add(comp);
+                }
+            }
+        }
+        return merged;
+    }
+
     // ==================== 内部方法 ====================
 
     private void rebuildCombinedText() {
         this.combinedText = Component.empty();
         for (Component component : this.components) {
-            this.combinedText. append(component);
+            this.combinedText.append(component);
         }
-        this.plainText = this. combinedText.getString();
+        this.plainText = this.combinedText.getString();
 
         // 应用字符限制
         if (this.hasCharacterLimit() && this.plainText.length() > this.characterLimit) {
@@ -476,8 +498,8 @@ public class StyledMultilineTextField {
                 }
             }
 
-            this.components. clear();
-            this.components. addAll(truncated);
+            this.components.clear();
+            this.components.addAll(truncated);
 
             this.combinedText = Component.empty();
             for (Component comp : this.components) {
@@ -494,9 +516,9 @@ public class StyledMultilineTextField {
     }
 
     private void reflowDisplayLines() {
-        this.displayLines. clear();
+        this.displayLines.clear();
 
-        if (this.plainText. isEmpty()) {
+        if (this.plainText.isEmpty()) {
             this.displayLines.add(StringView.EMPTY);
         } else {
             // 使用 String 版本的 splitLines 来获取索引
@@ -509,8 +531,8 @@ public class StyledMultilineTextField {
             );
 
             // 处理末尾的换行符
-            if (this. plainText.charAt(this.plainText.length() - 1) == '\n') {
-                this.displayLines. add(new StringView(this.plainText. length(), this.plainText.length()));
+            if (this.plainText.charAt(this.plainText.length() - 1) == '\n') {
+                this.displayLines.add(new StringView(this.plainText.length(), this.plainText.length()));
             }
         }
     }

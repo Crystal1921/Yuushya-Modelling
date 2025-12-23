@@ -1,16 +1,16 @@
 package com.yuushya.modelling.gui.widget;
 
+import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft. Util;
 import net.minecraft. client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft. client.gui.components.AbstractScrollWidget;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api. distmarker.OnlyIn;
@@ -32,12 +32,23 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     private final StyledMultilineTextField textField;
     private long focusedTime = Util.getMillis();
 
-    public StyledMultiLineEditBox(Font font, int x, int y, int width, int height, Component placeholder, Component message) {
+    private final Button boldButton;
+    private final Button italicButton;
+    private final Button underlineButton;
+    private final Button strikethroughButton;
+    private final Button obfuscatedButton;
+
+    public StyledMultiLineEditBox(Font font, int x, int y, int width, int height, Component placeholder, Component message, TextBlockScreen textBlockScreen) {
         super(x, y, width, height, message);
         this.font = font;
         this.placeholder = placeholder;
-        this.textField = new StyledMultilineTextField(font, width - this.totalInnerPadding());
+        this.textField = new StyledMultilineTextField(font, width - this.totalInnerPadding(), textBlockScreen);
         this.textField.setCursorListener(this::scrollToCursor);
+        this.boldButton = textBlockScreen.boldButton;
+        this.italicButton = textBlockScreen.italicButton;
+        this.underlineButton = textBlockScreen.underlineButton;
+        this.strikethroughButton = textBlockScreen.strikethroughButton;
+        this.obfuscatedButton = textBlockScreen.obfuscatedButton;
     }
 
     // ==================== 配置方法 ====================
@@ -76,13 +87,6 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
      */
     public List<Component> getStyledValue() {
         return this.textField. getComponents();
-    }
-
-    /**
-     * 插入带样式的文本
-     */
-    public void insertStyledText(Component component) {
-        this.textField.insertStyledText(component);
     }
 
     // ==================== 渲染与交互 ====================
@@ -128,7 +132,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         if (this.visible && this.isFocused() && StringUtil.isAllowedChatCharacter(codePoint)) {
-            this.textField. insertText(Character.toString(codePoint));
+            this.textField.insertText(Character.toString(codePoint));
             return true;
         } else {
             return false;

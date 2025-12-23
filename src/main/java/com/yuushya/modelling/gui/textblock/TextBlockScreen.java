@@ -57,11 +57,11 @@ public class TextBlockScreen extends Screen {
     private TextIconList textIconList;
     private StyledMultiLineEditBox textEditBox;
 
-    private Button boldButton;
-    private Button italicButton;
-    private Button underlineButton;
-    private Button strikethroughButton;
-    private Button obfuscatedButton;
+    public Button boldButton;
+    public Button italicButton;
+    public Button underlineButton;
+    public Button strikethroughButton;
+    public Button obfuscatedButton;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -173,7 +173,7 @@ public class TextBlockScreen extends Screen {
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
         // Text editing section
-        textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"));
+        textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);
         textEditBox.visible = false;
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
