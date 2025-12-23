@@ -417,6 +417,9 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                 .withObfuscated(obfuscatedButton.getValue());
 
         String selectedText = this.textField.getSelectedText();
+        if (selectedText.isEmpty()) {
+            return;
+        }
         this.textField.insertStyledText(Component.literal(selectedText).withStyle(style));
     }
 }
