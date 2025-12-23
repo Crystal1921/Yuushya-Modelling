@@ -31,6 +31,7 @@ public class StyledMultilineTextField {
     // 核心：使用 List<Component> 替代 String
     private final List<Component> components;
     private final int width;
+    private final TextBlockScreen textBlockScreen;
     private MutableComponent combinedText;
     @Getter
     private String plainText; // 缓存的纯文本，用于光标位置计算
@@ -52,6 +53,7 @@ public class StyledMultilineTextField {
         this.components = new ArrayList<>();
         this.combinedText = Component.empty();
         this.plainText = "";
+        this.textBlockScreen = textBlockScreen;
         this.setValue(new ArrayList<>());
     }
 
@@ -177,6 +179,8 @@ public class StyledMultilineTextField {
 
         this.components.clear();
         this.components.addAll(mergeSameStyle(newComponents)); // << 修改点：加合并
+
+        this.textBlockScreen.updateComponentLines(this.components);
 
         this.cursor = selection.beginIndex + insertText.length();
         this.selectCursor = this.cursor;

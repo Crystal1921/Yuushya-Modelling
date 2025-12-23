@@ -106,6 +106,7 @@
   "block.yuushya.modelframe": "Entitilized Block",
   "block.yuushya.showblock": "Entity Block",
   "block.yuushya.itemblock": "Item Block",
+  "block.yuushya.textblock": "Text Block",
   "block.yuushya.mixedblock": "Combined Block",
   "block.yuushya.showblock.pos_text": "Pos: ",
   "block.yuushya.showblock.rot_text": "Rot: ",

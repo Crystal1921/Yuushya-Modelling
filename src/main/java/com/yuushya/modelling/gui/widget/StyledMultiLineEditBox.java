@@ -75,6 +75,10 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.textField.setValue(List.of(Component.literal(fullText)));
     }
 
+    public void setValue(List<Component> components) {
+        this.textField.setValue(components);
+    }
+
     /**
      * 获取带样式的 Component 列表
      */
@@ -405,10 +409,17 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     }
 
     public void setTextStyle() {
-        int cursor = this.textField.cursor();
-        String plainText = this.textField.getPlainText();
-        if (cursor < plainText.length()) {
-
+        if (!this.textField.hasSelection()) {
+            return;
         }
+        String selectedText = this.textField.getSelectedText();
+        Component styledComponent = Component.literal(selectedText)
+                .withStyle(Style.EMPTY
+                        .withBold(boldButton.getValue())
+                        .withItalic(italicButton.getValue())
+                        .withUnderlined(underlineButton.getValue())
+                        .withStrikethrough(strikethroughButton.getValue())
+                        .withObfuscated(obfuscatedButton.getValue()));
+        this.textField.insertStyledText(styledComponent);
     }
 }

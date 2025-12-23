@@ -15,11 +15,13 @@ import com.yuushya.modelling.network.TextTransformDataOncePacket;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -101,9 +103,14 @@ public class TextBlockScreen extends Screen {
         // Update text edit box with first line of current slot
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
-            this.textEditBox.setValue(currentLines.get(0));
-        } else {
-            this.textEditBox.setValue("");
+            ClientLevel level = Minecraft.getInstance().level;
+            List<Component> components = new ArrayList<>();
+            for (String line : currentLines) {
+                if (level != null) {
+                    components.add(Component.Serializer.fromJson(line, level.registryAccess()));
+                }
+            }
+            textEditBox.setValue(components);
         }
     }
 
@@ -134,8 +141,12 @@ public class TextBlockScreen extends Screen {
                                 updateTextLines(new ArrayList<>(newTextLines));
                                 updateTransformDataClient(SHOWN, 1.0);
                             } else {
+                                ClientLevel level = Minecraft.getInstance().level;
+                                if (level == null) {
+                                    return;
+                                }
                                 List<String> defaultText = new ArrayList<>();
-                                defaultText.add("New Text");
+                                defaultText.add(Component.Serializer.toJson(Component.literal("New Text"), level.registryAccess()));
                                 updateTextLines(defaultText);
                                 updateTransformDataClient(SHOWN, 1.0);
                             }
@@ -386,7 +397,14 @@ public class TextBlockScreen extends Screen {
         textEditBox.visible = false;
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
-            textEditBox.setValue(currentLines.getFirst());
+            ClientLevel level = Minecraft.getInstance().level;
+            List<Component> components = new ArrayList<>();
+            for (String line : currentLines) {
+                if (level != null) {
+                    components.add(Component.Serializer.fromJson(line, level.registryAccess()));
+                }
+            }
+            textEditBox.setValue(components);
         }
 
         for (TextTransformComponent component : this.panel.values()) {
@@ -497,6 +515,16 @@ public class TextBlockScreen extends Screen {
         this.textLines = new ArrayList<>(textLines);
         TEXT_LINES.modify(blockEntity, slot, textLines);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+    }
+
+    public void updateComponentLines(List<Component> textLines) {
+        List<String> lines = new ArrayList<>();
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) return;
+        for (Component line : textLines) {
+            lines.add(Component.Serializer.toJson(line, level.registryAccess()));
+        }
+        updateTextLines(lines);
     }
 
     private void setTextInputVisible(boolean visible) {
