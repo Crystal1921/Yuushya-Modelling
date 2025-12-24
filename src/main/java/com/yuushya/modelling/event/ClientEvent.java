@@ -9,6 +9,7 @@ import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.registries.MenuRegistry;
+import com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -39,6 +40,7 @@ public class ClientEvent {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(BlockEntityRegistry.SHOW_BLOCK_ENTITY.get(), ShowBlockEntityRender::new);
         event.registerBlockEntityRenderer(BlockEntityRegistry.ITEM_BLOCK_ENTITY.get(), ItemBlockEntityRender::new);
+        event.registerBlockEntityRenderer(BlockEntityRegistry.TEXT_BLOCK_ENTITY.get(), TextBlockEntityRender::new);
     }
 
     @SubscribeEvent
