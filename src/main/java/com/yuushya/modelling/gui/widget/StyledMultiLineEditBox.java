@@ -425,19 +425,19 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         }
         Style selectionStyle = this.getUniformSelectionStyle();
         if (selectionStyle != null) {
-            this.boldButton.setValue(Boolean.TRUE.equals(selectionStyle.isBold()));
-            this.italicButton.setValue(Boolean.TRUE.equals(selectionStyle.isItalic()));
-            this.underlineButton.setValue(Boolean.TRUE.equals(selectionStyle.isUnderlined()));
-            this.strikethroughButton.setValue(Boolean.TRUE.equals(selectionStyle.isStrikethrough()));
-            this.obfuscatedButton.setValue(Boolean.TRUE.equals(selectionStyle.isObfuscated()));
+            this.boldButton.setValue(this.toBool(selectionStyle.isBold()));
+            this.italicButton.setValue(this.toBool(selectionStyle.isItalic()));
+            this.underlineButton.setValue(this.toBool(selectionStyle.isUnderlined()));
+            this.strikethroughButton.setValue(this.toBool(selectionStyle.isStrikethrough()));
+            this.obfuscatedButton.setValue(this.toBool(selectionStyle.isObfuscated()));
         }
     }
 
     private Style getUniformSelectionStyle() {
-        StyledMultilineTextField.StringView selection = this.textField.getSelected();
-        if (selection.beginIndex() == selection.endIndex()) {
+        if (!this.textField.hasSelection()) {
             return null;
         }
+        StyledMultilineTextField.StringView selection = this.textField.getSelected();
         List<Component> components = this.textField.getComponents();
         int start = selection.beginIndex();
         int end = selection.endIndex();
@@ -466,5 +466,9 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
             currentIndex = componentEnd;
         }
         return style;
+    }
+
+    private boolean toBool(Boolean value) {
+        return Boolean.TRUE.equals(value);
     }
 }

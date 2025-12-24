@@ -186,11 +186,11 @@ public class StyledMultilineTextField {
     }
 
     public void applyStyleToSelection(Style style) {
-        StringView selection = this.getSelected();
-        if (selection.beginIndex == selection.endIndex) {
+        if (!this.hasSelection()) {
             return;
         }
 
+        StringView selection = this.getSelected();
         Style appliedStyle = style == null ? Style.EMPTY : style;
         List<Component> newComponents = new ArrayList<>();
         int currentIndex = 0;
