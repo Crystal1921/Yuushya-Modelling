@@ -437,10 +437,9 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         if (!this.textField.hasSelection()) {
             return null;
         }
-        StyledMultilineTextField.StringView selection = this.textField.getSelected();
         List<Component> components = this.textField.getComponents();
-        int start = selection.beginIndex();
-        int end = selection.endIndex();
+        int start = this.textField.getSelectionStart();
+        int end = this.textField.getSelectionEnd();
         int currentIndex = 0;
         Style style = null;
 

@@ -190,8 +190,11 @@ public class StyledMultilineTextField {
             return;
         }
 
+        if (style == null) {
+            style = Style.EMPTY;
+        }
+
         StringView selection = this.getSelected();
-        Style appliedStyle = style == null ? Style.EMPTY : style;
         List<Component> newComponents = new ArrayList<>();
         int currentIndex = 0;
 
@@ -213,7 +216,7 @@ public class StyledMultilineTextField {
                 int selectedStart = Math.max(0, selection.beginIndex - currentIndex);
                 int selectedEnd = Math.min(compLength, selection.endIndex - currentIndex);
                 if (selectedEnd > selectedStart) {
-                    newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(appliedStyle));
+                    newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style));
                 }
 
                 if (selection.endIndex < compEnd) {
@@ -255,6 +258,14 @@ public class StyledMultilineTextField {
                 Math.min(this.selectCursor, this.cursor),
                 Math.max(this.selectCursor, this.cursor)
         );
+    }
+
+    public int getSelectionStart() {
+        return this.getSelected().beginIndex;
+    }
+
+    public int getSelectionEnd() {
+        return this.getSelected().endIndex;
     }
 
     public void seekCursor(Whence whence, int position) {
