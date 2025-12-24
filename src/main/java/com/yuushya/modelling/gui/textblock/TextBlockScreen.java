@@ -66,6 +66,7 @@ public class TextBlockScreen extends Screen {
     public CycleButton<Boolean> underlineButton;
     public CycleButton<Boolean> strikethroughButton;
     public CycleButton<Boolean> obfuscatedButton;
+    public Button clearButton;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -345,7 +346,7 @@ public class TextBlockScreen extends Screen {
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
-                .create(leftColumnX(), top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                .create(leftColumnX() - RIGHT_BAR_WIDTH, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
@@ -354,7 +355,7 @@ public class TextBlockScreen extends Screen {
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
-                .create(leftColumnX() + RIGHT_BAR_WIDTH, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                .create(leftColumnX(), top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
@@ -363,7 +364,7 @@ public class TextBlockScreen extends Screen {
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
-                .create(leftColumnX() + RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                .create(leftColumnX() + RIGHT_BAR_WIDTH, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
@@ -372,7 +373,7 @@ public class TextBlockScreen extends Screen {
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
-                .create(leftColumnX() + RIGHT_BAR_WIDTH * 3, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                .create(leftColumnX() + RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
@@ -381,16 +382,21 @@ public class TextBlockScreen extends Screen {
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
-                .create(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                .create(leftColumnX() + RIGHT_BAR_WIDTH * 3, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
+
+        clearButton = Button.builder(Component.literal("C"), (button) ->  {
+            this.textEditBox.clearStyle();
+        }).bounds(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         boldButton.visible = false;
         italicButton.visible = false;
         underlineButton.visible = false;
         strikethroughButton.visible = false;
         obfuscatedButton.visible = false;
+        clearButton.visible = false;
 
         // Text editing section
         textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);
@@ -430,6 +436,7 @@ public class TextBlockScreen extends Screen {
         this.addRenderableWidget(underlineButton);
         this.addRenderableWidget(strikethroughButton);
         this.addRenderableWidget(obfuscatedButton);
+        this.addRenderableWidget(clearButton);
 
         textIconList.setSelectedSlot(slot);
     }
@@ -534,6 +541,7 @@ public class TextBlockScreen extends Screen {
         this.underlineButton.visible = visible;
         this.strikethroughButton.visible = visible;
         this.obfuscatedButton.visible = visible;
+        this.clearButton.visible = visible;
     }
 
     public enum Mode implements StringRepresentable {

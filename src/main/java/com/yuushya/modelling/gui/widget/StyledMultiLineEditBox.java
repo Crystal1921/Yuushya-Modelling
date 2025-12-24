@@ -477,4 +477,12 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     private boolean toBool(Boolean value) {
         return Boolean.TRUE.equals(value);
     }
+
+    public void clearStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
+        }
+        this.textField.applyStyleToSelection(Style.EMPTY);
+        this.syncSelectionStyle();
+    }
 }
