@@ -3,12 +3,17 @@ package com.yuushya.modelling.blockentity.textblock;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import com.yuushya.modelling.Yuushya;
+import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
+import com.mojang.math.Axis;
+import net.minecraft.core.Direction;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
 public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<TextBlockEntity> {
 
@@ -34,6 +39,15 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
                                 PoseStack matrixStack, MultiBufferSource multiBufferSource, int light) {
         matrixStack.pushPose();
         {
+            Direction facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
+            float f = facing.toYRot();
+            matrixStack.translate(0.5f, 0.5f, 0.5f);
+            matrixStack.mulPose(Axis.YP.rotationDegrees(-f));
+            matrixStack.translate(-0.5f, -0.5f, -0.5f);
+            YuushyaUtils.scale(matrixStack, transformData.scales);
+            YuushyaUtils.translate(matrixStack, transformData.pos);
+            YuushyaUtils.rotate(matrixStack, transformData.rot);
+
             Camera camera = this.blockEntityRenderDispatcher.camera;
             renderText(font,
                     Component.translatable("block.yuushya.showblock.pos_text")
@@ -54,7 +68,12 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
             if (level != null) {
                 float high = 0.3f;
                 for (String line : transformData.textLines) {
-                    Component component = Component.Serializer.fromJson(line, level.registryAccess());
+                    Component component = null;
+                    try {
+                        component = Component.Serializer.fromJson(line, level.registryAccess());
+                    } catch (Exception ex) {
+                        Yuushya.LOGGER.warn("Failed to parse text component for TextBlockEntity at {}: {}", blockEntity.getBlockPos(), line, ex);
+                    }
                     if (component != null) {
                         high -= 0.25f;
                         renderText(font, component, high, matrixStack, multiBufferSource, light, camera);
