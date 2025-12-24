@@ -43,7 +43,10 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.font = font;
         this.placeholder = placeholder;
         this.textField = new StyledMultilineTextField(font, width - this.totalInnerPadding(), textBlockScreen);
-        this.textField.setCursorListener(this::scrollToCursor);
+        this.textField.setCursorListener(() -> {
+            this.scrollToCursor();
+            this.syncSelectionStyle();
+        });
         this.boldButton = textBlockScreen.boldButton;
         this.italicButton = textBlockScreen.italicButton;
         this.underlineButton = textBlockScreen.underlineButton;
@@ -405,10 +408,63 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     }
 
     public void setTextStyle() {
-        int cursor = this.textField.cursor();
-        String plainText = this.textField.getPlainText();
-        if (cursor < plainText.length()) {
+        this.textField.applyStyleToSelection(
+                Style.EMPTY
+                        .withBold(boldButton.getValue())
+                        .withItalic(italicButton.getValue())
+                        .withUnderlined(underlineButton.getValue())
+                        .withStrikethrough(strikethroughButton.getValue())
+                        .withObfuscated(obfuscatedButton.getValue())
+        );
+        this.syncSelectionStyle();
+    }
 
+    private void syncSelectionStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
         }
+        Style selectionStyle = this.getUniformSelectionStyle();
+        if (selectionStyle != null) {
+            this.boldButton.setValue(selectionStyle.isBold());
+            this.italicButton.setValue(selectionStyle.isItalic());
+            this.underlineButton.setValue(selectionStyle.isUnderlined());
+            this.strikethroughButton.setValue(selectionStyle.isStrikethrough());
+            this.obfuscatedButton.setValue(selectionStyle.isObfuscated());
+        }
+    }
+
+    private Style getUniformSelectionStyle() {
+        StyledMultilineTextField.StringView selection = this.textField.getSelected();
+        if (selection.beginIndex() == selection.endIndex()) {
+            return null;
+        }
+        List<Component> components = this.textField.getComponents();
+        int start = selection.beginIndex();
+        int end = selection.endIndex();
+        int currentIndex = 0;
+        Style style = null;
+
+        for (Component component : components) {
+            String text = component.getString();
+            int componentEnd = currentIndex + text.length();
+            if (componentEnd <= start) {
+                currentIndex = componentEnd;
+                continue;
+            }
+            if (currentIndex >= end) {
+                break;
+            }
+
+            if (!text.isEmpty()) {
+                Style componentStyle = component.getStyle();
+                if (style == null) {
+                    style = componentStyle;
+                } else if (!style.equals(componentStyle)) {
+                    return null;
+                }
+            }
+            currentIndex = componentEnd;
+        }
+        return style;
     }
 }
