@@ -189,6 +189,61 @@ public class StyledMultilineTextField {
         this.onValueChange();
     }
 
+    public void applyStyleToSelection(Style style) {
+        if (!this.hasSelection()) {
+            return;
+        }
+
+        if (style == null) {
+            style = Style.EMPTY;
+        }
+
+        StringView selection = this.getSelected();
+        List<Component> newComponents = new ArrayList<>();
+        int currentIndex = 0;
+
+        for (Component comp : this.components) {
+            String compText = comp.getString();
+            int compLength = compText.length();
+            int compEnd = currentIndex + compLength;
+
+            if (compEnd <= selection.beginIndex || currentIndex >= selection.endIndex) {
+                newComponents.add(comp);
+            } else {
+                if (currentIndex < selection.beginIndex) {
+                    int beforeEnd = selection.beginIndex - currentIndex;
+                    if (beforeEnd > 0) {
+                        newComponents.add(Component.literal(compText.substring(0, beforeEnd)).setStyle(comp.getStyle()));
+                    }
+                }
+
+                int selectedStart = Math.max(0, selection.beginIndex - currentIndex);
+                int selectedEnd = Math.min(compLength, selection.endIndex - currentIndex);
+                if (selectedEnd > selectedStart) {
+                    newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style));
+                }
+
+                if (selection.endIndex < compEnd) {
+                    int afterStart = Math.max(0, selection.endIndex - currentIndex);
+                    if (afterStart < compLength) {
+                        newComponents.add(Component.literal(compText.substring(afterStart)).setStyle(comp.getStyle()));
+                    }
+                }
+            }
+
+            currentIndex = compEnd;
+        }
+
+        this.components.clear();
+        this.components.addAll(mergeSameStyle(newComponents));
+
+        this.selectCursor = selection.beginIndex;
+        this.cursor = selection.endIndex;
+
+        rebuildCombinedText();
+        this.onValueChange();
+    }
+
     public void deleteText(int length) {
         if (!this.hasSelection()) {
             this.selectCursor = Mth.clamp(this.cursor + length, 0, this.plainText.length());
@@ -207,6 +262,14 @@ public class StyledMultilineTextField {
                 Math.min(this.selectCursor, this.cursor),
                 Math.max(this.selectCursor, this.cursor)
         );
+    }
+
+    public int getSelectionStart() {
+        return Math.min(this.selectCursor, this.cursor);
+    }
+
+    public int getSelectionEnd() {
+        return Math.max(this.selectCursor, this.cursor);
     }
 
     public void seekCursor(Whence whence, int position) {

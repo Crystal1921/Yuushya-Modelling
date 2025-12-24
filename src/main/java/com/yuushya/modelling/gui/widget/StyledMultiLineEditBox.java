@@ -43,7 +43,10 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.font = font;
         this.placeholder = placeholder;
         this.textField = new StyledMultilineTextField(font, width - this.totalInnerPadding(), textBlockScreen);
-        this.textField.setCursorListener(this::scrollToCursor);
+        this.textField.setCursorListener(() -> {
+            this.scrollToCursor();
+            this.syncSelectionStyle();
+        });
         this.boldButton = textBlockScreen.boldButton;
         this.italicButton = textBlockScreen.italicButton;
         this.underlineButton = textBlockScreen.underlineButton;
@@ -412,14 +415,74 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         if (!this.textField.hasSelection()) {
             return;
         }
-        String selectedText = this.textField.getSelectedText();
-        Component styledComponent = Component.literal(selectedText)
-                .withStyle(Style.EMPTY
+        this.textField.applyStyleToSelection(
+                Style.EMPTY
                         .withBold(boldButton.getValue())
                         .withItalic(italicButton.getValue())
                         .withUnderlined(underlineButton.getValue())
                         .withStrikethrough(strikethroughButton.getValue())
-                        .withObfuscated(obfuscatedButton.getValue()));
-        this.textField.insertStyledText(styledComponent);
+                        .withObfuscated(obfuscatedButton.getValue())
+        );
+        this.syncSelectionStyle();
+    }
+
+    private void syncSelectionStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
+        }
+        Style selectionStyle = this.getUniformSelectionStyle();
+        if (selectionStyle != null) {
+            this.boldButton.setValue(this.toBool(selectionStyle.isBold()));
+            this.italicButton.setValue(this.toBool(selectionStyle.isItalic()));
+            this.underlineButton.setValue(this.toBool(selectionStyle.isUnderlined()));
+            this.strikethroughButton.setValue(this.toBool(selectionStyle.isStrikethrough()));
+            this.obfuscatedButton.setValue(this.toBool(selectionStyle.isObfuscated()));
+        }
+    }
+
+    private Style getUniformSelectionStyle() {
+        if (!this.textField.hasSelection()) {
+            return null;
+        }
+        List<Component> components = this.textField.getComponents();
+        int start = this.textField.getSelectionStart();
+        int end = this.textField.getSelectionEnd();
+        int currentIndex = 0;
+        Style style = null;
+
+        for (Component component : components) {
+            String text = component.getString();
+            int componentEnd = currentIndex + text.length();
+            if (componentEnd <= start) {
+                currentIndex = componentEnd;
+                continue;
+            }
+            if (currentIndex >= end) {
+                break;
+            }
+
+            if (!text.isEmpty()) {
+                Style componentStyle = component.getStyle();
+                if (style == null) {
+                    style = componentStyle;
+                } else if (!style.equals(componentStyle)) {
+                    return null;
+                }
+            }
+            currentIndex = componentEnd;
+        }
+        return style;
+    }
+
+    private boolean toBool(Boolean value) {
+        return Boolean.TRUE.equals(value);
+    }
+
+    public void clearStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
+        }
+        this.textField.applyStyleToSelection(Style.EMPTY);
+        this.syncSelectionStyle();
     }
 }
