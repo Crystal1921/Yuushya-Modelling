@@ -1,6 +1,7 @@
 package com.yuushya.modelling.blockentity.textblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import net.minecraft.ChatFormatting;
@@ -57,10 +58,12 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
                     Component component = null;
                     try {
                         component = Component.Serializer.fromJson(line, level.registryAccess());
-                    } catch (Exception ignored) {
+                    } catch (Exception ex) {
+                        Yuushya.LOGGER.warn("Failed to parse text component for TextBlockEntity at {}: {}", blockEntity.getBlockPos(), line, ex);
                     }
                     if (component != null) {
-                        renderText(font, component, high -= 0.25f, matrixStack, multiBufferSource, light, camera);
+                        high -= 0.25f;
+                        renderText(font, component, high, matrixStack, multiBufferSource, light, camera);
                     }
                 }
             }
