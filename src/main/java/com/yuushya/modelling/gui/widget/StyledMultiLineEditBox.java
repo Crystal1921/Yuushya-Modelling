@@ -425,11 +425,11 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         }
         Style selectionStyle = this.getUniformSelectionStyle();
         if (selectionStyle != null) {
-            this.boldButton.setValue(selectionStyle.isBold());
-            this.italicButton.setValue(selectionStyle.isItalic());
-            this.underlineButton.setValue(selectionStyle.isUnderlined());
-            this.strikethroughButton.setValue(selectionStyle.isStrikethrough());
-            this.obfuscatedButton.setValue(selectionStyle.isObfuscated());
+            this.boldButton.setValue(Boolean.TRUE.equals(selectionStyle.isBold()));
+            this.italicButton.setValue(Boolean.TRUE.equals(selectionStyle.isItalic()));
+            this.underlineButton.setValue(Boolean.TRUE.equals(selectionStyle.isUnderlined()));
+            this.strikethroughButton.setValue(Boolean.TRUE.equals(selectionStyle.isStrikethrough()));
+            this.obfuscatedButton.setValue(Boolean.TRUE.equals(selectionStyle.isObfuscated()));
         }
     }
 
