@@ -261,11 +261,11 @@ public class StyledMultilineTextField {
     }
 
     public int getSelectionStart() {
-        return this.getSelected().beginIndex;
+        return Math.min(this.selectCursor, this.cursor);
     }
 
     public int getSelectionEnd() {
-        return this.getSelected().endIndex;
+        return Math.max(this.selectCursor, this.cursor);
     }
 
     public void seekCursor(Whence whence, int position) {
