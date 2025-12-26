@@ -17,6 +17,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import java.util.List;
 
@@ -47,14 +48,35 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
                 });
                 matrixStack.pushPose();
 
-                YuushyaUtils.scale(matrixStack, transformData.scales);
+                matrixStack.translate(0.0D, 1.0D, 0.0D);
+
+                scale(matrixStack, transformData.scales);
                 YuushyaUtils.translate(matrixStack, transformData.pos);
-                YuushyaUtils.rotate(matrixStack, transformData.rot);
+                rotate(matrixStack, transformData.rot);
 
                 matrixStack.mulPose(Axis.XP.rotationDegrees(180.0F));
                 matrixStack.scale(0.1F, 0.1F, 0.1F);
                 Matrix4f matrix4f = matrixStack.last().pose();
-                drawStringUnified(font, mutableComponent.getVisualOrderText(), 0, 0, -1, false, matrix4f, multiBufferSource, 0, light);
+
+                boolean isCulled = transformData.isCulled;
+                boolean isMirror = transformData.isMirror;
+
+                if (!isCulled && !isMirror) {
+                    drawStringUnified(font, mutableComponent.getVisualOrderText(), 0, 0, -1, false, matrix4f, multiBufferSource, 0, light);
+                }
+
+                if (!isCulled && isMirror) {
+                    font.drawInBatch(mutableComponent, 0, 0, -1, false, matrix4f, multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
+                    matrixStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+                    matrixStack.translate(-font.width(mutableComponent), 0.0D, 0.0D);
+                    Matrix4f matrix4fMirror = matrixStack.last().pose();
+                    font.drawInBatch(mutableComponent, 0, 0, -1, false, matrix4fMirror, multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
+                }
+
+                if (isCulled) {
+                    font.drawInBatch(mutableComponent, 0, 0, -1, false, matrix4f, multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
+                }
+
 
                 matrixStack.popPose();
             }
@@ -111,5 +133,23 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
             }
         }
         matrixStack.popPose();
+    }
+
+    public static void scale(PoseStack arg, Vector3f scales) {
+        if (scales.x() != 1 || scales.y() != 1 || scales.z() != 1) {
+            arg.scale(scales.x(), scales.y(), scales.z());
+        }
+    }
+
+    public static void rotate(PoseStack arg, Vector3f rot) {
+        float roll = rot.z(), yaw = rot.y(), pitch = rot.x();
+        if (roll != 0.0F || yaw != 0.0F || pitch != 0.0F) {
+            if (roll != 0.0F)
+                arg.mulPose(Axis.ZP.rotationDegrees(roll));
+            if (yaw != 0.0F)
+                arg.mulPose(Axis.YP.rotationDegrees(yaw));
+            if (pitch != 0.0F)
+                arg.mulPose(Axis.XP.rotationDegrees(pitch));
+        }
     }
 }

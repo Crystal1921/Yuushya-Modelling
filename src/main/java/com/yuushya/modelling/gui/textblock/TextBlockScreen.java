@@ -67,6 +67,8 @@ public class TextBlockScreen extends Screen {
     public CycleButton<Boolean> strikethroughButton;
     public CycleButton<Boolean> obfuscatedButton;
     public Button clearButton;
+    public CycleButton<Boolean> cullButton;
+    public CycleButton<Boolean> mirrorButton;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -100,6 +102,8 @@ public class TextBlockScreen extends Screen {
         }
 
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
+        cullButton.setValue(this.blockEntity.getTransformData(slot).isCulled);
+        mirrorButton.setValue(this.blockEntity.getTransformData(slot).isMirror);
 
         // Update text edit box with first line of current slot
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
@@ -182,6 +186,26 @@ public class TextBlockScreen extends Screen {
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> updateTransformDataClient(SHOWN, bl ? 1.0 : 0.0)
+                );
+
+        cullButton = CycleButton.booleanBuilder(
+                Component.literal("▢"),
+                Component.literal("■"))
+                .displayOnlyValue()
+                .withInitialValue(CULLED.extract(blockEntity, slot) != 0)
+                .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.textBlockScreen.cull.on") : Component.translatable("gui.textBlockScreen.cull.off")))
+                .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> updateTransformDataClient(CULLED, bl ? 1.0 : 0.0)
+                );
+
+        mirrorButton = CycleButton.booleanBuilder(
+                Component.literal("⇢"),
+                Component.literal("⇠"))
+                .displayOnlyValue()
+                .withInitialValue(MIRROR.extract(blockEntity, slot) != 0)
+                .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.textBlockScreen.mirror.on") : Component.translatable("gui.textBlockScreen.mirror.off")))
+                .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 5, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> updateTransformDataClient(MIRROR, bl ? 1.0 : 0.0)
                 );
 
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
@@ -425,6 +449,8 @@ public class TextBlockScreen extends Screen {
 
         this.addRenderableWidget(modeButton);
         this.addRenderableWidget(shapeButton);
+        this.addRenderableWidget(cullButton);
+        this.addRenderableWidget(mirrorButton);
         this.addWidget(this.textIconList);
         this.addRenderableWidget(addTextButton);
         this.addRenderableWidget(removeTextButton);
@@ -448,23 +474,6 @@ public class TextBlockScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.textIconList.render(guiGraphics, mouseX, mouseY, partialTick);
-
-        // Render text lines info
-        List<String> lines = getTextLines();
-        guiGraphics.drawString(this.font, Component.literal("Lines: " + lines.size()), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
-
-        // Render first few lines as preview
-        int previewY = TOP + 6 + PER_HEIGHT + this.font.lineHeight + 2;
-        for (int i = 0; i < Math.min(lines.size(), 5); i++) {
-            String line = lines.get(i);
-            if (line.length() > 20) {
-                line = line.substring(0, 20) + "...";
-            }
-            guiGraphics.drawString(this.font, line, RIGHT_STATE_INFORM_X, previewY + i * (this.font.lineHeight + 1), 0xFFEBC6, false);
-        }
-        if (lines.size() > 5) {
-            guiGraphics.drawString(this.font, "... (" + (lines.size() - 5) + " more)", RIGHT_STATE_INFORM_X, previewY + 5 * (this.font.lineHeight + 1), 0xAAAAAA, false);
-        }
 
         if (modeButton.getValue() == Mode.EDIT) {
             for (TextTransformComponent component : this.panel.values()) {
@@ -507,6 +516,8 @@ public class TextBlockScreen extends Screen {
         updateTransformDataClient(SCALE_Y, (double) data.scales.y);
         updateTransformDataClient(SCALE_Z, (double) data.scales.z);
 
+        updateTransformDataClient(CULLED, data.isCulled ? 1.0 : 0.0);
+        updateTransformDataClient(MIRROR, data.isMirror ? 1.0 : 0.0);
         updateTransformDataClient(SHOWN, data.isShown ? 1.0 : 0.0);
 
         updateTextLines(data.textLines);

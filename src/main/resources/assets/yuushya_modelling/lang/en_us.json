@@ -161,6 +161,10 @@
   "gui.itemBlockScreen.apply.tip.apply": "Confirm and apply the changes made to all layers.",
   "gui.itemBlockScreen.apply.done": "Done",
   "gui.itemBlockScreen.apply.tip.done": "Click to reset the button state.",
+  "gui.textBlockScreen.cull.on": "Cull Face: On",
+  "gui.textBlockScreen.cull.off": "Cull Face: Off",
+  "gui.textBlockScreen.mirror.on": "Mirror: On",
+  "gui.textBlockScreen.mirror.off": "Mirror: Off",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",

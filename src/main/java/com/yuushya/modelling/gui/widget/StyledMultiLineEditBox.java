@@ -36,6 +36,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     private final CycleButton<Boolean> underlineButton;
     private final CycleButton<Boolean> strikethroughButton;
     private final CycleButton<Boolean> obfuscatedButton;
+    private final TextBlockScreen textBlockScreen;
     private long focusedTime = Util.getMillis();
 
     public StyledMultiLineEditBox(Font font, int x, int y, int width, int height, Component placeholder, Component message, TextBlockScreen textBlockScreen) {
@@ -52,6 +53,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.underlineButton = textBlockScreen.underlineButton;
         this.strikethroughButton = textBlockScreen.strikethroughButton;
         this.obfuscatedButton = textBlockScreen.obfuscatedButton;
+        this.textBlockScreen = textBlockScreen;
     }
 
     // ==================== 配置方法 ====================
@@ -424,6 +426,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                         .withObfuscated(obfuscatedButton.getValue())
         );
         this.syncSelectionStyle();
+        this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }
 
     private void syncSelectionStyle() {
@@ -484,5 +487,6 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         }
         this.textField.applyStyleToSelection(Style.EMPTY);
         this.syncSelectionStyle();
+        this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }
 }

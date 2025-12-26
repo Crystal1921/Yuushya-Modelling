@@ -226,6 +226,10 @@
   "gui.showBlockScreen.shape.bottom_half": "下半砖",
   "gui.showBlockScreen.shape.top_half": "上半砖",
   "gui.showBlockScreen.shape.block": "完整方块",
+  "gui.textBlockScreen.cull.on": "面剔除：开",
+  "gui.textBlockScreen.cull.off": "面剔除：关",
+  "gui.textBlockScreen.mirror.on": "反面镜像：开",
+  "gui.textBlockScreen.mirror.off": "反面镜像：关",
 
   "itemGroup.yuushya.primitive": "Yuushya-建模预制体",
   "item.yuushya.chibi_0": "小人素体",

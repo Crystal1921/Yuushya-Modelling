@@ -18,7 +18,7 @@ public enum TextTransformType {
     LIT(11),
     REMOVE(12),
     SUCCESS(13), FAIL(14),
-    SHAPE(15);
+    SHAPE(15), CULLED(16), MIRROR(17);
 
     public final int type;
 
@@ -39,6 +39,8 @@ public enum TextTransformType {
             case SCALE_Z -> transformData.scales.z();
             case TEXT_LINES -> transformData.textLines.size();
             case SHOWN -> transformData.isShown ? 1 : 0;
+            case CULLED ->  transformData.isCulled ? 1 : 0;
+            case MIRROR -> transformData.isMirror ? 1 : 0;
             case LIT, REMOVE, SUCCESS, SHAPE, FAIL -> 0;
         };
     }
@@ -55,6 +57,8 @@ public enum TextTransformType {
             case SCALE_Y -> transformData.scales.set(transformData.scales.x(), number.floatValue(), transformData.scales.z());
             case SCALE_Z -> transformData.scales.set(transformData.scales.x(), transformData.scales.y(), number.floatValue());
             case SHOWN -> transformData.isShown = number != 0;
+            case CULLED -> transformData.isCulled = number != 0;
+            case MIRROR -> transformData.isMirror = number != 0;
             case FAIL -> {
             }
         }

@@ -22,7 +22,7 @@ public class TextShader {
                 .setLightmapState(RenderType.LIGHTMAP)
                 .setCullState(RenderStateShard.NO_CULL)
                 .createCompositeState(false);
-        return RenderType.create("neoforge_text", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true, rendertype$state);
+        return RenderType.create("no_cull_text", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true, rendertype$state);
     }
 
     private static class CustomizableTextureState extends RenderStateShard.TextureStateShard {

@@ -16,6 +16,8 @@ public class TransformTextData implements ITransformDataProvider {
     public Vector3f rot;
     public Vector3f scales;
     public List<String> textLines;
+    public boolean isCulled;
+    public boolean isMirror;
     public boolean isShown;
 
     public TransformTextData() {
@@ -23,28 +25,34 @@ public class TransformTextData implements ITransformDataProvider {
         this.rot = new Vector3f(0, 0, 0);
         this.scales = new Vector3f(1, 1, 1);
         this.textLines = new ArrayList<>();
+        this.isCulled = false;
+        this.isMirror = false;
         this.isShown = false;
     }
 
-    public TransformTextData(Vector3d pos, Vector3f rot, Vector3f scales, List<String> textLines, boolean isShown) {
+    public TransformTextData(Vector3d pos, Vector3f rot, Vector3f scales, List<String> textLines, boolean isCulled, boolean isMirror, boolean isShown) {
         this();
         this.pos.set(pos);
         this.rot.set(rot.x(), rot.y(), rot.z());
         this.scales.set(scales.x(), scales.y(), scales.z());
         this.textLines = new ArrayList<>(textLines);
+        this.isCulled = isCulled;
+        this.isMirror = isMirror;
         this.isShown = isShown;
     }
 
-    public void set(Vector3d pos, Vector3f rot, Vector3f scales, List<String> textLines, boolean isShown) {
+    public void set(Vector3d pos, Vector3f rot, Vector3f scales, List<String> textLines, boolean isCulled, boolean isMirror, boolean isShown) {
         this.pos.set(pos);
         this.rot.set(rot.x(), rot.y(), rot.z());
         this.scales.set(scales.x(), scales.y(), scales.z());
         this.textLines = new ArrayList<>(textLines);
+        this.isCulled = isCulled;
+        this.isMirror = isMirror;
         this.isShown = isShown;
     }
 
     public void set(TransformTextData old) {
-        set(old.pos, old.rot, old.scales, old.textLines, old.isShown);
+        set(old.pos, old.rot, old.scales, old.textLines, old.isCulled, old.isMirror, old.isShown);
     }
 
     public void set() {
@@ -52,6 +60,8 @@ public class TransformTextData implements ITransformDataProvider {
         this.rot.set(0, 0, 0);
         this.scales.set(1, 1, 1);
         this.textLines.clear();
+        this.isCulled = false;
+        this.isMirror = false;
         this.isShown = false;
     }
 
@@ -63,8 +73,10 @@ public class TransformTextData implements ITransformDataProvider {
         this.pos.set(listTagPos.getDouble(0), listTagPos.getDouble(1), listTagPos.getDouble(2));
         this.rot.set(listTagRot.getFloat(0), listTagRot.getFloat(1), listTagRot.getFloat(2));
         this.scales.set(listTagScales.getFloat(0), listTagScales.getFloat(1), listTagScales.getFloat(2));
+        this.isCulled = compoundTag.getBoolean("Culled");
+        this.isMirror = compoundTag.getBoolean("Mirrored");
         this.isShown = compoundTag.getBoolean("isShown");
-        
+
         // Load text lines
         this.textLines.clear();
         ListTag textListTag = compoundTag.getList("TextLines", 8); // 8 means String
@@ -78,8 +90,10 @@ public class TransformTextData implements ITransformDataProvider {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(), rot.y(), rot.z()));
         compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(), scales.y(), scales.z()));
+        compoundTag.putBoolean("Culled", isCulled);
+        compoundTag.putBoolean("Mirrored", isMirror);
         compoundTag.putBoolean("isShown", isShown);
-        
+
         // Save text lines
         ListTag textListTag = new ListTag();
         for (String line : textLines) {
