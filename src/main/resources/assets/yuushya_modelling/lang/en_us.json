@@ -204,6 +204,7 @@
   "gui.showBlockScreen.shape.bottom_half": "Bottom Half",
   "gui.showBlockScreen.shape.top_half": "Top Half",
   "gui.showBlockScreen.shape.block": "Block",
+  "gui.showBlockScreen.calculate": "Calculate Face Count",
 
   "itemGroup.yuushya.primitive": "Yuushya - Modeling Primitive",
   "item.yuushya.chibi_0": "Chibi Base Body",

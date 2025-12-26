@@ -26,10 +26,14 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,11 +61,13 @@ public class ShowBlockScreen extends Screen {
     private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
     private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
     private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
+    private static final RandomSource random = RandomSource.create();
     private final ShowBlockEntity blockEntity;
     private final BlockState newBlockState;
     private final Map<TransformType, Double> storage = new HashMap<>();
     private final Map<TransformType, TransformComponent> panel = new LinkedHashMap<>();
     private final Map<TransformType, EditBox> editBoxes = new HashMap<>();
+    private long faceCount = 0;
     private int slot;
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
@@ -84,6 +90,24 @@ public class ShowBlockScreen extends Screen {
     // i \in [1,...]
     private static int top(int i, int offset) {
         return TOP + PER_HEIGHT + 10 + PER_HEIGHT * i + offset;
+    }
+
+    public static long calculateFaces(ShowBlockEntity showBlockEntity) {
+        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
+        ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+        directions.add(null); // 加个null
+        return showBlockEntity.getTransformData().stream().mapToInt(
+                data -> {
+                    int countFace = 0;
+                    BlockState blockState = data.blockState;
+                    BakedModel blockModel = blockRenderDispatcher.getBlockModel(blockState);
+                    for (Direction value : directions) {
+                        List<BakedQuad> blockModelQuads = blockModel.getQuads(blockState, value, random);
+                        countFace += blockModelQuads.size();
+                    }
+                    return countFace;
+                }
+        ).sum();
     }
 
     public void setSlot(int slot) {
@@ -252,6 +276,12 @@ public class ShowBlockScreen extends Screen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4 + 60, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         blockStateList = new BlockStateIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
+
+        Button statisticButton = Button.builder(Component.literal("📊"),
+                        (btn) -> this.faceCount = calculateFaces(blockEntity))
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.calculate")))
+                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 5 + 80, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT)
+                .build();
 
         leftPropertyButton = Button.builder(Component.literal("<"),
                         (btn) -> property = YuushyaBlockStates.getRelative(blockStateList.updateRenderProperties(getBlockState()), property, true))
@@ -438,6 +468,7 @@ public class ShowBlockScreen extends Screen {
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
         this.addRenderableWidget(saveButton);
+        this.addRenderableWidget(statisticButton);
 
         blockStateList.setSelectedSlot(slot);//updateStateButtonVisible();
     }
@@ -465,6 +496,12 @@ public class ShowBlockScreen extends Screen {
                 guiGraphics.drawString(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
                 component.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
             }
+        }
+
+        if (faceCount > 0) {
+            String text = String.valueOf(faceCount);
+            guiGraphics.fill(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 85, TOP, RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 95 + font.width(text), TOP + 20, 0x80000000);
+            guiGraphics.drawString(this.font, Component.literal(text), RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 90, TOP + 5, 0xFFFFFFFF, false);
         }
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
