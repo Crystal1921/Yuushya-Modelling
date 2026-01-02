@@ -125,6 +125,7 @@
   "block.yuushya.modelframe.line1": "\u00A78Unavailable",
   "block.yuushya.showblock.line1": "\u00A78Unavailable",
   "block.yuushya.itemblock.line1": "\u00A78Extended version of [Entity Block], but subtle differences exist",
+  "block.yuushya.textblock.line1": "\u00A78Extended version of [Entity Block], but subtle differences exist",
   "block.yuushya.mixedblock.line1": "\u00A78Unavailable",
   "item.yuushya.destroy_item": "Silk Touch Hammer",
   "item.yuushya.destroy_item.line1": "\u00A79Click to get Entity Block or Item Block without NBT loss",

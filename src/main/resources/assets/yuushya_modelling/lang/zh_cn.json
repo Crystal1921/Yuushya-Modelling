@@ -147,6 +147,7 @@
   "block.yuushya.modelframe.line1": "\u00A78不可用",
   "block.yuushya.showblock.line1": "\u00A79副手持[实体方块旋转工具]可根据玩家朝向旋转放置此实体方块",
   "block.yuushya.itemblock.line1": "\u00A79[实体方块]的进阶版本，但有所区别",
+  "block.yuushya.textblock.line1": "\u00A79[实体方块]的进阶版本，但有所区别",
   "block.yuushya.mixedblock.line1": "\u00A78不可用",
 
   "item.yuushya.destroy_item": "采集锤",

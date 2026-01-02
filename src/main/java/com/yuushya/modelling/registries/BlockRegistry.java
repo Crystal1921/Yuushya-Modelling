@@ -16,7 +16,7 @@ public class BlockRegistry {
 
     public static final DeferredBlock<Block> SHOW_BLOCK = BLOCKS.register("showblock", () -> new ShowBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 0));
     public static final DeferredBlock<Block> ITEM_BLOCK = BLOCKS.register("itemblock", () -> new ItemBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 1));
-    public static final DeferredBlock<Block> TEXT_BLOCK = BLOCKS.register("textblock", () -> new TextBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 2));
+    public static final DeferredBlock<Block> TEXT_BLOCK = BLOCKS.register("textblock", () -> new TextBlock(BlockBehaviour.Properties.of().noOcclusion().forceSolidOn().strength(4.0f).lightLevel(blockState -> blockState.getValue(YuushyaBlockStates.LIT)), 1));
 
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);
