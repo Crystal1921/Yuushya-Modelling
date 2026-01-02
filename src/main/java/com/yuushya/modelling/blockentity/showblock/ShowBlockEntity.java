@@ -92,7 +92,7 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void setRemoved() {
-        if (!this.isEmpty()) {
+        if (this.level != null && !this.isEmpty() && this.level.isClientSide) {
             String res = ShareUtils.transfer(this.getTransformData());
             ShareUtils.ShareBlockInformation information = ShareUtils.from(res);
             if (this.level != null) {

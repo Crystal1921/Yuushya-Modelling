@@ -84,13 +84,15 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void setRemoved() {
-        CustomRenderInstance.getINSTANCE().dirty = true;
-        if (!this.isEmpty()) {
-            String res = ShareUtils.transferItems(this.getTransformData());
-            ShareUtils.ShareItemInformation information = ShareUtils.fromItems(res);
-            if (this.level != null) {
-                String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
-                HISTORY_ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
+        if (this.level != null && this.level.isClientSide) {
+            CustomRenderInstance.getINSTANCE().dirty = true;
+            if (!this.isEmpty()) {
+                String res = ShareUtils.transferItems(this.getTransformData());
+                ShareUtils.ShareItemInformation information = ShareUtils.fromItems(res);
+                if (this.level != null) {
+                    String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
+                    HISTORY_ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
+                }
             }
         }
         super.setRemoved();
