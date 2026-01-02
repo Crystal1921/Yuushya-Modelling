@@ -5,6 +5,7 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -17,6 +18,8 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.ChunkRenderTypeSet;
+import net.neoforged.neoforge.client.RenderTypeHelper;
 import net.neoforged.neoforge.client.extensions.IBakedModelExtension;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
@@ -28,6 +31,7 @@ import java.util.*;
 public class NeoShowBlockModel extends ShowBlockModel implements IBakedModelExtension, BakedModel {
     private static final Map<ItemStack, NeoShowBlockModel> itemModelCache = new HashMap<>();
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
+    private static final net.neoforged.neoforge.client.ChunkRenderTypeSet CUTOUT_MIPPED = net.neoforged.neoforge.client.ChunkRenderTypeSet.of(RenderType.cutoutMipped());
 
     public NeoShowBlockModel(Direction facing) {
         super(facing);
@@ -77,5 +81,15 @@ public class NeoShowBlockModel extends ShowBlockModel implements IBakedModelExte
                 return super.getQuads(blockState, side, rand, transformDatas);
             }
         }));
+    }
+
+    @Override
+    public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource rand, ModelData data) {
+        return CUTOUT_MIPPED;
+    }
+
+    @Override
+    public List<RenderType> getRenderTypes(ItemStack itemStack, boolean fabulous) {
+        return List.of(RenderType.cutoutMipped());
     }
 }
