@@ -132,9 +132,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
                 for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
                     if (pos != null) {
                         ChunkPos chunkPos = new ChunkPos(pos);
-                        HashSet<BlockPos> orDefault = CustomRenderInstance.getINSTANCE().getCachedModeData().getOrDefault(chunkPos, new HashSet<>());
-                        orDefault.add(pos);
-                        CustomRenderInstance.getINSTANCE().getCachedModeData().put(chunkPos, orDefault);
+                        CustomRenderInstance.getINSTANCE().addBlockPos(chunkPos, pos);
                         CustomRenderInstance.getINSTANCE().dirty = true;
                         return Collections.emptyList();
                     }

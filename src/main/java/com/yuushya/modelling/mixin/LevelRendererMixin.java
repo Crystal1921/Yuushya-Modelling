@@ -26,9 +26,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
@@ -97,7 +97,7 @@ public abstract class LevelRendererMixin {
         CustomRenderInstance instance = CustomRenderInstance.getINSTANCE();
         if (level == null) return;
         if (instance.dirty) {
-            Map<ChunkPos, HashSet<BlockPos>> cachedModeData = instance.getCachedModeData();
+            Map<ChunkPos, Set<BlockPos>> cachedModeData = instance.getCachedModeData();
             cachedModeData.forEach((chunkPos, blockPosSet) -> {
                 if (blockPosSet.isEmpty()) return;
                 List<BlockPos> list = blockPosSet.stream()
