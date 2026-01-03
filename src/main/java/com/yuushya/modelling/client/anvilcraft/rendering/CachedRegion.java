@@ -200,17 +200,18 @@ public class CachedRegion {
                     (float) -cameraPosition.z);
         }
         vertexBuffer.bind();
-        if (renderType.sortOnUpload) {
-            MeshData.SortState sortState = this.meshSortings.get(renderType);
-            if (sortState != null) {
-                ByteBufferBuilder.Result result = sortState.buildSortedIndexBuffer(
-                        this.requestSortBuffer(renderType),
-                        VertexSorting.byDistance(cameraPosition.toVector3f()));
-                if (result != null) {
-                    vertexBuffer.uploadIndexBuffer(result);
-                }
-            }
-        }
+        // 禁用每帧排序以提高性能 - 透明物体可能显示顺序不正确
+        // if (renderType.sortOnUpload) {
+        //     MeshData.SortState sortState = this.meshSortings.get(renderType);
+        //     if (sortState != null) {
+        //         ByteBufferBuilder.Result result = sortState.buildSortedIndexBuffer(
+        //                 this.requestSortBuffer(renderType),
+        //                 VertexSorting.byDistance(cameraPosition.toVector3f()));
+        //         if (result != null) {
+        //             vertexBuffer.uploadIndexBuffer(result);
+        //         }
+        //     }
+        // }
         vertexBuffer.drawWithShader(frustumMatrix, projectionMatrix, shader);
         VertexBuffer.unbind();
         if (uniform != null) {
