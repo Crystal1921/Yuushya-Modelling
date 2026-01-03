@@ -69,28 +69,31 @@ public abstract class LevelRendererMixin {
         CacheableBERenderingPipeline.getInstance().render(frustumMatrix, projectionMatrix);
     }
 
-    @WrapOperation(
-            method = "renderLevel",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
-            )
-    )
-    <E extends BlockEntity> void wrapRenderBlockEntity(
-            BlockEntityRenderDispatcher instance,
-            E blockEntity,
-            float partialTick,
-            PoseStack poseStack,
-            MultiBufferSource bufferSource,
-            Operation<Void> original
-    ) {
-        if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
-            CacheableBERenderingPipeline.getInstance().getRenderRegion(new ChunkPos(blockEntity.getBlockPos()))
-                    .addIfPossible(blockEntity);
-            return;
-        }
-        original.call(instance, blockEntity, partialTick, poseStack, bufferSource);
-    }
+    // @WrapOperation(
+    //         method = "renderLevel",
+    //         at = @At(
+    //                 value = "INVOKE",
+    //                 target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
+    //         )
+    // )
+    // <E extends BlockEntity> void wrapRenderBlockEntity(
+    //         BlockEntityRenderDispatcher instance,
+    //         E blockEntity,
+    //         float partialTick,
+    //         PoseStack poseStack,
+    //         MultiBufferSource bufferSource,
+    //         Operation<Void> original
+    // ) {
+    //     if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
+    //         CacheableBERenderingPipeline.getInstance().getRenderRegion(new ChunkPos(blockEntity.getBlockPos()))
+    //                 .addIfPossible(blockEntity);
+    //         return;
+    //     }
+    //     original.call(instance, blockEntity, partialTick, poseStack, bufferSource);
+    // }
+    //
+    // 已禁用：这个 mixin 每帧拦截所有方块实体渲染，开销巨大
+    // 缓存更新已通过 callRebuild() 方法中的 CustomRenderInstance.dirty 标志统一处理
 
     @Inject(at = @At("TAIL"), method = "renderLevel")
     void callRebuild(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
