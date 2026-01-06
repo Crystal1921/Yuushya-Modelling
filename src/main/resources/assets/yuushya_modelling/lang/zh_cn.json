@@ -232,6 +232,8 @@
   "gui.textBlockScreen.cull.off": "面剔除：关",
   "gui.textBlockScreen.mirror.on": "反面镜像：开",
   "gui.textBlockScreen.mirror.off": "反面镜像：关",
+  "gui.textBlockScreen.font": "字体",
+  "gui.textBlockScreen.color": "颜色",
 
   "itemGroup.yuushya.primitive": "Yuushya-建模预制体",
   "item.yuushya.chibi_0": "小人素体",

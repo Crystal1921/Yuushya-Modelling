@@ -36,6 +36,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     private final CycleButton<Boolean> underlineButton;
     private final CycleButton<Boolean> strikethroughButton;
     private final CycleButton<Boolean> obfuscatedButton;
+    private final ColorWidget colorWidget;
     private final TextBlockScreen textBlockScreen;
     private long focusedTime = Util.getMillis();
 
@@ -53,6 +54,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.underlineButton = textBlockScreen.underlineButton;
         this.strikethroughButton = textBlockScreen.strikethroughButton;
         this.obfuscatedButton = textBlockScreen.obfuscatedButton;
+        this.colorWidget = textBlockScreen.colorWidget;
         this.textBlockScreen = textBlockScreen;
     }
 
@@ -424,6 +426,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                         .withUnderlined(underlineButton.getValue())
                         .withStrikethrough(strikethroughButton.getValue())
                         .withObfuscated(obfuscatedButton.getValue())
+                        .withColor(colorWidget.getColor())
         );
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());

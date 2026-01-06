@@ -3,7 +3,6 @@ package com.yuushya.modelling.gui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
-import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -11,21 +10,22 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
 import java.awt.*;
 
 public class ColorWidget extends AbstractWidget {
-    private final ItemBlockScreen itemBlockScreen;
+    private final AbstractColorScreen colorScreen;
     private final int WIDTH = 75;
     private final int xPadding = 5;
     private final int yPadding = 5;
     private final int yHeight = 65;
     float[] hsbVals = new float[3];
 
-    public ColorWidget(int posX, int posY, int width, int height, int finalColor, Component message, ItemBlockScreen itemBlockScreen) {
+    public ColorWidget(int posX, int posY, int width, int height, int finalColor, Component message, AbstractColorScreen colorScreen) {
         super(posX, posY, width, height, message);
-        this.itemBlockScreen = itemBlockScreen;
+        this.colorScreen = colorScreen;
         Color color = new Color(finalColor);
         Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
     }
@@ -36,7 +36,7 @@ public class ColorWidget extends AbstractWidget {
         guiGraphics.fill(getX() - 1, getY() - 1, getX() + getWidth() + 1, getY()+ getHeight()+26,FastColor.ARGB32.color(72, 0, 0, 0));
         guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() + 25, FastColor.ARGB32.color(72, 0, 0, 0));
 
-        guiGraphics.drawString(itemBlockScreen.getFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 255, 255, 255), false);
+        guiGraphics.drawString(colorScreen.getColorFont(), hsv, getX() + yPadding, getY() + 145, FastColor.ARGB32.color(255, 255, 255, 255), false);
         RenderSystem.enableBlend();
 
         guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, WIDTH, 10, 90, 10);
@@ -84,12 +84,10 @@ public class ColorWidget extends AbstractWidget {
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        this.itemBlockScreen.setFocused(this);
-        this.itemBlockScreen.setDragging(true);
+        this.colorScreen.setColorFocused(this);
+        this.colorScreen.setColorDragging(true);
 
         changeColor(mouseX, mouseY);
-
-        itemBlockScreen.colorApplyButton.mouseClicked(mouseX, mouseY, button);
 
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -134,11 +132,15 @@ public class ColorWidget extends AbstractWidget {
     private void setEditBox() {
         int rgb = Color.getHSBColor(hsbVals[0], hsbVals[1], hsbVals[2]).getRGB();
         String hex = String.format("#%06X", (0xFFFFFF & rgb));
-        itemBlockScreen.colorEditBox.setValue(hex);
+        colorScreen.getColorEditBox().setValue(hex);
     }
 
     private void updateData() {
-        itemBlockScreen.updateTransformDataClient(ItemTransformType.COLOR, (double) (Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2])));
+        colorScreen.updateColorData(Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2]));
+    }
+
+    public int getColor() {
+        return Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2]);
     }
 
     public void setColor(int color) {
@@ -147,7 +149,7 @@ public class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
 
     }
 

@@ -166,6 +166,8 @@
   "gui.textBlockScreen.cull.off": "Cull Face: Off",
   "gui.textBlockScreen.mirror.on": "Mirror: On",
   "gui.textBlockScreen.mirror.off": "Mirror: Off",
+  "gui.textBlockScreen.font": "Font",
+  "gui.textBlockScreen.color": "Color",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",

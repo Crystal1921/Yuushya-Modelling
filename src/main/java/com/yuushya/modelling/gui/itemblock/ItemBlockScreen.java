@@ -10,6 +10,7 @@ import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
+import com.yuushya.modelling.gui.widget.AbstractColorScreen;
 import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.ItemStackIconList;
 import com.yuushya.modelling.gui.widget.ItemTransformComponent;
@@ -25,10 +26,7 @@ import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
@@ -57,7 +55,7 @@ import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 import static com.yuushya.modelling.utils.YuushyaUtils.normalizeAngle;
 
-public class ItemBlockScreen extends Screen {
+public class ItemBlockScreen extends AbstractColorScreen {
     public static final int PER_HEIGHT = 20;
     public static final int SMALL_BUTTON_WIDTH = 10;
     private static final int TOP = 10;
@@ -757,6 +755,32 @@ public class ItemBlockScreen extends Screen {
     public static void setClipboard(String clipboardValue) {
         Minecraft mc = Minecraft.getInstance();
         TextFieldHelper.setClipboardContents(mc, clipboardValue);
+    }
+
+    // AbstractColorScreen 接口实现
+    @Override
+    public Font getColorFont() {
+        return this.font;
+    }
+
+    @Override
+    public EditBox getColorEditBox() {
+        return this.colorEditBox;
+    }
+
+    @Override
+    public void updateColorData(int colorValue) {
+        updateTransformDataClient(ItemTransformType.COLOR, (double) colorValue);
+    }
+
+    @Override
+    public void setColorFocused(AbstractWidget widget) {
+        this.setFocused(widget);
+    }
+
+    @Override
+    public void setColorDragging(boolean dragging) {
+        this.setDragging(dragging);
     }
 
     public Font getFont() {

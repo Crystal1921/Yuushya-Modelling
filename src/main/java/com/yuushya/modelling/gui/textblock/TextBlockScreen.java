@@ -7,24 +7,26 @@ import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
-import com.yuushya.modelling.gui.widget.StyledMultiLineEditBox;
-import com.yuushya.modelling.gui.widget.TextIconList;
-import com.yuushya.modelling.gui.widget.TextTransformComponent;
+import com.yuushya.modelling.gui.widget.*;
 import com.yuushya.modelling.network.TextLinesPacket;
 import com.yuushya.modelling.network.TextTransformDataOncePacket;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.font.FontManager;
+import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,11 +34,12 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.COLOR;
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 
-public class TextBlockScreen extends Screen {
+public class TextBlockScreen extends AbstractColorScreen {
     public static final int PER_HEIGHT = 20;
     public static final int SMALL_BUTTON_WIDTH = 10;
     private static final int TOP = 10;
@@ -49,6 +52,7 @@ public class TextBlockScreen extends Screen {
     private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
     private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
     private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
+    protected static final Button.CreateNarration DEFAULT_NARRATION = component -> component.get();
 
     private final TextBlockEntity blockEntity;
     private final List<String> newTextLines;
@@ -66,9 +70,13 @@ public class TextBlockScreen extends Screen {
     public CycleButton<Boolean> underlineButton;
     public CycleButton<Boolean> strikethroughButton;
     public CycleButton<Boolean> obfuscatedButton;
+    public CycleButton<Boolean> fontButton;
+    public ColorButton colorButton;
     public Button clearButton;
     public CycleButton<Boolean> cullButton;
     public CycleButton<Boolean> mirrorButton;
+    public EditBox colorEditBox;
+    public ColorWidget colorWidget;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -366,6 +374,9 @@ public class TextBlockScreen extends Screen {
                         .initial(LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
+        this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
+        this.colorEditBox.setMaxLength(7);
+
         boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
@@ -411,9 +422,26 @@ public class TextBlockScreen extends Screen {
                             this.textEditBox.setTextStyle();
                         });
 
+        fontButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.font"), Component.translatable("gui.textBlockScreen.font"))
+                .displayOnlyValue()
+                .withInitialValue(Boolean.FALSE)
+                .withTooltip((on) -> Tooltip.create(Component.empty()))
+                .create(leftColumnX() - RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, bl) -> {
+                            Map<ResourceLocation, FontSet> fontSets = Minecraft.getInstance().fontManager.fontSets;
+
+                        });
+
         clearButton = Button.builder(Component.literal("C"), (button) ->  {
             this.textEditBox.clearStyle();
         }).bounds(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT).build();
+
+        colorButton = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * 3, top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
+            colorButton.showEditor = !colorButton.showEditor;
+            colorWidget.visible = colorButton.showEditor;
+        },DEFAULT_NARRATION);
+
+        this.colorWidget = new ColorWidget(leftColumnX() - 120, top(0, 30), 110, 160, Color.WHITE.getRGB(), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
 
         boldButton.visible = false;
         italicButton.visible = false;
@@ -421,10 +449,15 @@ public class TextBlockScreen extends Screen {
         strikethroughButton.visible = false;
         obfuscatedButton.visible = false;
         clearButton.visible = false;
+        fontButton.visible = false;
+        colorButton.visible = false;
+        colorEditBox.visible = false;
+        colorWidget.visible = false;
 
         // Text editing section
         textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);
         textEditBox.visible = false;
+
         List<String> currentLines = this.blockEntity.getTransformData(slot).textLines;
         if (!currentLines.isEmpty()) {
             ClientLevel level = Minecraft.getInstance().level;
@@ -435,6 +468,10 @@ public class TextBlockScreen extends Screen {
                 }
             }
             textEditBox.setValue(components);
+            TextColor textColor = components.getFirst().getStyle().getColor();
+            if (textColor != null) {
+                colorWidget.setColor(textColor.getValue());
+            }
         }
 
         for (TextTransformComponent component : this.panel.values()) {
@@ -463,6 +500,9 @@ public class TextBlockScreen extends Screen {
         this.addRenderableWidget(strikethroughButton);
         this.addRenderableWidget(obfuscatedButton);
         this.addRenderableWidget(clearButton);
+        this.addRenderableWidget(colorButton);
+        this.addRenderableWidget(fontButton);
+        this.addRenderableWidget(colorWidget);
 
         textIconList.setSelectedSlot(slot);
     }
@@ -553,6 +593,36 @@ public class TextBlockScreen extends Screen {
         this.strikethroughButton.visible = visible;
         this.obfuscatedButton.visible = visible;
         this.clearButton.visible = visible;
+        this.colorButton.visible = visible;
+        this.fontButton.visible = visible;
+        this.colorEditBox.visible = visible;
+        this.colorWidget.visible = visible;
+    }
+
+    @Override
+    public Font getColorFont() {
+        return this.font;
+    }
+
+    @Override
+    public EditBox getColorEditBox() {
+        return colorEditBox;
+    }
+
+    @Override
+    public void updateColorData(int colorValue) {
+        this.colorButton.color = colorValue;
+        this.textEditBox.setTextStyle();
+    }
+
+    @Override
+    public void setColorFocused(AbstractWidget widget) {
+        this.setFocused(widget);
+    }
+
+    @Override
+    public void setColorDragging(boolean dragging) {
+        this.setDragging(dragging);
     }
 
     public enum Mode implements StringRepresentable {
