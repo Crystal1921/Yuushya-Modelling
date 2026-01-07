@@ -52,6 +52,16 @@ public class TextBlockScreen extends AbstractColorScreen {
     private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
     private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
     private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
+    private static final int RAINBOW_COUNT = 7;
+    private static int[] rainbowColors = {
+            Color.RED.getRGB(),
+            Color.ORANGE.getRGB(),
+            Color.YELLOW.getRGB(),
+            Color.GREEN.getRGB(),
+            Color.CYAN.getRGB(),
+            Color.BLUE.getRGB(),
+            Color.MAGENTA.getRGB()
+    };
     protected static final Button.CreateNarration DEFAULT_NARRATION = component -> component.get();
 
     private final TextBlockEntity blockEntity;
@@ -77,6 +87,7 @@ public class TextBlockScreen extends AbstractColorScreen {
     public CycleButton<Boolean> mirrorButton;
     public EditBox colorEditBox;
     public ColorWidget colorWidget;
+    private ColorButton[] rainbowColorButtons = new ColorButton[RAINBOW_COUNT];
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -146,7 +157,6 @@ public class TextBlockScreen extends AbstractColorScreen {
     @Override
     protected void init() {
         if (minecraft == null) return;
-
         Button addTextButton = Button.builder(Component.literal("+"),
                         (btn) -> {
                             textIconList.addSlot();
@@ -439,9 +449,22 @@ public class TextBlockScreen extends AbstractColorScreen {
         colorButton = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * 3, top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
             colorButton.showEditor = !colorButton.showEditor;
             colorWidget.visible = colorButton.showEditor;
+            for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
+                rainbowColorButton.visible = colorButton.showEditor;
+            }
         },DEFAULT_NARRATION);
 
         this.colorWidget = new ColorWidget(leftColumnX() - 120, top(0, 30), 110, 160, Color.WHITE.getRGB(), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
+        for (int i = 0; i < rainbowColors.length; i++) {
+            rainbowColorButtons[i] = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * (4 + i ), top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
+                if (button instanceof ColorButton selectButton) {
+                    this.colorWidget.setColor(selectButton.color);
+                    colorButton.color = selectButton.color;
+                    this.textEditBox.setColorTextStyle();
+                }
+            }, DEFAULT_NARRATION, rainbowColors[i]);
+            rainbowColorButtons[i].visible = false;
+        }
 
         boldButton.visible = false;
         italicButton.visible = false;
@@ -453,6 +476,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         colorButton.visible = false;
         colorEditBox.visible = false;
         colorWidget.visible = false;
+
 
         // Text editing section
         textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);
@@ -503,6 +527,10 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.addRenderableWidget(colorButton);
         this.addRenderableWidget(fontButton);
         this.addRenderableWidget(colorWidget);
+
+        for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
+            this.addRenderableWidget(rainbowColorButton);
+        }
 
         textIconList.setSelectedSlot(slot);
     }
@@ -598,6 +626,9 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.colorButton.visible = visible;
         this.colorWidget.visible = false;
         this.colorButton.showEditor = false;
+        for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
+            rainbowColorButton.visible = false;
+        }
     }
 
     @Override

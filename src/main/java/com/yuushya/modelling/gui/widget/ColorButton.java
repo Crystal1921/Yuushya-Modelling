@@ -10,6 +10,11 @@ public class ColorButton extends Button {
     public int color = Color.WHITE.getRGB();
     public boolean showEditor;
 
+    public ColorButton(int x, int y, int width, int height, OnPress onPress, CreateNarration createNarration, int color) {
+        super(x, y, width, height, Component.empty(), onPress, createNarration);
+        this.color = color;
+    }
+
     public ColorButton(int x, int y, int width, int height, OnPress onPress, CreateNarration createNarration) {
         super(x, y, width, height, Component.empty(), onPress, createNarration);
     }
