@@ -426,6 +426,22 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                         .withUnderlined(underlineButton.getValue())
                         .withStrikethrough(strikethroughButton.getValue())
                         .withObfuscated(obfuscatedButton.getValue())
+        );
+        this.syncSelectionStyle();
+        this.textBlockScreen.updateComponentLines(this.textField.getComponents());
+    }
+
+    public void setColorTextStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
+        }
+        this.textField.applyStyleToSelection(
+                Style.EMPTY
+                        .withBold(boldButton.getValue())
+                        .withItalic(italicButton.getValue())
+                        .withUnderlined(underlineButton.getValue())
+                        .withStrikethrough(strikethroughButton.getValue())
+                        .withObfuscated(obfuscatedButton.getValue())
                         .withColor(colorWidget.getColor())
         );
         this.syncSelectionStyle();

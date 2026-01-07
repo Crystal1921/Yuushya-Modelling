@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
@@ -210,23 +211,32 @@ public class StyledMultilineTextField {
             if (compEnd <= selection.beginIndex || currentIndex >= selection.endIndex) {
                 newComponents.add(comp);
             } else {
+                Style compStyle = comp.getStyle();
                 if (currentIndex < selection.beginIndex) {
                     int beforeEnd = selection.beginIndex - currentIndex;
                     if (beforeEnd > 0) {
-                        newComponents.add(Component.literal(compText.substring(0, beforeEnd)).setStyle(comp.getStyle()));
+                        newComponents.add(Component.literal(compText.substring(0, beforeEnd)).setStyle(compStyle));
                     }
                 }
 
                 int selectedStart = Math.max(0, selection.beginIndex - currentIndex);
                 int selectedEnd = Math.min(compLength, selection.endIndex - currentIndex);
                 if (selectedEnd > selectedStart) {
-                    newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style));
+                    TextColor newTextColor = style.getColor();
+                    TextColor oldTextColor = compStyle.getColor();
+                    if (newTextColor != null && !newTextColor.equals(oldTextColor)) {
+                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style.withColor(newTextColor)));
+                    } else if (oldTextColor != null) {
+                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style.withColor(oldTextColor)));
+                    } else {
+                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style));
+                    }
                 }
 
                 if (selection.endIndex < compEnd) {
                     int afterStart = Math.max(0, selection.endIndex - currentIndex);
                     if (afterStart < compLength) {
-                        newComponents.add(Component.literal(compText.substring(afterStart)).setStyle(comp.getStyle()));
+                        newComponents.add(Component.literal(compText.substring(afterStart)).setStyle(compStyle));
                     }
                 }
             }

@@ -593,10 +593,11 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.strikethroughButton.visible = visible;
         this.obfuscatedButton.visible = visible;
         this.clearButton.visible = visible;
-        this.colorButton.visible = visible;
         this.fontButton.visible = visible;
         this.colorEditBox.visible = visible;
-        this.colorWidget.visible = visible;
+        this.colorButton.visible = visible;
+        this.colorWidget.visible = false;
+        this.colorButton.showEditor = false;
     }
 
     @Override
@@ -612,7 +613,7 @@ public class TextBlockScreen extends AbstractColorScreen {
     @Override
     public void updateColorData(int colorValue) {
         this.colorButton.color = colorValue;
-        this.textEditBox.setTextStyle();
+        this.textEditBox.setColorTextStyle();
     }
 
     @Override
