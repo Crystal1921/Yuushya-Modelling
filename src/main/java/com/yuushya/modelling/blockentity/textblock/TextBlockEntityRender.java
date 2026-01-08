@@ -29,8 +29,8 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
     }
 
     @Override
-    public void render(@NotNull TextBlockEntity blockEntity, float tickDelta, PoseStack matrixStack,
-                       MultiBufferSource multiBufferSource, int light, int overlay) {
+    public void render(@NotNull TextBlockEntity blockEntity, float tickDelta, @NotNull PoseStack matrixStack,
+                       @NotNull MultiBufferSource multiBufferSource, int light, int overlay) {
         super.render(blockEntity, tickDelta, matrixStack, multiBufferSource, light, overlay);
 
         Level level = blockEntity.getLevel();

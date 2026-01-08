@@ -2,6 +2,8 @@ package com.yuushya.modelling.blockentity.textblock;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -12,12 +14,23 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class TextBlock extends AbstractTransformBlock {
+    public static final IClientItemExtensions ITEM_EXTENSIONS = new IClientItemExtensions() {
+        @Override
+        public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            Minecraft minecraft = Minecraft.getInstance();
+            return new TextBlockSpecialRender(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
+        }
+    };
+
     public TextBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
     }
