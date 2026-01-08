@@ -18,9 +18,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.font.FontManager;
 import net.minecraft.client.gui.font.FontSet;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -33,8 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Supplier;
 
-import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.COLOR;
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
@@ -42,6 +40,7 @@ import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 public class TextBlockScreen extends AbstractColorScreen {
     public static final int PER_HEIGHT = 20;
     public static final int SMALL_BUTTON_WIDTH = 10;
+    protected static final Button.CreateNarration DEFAULT_NARRATION = Supplier::get;
     private static final int TOP = 10;
     private static final int RIGHT_COLUMN_X = 2;
     private static final int RIGHT_BAR_WIDTH = PER_HEIGHT;
@@ -62,19 +61,10 @@ public class TextBlockScreen extends AbstractColorScreen {
             Color.BLUE.getRGB(),
             Color.MAGENTA.getRGB()
     };
-    protected static final Button.CreateNarration DEFAULT_NARRATION = component -> component.get();
-
     private final TextBlockEntity blockEntity;
     private final List<String> newTextLines;
     private final Map<TextTransformType, Double> storage = new HashMap<>();
     private final Map<TextTransformType, TextTransformComponent> panel = new LinkedHashMap<>();
-    private int slot;
-    private List<String> textLines = new ArrayList<>();
-    private CycleButton<Mode> modeButton;
-    private CycleButton<Boolean> shownStateButton;
-    private TextIconList textIconList;
-    private StyledMultiLineEditBox textEditBox;
-
     public CycleButton<Boolean> boldButton;
     public CycleButton<Boolean> italicButton;
     public CycleButton<Boolean> underlineButton;
@@ -87,6 +77,13 @@ public class TextBlockScreen extends AbstractColorScreen {
     public CycleButton<Boolean> mirrorButton;
     public EditBox colorEditBox;
     public ColorWidget colorWidget;
+    private int slot;
+    private List<String> textLines = new ArrayList<>();
+    private CycleButton<Mode> modeButton;
+    private CycleButton<Boolean> shownStateButton;
+    private TextIconList textIconList;
+    private StyledMultiLineEditBox textEditBox;
+    private FontList fontList;
     private ColorButton[] rainbowColorButtons = new ColorButton[RAINBOW_COUNT];
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
@@ -207,8 +204,8 @@ public class TextBlockScreen extends AbstractColorScreen {
                 );
 
         cullButton = CycleButton.booleanBuilder(
-                Component.literal("▢"),
-                Component.literal("■"))
+                        Component.literal("▢"),
+                        Component.literal("■"))
                 .displayOnlyValue()
                 .withInitialValue(CULLED.extract(blockEntity, slot) != 0)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.textBlockScreen.cull.on") : Component.translatable("gui.textBlockScreen.cull.off")))
@@ -217,8 +214,8 @@ public class TextBlockScreen extends AbstractColorScreen {
                 );
 
         mirrorButton = CycleButton.booleanBuilder(
-                Component.literal("⇢"),
-                Component.literal("⇠"))
+                        Component.literal("⇢"),
+                        Component.literal("⇠"))
                 .displayOnlyValue()
                 .withInitialValue(MIRROR.extract(blockEntity, slot) != 0)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.textBlockScreen.mirror.on") : Component.translatable("gui.textBlockScreen.mirror.off")))
@@ -387,6 +384,8 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
         this.colorEditBox.setMaxLength(7);
 
+        fontList = new FontList(this.minecraft, 200, 160, leftColumnX() - 200, top(0, 30), 30);
+
         boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
                 .displayOnlyValue()
                 .withInitialValue(Boolean.FALSE)
@@ -438,25 +437,37 @@ public class TextBlockScreen extends AbstractColorScreen {
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() - RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
+                            this.fontList.visible = bl;
+                            if (this.colorWidget.visible) {
+                                this.colorWidget.visible = !bl;
+                                colorButton.showEditor = !bl;
+                                for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
+                                    rainbowColorButton.visible = !bl;
+                                }
+                            }
                             Map<ResourceLocation, FontSet> fontSets = Minecraft.getInstance().fontManager.fontSets;
-
+                            this.fontList.updateRenderList(new ArrayList<>(fontSets.keySet()));
                         });
 
-        clearButton = Button.builder(Component.literal("C"), (button) ->  {
+        clearButton = Button.builder(Component.literal("C"), (button) -> {
             this.textEditBox.clearStyle();
         }).bounds(leftColumnX() + RIGHT_BAR_WIDTH * 4, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         colorButton = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * 3, top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
             colorButton.showEditor = !colorButton.showEditor;
             colorWidget.visible = colorButton.showEditor;
+            if (fontList.visible) {
+                fontList.visible = !colorButton.showEditor;
+                fontButton.setValue(!colorButton.showEditor);
+            }
             for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
                 rainbowColorButton.visible = colorButton.showEditor;
             }
-        },DEFAULT_NARRATION);
+        }, DEFAULT_NARRATION);
 
         this.colorWidget = new ColorWidget(leftColumnX() - 120, top(0, 30), 110, 160, Color.WHITE.getRGB(), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         for (int i = 0; i < rainbowColors.length; i++) {
-            rainbowColorButtons[i] = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * (4 + i ), top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
+            rainbowColorButtons[i] = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * (4 + i), top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
                 if (button instanceof ColorButton selectButton) {
                     this.colorWidget.setColor(selectButton.color);
                     colorButton.color = selectButton.color;
@@ -476,6 +487,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         colorButton.visible = false;
         colorEditBox.visible = false;
         colorWidget.visible = false;
+        fontList.visible = false;
 
 
         // Text editing section
@@ -527,6 +539,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.addRenderableWidget(colorButton);
         this.addRenderableWidget(fontButton);
         this.addRenderableWidget(colorWidget);
+        this.addRenderableWidget(fontList);
 
         for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
             this.addRenderableWidget(rainbowColorButton);
