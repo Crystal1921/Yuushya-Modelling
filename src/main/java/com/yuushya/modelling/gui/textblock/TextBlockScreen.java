@@ -82,8 +82,8 @@ public class TextBlockScreen extends AbstractColorScreen {
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private TextIconList textIconList;
-    private StyledMultiLineEditBox textEditBox;
-    private FontList fontList;
+    public StyledMultiLineEditBox textEditBox;
+    public FontList fontList;
     private ColorButton[] rainbowColorButtons = new ColorButton[RAINBOW_COUNT];
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
@@ -384,7 +384,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
         this.colorEditBox.setMaxLength(7);
 
-        fontList = new FontList(this.minecraft, 200, 160, leftColumnX() - 200, top(0, 30), 30);
+        fontList = new FontList(this.minecraft,this, 200, 160, leftColumnX() - 200, top(0, 30), 30);
 
         boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
                 .displayOnlyValue()

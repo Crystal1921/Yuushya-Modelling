@@ -1,9 +1,11 @@
 package com.yuushya.modelling.gui.widget;
 
+import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -15,12 +17,14 @@ import java.util.List;
 public class FontList extends ObjectSelectionList<FontList.Entry> {
 
     protected final List<ResourceLocation> fontList;
+    private final TextBlockScreen parentScreen;
     private int itemHeight;
     private int itemWidth;
 
-    public FontList(Minecraft minecraft, int width, int height, int x, int y0, int itemHeight) {
+    public FontList(Minecraft minecraft, TextBlockScreen textBlockScreen, int width, int height, int x, int y0, int itemHeight) {
         super(minecraft, width, height, y0, itemHeight);
         this.setX(x);
+        this.parentScreen = textBlockScreen;
         this.fontList = new ArrayList<>();
         this.centerListVertically = false;
         this.setRenderHeader(false, 0);
@@ -43,7 +47,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         if (selected != null && selected.slot < fontList.size()) {
             return fontList.get(selected.slot);
         }
-        return null;
+        return Minecraft.DEFAULT_FONT;
     }
 
     public void setSelectedSlot(int slot) {
@@ -94,15 +98,12 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         @Override
         public void render(@NotNull GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-            ResourceLocation font = getFont();
-
-            // Render font name
-            Font fontRenderer = Minecraft.getInstance().font;
-            if (font != null) {
-                String fontName = font.toString();
-                int textY = y + (itemHeight - fontRenderer.lineHeight) / 2;
-                guiGraphics.drawString(fontRenderer, fontName, x, textY, 0xFFFFFF, true);
-            }
+            ResourceLocation fontLoc = getFont();
+            FontSet fontSet = Minecraft.getInstance().fontManager.fontSets.get(fontLoc);
+            Font font = new Font(resourceLocation -> fontSet, true);
+            String fontName = fontSet.name().toString();
+            int textY = y + (itemHeight - font.lineHeight) / 2;
+            guiGraphics.drawString(font, fontName, x, textY, 0xFFFFFF, true);
 
             // Render selection indicator
             if (isMouseOver || this == FontList.this.getSelected()) {
@@ -113,6 +114,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             this.parent.setSelected(this);
+            this.parent.parentScreen.textEditBox.setFontTextStyle();
             return true;
         }
 

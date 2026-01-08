@@ -37,6 +37,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
     private final CycleButton<Boolean> strikethroughButton;
     private final CycleButton<Boolean> obfuscatedButton;
     private final ColorWidget colorWidget;
+    private final FontList fontList;
     private final TextBlockScreen textBlockScreen;
     private long focusedTime = Util.getMillis();
 
@@ -55,6 +56,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         this.strikethroughButton = textBlockScreen.strikethroughButton;
         this.obfuscatedButton = textBlockScreen.obfuscatedButton;
         this.colorWidget = textBlockScreen.colorWidget;
+        this.fontList = textBlockScreen.fontList;
         this.textBlockScreen = textBlockScreen;
     }
 
@@ -444,6 +446,22 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                         .withObfuscated(obfuscatedButton.getValue())
                         .withColor(colorWidget.getColor())
         );
+        this.syncSelectionStyle();
+        this.textBlockScreen.updateComponentLines(this.textField.getComponents());
+    }
+
+    public void setFontTextStyle() {
+        if (!this.textField.hasSelection()) {
+            return;
+        }
+        this.textField.applyStyleToSelection(
+                Style.EMPTY
+                        .withBold(boldButton.getValue())
+                        .withItalic(italicButton.getValue())
+                        .withUnderlined(underlineButton.getValue())
+                        .withStrikethrough(strikethroughButton.getValue())
+                        .withObfuscated(obfuscatedButton.getValue())
+        , fontList.getSelectedFont());
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }

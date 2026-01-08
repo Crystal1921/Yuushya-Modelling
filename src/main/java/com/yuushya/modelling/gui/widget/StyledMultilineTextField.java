@@ -12,13 +12,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @OnlyIn(Dist.CLIENT)
@@ -191,6 +194,10 @@ public class StyledMultilineTextField {
     }
 
     public void applyStyleToSelection(Style style) {
+        applyStyleToSelection(style, null);
+    }
+
+    public void applyStyleToSelection(Style style, @Nullable ResourceLocation font) {
         if (!this.hasSelection()) {
             return;
         }
@@ -212,6 +219,7 @@ public class StyledMultilineTextField {
                 newComponents.add(comp);
             } else {
                 Style compStyle = comp.getStyle();
+                style = style.withFont(Objects.requireNonNullElseGet(font, compStyle::getFont));
                 if (currentIndex < selection.beginIndex) {
                     int beforeEnd = selection.beginIndex - currentIndex;
                     if (beforeEnd > 0) {
