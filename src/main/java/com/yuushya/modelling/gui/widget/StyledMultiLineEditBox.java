@@ -2,6 +2,7 @@ package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractScrollWidget;
@@ -16,6 +17,7 @@ import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
+import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -477,6 +479,10 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
             this.underlineButton.setValue(this.toBool(selectionStyle.isUnderlined()));
             this.strikethroughButton.setValue(this.toBool(selectionStyle.isStrikethrough()));
             this.obfuscatedButton.setValue(this.toBool(selectionStyle.isObfuscated()));
+            if (selectionStyle.getColor() != null) {
+                this.colorWidget.setColor(selectionStyle.getColor().getValue());
+                this.textBlockScreen.colorButton.color = selectionStyle.getColor().getValue();
+            }
         }
     }
 
@@ -522,7 +528,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         if (!this.textField.hasSelection()) {
             return;
         }
-        this.textField.applyStyleToSelection(Style.EMPTY);
+        this.textField.applyStyleToSelection(Style.EMPTY.withColor(Color.WHITE.getRGB()), Minecraft.DEFAULT_FONT);
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }
