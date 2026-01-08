@@ -480,8 +480,9 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
             this.strikethroughButton.setValue(this.toBool(selectionStyle.isStrikethrough()));
             this.obfuscatedButton.setValue(this.toBool(selectionStyle.isObfuscated()));
             if (selectionStyle.getColor() != null) {
-                this.colorWidget.setColor(selectionStyle.getColor().getValue());
-                this.textBlockScreen.colorButton.color = selectionStyle.getColor().getValue();
+                int value = selectionStyle.getColor().getValue();
+                this.colorWidget.setColor(value);
+                this.textBlockScreen.colorButton.color = value;
             }
         }
     }

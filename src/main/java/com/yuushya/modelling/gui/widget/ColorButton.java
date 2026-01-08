@@ -24,6 +24,6 @@ public class ColorButton extends Button {
         if (showEditor) {
             guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), Color.BLACK.getRGB());
         }
-        guiGraphics.fill(this.getX() + 2, this.getY() + 2, this.getX() + this.getWidth() - 2, this.getY() + this.getHeight() - 2, color);
+        guiGraphics.fill(this.getX() + 2, this.getY() + 2, this.getX() + this.getWidth() - 2, this.getY() + this.getHeight() - 2, color | 0xFF000000);
     }
 }
