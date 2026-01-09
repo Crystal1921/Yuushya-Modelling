@@ -19,11 +19,14 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
 
 public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<TextBlockEntity> {
+    private final java.util.HashMap<String, MutableComponent> componentCacheMap = new java.util.HashMap<>();
+
     public TextBlockEntityRender(BlockEntityRendererProvider.Context context) {
         super(context);
     }
@@ -38,14 +41,24 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
             for (TransformTextData transformData : blockEntity.getTransformData()) {
 
                 List<String> textLines = transformData.textLines;
-                MutableComponent mutableComponent = Component.empty();
+                String cacheKey = String.join("", textLines);
 
-                textLines.forEach(line -> {
-                    MutableComponent lineComponent = Component.Serializer.fromJson(line, clientLevel.registryAccess());
-                    if (lineComponent != null) {
-                        mutableComponent.append(lineComponent);
-                    }
-                });
+                // 尝试从缓存获取
+                MutableComponent mutableComponent = componentCacheMap.get(cacheKey);
+
+                if (mutableComponent == null) {
+                    // 重新构建并缓存
+                    final MutableComponent tempComp = Component.empty();
+                    textLines.forEach(line -> {
+                        MutableComponent lineComponent = Component.Serializer.fromJson(line, clientLevel.registryAccess());
+                        if (lineComponent != null) {
+                            tempComp.append(lineComponent);
+                        }
+                    });
+                    mutableComponent = tempComp;
+                    componentCacheMap.put(cacheKey, tempComp);
+                }
+
                 matrixStack.pushPose();
 
                 matrixStack.translate(0.0D, 1.0D, 0.0D);
