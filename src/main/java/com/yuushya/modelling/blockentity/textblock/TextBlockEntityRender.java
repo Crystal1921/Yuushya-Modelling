@@ -21,11 +21,19 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
 
 public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<TextBlockEntity> {
-    private final java.util.HashMap<String, MutableComponent> componentCacheMap = new java.util.HashMap<>();
+    private final java.util.LinkedHashMap<String, MutableComponent> componentCacheMap =
+            new java.util.LinkedHashMap<>(100, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, MutableComponent> eldest) {
+                    return size() > 100;  // 限制最多100个条目
+                }
+            };
+
 
     public TextBlockEntityRender(BlockEntityRendererProvider.Context context) {
         super(context);
