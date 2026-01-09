@@ -1,7 +1,6 @@
 package com.yuushya.modelling.item;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.yuushya.modelling.blockentity.textblock.TextBlockSpecialRender;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -16,10 +15,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
 public class GetBlockStateItemForge extends GetBlockStateItem {
-    public static final IClientItemExtensions ITEM_EXTENSIONS = new IClientItemExtensions() {
+    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.dist == Dist.CLIENT ? new IClientItemExtensions() {
         @Override
         public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
-            return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(),Minecraft.getInstance().getEntityModels()){
+            return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {
 
                 @Override
                 public void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
@@ -28,10 +27,12 @@ public class GetBlockStateItemForge extends GetBlockStateItem {
 
             };
         }
-    };
+    } : null;
+
     public GetBlockStateItemForge(Properties properties, Integer tipLines) {
         super(properties, tipLines);
     }
+
     @SuppressWarnings("removal")
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {

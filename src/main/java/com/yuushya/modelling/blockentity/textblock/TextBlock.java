@@ -23,13 +23,13 @@ import org.jetbrains.annotations.Nullable;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class TextBlock extends AbstractTransformBlock {
-    public static final IClientItemExtensions ITEM_EXTENSIONS = new IClientItemExtensions() {
+    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.dist == Dist.CLIENT ? new IClientItemExtensions() {
         @Override
         public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
             Minecraft minecraft = Minecraft.getInstance();
             return new TextBlockSpecialRender(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
         }
-    };
+    } : null;
 
     public TextBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
