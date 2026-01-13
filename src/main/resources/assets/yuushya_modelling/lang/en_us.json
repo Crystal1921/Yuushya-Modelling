@@ -168,6 +168,8 @@
   "gui.textBlockScreen.mirror.off": "Mirror: Off",
   "gui.textBlockScreen.font": "Font",
   "gui.textBlockScreen.color": "Color",
+  "gui.textBlockScreen.block": "Block",
+  "gui.textBlockScreen.item": "Item",
 
   "gui.yuushya.showBlockScreen.pos_text": "Position",
   "gui.yuushya.showBlockScreen.rot_text": "Rotation",

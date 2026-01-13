@@ -17,6 +17,7 @@ public class TransformItemData implements ITransformDataProvider {
     public int color;
     public ItemStack itemStack;
     public boolean isShown;
+    public boolean enableBlock;
 
     public TransformItemData() {
         this.pos = new Vector3d(0, 0, 0);
@@ -37,17 +38,18 @@ public class TransformItemData implements ITransformDataProvider {
         this.isShown = isShown;
     }
 
-    public void set(Vector3d pos, Vector3f rot, Vector3f scales, ItemStack ItemStack, int color, boolean isShown) {
+    public void set(Vector3d pos, Vector3f rot, Vector3f scales, ItemStack ItemStack, int color, boolean isShown, boolean enableBlock) {
         this.pos.set(pos);
         this.rot.set(rot.x(), rot.y(), rot.z());
         this.scales.set(scales.x(), scales.y(), scales.z());
         this.itemStack = ItemStack;
         this.color = color;
         this.isShown = isShown;
+        this.enableBlock = enableBlock;
     }
 
     public void set(TransformItemData old) {
-        set(old.pos, old.rot, old.scales, old.itemStack, old.color, old.isShown);
+        set(old.pos, old.rot, old.scales, old.itemStack, old.color, old.isShown, old.enableBlock);
     }
 
     public void set() {
@@ -56,6 +58,7 @@ public class TransformItemData implements ITransformDataProvider {
         this.scales.set(1, 1, 1);
         this.itemStack = Items.AIR.getDefaultInstance();
         this.isShown = false;
+        this.enableBlock = false;
     }
 
     //readNbt from compoundTag
@@ -69,6 +72,7 @@ public class TransformItemData implements ITransformDataProvider {
         this.itemStack = ItemStack.parseOptional(registries, compoundTag.getCompound("ItemStack"));
         this.color = (compoundTag.getInt("Color"));
         this.isShown = compoundTag.getBoolean("isShown");
+        this.enableBlock = compoundTag.getBoolean("enableBlock");
     }
 
     //writeNbt to compoundTag
@@ -79,6 +83,7 @@ public class TransformItemData implements ITransformDataProvider {
         compoundTag.put("ItemStack", YuushyaUtils.itemStackTag(itemStack, registries));
         compoundTag.putInt("Color", color);
         compoundTag.putBoolean("isShown", isShown);
+        compoundTag.putBoolean("enableBlock", enableBlock);
     }
 
     // ITransformDataProvider interface methods

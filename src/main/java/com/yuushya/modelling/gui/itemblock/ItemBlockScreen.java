@@ -1,6 +1,7 @@
 package com.yuushya.modelling.gui.itemblock;
 
 import com.yuushya.modelling.Yuushya;
+import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
@@ -15,9 +16,11 @@ import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.ItemStackIconList;
 import com.yuushya.modelling.gui.widget.ItemTransformComponent;
 import com.yuushya.modelling.gui.widget.SizeTransformComponent;
+import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.network.UpdateAOPacket;
+import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import lombok.Getter;
@@ -29,25 +32,26 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
@@ -83,6 +87,12 @@ public class ItemBlockScreen extends AbstractColorScreen {
     private CycleButton<Boolean> shownStateButton;
     private ItemStackIconList itemStackList;
     private ColorWidget colorWidget;
+    private Property<?> property;
+    private Button leftPropertyButton;
+    private Button rightPropertyButton;
+    private Button leftStateButton;
+    private Button rightStateButton;
+    private CycleButton<Boolean> enableBlockButton;
 
     public ItemBlockScreen(ItemBlockEntity blockEntity, ItemStack newItemStack) {
         super(GameNarrator.NO_TITLE);
@@ -124,6 +134,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.colorEditBox.setValue(String.format("#%06X", (0xFFFFFF & (int) extract)));
 
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
+        boolean enableBlock = ENABLE_BLOCK.extract(blockEntity, slot) == 1;
+        updateBlockStateButtonVisible(updateStateButton() && enableBlock);
+        enableBlockButton.setValue(enableBlock);
     }
 
     private ItemTransformComponent choose(ItemTransformType type) {
@@ -139,6 +152,44 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.colorEditBox.visible = visible;
         this.colorFinishButton.visible = visible;
         this.colorApplyButton.visible = visible;
+    }
+
+    private void updateBlockStateButtonVisible(boolean visible) {
+        this.leftPropertyButton.visible = visible;
+        this.rightPropertyButton.visible = visible;
+        this.leftStateButton.visible = visible;
+        this.rightStateButton.visible = visible;
+    }
+
+    @Nullable
+    public BlockState getBlockState() {
+        ItemStack itemStack = blockEntity.getTransformData(slot).itemStack;
+        BlockState blockState = itemStack.get(DataComponentRegistry.BLOCKSTATE);
+        if (blockState == null) {
+            Item item = itemStack.getItem();
+            if (item instanceof BlockItem blockItem) {
+                return blockItem.getBlock().defaultBlockState();
+            }
+        }
+        return blockState;
+    }
+
+    @Nullable
+    public Collection<Property<?>> getProperties() {
+        BlockState blockState = getBlockState();
+        if (blockState == null) {return null;}
+        return blockState.getProperties();
+    }
+
+    public boolean updateStateButton() {
+        BlockState blockState = getBlockState();
+        if (blockState == null) {
+            return false;
+        }
+        Collection<Property<?>> collection = blockState.getBlock().getStateDefinition().getProperties();
+        boolean stateButtonVisible = !collection.isEmpty();
+        if (stateButtonVisible) property = collection.iterator().next();
+        return stateButtonVisible;
     }
 
     public ItemStack getItemStack() {
@@ -161,9 +212,13 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn) -> {
                             if (this.newItemStack != null) {
                                 if (this.newItemStack.isEmpty()) return;
+                                if (newItemStack.getItem() instanceof BlockItem blockItem) {
+                                    newItemStack.set(DataComponentRegistry.BLOCKSTATE, blockItem.getBlock().defaultBlockState());
+                                }
                                 itemStackList.addSlot();
                                 updateItemStack(newItemStack);
                                 updateTransformDataClient(SHOWN, 1.0);
+                                updateStateButton();
                             }
                         })
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.add")))
@@ -206,8 +261,8 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         shownStateButton = CycleButton.booleanBuilder(
-                        Component.literal("🕶"),//Component.translatable("gui.itemBlockScreen.display.on"),
-                        Component.literal("👀"))//Component.translatable("gui.itemBlockScreen.display.off"))
+                        Component.literal("🕶"),
+                        Component.literal("👀"))
                 .displayOnlyValue()
                 .withInitialValue(true)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
@@ -284,7 +339,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 .booleanBuilder(Component.literal("●"), Component.literal("☀"))
                 .displayOnlyValue()
                 .withInitialValue(blockEntity.getBlockState().getValue(ENABLE_AO))
-                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.ambientOcclusion.off") : Component.translatable("gui.itemBlockScreen.ambientOcclusion.on"))))
+                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.ambientOcclusion.on") : Component.translatable("gui.itemBlockScreen.ambientOcclusion.off"))))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 9, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, enableAO) -> {
                             Level level = blockEntity.getLevel();
@@ -503,6 +558,56 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .initial(SCALE_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(4, 20), leftColumnWidth(), PER_HEIGHT).build();
 
+        boolean enableBlock = ENABLE_BLOCK.extract(blockEntity, slot) == 1;
+        enableBlockButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.block"), Component.translatable("gui.textBlockScreen.item"))
+                .displayOnlyValue()
+                .withInitialValue(enableBlock)
+                .create(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT, RIGHT_LIST_WIDTH, PER_HEIGHT, Component.empty(), (button, bool) -> {
+                    updateBlockStateButtonVisible(bool);
+                    updateTransformDataClient(ENABLE_BLOCK, bool ? 1.0 : 0.0);
+                });
+
+        leftPropertyButton = Button.builder(Component.literal("<"),
+                        (btn) -> {
+                            if (property != null) {
+                                property = YuushyaBlockStates.getRelative(getProperties(), property, true);
+                            }
+                        })
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT * 2, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .build();
+        rightPropertyButton = Button.builder(Component.literal(">"),
+                        (btn) -> {
+                            if (property != null) {
+                                property = YuushyaBlockStates.getRelative(getProperties(), property, false);
+                            }
+                        })
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 2, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .build();
+        leftStateButton = Button.builder(Component.literal("<"),
+                        (btn) -> {
+                            BlockState blockState = getBlockState();
+                            if (blockState == null) return;
+                            BlockState nextBlockState = YuushyaBlockStates.cycleState(blockState, property, true);
+                            ItemStack itemStack = blockEntity.getTransformData(slot).itemStack;
+                            itemStack.set(DataComponentRegistry.BLOCKSTATE, nextBlockState);
+                            updateItemStack(itemStack);
+                        })
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .build();
+        rightStateButton = Button.builder(Component.literal(">"),
+                        (btn) -> {
+                            BlockState blockState = getBlockState();
+                            if (blockState == null) return;
+                            BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, false);
+                            ItemStack itemStack = blockEntity.getTransformData(slot).itemStack;
+                            itemStack.set(DataComponentRegistry.BLOCKSTATE, nextBlockState);
+                            updateItemStack(itemStack);
+                        })
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .build();
+
+        updateBlockStateButtonVisible(updateStateButton() && enableBlock);
+
         this.colorWidget = new ColorWidget(leftColumnX() - 10, top(-2, 30), 110, 160, (int) COLOR.extract(blockEntity, slot), Component.translatable("gui.yuushya.itemBlockScreen.color_text"), this);
         this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
         this.colorEditBox.setMaxLength(7);
@@ -587,6 +692,11 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.addRenderableWidget(colorEditBox);
         this.addRenderableWidget(colorFinishButton);
         this.addRenderableWidget(colorApplyButton);
+        this.addRenderableWidget(enableBlockButton);
+        this.addRenderableWidget(leftPropertyButton);
+        this.addRenderableWidget(rightStateButton);
+        this.addRenderableWidget(leftStateButton);
+        this.addRenderableWidget(rightPropertyButton);
 
         itemStackList.setSelectedSlot(slot);
     }
@@ -617,11 +727,11 @@ public class ItemBlockScreen extends AbstractColorScreen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.itemStackList.render(guiGraphics, mouseX, mouseY, partialTick);
         ItemStack itemStack = getItemStack();
         guiGraphics.drawString(this.font, itemStack.getDisplayName(), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
@@ -632,6 +742,17 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 component.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
+
+        if (ENABLE_BLOCK.extract(blockEntity, slot) == 1) {
+            BlockState blockState = getBlockState();
+            if (blockState != null && property != null) {
+                String propertyName = property.getName();
+                guiGraphics.drawString(this.font, propertyName, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyName) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 2 + 5, 0xFFFFFFFF, false);
+                String propertyValue = YuushyaDebugStickItem.getNameHelper(blockState, property);
+                guiGraphics.drawString(this.font, propertyValue, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyValue) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3 + 5, 0xFFFFFFFF, false);
+            }
+        }
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
@@ -726,6 +847,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         updateTransformDataClient(SCALE_Z, (double) data.scales.z);
 
         updateTransformDataClient(SHOWN, data.isShown ? 1.0 : 0.0);
+        updateTransformDataClient(ENABLE_BLOCK, data.enableBlock ? 1.0 : 0.0);
         updateTransformDataClient(COLOR, (double) data.color);
 
         updateItemStack(data.itemStack);

@@ -300,7 +300,7 @@ public class ShowBlockScreen extends Screen {
                 .build();
         rightStateButton = Button.builder(Component.literal(">"),
                         (btn) -> {
-                            BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, true);
+                            BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, false);
                             updateTransformData(BLOCK_STATE, (double) Block.getId(nextBlockState));
                         })
                 .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2 * 3, RIGHT_STATE_PANEL_Y + PER_HEIGHT, SMALL_BUTTON_WIDTH, PER_HEIGHT)

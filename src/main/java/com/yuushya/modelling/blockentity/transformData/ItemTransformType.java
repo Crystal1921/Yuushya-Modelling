@@ -18,7 +18,7 @@ public enum ItemTransformType {
     LIT(11),
     REMOVE(12),
     SUCCESS(13), FAIL(14),
-    SHAPE(15), COLOR(16);
+    SHAPE(15), COLOR(16), ENABLE_BLOCK(17);
 
     public final int type;
 
@@ -40,6 +40,7 @@ public enum ItemTransformType {
             case COLOR ->  transformData.color;
             case ITEM_STACK -> Item.getId(transformData.itemStack.getItem());
             case SHOWN -> transformData.isShown ? 1 : 0;
+            case ENABLE_BLOCK -> transformData.enableBlock ? 1 : 0;
             case LIT, REMOVE, SUCCESS, SHAPE, FAIL -> 0;
         };
     }
@@ -57,6 +58,7 @@ public enum ItemTransformType {
             case SCALE_Z -> transformData.scales.set(transformData.scales.x(), transformData.scales.y(), number.floatValue());
             case COLOR -> transformData.color = number.intValue();
             case SHOWN -> transformData.isShown = number != 0;
+            case ENABLE_BLOCK -> transformData.enableBlock = number != 0;
             case FAIL -> {
             }
         }

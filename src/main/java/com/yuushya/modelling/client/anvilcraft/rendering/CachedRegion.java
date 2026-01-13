@@ -8,6 +8,7 @@ import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.client.NeoItemBlockModel;
+import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
@@ -19,6 +20,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
@@ -40,6 +42,7 @@ import net.neoforged.neoforge.client.model.IQuadTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.awt.*;
 import java.util.*;
@@ -338,7 +341,8 @@ public class CachedRegion {
                         bufferSource.close();
                         return;
                     }
-                    ItemRenderer renderer = mc.getItemRenderer();
+                    ItemRenderer itemRenderer = mc.getItemRenderer();
+                    BlockRenderDispatcher blockRenderer = mc.getBlockRenderer();
                     ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
                     directions.add(null); // 加个null
                     float f = itemBlockEntity.getBlockState().getValue(HORIZONTAL_FACING).toYRot();
@@ -357,63 +361,46 @@ public class CachedRegion {
                             if (itemStack.is(ItemRegistry.TEXT_BLOCK)) {
                                 continue;
                             }
-                            BakedModel blockModel = renderer.getModel(itemStack, null, null, localPlayer.getId());
-                            for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
-                                BlockPos offset = pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16));
-                                if (model instanceof BuiltInModel) {
-                                    poseStack.pushPose();
-                                    {
-                                        poseStack.translate(
-                                                pos.getX(),
-                                                pos.getY(),
-                                                pos.getZ()
-                                        );
-                                        YuushyaUtils.scale(poseStack, transformData.scales);
-                                        YuushyaUtils.translate(poseStack, transformData.pos);
-                                        YuushyaUtils.rotate(poseStack, transformData.rot);
-                                        poseStack.translate(0.5f, 0.5f, 0.5f);
-                                    }
-                                    int packedLight = LevelRenderer.getLightColor(level, offset);
-                                    renderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
-                                    poseStack.popPose();
-                                } else {
-                                    for (Direction value : directions) {
-                                        float[] afloat = new float[DIRECTIONS.length * 2];
-                                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, random);
-                                        for (BakedQuad bakedQuad : blockModelQuads) {
-                                            poseStack.pushPose();
-                                            {
-                                                poseStack.translate(
-                                                        pos.getX(),
-                                                        pos.getY(),
-                                                        pos.getZ()
-                                                );
-
-                                                poseStack.translate(0.5f, 0.5f, 0.5f);
-                                                poseStack.mulPose(Axis.YP.rotationDegrees(-f));
-                                                poseStack.translate(-0.5f, -0.5f, -0.5f);
-
-                                                YuushyaUtils.scale(poseStack, transformData.scales);
-                                                YuushyaUtils.translate(poseStack, transformData.pos);
-                                                YuushyaUtils.rotate(poseStack, transformData.rot);
-
-                                                float[] colorComponents = getColorComponents(transformData, model, bakedQuad);
-                                                BitSet bitset = new BitSet(3);
-                                                calculateShape(level, be.getBlockState(), offset, bakedQuad.getVertices(), bakedQuad.getDirection(), afloat, bitset);
-                                                aoFace.calculate(level, be.getBlockState(), offset, bakedQuad.getDirection(), afloat, bitset, bakedQuad.isShade());
-
-                                                if (disableAO) {
-                                                    bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, aoFace.brightness, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, aoFace.lightmap, OverlayTexture.NO_OVERLAY, true);
-                                                } else {
-                                                    int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
-                                                    bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
-                                                }
-                                            }
-                                            poseStack.popPose();
+                            BakedModel blockModel;
+                            BlockState blockState = itemStack.get(DataComponentRegistry.BLOCKSTATE);
+                            if (transformData.enableBlock && blockState != null) {
+                                blockModel = blockRenderer.getBlockModel(blockState);
+                                for (Direction value : directions) {
+                                    List<BakedQuad> blockModelQuads = blockModel.getQuads(blockState, value, random);
+                                    float[] afloat = new float[DIRECTIONS.length * 2];
+                                    BlockPos offset = pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16));
+                                    putNormalModel(poseStack, bufferSource, be, f, level, pos, disableAO, transformData, blockModel, blockModelQuads, afloat, offset);
+                                }
+                            } else {
+                                blockModel = itemRenderer.getModel(itemStack, null, null, localPlayer.getId());
+                                for (BakedModel model : blockModel.getRenderPasses(itemStack, true)) {
+                                    BlockPos offset = pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16));
+                                    if (model instanceof BuiltInModel) {
+                                        poseStack.pushPose();
+                                        {
+                                            poseStack.translate(
+                                                    pos.getX(),
+                                                    pos.getY(),
+                                                    pos.getZ()
+                                            );
+                                            YuushyaUtils.scale(poseStack, transformData.scales);
+                                            YuushyaUtils.translate(poseStack, transformData.pos);
+                                            YuushyaUtils.rotate(poseStack, transformData.rot);
+                                            poseStack.translate(0.5f, 0.5f, 0.5f);
+                                        }
+                                        int packedLight = LevelRenderer.getLightColor(level, offset);
+                                        itemRenderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
+                                        poseStack.popPose();
+                                    } else {
+                                        for (Direction value : directions) {
+                                            float[] afloat = new float[DIRECTIONS.length * 2];
+                                            List<BakedQuad> blockModelQuads = model.getQuads(null, value, random);
+                                            putNormalModel(poseStack, bufferSource, be, f, level, pos, disableAO, transformData, model, blockModelQuads, afloat, offset);
                                         }
                                     }
                                 }
                             }
+
                         }
                 }
             }
@@ -426,6 +413,40 @@ public class CachedRegion {
             CachedRegion.this.meshSortings = bufferSource.getMeshSorts();
             CachedRegion.this.indexCountMap = bufferSource.getIndexCountMap();
             lastRebuildTask = null;
+        }
+
+        private void putNormalModel(PoseStack poseStack, FullyBufferedBufferSource bufferSource, BlockEntity be, float f, Level level, BlockPos pos, Boolean disableAO, TransformItemData transformData, BakedModel blockModel, List<BakedQuad> blockModelQuads, float[] afloat, BlockPos offset) {
+            for (BakedQuad bakedQuad : blockModelQuads) {
+                poseStack.pushPose();
+                {
+                    poseStack.translate(
+                            pos.getX(),
+                            pos.getY(),
+                            pos.getZ()
+                    );
+
+                    poseStack.translate(0.5f, 0.5f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(-f));
+                    poseStack.translate(-0.5f, -0.5f, -0.5f);
+
+                    YuushyaUtils.scale(poseStack, transformData.scales);
+                    YuushyaUtils.translate(poseStack, transformData.pos);
+                    YuushyaUtils.rotate(poseStack, transformData.rot);
+
+                    float[] colorComponents = getColorComponents(transformData, blockModel, bakedQuad);
+                    BitSet bitset = new BitSet(3);
+                    calculateShape(level, be.getBlockState(), offset, bakedQuad.getVertices(), bakedQuad.getDirection(), afloat, bitset);
+                    aoFace.calculate(level, be.getBlockState(), offset, bakedQuad.getDirection(), afloat, bitset, bakedQuad.isShade());
+
+                    if (disableAO) {
+                        bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, aoFace.brightness, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, aoFace.lightmap, OverlayTexture.NO_OVERLAY, true);
+                    } else {
+                        int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
+                        bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
+                    }
+                }
+                poseStack.popPose();
+            }
         }
 
         void cancel() {
