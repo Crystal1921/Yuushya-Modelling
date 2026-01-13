@@ -12,7 +12,7 @@ import org.joml.Matrix4f;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Queue;
 
@@ -20,12 +20,28 @@ import java.util.Queue;
  * @author ZhuRuoLing
  */
 public class CacheableBERenderingPipeline {
+    /**
+     * 最大缓存区域数量（区块数）
+     * 假设渲染距离为12格区块，玩家周围约为 12*12 = 144个区块
+     * 限制为256个以提供足够的缓冲
+     */
+    private static final int MAX_CACHED_REGIONS = 256;
+
     @Nullable
     private static CacheableBERenderingPipeline instance;
     private final ClientLevel level;
     private final Queue<Runnable> pendingCompiles = new ArrayDeque<>();
     private final Queue<Runnable> pendingUploads = new ArrayDeque<>();
-    private final Map<ChunkPos, CachedRegion> regions = new HashMap<>();
+    private final Map<ChunkPos, CachedRegion> regions = new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<ChunkPos, CachedRegion> eldest) {
+            boolean shouldRemove = size() > MAX_CACHED_REGIONS;
+            if (shouldRemove) {
+                eldest.getValue().releaseBuffers();
+            }
+            return shouldRemove;
+        }
+    };
     private boolean valid = true;
 
     public CachedRegion getRenderRegion(ChunkPos chunkPos) {

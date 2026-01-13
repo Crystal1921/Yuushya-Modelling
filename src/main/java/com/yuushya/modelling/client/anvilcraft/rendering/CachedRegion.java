@@ -434,11 +434,11 @@ public class CachedRegion {
                     YuushyaUtils.rotate(poseStack, transformData.rot);
 
                     float[] colorComponents = getColorComponents(transformData, blockModel, bakedQuad);
-                    BitSet bitset = new BitSet(3);
-                    calculateShape(level, be.getBlockState(), offset, bakedQuad.getVertices(), bakedQuad.getDirection(), afloat, bitset);
-                    aoFace.calculate(level, be.getBlockState(), offset, bakedQuad.getDirection(), afloat, bitset, bakedQuad.isShade());
 
                     if (disableAO) {
+                        BitSet bitset = new BitSet(3);
+                        calculateShape(level, be.getBlockState(), offset, bakedQuad.getVertices(), bakedQuad.getDirection(), afloat, bitset);
+                        aoFace.calculate(level, be.getBlockState(), offset, bakedQuad.getDirection(), afloat, bitset, bakedQuad.isShade());
                         bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, aoFace.brightness, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, aoFace.lightmap, OverlayTexture.NO_OVERLAY, true);
                     } else {
                         int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
