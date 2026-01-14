@@ -3,13 +3,19 @@ package com.yuushya.modelling.gui.textblock;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.textblock.TextBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TextTransformType;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
+import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.*;
+import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.network.TextLinesPacket;
 import com.yuushya.modelling.network.TextTransformDataOncePacket;
+import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
@@ -18,8 +24,10 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -29,11 +37,15 @@ import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.REMOVE;
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
+import static com.yuushya.modelling.utils.ClientMethod.getClipboard;
+import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 
@@ -51,8 +63,9 @@ public class TextBlockScreen extends AbstractColorScreen {
     private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
     private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
     private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
-    private static final int RAINBOW_COUNT = 7;
-    private static int[] rainbowColors = {
+    private static final int[] rainbowColors = {
+            Color.WHITE.getRGB(),
+            Color.BLACK.getRGB(),
             Color.RED.getRGB(),
             Color.ORANGE.getRGB(),
             Color.YELLOW.getRGB(),
@@ -61,10 +74,12 @@ public class TextBlockScreen extends AbstractColorScreen {
             Color.BLUE.getRGB(),
             Color.MAGENTA.getRGB()
     };
+    private static final int RAINBOW_COUNT = rainbowColors.length;
     private final TextBlockEntity blockEntity;
     private final List<String> newTextLines;
     private final Map<TextTransformType, Double> storage = new HashMap<>();
     private final Map<TextTransformType, TextTransformComponent> panel = new LinkedHashMap<>();
+    private final ColorButton[] rainbowColorButtons = new ColorButton[RAINBOW_COUNT];
     public CycleButton<Boolean> boldButton;
     public CycleButton<Boolean> italicButton;
     public CycleButton<Boolean> underlineButton;
@@ -77,14 +92,13 @@ public class TextBlockScreen extends AbstractColorScreen {
     public CycleButton<Boolean> mirrorButton;
     public EditBox colorEditBox;
     public ColorWidget colorWidget;
+    public StyledMultiLineEditBox textEditBox;
+    public FontList fontList;
     private int slot;
     private List<String> textLines = new ArrayList<>();
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private TextIconList textIconList;
-    public StyledMultiLineEditBox textEditBox;
-    public FontList fontList;
-    private ColorButton[] rainbowColorButtons = new ColorButton[RAINBOW_COUNT];
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
         super(GameNarrator.NO_TITLE);
@@ -188,10 +202,74 @@ public class TextBlockScreen extends AbstractColorScreen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         Button removeTextButton = Button.builder(Component.literal("×"),
-                        (btn) -> updateTransformDataClient(REMOVE, 0.0)
+                        (btn) -> updateTransformDataClient(TextTransformType.REMOVE, 0.0)
                 )
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.remove")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 2, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
+
+        Button copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),
+                        (btn) -> {
+                            String res = ShareUtils.transferText(blockEntity.getTransformData());
+                            setClipboard(res);
+                            this.minecraft.getToasts().addToast(
+                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                            );
+                        }
+                )
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.copy")))
+                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
+
+        Button parseButton = Button.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),
+                        (btn) -> {
+                            String string = getClipboard();
+                            try {
+                                ShareUtils.SharedTextInformation shareInformation = ShareUtils.fromText(string);
+                                if (shareInformation.texts().isEmpty()) {
+                                    this.minecraft.getToasts().addToast(
+                                            SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No item data found")));
+                                    return;
+                                }
+                                updateAllTransformData(shareInformation);
+                                this.minecraft.getToasts().addToast(
+                                        new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
+                                );
+                            } catch (Exception e) {
+                                this.minecraft.getToasts().addToast(
+                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
+                                );
+                            }
+                        }
+                )
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.paste")))
+                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 7, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
+
+        Button saveButton = Button.builder(Component.literal("\uD83D\uDCBE").withStyle(ChatFormatting.BOLD),
+                        (btn) -> this.minecraft.setScreen(new EditScreen(this,
+                                Component.translatable("gui.showBlockScreen.workshop.save"),
+                                Component.translatable("gui.showBlockScreen.workshop.save.tip"),
+                                (string) -> {
+                                    if (string != null) {
+                                        String res = ShareUtils.transferText(blockEntity.getTransformData());
+                                        try {
+                                            EngraveTextResultLoader.saveItem(res, string);
+                                            this.minecraft.getToasts().addToast(
+                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                                            );
+                                        } catch (IOException e) {
+                                            this.minecraft.getToasts().addToast(
+                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
+                                            );
+                                        }
+                                        this.minecraft.setScreen(this);
+                                    } else {
+                                        this.minecraft.setScreen(this);
+                                    }
+                                },
+                                (string) -> true
+                        ))
+                )
+                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.save")))
+                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 8, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         shownStateButton = CycleButton.booleanBuilder(
                         Component.literal("🕶"),
@@ -384,7 +462,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.colorEditBox = new EditBox(this.font, leftColumnX() - 5, top(6, 30), leftColumnWidth(), PER_HEIGHT, Component.translatable("gui.yuushya.itemBlockScreen.color_text"));
         this.colorEditBox.setMaxLength(7);
 
-        fontList = new FontList(this.minecraft,this, 200, 160, leftColumnX() - 200, top(0, 30), 30);
+        fontList = new FontList(this.minecraft, this, 200, 160, leftColumnX() - 200, top(0, 30), 30);
 
         boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
                 .displayOnlyValue()
@@ -520,6 +598,9 @@ public class TextBlockScreen extends AbstractColorScreen {
             this.addRenderableWidget(component.finishButton);
         }
 
+        this.addRenderableWidget(copyButton);
+        this.addRenderableWidget(parseButton);
+        this.addRenderableWidget(saveButton);
         this.addRenderableWidget(modeButton);
         this.addRenderableWidget(shapeButton);
         this.addRenderableWidget(cullButton);
@@ -602,6 +683,55 @@ public class TextBlockScreen extends AbstractColorScreen {
         updateTransformDataClient(SHOWN, data.isShown ? 1.0 : 0.0);
 
         updateTextLines(data.textLines);
+    }
+
+    private void updateAllTransformData(ShareUtils.SharedTextInformation shareInformation) {
+        List<TransformTextData> dataList = blockEntity.getTransformData();
+        BlockPos pos = blockEntity.getBlockPos();
+        int currentSize = dataList.size();
+        for (int slot = 0; slot < currentSize; slot++) {
+            blockEntity.removeTransformData(slot);
+            ItemTransformDataOncePacket.sendToServerSide(pos, slot, REMOVE, 0.0);
+        }
+
+        shareInformation.transferTexts(dataList);
+
+        int nextSize = dataList.size();
+        this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+        this.storage.clear();
+        for (int slot = 0; slot < nextSize; slot++) {
+            TransformTextData data = dataList.get(slot);
+            updateTransformDataServerImmediate(data, slot);
+        }
+        ItemTransformDataOncePacket.sendToServerSideSuccess(pos);
+        for (int slot = nextSize - 1; slot < currentSize; slot++) {
+            blockEntity.setSlot(slot);
+        }
+        this.textIconList.updateRenderList();
+    }
+
+    private void updateTransformDataServerImmediate(TransformTextData data, int slot) {
+        if (data.textLines.isEmpty()) {
+            return;
+        }
+        BlockPos pos = blockEntity.getBlockPos();
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, POS_X, data.pos.x);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, POS_Y, data.pos.y);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, POS_Z, data.pos.z);
+
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, ROT_X, data.rot.x);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, ROT_Y, data.rot.y);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, ROT_Z, data.rot.z);
+
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_X, data.scales.x);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Y, data.scales.y);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Z, data.scales.z);
+
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, CULLED, data.isCulled ? 1 : 0);
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, MIRROR, data.isMirror ? 1 : 0);
+
+        TextLinesPacket.sendToServerSide(pos, slot, data.textLines);
     }
 
     public void updateTransformDataClient(TextTransformType type, Double number) {

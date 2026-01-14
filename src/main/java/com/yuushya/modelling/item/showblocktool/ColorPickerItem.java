@@ -22,7 +22,7 @@ import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import static com.yuushya.modelling.gui.itemblock.ItemBlockScreen.setClipboard;
+import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 
 public class ColorPickerItem extends AbstractToolItem {
     public ColorPickerItem(Properties properties, Integer tipLines) {

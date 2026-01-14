@@ -9,6 +9,7 @@ import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -52,5 +53,15 @@ public class ClientMethod {
                     new TextBlockScreen(textBlockEntity, newTextLines)
             );
         }
+    }
+
+    public static String getClipboard() {
+        Minecraft mc = Minecraft.getInstance();
+        return TextFieldHelper.getClipboardContents(mc);
+    }
+
+    public static void setClipboard(String clipboardValue) {
+        Minecraft mc = Minecraft.getInstance();
+        TextFieldHelper.setClipboardContents(mc, clipboardValue);
     }
 }

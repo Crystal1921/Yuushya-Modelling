@@ -21,6 +21,7 @@ import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.network.UpdateAOPacket;
 import com.yuushya.modelling.registries.DataComponentRegistry;
+import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import lombok.Getter;
@@ -31,7 +32,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -273,7 +273,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         Button copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),
                         (btn) -> {
                             String res = ShareUtils.transferItems(blockEntity.getTransformData());
-                            setClipboard(res);
+                            ClientMethod.setClipboard(res);
                             this.minecraft.getToasts().addToast(
                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                             );
@@ -284,7 +284,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
         Button parseButton = Button.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),
                         (btn) -> {
-                            String string = getClipboard();
+                            String string = ClientMethod.getClipboard();
                             try {
                                 ShareUtils.ShareItemInformation shareInformation = ShareUtils.fromItems(string);
                                 if (shareInformation.items().isEmpty()) {
@@ -868,15 +868,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.itemStack = itemStack.copy();
         ITEM_STACK.modify(blockEntity, slot, itemStack);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
-    }
-
-    private String getClipboard() {
-        return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
-    }
-
-    public static void setClipboard(String clipboardValue) {
-        Minecraft mc = Minecraft.getInstance();
-        TextFieldHelper.setClipboardContents(mc, clipboardValue);
     }
 
     // AbstractColorScreen 接口实现
