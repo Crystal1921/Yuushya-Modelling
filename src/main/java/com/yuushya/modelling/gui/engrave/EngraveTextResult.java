@@ -1,0 +1,42 @@
+package com.yuushya.modelling.gui.engrave;
+
+import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import com.yuushya.modelling.registries.ItemRegistry;
+import com.yuushya.modelling.utils.ShareUtils;
+import lombok.Getter;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.yuushya.modelling.item.showblocktool.DestroyItem.saveToItem;
+
+public class EngraveTextResult implements IEngraveResult {
+    @Getter
+    private final String name;
+    private final ItemStack resultItemStack;
+
+    public EngraveTextResult(String name, ShareUtils.SharedTextInformation itemInfo) {
+        this(name, itemInfo, Minecraft.getInstance().level.registryAccess());
+    }
+
+    public EngraveTextResult(String name, ShareUtils.SharedTextInformation itemInfo, RegistryAccess registryAccess) {
+        this.name = name;
+        List<TransformTextData> transformDataList = new ArrayList<>();
+        itemInfo.transferTexts(transformDataList);
+        resultItemStack = ItemRegistry.TEXT_BLOCK.get().getDefaultInstance();
+        resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
+        if (registryAccess != null) {
+            saveToItem(resultItemStack, transformDataList, registryAccess);
+        }
+    }
+
+    @Override
+    public ItemStack getResultItem() {
+        return this.resultItemStack;
+    }
+}

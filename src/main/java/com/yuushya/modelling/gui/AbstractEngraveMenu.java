@@ -4,8 +4,10 @@ package com.yuushya.modelling.gui;
 
 import com.google.common.collect.Lists;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlock;
+import com.yuushya.modelling.blockentity.textblock.TextBlock;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
 import com.yuushya.modelling.gui.engrave.EngraveItemResult;
+import com.yuushya.modelling.gui.engrave.EngraveTextResult;
 import com.yuushya.modelling.gui.engrave.IEngraveResult;
 import com.yuushya.modelling.network.TransformDataListPacket;
 import lombok.Getter;
@@ -69,7 +71,7 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
     /**
      * Determines whether to use block or item recipes based on the input item.
      */
-    private boolean useItemRecipes = false;
+    private BLOCK_TYPE useItemRecipes = BLOCK_TYPE.BLOCK;
     
     public final Container container = new SimpleContainer(1) {
         public void setChanged() {
@@ -183,10 +185,13 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
             // Check if the input item is an itemblock or showblock
             if (stack.getItem() instanceof BlockItem blockItem) {
                 if (blockItem.getBlock() instanceof ItemBlock) {
-                    this.useItemRecipes = true;
+                    this.useItemRecipes = BLOCK_TYPE.BLOCK;
                     this.recipes = new ArrayList<>(getItemBlockRecipes());
+                } else if (blockItem.getBlock() instanceof TextBlock) {
+                    this.useItemRecipes = BLOCK_TYPE.TEXT;
+                    this.recipes = new ArrayList<>(getTextBlockRecipes());
                 } else {
-                    this.useItemRecipes = false;
+                    this.useItemRecipes = BLOCK_TYPE.ITEM;
                     this.recipes = new ArrayList<>(getShowBlockRecipes());
                 }
             }
@@ -208,6 +213,8 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
      * @return List of engrave results for ItemBlock
      */
     protected abstract List<EngraveItemResult> getItemBlockRecipes();
+    
+    protected abstract List<EngraveTextResult> getTextBlockRecipes();
 
     public void setupResultSlotServer(ItemStack resultItemStack) {
         ItemStack itemStack = resultItemStack.copy();
@@ -241,7 +248,7 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
         this.slotUpdateListener = listener;
     }
 
-    public boolean isUsingItemRecipes() {
+    public BLOCK_TYPE getBlockType() {
         return this.useItemRecipes;
     }
 
@@ -249,7 +256,7 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
         return slot.container != this.resultContainer && super.canTakeItemForPickAll(stack, slot);
     }
 
-    public ItemStack quickMoveStack(Player player, int index) {
+    public @NotNull ItemStack quickMoveStack(Player player, int index) {
         ItemStack itemStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         if (slot != null && slot.hasItem()) {
@@ -290,5 +297,9 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
         super.removed(player);
         this.resultContainer.removeItemNoUpdate(1);
         this.access.execute((level, blockPos) -> this.clearContainer(player, this.container));
+    }
+
+    public enum BLOCK_TYPE {
+        BLOCK,ITEM,TEXT
     }
 }

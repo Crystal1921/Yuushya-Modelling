@@ -1,8 +1,11 @@
 package com.yuushya.modelling.item.showblocktool;
 
+import com.yuushya.modelling.blockentity.itemblock.ItemBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
+import com.yuushya.modelling.blockentity.textblock.TextBlock;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
 import com.yuushya.modelling.gui.engrave.EngraveItemResult;
+import com.yuushya.modelling.gui.engrave.EngraveTextResult;
 import com.yuushya.modelling.gui.history.HistoryMenu;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
 import net.minecraft.core.BlockPos;
@@ -17,6 +20,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashMap;
@@ -25,6 +29,7 @@ import java.util.Map;
 public class HistoryItem extends AbstractMultiPurposeToolItem {
     public static final Map<String, EngraveBlockResult> HISTORY_SHOWBLOCK_MAP = new HashMap<>();
     public static final Map<String, EngraveItemResult> HISTORY_ITEMBLOCK_ITEM_MAP = new HashMap<>();
+    public static final Map<String, EngraveTextResult> HISTORY_TEXTBLOCK_TEXT_MAP = new HashMap<>();
 
     public HistoryItem(Properties properties, Integer tipLines) {
         super(properties, tipLines);
@@ -45,7 +50,8 @@ public class HistoryItem extends AbstractMultiPurposeToolItem {
         }
         ItemStack offhandItem = player.getOffhandItem();
         if (offhandItem.getItem() instanceof BlockItem blockItem) {
-            if (blockItem.getBlock() instanceof ShowBlock || blockItem.getBlock() instanceof com.yuushya.modelling.blockentity.itemblock.ItemBlock) {
+            Block block = blockItem.getBlock();
+            if (block instanceof ShowBlock || block instanceof ItemBlock || block instanceof TextBlock) {
                 ItemStack itemStack = offhandItem.copy();
                 if (player.isCreative()) player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
                 else player.getItemInHand(InteractionHand.OFF_HAND).setCount(0);

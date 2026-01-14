@@ -33,6 +33,16 @@ public class ReloadModelCommand {
                                     player.sendSystemMessage(Component.translatable("command.yuushya_modelling.reload_succeed"));
                                     return 1;
                                 }))
+                        .then(Commands.literal("texts")
+                                .executes(context -> {
+                                    ServerPlayer player = context.getSource().getPlayer();
+                                    if (player == null) {
+                                        return 0;
+                                    }
+                                    PacketDistributor.sendToPlayer(player, new ReloadModelPacket(ReloadType.TEXTS));
+                                    player.sendSystemMessage(Component.translatable("command.yuushya_modelling.reload_succeed"));
+                                    return 1;
+                                }))
                         .then(Commands.literal("all")
                                 .executes(context -> {
                                     ServerPlayer player = context.getSource().getPlayer();
@@ -49,6 +59,7 @@ public class ReloadModelCommand {
     public enum ReloadType {
         BLOCKS,
         ITEMS,
+        TEXTS,
         ALL
     }
 }

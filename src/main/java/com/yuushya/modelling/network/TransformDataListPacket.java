@@ -71,7 +71,11 @@ public record TransformDataListPacket(
                     menu.setupResultSlotServer(HandlingCache.get(hash));
                 } else {
                     // Determine which item type to create based on the menu's recipe type
-                    String itemType = menu.isUsingItemRecipes() ? "itemblock" : "showblock";
+                    String itemType = switch (menu.getBlockType()) {
+                        case BLOCK -> "itemblock";
+                        case ITEM -> "showblock";
+                        case TEXT -> "textblock";
+                    };
                     ItemStack itemStack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, itemType)).getDefaultInstance();
                     itemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
                     itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(packet.tag));

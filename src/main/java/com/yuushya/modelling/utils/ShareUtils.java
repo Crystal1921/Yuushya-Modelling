@@ -7,6 +7,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -50,12 +51,21 @@ public class ShareUtils {
         return GSON.toJson(shareInformation, ShareItemInformation.class);
     }
 
+    public static String transferText(List<TransformTextData> transformDataList) {
+        SharedTextInformation sharedTextInformation = SharedTextInformation.from(transformDataList);
+        return GSON.toJson(sharedTextInformation, SharedTextInformation.class);
+    }
+
     public static ShareBlockInformation from(String json) {
         return GSON.fromJson(json, ShareBlockInformation.class);
     }
 
     public static ShareItemInformation fromItems(String json) {
         return GSON.fromJson(json, ShareItemInformation.class);
+    }
+
+    public static SharedTextInformation fromText(String json) {
+        return GSON.fromJson(json, SharedTextInformation.class);
     }
 
     // JsonElement → CompoundTag
@@ -275,6 +285,74 @@ public class ShareUtils {
 
                     return itemStackJsonElementPair.getFirst();
                 }
+            }
+        }
+    }
+    public record SharedTextInformation(
+            Set<String> mods,
+            List<TextShareData> texts
+    ) {
+        public static SharedTextInformation from(List<TransformTextData> transformDataList) {
+            Set<String> modIds = new HashSet<>();
+            List<TextShareData> shareDataList = new ArrayList<>();
+            for (TransformTextData data : transformDataList) {
+                shareDataList.add(TextShareData.from(data));
+            }
+            return new SharedTextInformation(modIds, shareDataList);
+        }
+
+        public void transferTexts(List<TransformTextData> transformDataList) {
+            if (!transformDataList.isEmpty()) transformDataList.clear();
+            for (TextShareData data : texts) {
+                transformDataList.add(data.transfer());
+            }
+        }
+
+        public record TextShareData(
+                List<Double> pos,
+                List<Float> rot,
+                List<Float> scales,
+                List<String> textLines,
+                boolean isCulled,
+                boolean isMirror,
+                boolean isShown
+        ) {
+            public static TextShareData from(TransformTextData data) {
+                return new TextShareData(
+                        List.of(data.pos.x, data.pos.y, data.pos.z),
+                        List.of(data.rot.x(), data.rot.y(), data.rot.z()),
+                        List.of(data.scales.x(), data.scales.y(), data.scales.z()),
+                        new ArrayList<>(data.textLines),
+                        data.isCulled,
+                        data.isMirror,
+                        data.isShown
+                );
+            }
+
+            public TransformTextData transfer() {
+                List<Double> posList = new ArrayList<>(pos);
+                List<Float> rotList = new ArrayList<>(rot);
+                List<Float> scalesList = new ArrayList<>(scales);
+
+                posList.add(0d);
+                posList.add(0d);
+                posList.add(0d);
+                rotList.add(0f);
+                rotList.add(0f);
+                rotList.add(0f);
+                scalesList.add(1f);
+                scalesList.add(1f);
+                scalesList.add(1f);
+
+                return new TransformTextData(
+                        new Vector3d(posList.get(0), posList.get(1), posList.get(2)),
+                        new Vector3f(rotList.get(0), rotList.get(1), rotList.get(2)),
+                        new Vector3f(scalesList.get(0), scalesList.get(1), scalesList.get(2)),
+                        new ArrayList<>(textLines),
+                        isCulled,
+                        isMirror,
+                        isShown
+                );
             }
         }
     }

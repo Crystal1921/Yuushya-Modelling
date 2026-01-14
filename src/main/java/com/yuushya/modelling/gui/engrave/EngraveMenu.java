@@ -36,6 +36,11 @@ public class EngraveMenu extends AbstractEngraveMenu {
     }
 
     @Override
+    protected List<EngraveTextResult> getTextBlockRecipes() {
+        return EngraveTextResultLoader.TEXTBLOCK_ITEM_MAP.values().stream().toList();
+    }
+
+    @Override
     public MenuType<?> getType() {
         return MenuRegistry.EngraveMenu.get();
     }

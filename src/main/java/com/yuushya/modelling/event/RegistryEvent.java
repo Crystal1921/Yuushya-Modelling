@@ -2,6 +2,7 @@ package com.yuushya.modelling.event;
 
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
 import net.minecraft.core.RegistryAccess;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,7 +20,9 @@ public class RegistryEvent {
     public static void load(RegistryAccess registryAccess) {
         EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.clear();
         EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.clear();
+        EngraveTextResultLoader.TEXTBLOCK_ITEM_MAP.clear();
         EngraveBlockResultLoader.load(registryAccess);
         EngraveItemResultLoader.load(registryAccess);
+        EngraveTextResultLoader.load(registryAccess);
     }
 }

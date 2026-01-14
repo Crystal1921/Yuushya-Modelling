@@ -5,6 +5,7 @@ package com.yuushya.modelling.gui.history;
 import com.yuushya.modelling.gui.AbstractEngraveMenu;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
 import com.yuushya.modelling.gui.engrave.EngraveItemResult;
+import com.yuushya.modelling.gui.engrave.EngraveTextResult;
 import com.yuushya.modelling.item.showblocktool.HistoryItem;
 import com.yuushya.modelling.registries.MenuRegistry;
 import net.minecraft.network.FriendlyByteBuf;
@@ -37,6 +38,11 @@ public class HistoryMenu extends AbstractEngraveMenu {
     @Override
     protected List<EngraveItemResult> getItemBlockRecipes() {
         return HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP.values().stream().toList();
+    }
+
+    @Override
+    protected List<EngraveTextResult> getTextBlockRecipes() {
+        return HistoryItem.HISTORY_TEXTBLOCK_TEXT_MAP.values().stream().toList();
     }
 
     @Override

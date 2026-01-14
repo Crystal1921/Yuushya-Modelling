@@ -3,8 +3,11 @@ package com.yuushya.modelling.blockentity.textblock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformTextDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import com.yuushya.modelling.gui.engrave.EngraveItemResult;
+import com.yuushya.modelling.gui.engrave.EngraveTextResult;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.utils.CustomRenderInstance;
+import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -23,6 +26,8 @@ import java.util.List;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
+import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP;
+import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_TEXTBLOCK_TEXT_MAP;
 
 public class TextBlockEntity extends AbstractTransformBlockEntity implements ITransformTextDataInventory {
     @Getter
@@ -81,7 +86,16 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void setRemoved() {
-        CustomRenderInstance.getINSTANCE().dirty = true;
+        if (this.level != null && this.level.isClientSide) {
+            if (!this.isEmpty()) {
+                String res = ShareUtils.transferText(this.getTransformData());
+                ShareUtils.SharedTextInformation information = ShareUtils.fromText(res);
+                if (this.level != null) {
+                    String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
+                    HISTORY_TEXTBLOCK_TEXT_MAP.put(name, new EngraveTextResult(name, information));
+                }
+            }
+        }
         super.setRemoved();
     }
 }

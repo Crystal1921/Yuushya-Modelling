@@ -5,6 +5,7 @@ import com.yuushya.modelling.command.ReloadModelCommand;
 import com.yuushya.modelling.event.RegistryEvent;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -36,6 +37,10 @@ public record ReloadModelPacket(ReloadModelCommand.ReloadType reloadType) implem
                     case ITEMS -> {
                         EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.clear();
                         EngraveItemResultLoader.load(client.registryAccess());
+                    }
+                    case TEXTS -> {
+                        EngraveTextResultLoader.TEXTBLOCK_ITEM_MAP.clear();
+                        EngraveTextResultLoader.load(client.registryAccess());
                     }
                     case ALL -> RegistryEvent.load(client.registryAccess());
                 }
