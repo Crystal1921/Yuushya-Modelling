@@ -806,6 +806,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
         for (int slot = nextSize - 1; slot < currentSize; slot++) {
             blockEntity.setSlot(slot);
         }
+        boolean enableBlock = ENABLE_BLOCK.extract(blockEntity, slot) == 1;
+        updateBlockStateButtonVisible(updateStateButton() && enableBlock);
+        enableBlockButton.setValue(enableBlock);
         this.itemStackList.updateRenderList();
     }
 
@@ -827,6 +830,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SCALE_Z, data.scales.z);
 
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
+        ItemTransformDataOncePacket.sendToServerSide(pos, slot, ENABLE_BLOCK, data.enableBlock ? 1 : 0);
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, COLOR, data.color);
 
         PacketDistributor.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));

@@ -1,6 +1,8 @@
 package com.yuushya.modelling.item.showblocktool;
 
+import com.yuushya.modelling.blockentity.itemblock.ItemBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
+import com.yuushya.modelling.blockentity.textblock.TextBlock;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
 import net.minecraft.core.BlockPos;
@@ -15,6 +17,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class EngraveItem extends AbstractMultiPurposeToolItem {
@@ -37,10 +40,15 @@ public class EngraveItem extends AbstractMultiPurposeToolItem {
         }
         ItemStack offhandItem = player.getOffhandItem();
         if (offhandItem.getItem() instanceof BlockItem blockItem) {
-            if (blockItem.getBlock() instanceof ShowBlock || blockItem.getBlock() instanceof com.yuushya.modelling.blockentity.itemblock.ItemBlock) {
+            Block block = blockItem.getBlock();
+            if (block instanceof ShowBlock || block instanceof ItemBlock || block instanceof TextBlock) {
                 ItemStack itemStack = offhandItem.copy();
-                if (player.isCreative()) player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
-                else player.getItemInHand(InteractionHand.OFF_HAND).setCount(0);
+                if (player.isCreative()) {
+                    player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
+                }
+                else {
+                    player.getItemInHand(InteractionHand.OFF_HAND).setCount(0);
+                }
                 player.openMenu(getMenuProvider(level, player.blockPosition(), itemStack));
                 player.awardStat(Stats.INTERACT_WITH_STONECUTTER);//player.awardStat(Stats.ITEM_USED.get(this));
                 return InteractionResult.CONSUME;

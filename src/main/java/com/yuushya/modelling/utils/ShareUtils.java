@@ -213,7 +213,8 @@ public class ShareUtils {
                 List<Float> scales,
                 ShareItemStack itemStack,
                 int color,
-                boolean isShown
+                boolean isShown,
+                boolean enableBlock
         ) {
             public static ItemShareData from(TransformItemData data) {
                 return new ItemShareData(
@@ -222,7 +223,8 @@ public class ShareUtils {
                         List.of(data.scales.x(), data.scales.y(), data.scales.z()),
                         ShareItemStack.from(data.itemStack),
                         data.color,
-                        data.isShown
+                        data.isShown,
+                        data.enableBlock
                 );
             }
 
@@ -247,7 +249,8 @@ public class ShareUtils {
                         new Vector3f(scalesList.get(0), scalesList.get(1), scalesList.get(2)),
                         itemStack.transfer(),
                         color,
-                        isShown
+                        isShown,
+                        enableBlock
                 );
             }
 
