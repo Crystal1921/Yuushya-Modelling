@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum BlockShape implements StringRepresentable {
     NONE(Shapes.empty()),
-    FENCE(Shapes.create(0.4375, 0, 0.4375, 0.5625, 1, 0.5625)),
+    FENCE(Shapes.create(0.4375, 0, 0.4375, 0.5625, 1.5, 0.5625)),
     BOTTOM_HALF(Shapes.create(0, 0, 0, 1, 0.5, 1)),
     TOP_HALF(Shapes.create(0, 0.5, 0, 1, 1, 1)),
     BLOCK(Shapes.block());

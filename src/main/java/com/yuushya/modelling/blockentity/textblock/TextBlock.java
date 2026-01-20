@@ -2,16 +2,22 @@ package com.yuushya.modelling.blockentity.textblock;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
+import com.yuushya.modelling.blockentity.BlockShape;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.api.distmarker.Dist;
@@ -76,5 +82,16 @@ public class TextBlock extends AbstractTransformBlock {
     public @NotNull BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         this.spawnDestroyParticles(level, player, pos, state);
         return state;
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+        ItemStack itemStack = new ItemStack(this);
+        BlockItemStateProperties stateProperties = itemStack.get(DataComponents.BLOCK_STATE);
+        if (stateProperties == null) stateProperties = BlockItemStateProperties.EMPTY;
+        BlockShape value = stateProperties.get(SHAPES);
+        if (value == null) value = BlockShape.BLOCK;
+        itemStack.set(DataComponents.BLOCK_STATE, stateProperties.with(SHAPES, value));
+        return itemStack;
     }
 }
