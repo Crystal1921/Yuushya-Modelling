@@ -61,13 +61,7 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
             return;
         }
         if (data == CustomData.EMPTY) {
-            matrixStack.pushPose();
-            matrixStack.translate(0.08D, 0.2D, 0.0D);
-            matrixStack.scale(0.625F, 0.625F, 0.625F);
-            matrixStack.mulPose(Axis.XP.rotationDegrees(30));
-            matrixStack.mulPose(Axis.YP.rotationDegrees(45));
             mc.getBlockRenderer().getModelRenderer().renderModel(matrixStack.last(), multiBufferSource.getBuffer(RenderType.CUTOUT), BlockRegistry.TEXT_BLOCK.get().defaultBlockState(), backup, 1, 1, 1, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-            matrixStack.popPose();
             return;
         }
 
