@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.FULL_BLOCK;
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
@@ -344,7 +345,20 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, enableAO) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockPos()));
+                                PacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockPos()));
+                            }
+                        });
+
+        CycleButton<Boolean> fullBlockButton = CycleButton
+                .booleanBuilder(Component.literal("■"), Component.literal("□"))
+                .displayOnlyValue()
+                .withInitialValue(blockEntity.getBlockState().getValue(FULL_BLOCK))
+                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.fullBlock.on") : Component.translatable("gui.itemBlockScreen.fullBlock.off"))))
+                .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 10, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, fullBlock) -> {
+                            Level level = blockEntity.getLevel();
+                            if (level != null) {
+                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockPos()));
                             }
                         });
 
@@ -685,6 +699,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.addRenderableWidget(parseButton);
         this.addRenderableWidget(saveButton);
         this.addRenderableWidget(ambientOcclusionButton);
+        this.addRenderableWidget(fullBlockButton);
         this.addRenderableWidget(xMirror);
         this.addRenderableWidget(yMirror);
         this.addRenderableWidget(zMirror);

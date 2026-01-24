@@ -156,6 +156,8 @@
   "gui.itemBlockScreen.mirror.tip": "Mirror : %s",
   "gui.itemBlockScreen.ambientOcclusion.on": "Enable Ambient Occlusion",
   "gui.itemBlockScreen.ambientOcclusion.off": "Disable Ambient Occlusion",
+  "gui.itemBlockScreen.fullBlock.on": "Enable Full Block AO",
+  "gui.itemBlockScreen.fullBlock.off": "Disable Full Block AO",
   "gui.itemBlockScreen.apply.pre_apply": "PreApply",
   "gui.itemBlockScreen.apply.tip.pre_apply": "When enabled, changes will be applied to all layers simultaneously.",
   "gui.itemBlockScreen.apply.apply": "Apply",
