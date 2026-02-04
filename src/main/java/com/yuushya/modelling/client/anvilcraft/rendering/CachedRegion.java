@@ -183,7 +183,8 @@ public class CachedRegion {
             return;
         }
         List<RenderType> renderingOrders = new ArrayList<>(renderTypes);
-        renderingOrders.sort(Comparator.comparingInt(a -> (a.sortOnUpload ? 1 : 0)));
+        //TODO : 这里可能会因为排序影响性能
+//        renderingOrders.sort(Comparator.comparingInt(a -> (a.sortOnUpload ? 1 : 0)));
         for (RenderType renderType : renderingOrders) {
             VertexBuffer vb = buffers.get(renderType);
             if (vb == null) continue;
