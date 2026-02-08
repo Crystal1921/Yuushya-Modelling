@@ -114,7 +114,22 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
             Font font = Minecraft.getInstance().font;
 
             // Render text preview (first line or placeholder)
-            String previewText = textLines.isEmpty() ? "[Empty]" : textLines.get(0);
+            // Deserialize JSON string to Component and extract plain text
+            String previewText = "[Empty]";
+            if (!textLines.isEmpty()) {
+                try {
+                    var level = Minecraft.getInstance().level;
+                    if (level != null) {
+                        Component component = Component.Serializer.fromJson(textLines.get(0), level.registryAccess());
+                        if (component != null) {
+                            previewText = component.getString();
+                        }
+                    }
+                } catch (Exception e) {
+                    // If deserialization fails, use raw string as fallback
+                    previewText = textLines.get(0);
+                }
+            }
             if (previewText.length() > 6) {
                 previewText = previewText.substring(0, 6) + "...";
             }

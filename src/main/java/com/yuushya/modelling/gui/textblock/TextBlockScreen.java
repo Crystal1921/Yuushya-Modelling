@@ -180,7 +180,10 @@ public class TextBlockScreen extends AbstractColorScreen {
                                     return;
                                 }
                                 List<String> defaultText = new ArrayList<>();
+                                List<Component> components = new ArrayList<>();
+                                components.add(Component.literal("New Text"));
                                 defaultText.add(Component.Serializer.toJson(Component.literal("New Text"), level.registryAccess()));
+                                this.textEditBox.setValue(components);
                                 updateTextLines(defaultText);
                                 updateTransformDataClient(SHOWN, 1.0);
                             }

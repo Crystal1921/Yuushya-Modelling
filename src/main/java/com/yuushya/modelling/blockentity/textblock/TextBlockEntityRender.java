@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -172,5 +173,10 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
             if (pitch != 0.0F)
                 arg.mulPose(Axis.XP.rotationDegrees(pitch));
         }
+    }
+
+    @Override
+    public boolean shouldRender(@NotNull TextBlockEntity blockEntity, @NotNull Vec3 cameraPos) {
+        return true;
     }
 }
