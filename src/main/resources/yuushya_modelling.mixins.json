@@ -6,14 +6,12 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "chisel.refmap.json",
+  "refmap": "yuushya.refmap.json",
   "client": [
     "BlockBehaviourMixin",
     "GlyphRenderTypesMixin",
     "LevelRendererMixin",
-    "MinecraftMixin"
-  ],
-  "mixins": [
+    "MinecraftMixin",
     "compat.EmbeddiumWorldRenderMixin",
     "compat.SodiumWorldRenderMixin"
   ]
