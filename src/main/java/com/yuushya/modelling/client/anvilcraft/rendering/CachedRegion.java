@@ -10,6 +10,8 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.client.ByteBufferBuilder;
+import com.yuushya.modelling.client.MeshData;
 import com.yuushya.modelling.client.NeoItemBlockModel;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.YuushyaDataTags;

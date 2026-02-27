@@ -2,6 +2,8 @@ package com.yuushya.modelling.client.anvilcraft.rendering;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.yuushya.modelling.client.ByteBufferBuilder;
+import com.yuushya.modelling.client.MeshData;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import lombok.Getter;
@@ -46,13 +48,13 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
                 it -> new BufferBuilder(
                         getByteBuffer(forceUseBlockRenderTypes(renderType)),
                         it.mode,
-                        it.format
+                        it.format()
                 )
         );
     }
 
     private RenderType forceUseBlockRenderTypes(RenderType renderType) {
-        if (renderType.format == DefaultVertexFormat.NEW_ENTITY && renderType instanceof RenderType.CompositeRenderType compositeRenderType) {
+        if (renderType.format() == DefaultVertexFormat.NEW_ENTITY && renderType instanceof RenderType.CompositeRenderType compositeRenderType) {
             return cachedRenderTypeConvertions.computeIfAbsent(
                     renderType,
                     it -> createBlockRenderType(compositeRenderType)
@@ -108,7 +110,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
             runner.accept(() -> {
                 BufferBuilder bufferBuilder = bufferBuilders.get(renderType);
                 ByteBufferBuilder byteBuffer = byteBuffers.get(renderType);
-                int compiledVertices = bufferBuilder.vertices * renderType.format.getVertexSize();
+                int compiledVertices = bufferBuilder.vertices * renderType.format().getVertexSize();
                 if (compiledVertices >= 0) {
                     MeshData mesh = bufferBuilder.build();
                     indexCountMap.put(renderType, renderType.mode.indexCount(bufferBuilder.vertices));
