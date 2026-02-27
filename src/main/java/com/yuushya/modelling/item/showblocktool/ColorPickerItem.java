@@ -2,14 +2,14 @@ package com.yuushya.modelling.item.showblocktool;
 
 import com.mojang.blaze3d.platform.Window;
 import com.yuushya.modelling.item.AbstractToolItem;
-import com.yuushya.modelling.registries.DataComponentRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -50,7 +51,7 @@ public class ColorPickerItem extends AbstractToolItem {
             int b = (255 - buffer.get(2)) & 0xFF;
             int color = (r << 16) | (g << 8) | b;
 
-            handItemStack.set(DataComponentRegistry.COLOR_DATA, color);
+            YuushyaDataTags.setColorData(handItemStack, color);
 
             setClipboard(String.format("#%06X", color));
         }
@@ -69,23 +70,23 @@ public class ColorPickerItem extends AbstractToolItem {
 
     //对方块主手左键
     public InteractionResult inMainHandLeftClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        Integer i = handItemStack.get(DataComponentRegistry.COLOR_DATA);
-        if (i != null) {
-            setClipboard(String.format("#%06X", i));
+        if (YuushyaDataTags.hasColorData(handItemStack)) {
+            int color = YuushyaDataTags.getColorData(handItemStack);
+            setClipboard(String.format("#%06X", color));
         }
         return InteractionResult.PASS;
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack itemStack, Item.TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag tooltipFlag) {
-        Integer i = itemStack.get(DataComponentRegistry.COLOR_DATA);
-        if (i != null) {
-            String hex = String.format("#%08X", i);
-            tooltips.add(Component.literal(hex).withColor(i));
+    public void appendHoverText(@NotNull ItemStack itemStack, @Nullable Level level, @NotNull List<Component> tooltips, @NotNull TooltipFlag flags) {
+        if (YuushyaDataTags.hasColorData(itemStack)) {
+            int color = YuushyaDataTags.getColorData(itemStack);
+            String hex = String.format("#%08X", color);
+            tooltips.add(Component.literal(hex).withStyle(Style.EMPTY.withColor(color)));
         } else {
-            tooltips.add(Component.translatable("item.yuushya.color_picker.none").withColor(Color.LIGHT_GRAY.getRGB()));
+            tooltips.add(Component.translatable("item.yuushya.color_picker.none").withStyle(Style.EMPTY.withColor(Color.LIGHT_GRAY.getRGB())));
         }
 
-        super.appendHoverText(itemStack, context, tooltips, tooltipFlag);
+        super.appendHoverText(itemStack, level, tooltips, flags);
     }
 }

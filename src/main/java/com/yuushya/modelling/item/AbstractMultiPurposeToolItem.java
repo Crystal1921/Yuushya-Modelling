@@ -1,6 +1,6 @@
 package com.yuushya.modelling.item;
 
-import com.yuushya.modelling.registries.DataComponentRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -29,11 +29,11 @@ public class AbstractMultiPurposeToolItem extends AbstractToolItem {
 
     //method for readNbt and writeNbt
     public void getTag(ItemStack itemStack) {
-        _form_now = itemStack.getOrDefault(DataComponentRegistry.TRANS_DIRECTION, 0);
+        _form_now = YuushyaDataTags.getTransDirection(itemStack);
     }
 
     public void setTag(ItemStack itemStack) {
-        itemStack.set(DataComponentRegistry.TRANS_DIRECTION, _form_now);
+        YuushyaDataTags.setTransDirection(itemStack, _form_now);
     }
 
 

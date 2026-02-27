@@ -4,8 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractToolItem;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -30,9 +30,12 @@ public class GetBlockStateItem extends AbstractToolItem {
     }
 
     public static void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource vertexConsumers, int light, int overlay) {
-        if (stack.is(ItemRegistry.GET_BLOCKSTATE_ITEM)) return ;
+        if (stack.is(ItemRegistry.GET_BLOCKSTATE_ITEM.get())) return ;
         ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        BlockState blockState = stack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
+        BlockState blockState = YuushyaDataTags.getBlockState(stack);
+        if (blockState == null) {
+            blockState = Blocks.AIR.defaultBlockState();
+        }
         BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
         itemRenderer.render(stack, displayContext, false, poseStack, vertexConsumers, light, overlay, blockRenderDispatcher.getBlockModel(blockState));
     }
@@ -81,11 +84,14 @@ public class GetBlockStateItem extends AbstractToolItem {
 
     //method for readNbt and writeNbt
     public void getTag(ItemStack itemStack) {
-        blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
+        blockState = YuushyaDataTags.getBlockState(itemStack);
+        if (blockState == null) {
+            blockState = Blocks.AIR.defaultBlockState();
+        }
     }
 
     public void setTag(ItemStack itemStack) {
-        itemStack.set(DataComponentRegistry.BLOCKSTATE.get(), blockState);
+        YuushyaDataTags.setBlockState(itemStack, blockState);
     }
 
 }

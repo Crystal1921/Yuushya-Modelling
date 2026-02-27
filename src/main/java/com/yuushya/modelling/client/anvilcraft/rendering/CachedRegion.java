@@ -3,13 +3,16 @@ package com.yuushya.modelling.client.anvilcraft.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.client.NeoItemBlockModel;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
@@ -41,7 +44,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.joml.Vector4f;
 
 import java.awt.*;
 import java.util.*;
@@ -361,7 +363,7 @@ public class CachedRegion {
                                 continue;
                             }
                             BakedModel blockModel;
-                            BlockState blockState = itemStack.get(DataComponentRegistry.BLOCKSTATE);
+                            BlockState blockState = YuushyaDataTags.getBlockState(itemStack);
                             if (transformData.enableBlock && blockState != null) {
                                 blockModel = blockRenderer.getBlockModel(blockState);
                                 for (Direction value : directions) {

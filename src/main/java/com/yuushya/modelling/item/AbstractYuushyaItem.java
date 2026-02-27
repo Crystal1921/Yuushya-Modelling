@@ -4,8 +4,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class AbstractYuushyaItem extends Item {
@@ -18,7 +20,7 @@ public class AbstractYuushyaItem extends Item {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack itemStack, Item.TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag tooltipFlag) {
+    public void appendHoverText(@NotNull ItemStack itemStack, @Nullable Level level, @NotNull List<Component> tooltips, @NotNull TooltipFlag flags) {
         for (int i = 1; i <= tipLines; i++)
             tooltips.add(Component.translatable(this.getDescriptionId() + ".line" + i));
     }

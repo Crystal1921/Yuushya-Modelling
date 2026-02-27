@@ -7,7 +7,6 @@ import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.core.BlockPos;
@@ -30,7 +29,10 @@ public class ClientMethod {
         BlockState newBlockState = null;
 
         if (newItemStack.getItem() instanceof GetBlockStateItem) {
-            newBlockState = newItemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
+            newBlockState = YuushyaDataTags.getBlockState(newItemStack);
+            if (newBlockState == null) {
+                newBlockState = Blocks.AIR.defaultBlockState();
+            }
         } else if (newItemStack.getItem() instanceof BlockItem item) {
             newBlockState = item.getBlock().defaultBlockState();
         }

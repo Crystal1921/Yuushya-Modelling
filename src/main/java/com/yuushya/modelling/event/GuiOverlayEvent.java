@@ -1,8 +1,8 @@
 package com.yuushya.modelling.event;
 
 import com.mojang.blaze3d.platform.Window;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
@@ -64,10 +64,10 @@ public class GuiOverlayEvent {
                 guiGraphics.fill(guiWidth - 35, guiHeight - 35, guiWidth - 10, guiHeight - 10, Color.LIGHT_GRAY.getRGB());
                 guiGraphics.fill(guiWidth - 33, guiHeight - 33, guiWidth - 12, guiHeight - 12, color);
 
-                Integer i = mainHandItem.get(DataComponentRegistry.COLOR_DATA);
-                if (i != null) {
+                if (YuushyaDataTags.hasColorData(mainHandItem)) {
+                    int colorData = YuushyaDataTags.getColorData(mainHandItem);
                     guiGraphics.fill(guiWidth + 10, guiHeight - 35, guiWidth + 35, guiHeight - 10, Color.LIGHT_GRAY.getRGB());
-                    guiGraphics.fill(guiWidth + 12, guiHeight - 33, guiWidth + 33, guiHeight - 12, i | 0xFF000000);
+                    guiGraphics.fill(guiWidth + 12, guiHeight - 33, guiWidth + 33, guiHeight - 12, colorData | 0xFF000000);
                 }
 
             }

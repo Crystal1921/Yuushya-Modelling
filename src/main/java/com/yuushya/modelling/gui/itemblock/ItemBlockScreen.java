@@ -16,7 +16,7 @@ import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.network.UpdateAOPacket;
-import com.yuushya.modelling.registries.DataComponentRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -159,7 +159,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
     @Nullable
     public BlockState getBlockState() {
         ItemStack itemStack = blockEntity.getTransformData(slot).itemStack;
-        BlockState blockState = itemStack.get(DataComponentRegistry.BLOCKSTATE);
+        BlockState blockState = YuushyaDataTags.getBlockState(itemStack);
         if (blockState == null) {
             Item item = itemStack.getItem();
             if (item instanceof BlockItem blockItem) {
@@ -210,7 +210,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                             if (this.newItemStack != null) {
                                 if (this.newItemStack.isEmpty()) return;
                                 if (newItemStack.getItem() instanceof BlockItem blockItem) {
-                                    newItemStack.set(DataComponentRegistry.BLOCKSTATE, blockItem.getBlock().defaultBlockState());
+                                    YuushyaDataTags.setBlockState(newItemStack, blockItem.getBlock().defaultBlockState());
                                 }
                                 itemStackList.addSlot();
                                 updateItemStack(newItemStack);
@@ -599,7 +599,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                             if (blockState == null) return;
                             BlockState nextBlockState = YuushyaBlockStates.cycleState(blockState, property, true);
                             ItemStack itemStack = blockEntity.getTransformData(slot).itemStack;
-                            itemStack.set(DataComponentRegistry.BLOCKSTATE, nextBlockState);
+                            YuushyaDataTags.setBlockState(itemStack, nextBlockState);
                             updateItemStack(itemStack);
                         })
                 .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH, TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
@@ -610,7 +610,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                             if (blockState == null) return;
                             BlockState nextBlockState = YuushyaBlockStates.cycleState(getBlockState(), property, false);
                             ItemStack itemStack = blockEntity.getTransformData(slot).itemStack;
-                            itemStack.set(DataComponentRegistry.BLOCKSTATE, nextBlockState);
+                            YuushyaDataTags.setBlockState(itemStack, nextBlockState);
                             updateItemStack(itemStack);
                         })
                 .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2, TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)

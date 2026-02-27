@@ -4,8 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,7 +16,6 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -74,7 +73,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     public ItemStack updateRenderItemstack(BlockState blockState) {
         return rememberItemStack.computeIfAbsent(Block.getId(blockState), (id) -> {
             ItemStack itemStack = ItemRegistry.GET_BLOCKSTATE_ITEM.get().getDefaultInstance();
-            itemStack.set(DataComponentRegistry.BLOCKSTATE.get(), Block.stateById(id));
+            YuushyaDataTags.setBlockState(itemStack, Block.stateById(id));
             return itemStack;
         });
     }

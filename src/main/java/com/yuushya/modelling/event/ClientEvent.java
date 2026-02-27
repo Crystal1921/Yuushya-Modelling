@@ -7,9 +7,9 @@ import com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
 import com.yuushya.modelling.gui.history.HistoryScreen;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.registries.MenuRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -51,7 +51,7 @@ public class ClientEvent {
             ItemProperties.register(
                     BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, s)),
                     ResourceLocation.parse("direction"),
-                    (itemStack, clientWorld, livingEntity, i) -> itemStack.getOrDefault(DataComponentRegistry.TRANS_DIRECTION.get(), 0) * 0.1F
+                    (itemStack, clientWorld, livingEntity, i) -> YuushyaDataTags.getTransDirection(itemStack) * 0.1F
             );
         }
 
@@ -59,8 +59,8 @@ public class ClientEvent {
                 ItemRegistry.GET_BLOCKSTATE_ITEM.get(),
                 ResourceLocation.parse("direction"),
                 (itemStack, clientWorld, livingEntity, i) -> {
-                    BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE, Blocks.AIR.defaultBlockState());
-                    if (!blockState.equals(Blocks.AIR.defaultBlockState())) return 1;
+                    BlockState blockState = YuushyaDataTags.getBlockState(itemStack);
+                    if (blockState != null && !blockState.equals(Blocks.AIR.defaultBlockState())) return 1;
                     return 0;
                 }
         );

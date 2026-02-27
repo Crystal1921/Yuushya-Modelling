@@ -4,16 +4,14 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.item.AbstractToolItem;
-import com.yuushya.modelling.registries.DataComponentRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -70,16 +68,9 @@ public class MoveTransformDataItem extends AbstractToolItem {
 
     //method for readNbt and writeNbt
     public void getTag(Level level, ItemStack itemStack) {
-        CustomData customData = itemStack.getOrDefault(DataComponentRegistry.TRANSFORM_DATA, CustomData.EMPTY);
-        CompoundTag compoundTag = customData.copyTag();
+        CompoundTag compoundTag = YuushyaDataTags.getTransformData(itemStack);
         if (compoundTag.contains("TransformData")) {
             transformData.load(compoundTag.getCompound("TransformData"));
-        } else { // to load the 1.20.4 below data //TODO: will remove in next version
-            customData = itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-            compoundTag = customData.copyTag();
-            if (compoundTag.contains("TransformData")) {
-                transformData.load(compoundTag.getCompound("TransformData"));
-            }
         }
     }
 
@@ -89,7 +80,7 @@ public class MoveTransformDataItem extends AbstractToolItem {
 
         CompoundTag compoundTag = new CompoundTag();
         compoundTag.put("TransformData", transformDataTag);
-        itemStack.set(DataComponentRegistry.TRANSFORM_DATA, CustomData.of(compoundTag));
+        YuushyaDataTags.setTransformData(itemStack, compoundTag);
     }
 
 }

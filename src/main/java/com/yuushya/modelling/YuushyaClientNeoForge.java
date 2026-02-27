@@ -4,8 +4,8 @@ import com.yuushya.modelling.client.NeoItemBlockModel;
 import com.yuushya.modelling.client.NeoShowBlockModel;
 import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.registries.BlockRegistry;
-import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
@@ -16,7 +16,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -80,7 +79,10 @@ public class YuushyaClientNeoForge {
     public void handleItemColor(RegisterColorHandlersEvent.Item event) {
         event.register(
                 (itemStack, i) -> {
-                    BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
+                    BlockState blockState = YuushyaDataTags.getBlockState(itemStack);
+                    if (blockState == null) {
+                        blockState = Blocks.AIR.defaultBlockState();
+                    }
                     return event.getBlockColors().getColor(blockState, null, null, i);
                 }, ItemRegistry.GET_BLOCKSTATE_ITEM.get()
         );
