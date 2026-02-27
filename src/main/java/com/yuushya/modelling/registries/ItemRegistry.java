@@ -2,6 +2,7 @@ package com.yuushya.modelling.registries;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.item.AbstractYuushyaItem;
+import com.yuushya.modelling.item.TextBlockItem;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.item.showblocktool.*;
 import net.minecraft.world.item.BlockItem;
@@ -87,7 +88,7 @@ public class ItemRegistry {
     // BlockItems
     public static final RegistryObject<Item> SHOW_BLOCK = ITEMS.register("showblock", () -> new BlockItem(BlockRegistry.SHOW_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> ITEM_BLOCK = ITEMS.register("itemblock", () -> new BlockItem(BlockRegistry.ITEM_BLOCK.get(), new Item.Properties()));
-    public static final RegistryObject<Item> TEXT_BLOCK = ITEMS.register("textblock", () -> new BlockItem(BlockRegistry.TEXT_BLOCK.get(), new Item.Properties()));
+    public static final RegistryObject<Item> TEXT_BLOCK = ITEMS.register("textblock", TextBlockItem::new);
 
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

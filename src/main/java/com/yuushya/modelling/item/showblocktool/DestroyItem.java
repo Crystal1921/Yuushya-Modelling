@@ -29,18 +29,18 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
         super(properties, tipLines);
     }
 
-    public static void saveToItem(ItemStack itemStack, BlockState blockState, HolderLookup.Provider registries) {
+    public static void saveToItem(ItemStack itemStack, BlockState blockState) {
         List<ITransformDataProvider> transformDataList = new ArrayList<>();
         TransformBlockData data = new TransformBlockData();
         data.blockState = blockState;
         data.isShown = true;
         transformDataList.add(data);
-        saveToItem(itemStack, transformDataList, registries);
+        saveToItem(itemStack, transformDataList);
     }
 
-    public static void saveToItem(ItemStack itemStack, List<? extends ITransformDataProvider> transformDataList, HolderLookup.Provider registries) {
+    public static void saveToItem(ItemStack itemStack, List<? extends ITransformDataProvider> transformDataList) {
         CompoundTag compoundTag = new CompoundTag();
-        ITransformDataInventory.saveAdditional(compoundTag, transformDataList, registries);
+        ITransformDataInventory.saveAdditional(compoundTag, transformDataList);
         BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.SHOW_BLOCK_ENTITY.get(), compoundTag);
     }
 
@@ -57,11 +57,11 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
 
         if (blockState.getBlock() instanceof AbstractTransformBlock) {
             if (level.getBlockEntity(blockPos) instanceof AbstractTransformBlockEntity showBlockEntity) {
-                showBlockEntity.saveToItem(offhandItem, level.registryAccess());
+                showBlockEntity.saveToItem(offhandItem);
                 showBlockEntity.writeBlockState(offhandItem, blockState);
             }
         } else {
-            saveToItem(offhandItem, blockState, level.registryAccess());
+            saveToItem(offhandItem, blockState);
         }
 
         return InteractionResult.SUCCESS;
@@ -72,11 +72,13 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
         if (blockState.getBlock() instanceof AbstractTransformBlock showBlock && level.getBlockEntity(blockPos) instanceof AbstractTransformBlockEntity showBlockEntity) {
             if (!level.isClientSide) {
                 ItemStack itemStack = new ItemStack(showBlock);
-                showBlockEntity.saveToItem(itemStack, level.registryAccess());
+                showBlockEntity.saveToItem(itemStack);
                 showBlockEntity.writeBlockState(itemStack, blockState);
                 level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 35);
                 level.levelEvent(player, 2001, blockPos, Block.getId(blockState));
-                if (!player.isCreative()) handItemStack.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
+                if (!player.isCreative()) handItemStack.hurtAndBreak(1, player, (player1 -> {
+                    player1.broadcastBreakEvent(EquipmentSlot.MAINHAND);
+                }));
                 ItemEntity itemEntity = new ItemEntity(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack);
                 itemEntity.setDefaultPickUpDelay();
                 level.addFreshEntity(itemEntity);

@@ -5,9 +5,7 @@ import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -22,17 +20,13 @@ public class EngraveItemResult implements IEngraveResult {
     private final String name;
 
     public EngraveItemResult(String name, ShareUtils.ShareItemInformation itemInfo) {
-        this(name, itemInfo, Minecraft.getInstance().level.registryAccess());
-    }
-
-    public EngraveItemResult(String name, ShareUtils.ShareItemInformation itemInfo, RegistryAccess registryAccess) {
         this.name = name;
         List<TransformItemData> transformDataList = new ArrayList<>();
         itemInfo.transferItems(transformDataList);
         resultItemStack = ItemRegistry.ITEM_BLOCK.get().getDefaultInstance();
         resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
         if (registryAccess != null) {
-            saveToItem(resultItemStack, transformDataList, registryAccess);
+            saveToItem(resultItemStack, transformDataList);
         }
     }
 

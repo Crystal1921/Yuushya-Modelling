@@ -6,7 +6,6 @@ import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 

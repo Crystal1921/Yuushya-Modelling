@@ -51,7 +51,8 @@ public class ItemBlock extends AbstractTransformBlock {
     }
 
     @Override
-    protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
+    @NotNull
+    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
         return blockState.getValue(SHAPES).voxelShape;
     }
 

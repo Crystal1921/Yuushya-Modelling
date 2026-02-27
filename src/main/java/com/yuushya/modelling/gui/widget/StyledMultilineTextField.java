@@ -15,14 +15,16 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+
+import static net.minecraft.SharedConstants.filterText;
 
 @OnlyIn(Dist.CLIENT)
 public class StyledMultilineTextField {
@@ -105,7 +107,7 @@ public class StyledMultilineTextField {
             return;
         }
 
-        String insertText = StringUtil.filterText(component.getString(), true);
+        String insertText = filterText(component.getString(), true);
         if (this.hasCharacterLimit()) {
             int availableSpace = this.characterLimit - this.plainText.length()
                     + getSelectedText().length();

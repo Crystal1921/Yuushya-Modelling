@@ -6,7 +6,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.client.extensions.IBlockEntityRendererExtension;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
@@ -85,7 +84,7 @@ public class CacheableBERenderingPipeline {
      * @param be The removed {@link BlockEntity}
      */
     public void blockRemoved(BlockEntity be) {
-        IBlockEntityRendererExtension<?> renderer = Minecraft.getInstance()
+        BlockEntityRenderer<?> renderer = Minecraft.getInstance()
             .getBlockEntityRenderDispatcher()
             .getRenderer(be);
         if (renderer == null) return;

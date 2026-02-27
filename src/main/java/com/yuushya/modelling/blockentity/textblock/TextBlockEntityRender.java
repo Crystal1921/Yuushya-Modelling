@@ -59,7 +59,7 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
                     // 重新构建并缓存
                     final MutableComponent tempComp = Component.empty();
                     textLines.forEach(line -> {
-                        MutableComponent lineComponent = Component.Serializer.fromJson(line, clientLevel.registryAccess());
+                        MutableComponent lineComponent = Component.Serializer.fromJson(line);
                         if (lineComponent != null) {
                             tempComp.append(lineComponent);
                         }
@@ -145,7 +145,7 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
                     mutableComponent.append(Component.translatable("block.yuushya.itemblock.slot_text", String.format("%2d", slot)));
 
                     textLines.forEach(line -> {
-                        MutableComponent lineComponent = Component.Serializer.fromJson(line, clientLevel.registryAccess());
+                        MutableComponent lineComponent = Component.Serializer.fromJson(line);
                         if (lineComponent != null) {
                             mutableComponent.append(lineComponent);
                         }

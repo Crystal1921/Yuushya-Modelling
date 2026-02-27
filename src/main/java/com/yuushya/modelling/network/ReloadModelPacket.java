@@ -1,7 +1,7 @@
 package com.yuushya.modelling.network;
 
 import com.yuushya.modelling.command.ReloadModelCommand;
-import com.yuushya.modelling.event.RegistryEvent;
+import com.yuushya.modelling.event.ClientEvent;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
@@ -34,17 +34,17 @@ public class ReloadModelPacket {
                 switch (packet.reloadType) {
                     case BLOCKS -> {
                         EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.clear();
-                        EngraveBlockResultLoader.load(minecraft.level.registryAccess());
+                        EngraveBlockResultLoader.load();
                     }
                     case ITEMS -> {
                         EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.clear();
-                        EngraveItemResultLoader.load(minecraft.level.registryAccess());
+                        EngraveItemResultLoader.load();
                     }
                     case TEXTS -> {
                         EngraveTextResultLoader.TEXTBLOCK_ITEM_MAP.clear();
-                        EngraveTextResultLoader.load(minecraft.level.registryAccess());
+                        EngraveTextResultLoader.load();
                     }
-                    case ALL -> RegistryEvent.load(minecraft.level.registryAccess());
+                    case ALL -> ClientEvent.load();
                 }
             }
         });

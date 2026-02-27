@@ -4,7 +4,10 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntityRender;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntityRender;
 import com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender;
+import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
+import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveScreen;
+import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
 import com.yuushya.modelling.gui.history.HistoryScreen;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
@@ -43,6 +46,7 @@ public class ClientEvent {
         event.enqueueWork(() -> {
             registerScreens();
             registerItemProperties();
+            load();
         });
     }
 
@@ -64,5 +68,14 @@ public class ClientEvent {
                     return 0;
                 }
         );
+    }
+
+    public static void load() {
+        EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.clear();
+        EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.clear();
+        EngraveTextResultLoader.TEXTBLOCK_ITEM_MAP.clear();
+        EngraveBlockResultLoader.load();
+        EngraveItemResultLoader.load();
+        EngraveTextResultLoader.load();
     }
 }

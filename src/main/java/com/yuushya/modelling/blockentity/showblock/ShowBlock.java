@@ -54,7 +54,8 @@ public class ShowBlock extends AbstractTransformBlock {
     }
 
     @Override
-    protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
+    @NotNull
+    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
         return blockState.getValue(SHAPES).voxelShape;
     }
 
@@ -76,7 +77,7 @@ public class ShowBlock extends AbstractTransformBlock {
             }
             if (!(block instanceof AirBlock)) {
                 BlockState blockState1 = blockState.updateShape(facing, facingState, worldIn, currentPos, facingPos);
-                if (!blockState1.isEmpty()) {
+                if (!blockState1.isAir()) {
                     showBlockEntity.getTransformData(0).blockState = blockState1;
                     showBlockEntity.saveChanged();
                     return stateIn.setValue(POWERED, !stateIn.getValue(POWERED));

@@ -3,7 +3,6 @@ package com.yuushya.modelling.network;
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.gui.AbstractEngraveMenu;
 import com.yuushya.modelling.gui.engrave.IEngraveResult;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

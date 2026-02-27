@@ -18,10 +18,10 @@ public class EngraveTextResultLoader {
 
     public static final Map<String, EngraveTextResult> TEXTBLOCK_ITEM_MAP = new HashMap<>();
 
-    public static void load(RegistryAccess registryAccess) {
+    public static void load() {
         if (Files.exists(PATH)) {
             try {
-                load(PATH, registryAccess);
+                load(PATH);
             } catch (IOException e) {
                 Yuushya.LOGGER.error(e);
             }
@@ -32,26 +32,26 @@ public class EngraveTextResultLoader {
         return basePath.toString().endsWith(".zip");
     }
 
-    private static void loadZip(Path path, RegistryAccess registryAccess) {
+    private static void loadZip(Path path) {
         try (FileSystem fileSystem = FileSystems.newFileSystem(path)) {
-            load(fileSystem.getPath("."), registryAccess);
+            load(fileSystem.getPath("."));
         } catch (IOException e) {
             Yuushya.LOGGER.error(e);
         }
     }
 
-    private static void load(Path path, RegistryAccess registryAccess) throws IOException {
+    private static void load(Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (isZip(file)) {
-                    loadZip(file, registryAccess);
+                    loadZip(file);
                 } else if (file.getFileName().toString().endsWith(".json")) {
                     String name = path.relativize(file).toString().replaceAll(".json", "");
                     String fileString = Files.readString(file);
                     try {
                         ShareUtils.SharedTextInformation information = ShareUtils.fromText(fileString);
-                        TEXTBLOCK_ITEM_MAP.put(name, new EngraveTextResult(name, information, registryAccess));
+                        TEXTBLOCK_ITEM_MAP.put(name, new EngraveTextResult(name, information));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

@@ -68,7 +68,8 @@ public class TextBlock extends AbstractTransformBlock {
     }
 
     @Override
-    protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
+    @NotNull
+    public VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
         return blockState.getValue(SHAPES).voxelShape;
     }
 
@@ -90,5 +91,9 @@ public class TextBlock extends AbstractTransformBlock {
         if (value == null) value = BlockShape.BLOCK;
         itemStack.set(DataComponents.BLOCK_STATE, stateProperties.with(SHAPES, value));
         return itemStack;
+    }
+
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientBlockExtensions> consumer) {
+        consumer.accept(ITEM_EXTENSIONS);
     }
 }

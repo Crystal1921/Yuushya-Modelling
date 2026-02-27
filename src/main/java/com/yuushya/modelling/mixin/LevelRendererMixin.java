@@ -1,10 +1,12 @@
 package com.yuushya.modelling.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
 import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import com.yuushya.modelling.utils.CustomRenderInstance;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -13,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,10 +37,10 @@ public abstract class LevelRendererMixin {
             method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/LevelRenderer;compileSections(Lnet/minecraft/client/Camera;)V"
+                    target = "Lnet/minecraft/client/renderer/LevelRenderer;compileChunks(Lnet/minecraft/client/Camera;)V"
             )
     )
-    void recompileBlockEntities(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+    void recompileBlockEntities(PoseStack pPoseStack, float pPartialTick, long pFinishNanoTime, boolean pRenderBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightTexture, Matrix4f pProjectionMatrix, CallbackInfo ci) {
         CacheableBERenderingPipeline.getInstance().runTasks();
     }
 
@@ -50,16 +53,12 @@ public abstract class LevelRendererMixin {
             )
     )
     void renderCachedBE(
-            DeltaTracker deltaTracker,
-            boolean renderBlockOutline,
-            Camera camera,
-            GameRenderer gameRenderer,
-            LightTexture lightTexture,
-            Matrix4f frustumMatrix,
-            Matrix4f projectionMatrix,
-            CallbackInfo ci
+            PoseStack pPoseStack, float pPartialTick, long pFinishNanoTime, boolean pRenderBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightTexture, Matrix4f pProjectionMatrix, CallbackInfo ci
     ) {
-        CacheableBERenderingPipeline.getInstance().render(frustumMatrix, projectionMatrix);
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Quaternionf quaternionf = camera.rotation().conjugate(new Quaternionf());
+        Matrix4f frustumMatrix = new Matrix4f().rotation(quaternionf);
+        CacheableBERenderingPipeline.getInstance().render(frustumMatrix, pProjectionMatrix);
     }
 
     // @WrapOperation(
@@ -89,7 +88,7 @@ public abstract class LevelRendererMixin {
     // 缓存更新已通过 callRebuild() 方法中的 CustomRenderInstance.dirty 标志统一处理
 
     @Inject(at = @At("TAIL"), method = "renderLevel")
-    void callRebuild(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+    void callRebuild(PoseStack pPoseStack, float pPartialTick, long pFinishNanoTime, boolean pRenderBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightTexture, Matrix4f pProjectionMatrix, CallbackInfo ci) {
         CustomRenderInstance instance = CustomRenderInstance.getINSTANCE();
         if (level == null) return;
         if (instance.dirty) {
