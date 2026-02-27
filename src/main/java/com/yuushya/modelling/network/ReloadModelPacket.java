@@ -1,56 +1,53 @@
 package com.yuushya.modelling.network;
 
-import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.command.ReloadModelCommand;
 import com.yuushya.modelling.event.RegistryEvent;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
-import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
 
-public record ReloadModelPacket(ReloadModelCommand.ReloadType reloadType) implements CustomPacketPayload {
-    public static final ResourceLocation RELOAD_MODEL_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "reload_model_packet");
-    public static final Type<ReloadModelPacket> TYPE = new Type<>(RELOAD_MODEL_PACKET_ID);
+import java.util.function.Supplier;
 
-    public static final StreamCodec<FriendlyByteBuf, ReloadModelPacket> STREAM_CODEC = StreamCodec.composite(
-            NeoForgeCodecs.enumCodec(ReloadModelCommand.ReloadType.class),
-            ReloadModelPacket::reloadType,
-            ReloadModelPacket::new
-    );
+public class ReloadModelPacket {
+    private final ReloadModelCommand.ReloadType reloadType;
 
-    public static void handler(ReloadModelPacket packet, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            Level level = ctx.player().level();
-            if (level instanceof ClientLevel client) {
+    public ReloadModelPacket(ReloadModelCommand.ReloadType reloadType) {
+        this.reloadType = reloadType;
+    }
+
+    public ReloadModelPacket(FriendlyByteBuf buffer) {
+        this.reloadType = buffer.readEnum(ReloadModelCommand.ReloadType.class);
+    }
+
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeEnum(this.reloadType);
+    }
+
+    public static void handle(ReloadModelPacket packet, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            // This packet is received on the client
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.level != null) {
                 switch (packet.reloadType) {
                     case BLOCKS -> {
                         EngraveBlockResultLoader.SHOWBLOCK_ITEM_MAP.clear();
-                        EngraveBlockResultLoader.load(client.registryAccess());
+                        EngraveBlockResultLoader.load(minecraft.level.registryAccess());
                     }
                     case ITEMS -> {
                         EngraveItemResultLoader.ITEMBLOCK_ITEM_MAP.clear();
-                        EngraveItemResultLoader.load(client.registryAccess());
+                        EngraveItemResultLoader.load(minecraft.level.registryAccess());
                     }
                     case TEXTS -> {
                         EngraveTextResultLoader.TEXTBLOCK_ITEM_MAP.clear();
-                        EngraveTextResultLoader.load(client.registryAccess());
+                        EngraveTextResultLoader.load(minecraft.level.registryAccess());
                     }
-                    case ALL -> RegistryEvent.load(client.registryAccess());
+                    case ALL -> RegistryEvent.load(minecraft.level.registryAccess());
                 }
             }
         });
+        ctx.get().setPacketHandled(true);
     }
-
-    @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
-
 }

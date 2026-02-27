@@ -11,11 +11,7 @@ import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
-import com.yuushya.modelling.gui.widget.AbstractColorScreen;
-import com.yuushya.modelling.gui.widget.ColorWidget;
-import com.yuushya.modelling.gui.widget.ItemStackIconList;
-import com.yuushya.modelling.gui.widget.ItemTransformComponent;
-import com.yuushya.modelling.gui.widget.SizeTransformComponent;
+import com.yuushya.modelling.gui.widget.*;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
@@ -42,8 +38,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
@@ -115,7 +109,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         }
 
         if (!itemStack.isEmpty()) {
-            PacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
+            ItemStackPacket.sendToServer(this.blockEntity.getBlockPos(), this.slot, itemStack);
         }
 
         this.itemStack = ItemStack.EMPTY;
@@ -178,7 +172,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
     @Nullable
     public Collection<Property<?>> getProperties() {
         BlockState blockState = getBlockState();
-        if (blockState == null) {return null;}
+        if (blockState == null) {
+            return null;
+        }
         return blockState.getProperties();
     }
 
@@ -345,7 +341,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, enableAO) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockPos()));
+                                UpdateAOPacket.sendToServer(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockPos());
                             }
                         });
 
@@ -358,7 +354,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, fullBlock) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockPos()));
+                                UpdateAOPacket.sendToServer(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockPos());
                             }
                         });
 
@@ -576,7 +572,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         enableBlockButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.block"), Component.translatable("gui.textBlockScreen.item"))
                 .displayOnlyValue()
                 .withInitialValue(enableBlock)
-                .create(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT, RIGHT_LIST_WIDTH, PER_HEIGHT, Component.empty(), (button, bool) -> {
+                .create(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH, TOP + PER_HEIGHT + PER_HEIGHT, RIGHT_LIST_WIDTH, PER_HEIGHT, Component.empty(), (button, bool) -> {
                     updateBlockStateButtonVisible(bool);
                     updateTransformDataClient(ENABLE_BLOCK, bool ? 1.0 : 0.0);
                 });
@@ -587,7 +583,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                                 property = YuushyaBlockStates.getRelative(getProperties(), property, true);
                             }
                         })
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT * 2, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH, TOP + PER_HEIGHT + PER_HEIGHT * 2, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
         rightPropertyButton = Button.builder(Component.literal(">"),
                         (btn) -> {
@@ -595,7 +591,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                                 property = YuushyaBlockStates.getRelative(getProperties(), property, false);
                             }
                         })
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 2, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2, TOP + PER_HEIGHT + PER_HEIGHT * 2, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
         leftStateButton = Button.builder(Component.literal("<"),
                         (btn) -> {
@@ -606,7 +602,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                             itemStack.set(DataComponentRegistry.BLOCKSTATE, nextBlockState);
                             updateItemStack(itemStack);
                         })
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH, TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
         rightStateButton = Button.builder(Component.literal(">"),
                         (btn) -> {
@@ -617,7 +613,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                             itemStack.set(DataComponentRegistry.BLOCKSTATE, nextBlockState);
                             updateItemStack(itemStack);
                         })
-                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
+                .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 5 / 2, TOP + PER_HEIGHT + PER_HEIGHT * 3, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
 
         updateBlockStateButtonVisible(updateStateButton() && enableBlock);
@@ -762,9 +758,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
             BlockState blockState = getBlockState();
             if (blockState != null && property != null) {
                 String propertyName = property.getName();
-                guiGraphics.drawString(this.font, propertyName, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyName) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 2 + 5, 0xFFFFFFFF, false);
+                guiGraphics.drawString(this.font, propertyName, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyName) / 2, TOP + PER_HEIGHT + PER_HEIGHT * 2 + 5, 0xFFFFFFFF, false);
                 String propertyValue = YuushyaDebugStickItem.getNameHelper(blockState, property);
-                guiGraphics.drawString(this.font, propertyValue, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyValue) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3 + 5, 0xFFFFFFFF, false);
+                guiGraphics.drawString(this.font, propertyValue, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyValue) / 2, TOP + PER_HEIGHT + PER_HEIGHT * 3 + 5, 0xFFFFFFFF, false);
             }
         }
 
@@ -782,7 +778,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
             ItemTransformDataOncePacket.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
         }
         if (!itemStack.isEmpty()) {
-            PacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
+            ItemStackPacket.sendToServer(this.blockEntity.getBlockPos(), this.slot, itemStack);
         }
 
         this.itemStack = ItemStack.EMPTY;
@@ -848,7 +844,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, ENABLE_BLOCK, data.enableBlock ? 1 : 0);
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, COLOR, data.color);
 
-        PacketDistributor.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));
+        ItemStackPacket.sendToServer(pos, slot, data.itemStack);
 
     }
 

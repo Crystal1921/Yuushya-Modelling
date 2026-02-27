@@ -1,38 +1,44 @@
 package com.yuushya.modelling.network;
 
-import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.FULL_BLOCK;
 
-public record UpdateAOPacket(boolean enableAO, boolean fullBlock, BlockPos blockPos) implements CustomPacketPayload {
+public class UpdateAOPacket {
+    private final boolean enableAO;
+    private final boolean fullBlock;
+    private final BlockPos blockPos;
 
-    public static final StreamCodec<FriendlyByteBuf, UpdateAOPacket> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.BOOL,
-            UpdateAOPacket::enableAO,
-            ByteBufCodecs.BOOL,
-            UpdateAOPacket::fullBlock,
-            BlockPos.STREAM_CODEC,
-            UpdateAOPacket::blockPos,
-            UpdateAOPacket::new
-    );
-    public static final Type<UpdateAOPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "diable_ao_packet"));
+    public UpdateAOPacket(boolean enableAO, boolean fullBlock, BlockPos blockPos) {
+        this.enableAO = enableAO;
+        this.fullBlock = fullBlock;
+        this.blockPos = blockPos;
+    }
 
-    public static void handler(UpdateAOPacket packet, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            Level level = ctx.player().level();
+    public UpdateAOPacket(FriendlyByteBuf buffer) {
+        this.enableAO = buffer.readBoolean();
+        this.fullBlock = buffer.readBoolean();
+        this.blockPos = buffer.readBlockPos();
+    }
+
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeBoolean(this.enableAO);
+        buffer.writeBoolean(this.fullBlock);
+        buffer.writeBlockPos(this.blockPos);
+    }
+
+    public static void handle(UpdateAOPacket packet, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Level level = ctx.get().getSender().level();
             if (level instanceof ServerLevel serverLevel) {
                 BlockEntity blockEntity = serverLevel.getBlockEntity(packet.blockPos);
                 if (blockEntity instanceof ItemBlockEntity) {
@@ -40,12 +46,10 @@ public record UpdateAOPacket(boolean enableAO, boolean fullBlock, BlockPos block
                 }
             }
         });
+        ctx.get().setPacketHandled(true);
     }
 
-    @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public static void sendToServer(boolean enableAO, boolean fullBlock, BlockPos blockPos) {
+        YuushyaModellingNetwork.INSTANCE.sendToServer(new UpdateAOPacket(enableAO, fullBlock, blockPos));
     }
-
-
 }

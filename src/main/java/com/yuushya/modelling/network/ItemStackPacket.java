@@ -1,47 +1,53 @@
 package com.yuushya.modelling.network;
 
-import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.ITEM_STACK;
 
-public record ItemStackPacket(BlockPos blockPos, int slot, ItemStack itemStack) implements CustomPacketPayload {
-    public static final ResourceLocation ITEM_DATA_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "item_data_packet");
-    public static final Type<ItemStackPacket> TYPE = new Type<>(ITEM_DATA_PACKET_ID);
-    public static final StreamCodec<RegistryFriendlyByteBuf, ItemStackPacket> STREAM_CODEC = StreamCodec.composite(
-            BlockPos.STREAM_CODEC,
-            ItemStackPacket::blockPos,
-            ByteBufCodecs.VAR_INT,
-            ItemStackPacket::slot,
-            ItemStack.STREAM_CODEC,
-            ItemStackPacket::itemStack,
-            ItemStackPacket::new
-    );
+public class ItemStackPacket {
+    private final BlockPos blockPos;
+    private final int slot;
+    private final ItemStack itemStack;
 
-    public static void handler(ItemStackPacket packet, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            Level level = ctx.player().level();
+    public ItemStackPacket(BlockPos blockPos, int slot, ItemStack itemStack) {
+        this.blockPos = blockPos;
+        this.slot = slot;
+        this.itemStack = itemStack;
+    }
+
+    public ItemStackPacket(FriendlyByteBuf buffer) {
+        this.blockPos = buffer.readBlockPos();
+        this.slot = buffer.readVarInt();
+        this.itemStack = buffer.readItem();
+    }
+
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.writeBlockPos(this.blockPos);
+        buffer.writeVarInt(this.slot);
+        buffer.writeItem(this.itemStack);
+    }
+
+    public static void handle(ItemStackPacket packet, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Level level = ctx.get().getSender().level();
             if (level instanceof ServerLevel serverLevel && serverLevel.hasChunkAt(packet.blockPos)) {
                 if (serverLevel.getBlockEntity(packet.blockPos) instanceof ItemBlockEntity itemBlockEntity) {
                     ITEM_STACK.modify(itemBlockEntity, packet.slot, packet.itemStack);
                 }
             }
         });
+        ctx.get().setPacketHandled(true);
     }
 
-    @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public static void sendToServer(BlockPos blockPos, int slot, ItemStack itemStack) {
+        YuushyaModellingNetwork.INSTANCE.sendToServer(new ItemStackPacket(blockPos, slot, itemStack));
     }
 }
