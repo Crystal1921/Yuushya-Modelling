@@ -4,8 +4,6 @@ import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -24,7 +22,7 @@ public class EngraveBlockResult implements IEngraveResult {
         List<TransformBlockData> transformDataList = new ArrayList<>();
         itemInfo.transfer(transformDataList);
         resultItemStack = ItemRegistry.SHOW_BLOCK.get().getDefaultInstance();
-        resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
+        resultItemStack.setHoverName(Component.literal(name));
         saveToItem(resultItemStack, transformDataList);
 
     }

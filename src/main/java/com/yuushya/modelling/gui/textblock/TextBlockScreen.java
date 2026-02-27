@@ -3,9 +3,7 @@ package com.yuushya.modelling.gui.textblock;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.textblock.TextBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TextTransformType;
-import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
-import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
 import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -44,10 +42,10 @@ import java.util.function.Supplier;
 
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.REMOVE;
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
-import static com.yuushya.modelling.utils.ClientMethod.getClipboard;
-import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
+import static com.yuushya.modelling.utils.ClientMethod.getClipboard;
+import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 
 public class TextBlockScreen extends AbstractColorScreen {
     public static final int PER_HEIGHT = 20;
@@ -142,7 +140,7 @@ public class TextBlockScreen extends AbstractColorScreen {
             List<Component> components = new ArrayList<>();
             for (String line : currentLines) {
                 if (level != null) {
-                    components.add(Component.Serializer.fromJson(line, level.registryAccess()));
+                    components.add(Component.Serializer.fromJson(line));
                 }
             }
             textEditBox.setValue(components);
@@ -182,7 +180,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                                 List<String> defaultText = new ArrayList<>();
                                 List<Component> components = new ArrayList<>();
                                 components.add(Component.literal("New Text"));
-                                defaultText.add(Component.Serializer.toJson(Component.literal("New Text"), level.registryAccess()));
+                                defaultText.add(Component.Serializer.toJson(Component.literal("New Text")));
                                 this.textEditBox.setValue(components);
                                 updateTextLines(defaultText);
                                 updateTransformDataClient(SHOWN, 1.0);
@@ -215,7 +213,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                             String res = ShareUtils.transferText(blockEntity.getTransformData());
                             setClipboard(res);
                             this.minecraft.getToasts().addToast(
-                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                             );
                         }
                 )
@@ -229,16 +227,16 @@ public class TextBlockScreen extends AbstractColorScreen {
                                 ShareUtils.SharedTextInformation shareInformation = ShareUtils.fromText(string);
                                 if (shareInformation.texts().isEmpty()) {
                                     this.minecraft.getToasts().addToast(
-                                            SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No item data found")));
+                                            SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No item data found")));
                                     return;
                                 }
                                 updateAllTransformData(shareInformation);
                                 this.minecraft.getToasts().addToast(
-                                        new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
+                                        new SystemToast(SystemToast.SystemToastIds.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
                                 );
                             } catch (Exception e) {
                                 this.minecraft.getToasts().addToast(
-                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
+                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
                                 );
                             }
                         }
@@ -256,11 +254,11 @@ public class TextBlockScreen extends AbstractColorScreen {
                                         try {
                                             EngraveTextResultLoader.saveItem(res, string);
                                             this.minecraft.getToasts().addToast(
-                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
+                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                                             );
                                         } catch (IOException e) {
                                             this.minecraft.getToasts().addToast(
-                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
+                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastIds.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
                                             );
                                         }
                                         this.minecraft.setScreen(this);
@@ -581,11 +579,11 @@ public class TextBlockScreen extends AbstractColorScreen {
             List<Component> components = new ArrayList<>();
             for (String line : currentLines) {
                 if (level != null) {
-                    components.add(Component.Serializer.fromJson(line, level.registryAccess()));
+                    components.add(Component.Serializer.fromJson(line));
                 }
             }
             textEditBox.setValue(components);
-            TextColor textColor = components.getFirst().getStyle().getColor();
+            TextColor textColor = components.get(0).getStyle().getColor();
             if (textColor != null) {
                 colorWidget.setColor(textColor.getValue());
             }
@@ -633,7 +631,7 @@ public class TextBlockScreen extends AbstractColorScreen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(GuiGraphics guiGraphics) {
     }
 
     @Override
@@ -754,7 +752,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
         for (Component line : textLines) {
-            lines.add(Component.Serializer.toJson(line, level.registryAccess()));
+            lines.add(Component.Serializer.toJson(line));
         }
         updateTextLines(lines);
     }

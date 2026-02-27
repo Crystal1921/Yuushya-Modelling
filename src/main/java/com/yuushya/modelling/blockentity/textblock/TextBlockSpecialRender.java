@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -37,7 +38,7 @@ import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
 
 public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
     public static final ResourceLocation BLOCK_ATLAS = ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png");
-    protected final BakedModel backup = new SimpleGeneratedModel(getTexture(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "item/abandon_textblock")));;
+    protected final BakedModel backup = new SimpleGeneratedModel(getTexture(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "item/abandon_textblock")));
     protected final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
 
     public TextBlockSpecialRender(BlockEntityRenderDispatcher blockEntityRenderDispatcher, EntityModelSet entityModelSet) {
@@ -48,7 +49,7 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
     @Override
     @SuppressWarnings("deprecation")
     public void renderByItem(@NotNull ItemStack itemStack, @NotNull ItemDisplayContext transformType, @NotNull PoseStack matrixStack, @NotNull MultiBufferSource multiBufferSource, int combinedLightIn, int combinedOverlayIn) {
-        CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
+        CompoundTag tag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
         Minecraft mc = Minecraft.getInstance();
         ClientLevel clientLevel = mc.level;
         int light = LightTexture.FULL_BRIGHT;
@@ -56,13 +57,13 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
         if (clientLevel == null) {
             return;
         }
-        if (data == CustomData.EMPTY) {
+        if (tag == null || tag.isEmpty()) {
             mc.getBlockRenderer().getModelRenderer().renderModel(matrixStack.last(), multiBufferSource.getBuffer(RenderType.CUTOUT), BlockRegistry.TEXT_BLOCK.get().defaultBlockState(), backup, 1, 1, 1, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
             return;
         }
 
         List<TransformTextData> transformDatas = new ArrayList<>();
-        ITransformTextDataInventory.load(data.copyTag(), transformDatas);
+        ITransformTextDataInventory.load(tag, transformDatas);
 
         for (TransformTextData transformData : transformDatas) {
 
@@ -70,7 +71,7 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
             MutableComponent mutableComponent = Component.empty();
 
             textLines.forEach(line -> {
-                MutableComponent lineComponent = Component.Serializer.fromJson(line, clientLevel.registryAccess());
+                MutableComponent lineComponent = Component.Serializer.fromJson(line);
                 if (lineComponent != null) {
                     mutableComponent.append(lineComponent);
                 }

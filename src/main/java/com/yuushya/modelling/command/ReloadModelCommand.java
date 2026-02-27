@@ -1,6 +1,7 @@
 package com.yuushya.modelling.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.yuushya.modelling.network.ReloadModelPacket;
 import com.yuushya.modelling.network.YuushyaModellingNetwork;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -17,7 +18,7 @@ public class ReloadModelCommand {
                                     if (player == null) {
                                         return 0;
                                     }
-                                    YuushyaModellingNetwork.INSTANCE.sendToClient(new ReloadModelPacket(ReloadType.BLOCKS), player.connection.getConnection(), net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                                    YuushyaModellingNetwork.INSTANCE.sendTo(new ReloadModelPacket(ReloadType.BLOCKS), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
                                     player.sendSystemMessage(Component.translatable("command.yuushya_modelling.reload_succeed"));
                                     return 1;
                                 })
@@ -28,7 +29,7 @@ public class ReloadModelCommand {
                                     if (player == null) {
                                         return 0;
                                     }
-                                    YuushyaModellingNetwork.INSTANCE.sendToClient(new ReloadModelPacket(ReloadType.ITEMS), player.connection.getConnection(), net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                                    YuushyaModellingNetwork.INSTANCE.sendTo(new ReloadModelPacket(ReloadType.ITEMS), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
                                     player.sendSystemMessage(Component.translatable("command.yuushya_modelling.reload_succeed"));
                                     return 1;
                                 }))
@@ -38,7 +39,7 @@ public class ReloadModelCommand {
                                     if (player == null) {
                                         return 0;
                                     }
-                                    YuushyaModellingNetwork.INSTANCE.sendToClient(new ReloadModelPacket(ReloadType.TEXTS), player.connection.getConnection(), net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                                    YuushyaModellingNetwork.INSTANCE.sendTo(new ReloadModelPacket(ReloadType.TEXTS), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
                                     player.sendSystemMessage(Component.translatable("command.yuushya_modelling.reload_succeed"));
                                     return 1;
                                 }))
@@ -48,7 +49,7 @@ public class ReloadModelCommand {
                                     if (player == null) {
                                         return 0;
                                     }
-                                    YuushyaModellingNetwork.INSTANCE.sendToClient(new ReloadModelPacket(ReloadType.ALL), player.connection.getConnection(), net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                                    YuushyaModellingNetwork.INSTANCE.sendTo(new ReloadModelPacket(ReloadType.ALL), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
                                     player.sendSystemMessage(Component.translatable("command.yuushya_modelling.reload_succeed"));
                                     return 1;
                                 }))

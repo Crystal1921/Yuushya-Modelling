@@ -7,6 +7,7 @@ import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResult;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_SHOWBLOCK_MAP;
 
 public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITransformDataInventory {
@@ -82,10 +84,9 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void writeBlockState(ItemStack itemStack, BlockState blockState) {
-        BlockItemStateProperties blockItemStateProperties = BlockItemStateProperties.EMPTY;
-        itemStack.set(DataComponents.BLOCK_STATE, blockItemStateProperties
-                .with(LIT, blockState.getValue(LIT))
-                .with(SHAPES, blockState.getValue(SHAPES)));
+        YuushyaDataTags.setLit(itemStack, blockState.getValue(LIT));
+        YuushyaDataTags.setShapes(itemStack, blockState.getValue(SHAPES).getSerializedName());
+        YuushyaDataTags.setEnableAO(itemStack, blockState.getValue(ENABLE_AO));
     }
 
     public void setRemoved() {

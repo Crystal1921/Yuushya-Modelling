@@ -4,8 +4,6 @@ import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -20,18 +18,12 @@ public class EngraveTextResult implements IEngraveResult {
     private final ItemStack resultItemStack;
 
     public EngraveTextResult(String name, ShareUtils.SharedTextInformation itemInfo) {
-        this(name, itemInfo, Minecraft.getInstance().level.registryAccess());
-    }
-
-    public EngraveTextResult(String name, ShareUtils.SharedTextInformation itemInfo, RegistryAccess registryAccess) {
         this.name = name;
         List<TransformTextData> transformDataList = new ArrayList<>();
         itemInfo.transferTexts(transformDataList);
         resultItemStack = ItemRegistry.TEXT_BLOCK.get().getDefaultInstance();
-        resultItemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
-        if (registryAccess != null) {
-            saveToItem(resultItemStack, transformDataList, registryAccess);
-        }
+        resultItemStack.setHoverName(Component.literal(name));
+        saveToItem(resultItemStack, transformDataList);
     }
 
     @Override

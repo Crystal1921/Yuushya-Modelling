@@ -48,8 +48,8 @@ public class TransformDataListPacket {
             tag = new CompoundTag();
         } else {
             ItemStack itemStack = itemResult.getResultItem();
-            CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-            tag = data.copyTag();
+            CompoundTag blockEntityTag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
+            tag = blockEntityTag != null ? blockEntityTag : new CompoundTag();
         }
         tag.putString("ItemName", name);
         YuushyaModellingNetwork.INSTANCE.sendToServer(new TransformDataListPacket(tag));
@@ -75,8 +75,8 @@ public class TransformDataListPacket {
                         case TEXT -> "textblock";
                     };
                     ItemStack itemStack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, itemType)).getDefaultInstance();
-                    itemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
-                    itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(packet.tag));
+                    itemStack.setHoverName(Component.literal(name));
+                    itemStack.addTagElement(ItemStack.BLOCK_ENTITY_TAG, packet.tag);
                     HandlingCache.put(hash, itemStack);
                     menu.setupResultSlotServer(itemStack);
                 }

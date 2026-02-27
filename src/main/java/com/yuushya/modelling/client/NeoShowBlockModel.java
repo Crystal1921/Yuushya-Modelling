@@ -5,12 +5,12 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -27,8 +27,8 @@ import java.util.*;
 
 public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedModel, BakedModel {
     private static final Map<ItemStack, NeoShowBlockModel> itemModelCache = new HashMap<>();
-    public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
     private static final ChunkRenderTypeSet CUTOUT_MIPPED = ChunkRenderTypeSet.of(RenderType.cutoutMipped());
+    public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
     public NeoShowBlockModel(Direction facing) {
         super(facing);
@@ -61,8 +61,8 @@ public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedMode
 
     @Override
     public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
-        CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-        if (data == CustomData.EMPTY) {
+        CompoundTag tag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
+        if (tag == null || tag.isEmpty()) {
             return List.of(backup);
         }
         return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoShowBlockModel(Direction.SOUTH) {
@@ -70,7 +70,7 @@ public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedMode
 
             {
                 this.transformDatas = new ArrayList<>();
-                ITransformDataInventory.load(data.copyTag(), transformDatas);
+                ITransformDataInventory.load(tag, transformDatas);
             }
 
             @Override

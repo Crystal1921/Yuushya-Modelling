@@ -12,6 +12,11 @@ public class YuushyaDataTags {
     public static final String TRANSFORM_DATA = "TransformData";
     public static final String COLOR_DATA = "ColorData";
 
+    // Block State Properties
+    public static final String LIT = "Lit";
+    public static final String SHAPES = "Shapes";
+    public static final String ENABLE_AO = "EnableAO";
+
     // Trans Direction (Integer)
     public static int getTransDirection(ItemStack itemStack) {
         return itemStack.getOrCreateTag().getInt(TRANS_DIRECTION);
@@ -68,5 +73,34 @@ public class YuushyaDataTags {
 
     public static boolean hasColorData(ItemStack itemStack) {
         return itemStack.getOrCreateTag().contains(COLOR_DATA);
+    }
+
+    // Block State Properties - for compatibility with 1.21 BlockItemStateProperties
+    public static int getLit(ItemStack itemStack) {
+        return itemStack.getOrCreateTag().getInt(LIT);
+    }
+
+    public static void setLit(ItemStack itemStack, int value) {
+        itemStack.getOrCreateTag().putInt(LIT, value);
+    }
+
+    public static String getShapes(ItemStack itemStack) {
+        CompoundTag tag = itemStack.getOrCreateTag();
+        if (tag.contains(SHAPES)) {
+            return tag.getString(SHAPES);
+        }
+        return null;
+    }
+
+    public static void setShapes(ItemStack itemStack, String shape) {
+        itemStack.getOrCreateTag().putString(SHAPES, shape);
+    }
+
+    public static boolean getEnableAO(ItemStack itemStack) {
+        return itemStack.getOrCreateTag().getBoolean(ENABLE_AO);
+    }
+
+    public static void setEnableAO(ItemStack itemStack, boolean value) {
+        itemStack.getOrCreateTag().putBoolean(ENABLE_AO, value);
     }
 }

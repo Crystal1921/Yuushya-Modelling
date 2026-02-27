@@ -7,6 +7,8 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -57,11 +59,19 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
             player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".empty", holder.getRegisteredName()), true);
             return false;
         }
-        DebugStickState debugStickState = debugStack.get(DataComponents.DEBUG_STICK_STATE);
-        if (debugStickState == null) {
-            return false;
+
+        // Get or create the debug stick state from NBT
+        CompoundTag tag = debugStack.getOrCreateTag();
+        Property<?> property = null;
+        if (tag.contains("DebugState")) {
+            CompoundTag debugState = tag.getCompound("DebugState");
+            Block block = NbtUtils.readBlockState(debugState.getCompound("Block")).getBlock();
+            if (block == holder.value()) {
+                String propertyName = debugState.getString("Property");
+                property = stateDefinition.getProperty(propertyName);
+            }
         }
-        Property<?> property = debugStickState.properties().get(holder);
+
         if (shouldCycleState) {
             if (property == null) {
                 property = collection.iterator().next();
@@ -77,7 +87,13 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
             player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".update", property.getName(), getNameHelper(blockStateNew, property)), true);
         } else {
             property = YuushyaBlockStates.getRelative(collection, property, player.isSecondaryUseActive());
-            debugStack.set(DataComponents.DEBUG_STICK_STATE, debugStickState.withProperty(holder, property));
+
+            // Save the new property to NBT
+            CompoundTag debugState = new CompoundTag();
+            debugState.put("Block", NbtUtils.writeBlockState(stateClicked));
+            debugState.putString("Property", property.getName());
+            tag.put("DebugState", debugState);
+
             player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".select", property.getName(), getNameHelper(stateClicked, property)), true);
         }
         return true;

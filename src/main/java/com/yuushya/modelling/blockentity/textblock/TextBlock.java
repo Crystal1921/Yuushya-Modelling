@@ -2,7 +2,7 @@ package com.yuushya.modelling.blockentity.textblock;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
-import com.yuushya.modelling.blockentity.BlockShape;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
@@ -12,10 +12,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
@@ -24,6 +22,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class TextBlock extends AbstractTransformBlock {
@@ -83,17 +82,11 @@ public class TextBlock extends AbstractTransformBlock {
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(BlockGetter pLevel, BlockPos pPos, BlockState pState) {
         ItemStack itemStack = new ItemStack(this);
-        BlockItemStateProperties stateProperties = itemStack.get(DataComponents.BLOCK_STATE);
-        if (stateProperties == null) stateProperties = BlockItemStateProperties.EMPTY;
-        BlockShape value = stateProperties.get(SHAPES);
-        if (value == null) value = BlockShape.BLOCK;
-        itemStack.set(DataComponents.BLOCK_STATE, stateProperties.with(SHAPES, value));
+        // Store block state properties in NBT for 1.20 compatibility
+        YuushyaDataTags.setLit(itemStack, pState.getValue(LIT));
+        YuushyaDataTags.setShapes(itemStack, pState.getValue(SHAPES).getSerializedName());
         return itemStack;
-    }
-
-    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientBlockExtensions> consumer) {
-        consumer.accept(ITEM_EXTENSIONS);
     }
 }

@@ -16,7 +16,7 @@ public class TextShader {
     private static RenderType getText(ResourceLocation locationIn) {
         var rendertype$state = RenderType.CompositeState.builder()
                 .setShaderState(RenderType.RENDERTYPE_TEXT_SHADER)
-                .setTextureState(new CustomizableTextureState(locationIn, () -> NeoForgeRenderTypes.enableTextTextureLinearFiltering, () -> false))
+                .setTextureState(new CustomizableTextureState(locationIn, () -> false, () -> false))
                 .setTransparencyState(RenderType.TRANSLUCENT_TRANSPARENCY)
                 .setLightmapState(RenderType.LIGHTMAP)
                 .setCullState(RenderStateShard.NO_CULL)

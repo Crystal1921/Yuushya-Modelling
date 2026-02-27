@@ -2,15 +2,14 @@ package com.yuushya.modelling.blockentity;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.block.AbstractYuushyaBlock;
-import com.yuushya.modelling.item.YuushyaDebugStickItem;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -18,12 +17,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
@@ -58,9 +52,9 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
-        if (blockPlaceContext.getPlayer() != null && 
-            blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(
-                ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
+        if (blockPlaceContext.getPlayer() != null &&
+                blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(
+                        ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
             BlockState blockState = this.defaultBlockState();
             blockState.setValue(ENABLE_AO, DEFAULT_ENABLE_AO);
             blockState.setValue(FULL_BLOCK, DEFAULT_FULL_BLOCK);
@@ -83,11 +77,11 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(BlockGetter pLevel, BlockPos pPos, BlockState pState) {
         ItemStack itemStack = new ItemStack(this);
-        Map<String, String> properties = state.getProperties().stream().collect(Collectors.toMap((Property::getName), property -> YuushyaDebugStickItem.getNameHelper(state, property)));
-        BlockItemStateProperties stateProperties = new BlockItemStateProperties(properties);
-        itemStack.set(DataComponents.BLOCK_STATE, stateProperties);
+        // Store block state properties in NBT for 1.20 compatibility
+        YuushyaDataTags.setLit(itemStack, pState.getValue(LIT));
+        YuushyaDataTags.setShapes(itemStack, pState.getValue(SHAPES).getSerializedName());
         return itemStack;
     }
 }

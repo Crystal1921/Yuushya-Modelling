@@ -7,6 +7,7 @@ import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.utils.CustomRenderInstance;
 import com.yuushya.modelling.utils.ShareUtils;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -73,11 +74,9 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void writeBlockState(ItemStack itemStack, BlockState blockState) {
-        BlockItemStateProperties blockItemStateProperties = BlockItemStateProperties.EMPTY;
-        itemStack.set(DataComponents.BLOCK_STATE, blockItemStateProperties
-                .with(LIT, blockState.getValue(LIT))
-                .with(SHAPES, blockState.getValue(SHAPES))
-                .with(ENABLE_AO, blockState.getValue(ENABLE_AO)));
+        YuushyaDataTags.setLit(itemStack, blockState.getValue(LIT));
+        YuushyaDataTags.setShapes(itemStack, blockState.getValue(SHAPES).getSerializedName());
+        YuushyaDataTags.setEnableAO(itemStack, blockState.getValue(ENABLE_AO));
     }
 
     public void setRemoved() {

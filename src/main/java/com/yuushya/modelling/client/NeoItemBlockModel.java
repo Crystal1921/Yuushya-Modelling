@@ -75,13 +75,13 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
 
     @Override
     public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
-        CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
+        CompoundTag tag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) {
             return Collections.emptyList();
         }
         RegistryAccess registryAccess = level.registryAccess();
-        if (data == CustomData.EMPTY) {
+        if (tag == null || tag.isEmpty()) {
             return List.of(backup);
         }
         return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoItemBlockModel(Direction.SOUTH) {
@@ -89,7 +89,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
 
             {
                 this.transformDatas = new ArrayList<>();
-                ITransformItemDataInventory.load(data.copyTag(), transformDatas, registryAccess);
+                ITransformItemDataInventory.load(tag, transformDatas, registryAccess);
             }
 
             @Override
