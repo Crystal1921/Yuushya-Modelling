@@ -1,0 +1,8 @@
+{
+	"credit": "Yuushya",
+	"parent": "minecraft:block/block",
+	"textures": {
+    "particle": "yuushya:block/pt"
+  },
+	"ambientocclusion": false
+}

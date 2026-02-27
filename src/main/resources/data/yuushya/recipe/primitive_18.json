@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "yuushya:cube_0"
+  },
+  "result": {
+    "id": "yuushya:chibi_0_alt",
+    "count": 1
+  }
+}
