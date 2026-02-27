@@ -6,7 +6,6 @@ import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
@@ -88,17 +87,17 @@ public class YuushyaUtils {
 
     public static void mirror(Vector3d pos, Quaternionf rot, MirrorFace face) {
         switch (face) {
-            case MirrorFace.X: // YZ 平面镜像
+            case X: // YZ 平面镜像
                 pos.x = -pos.x;
                 rot.x = -rot.x;
                 rot.w = -rot.w;
                 break;
-            case MirrorFace.Y: // XZ 平面镜像
+            case Y: // XZ 平面镜像
                 pos.y = -pos.y;
                 rot.y = -rot.y;
                 rot.w = -rot.w;
                 break;
-            case MirrorFace.Z: // XY 平面镜像
+            case Z: // XY 平面镜像
                 pos.z = -pos.z;
                 rot.z = -rot.z;
                 rot.w = -rot.w;
@@ -155,10 +154,10 @@ public class YuushyaUtils {
         return listTag;
     }
 
-    public static CompoundTag itemStackTag(ItemStack stack, HolderLookup.Provider registries) {
+    public static CompoundTag itemStackTag(ItemStack stack) {
         if (stack.isEmpty()) return new CompoundTag();
         CompoundTag compoundTag = new CompoundTag();
-        return (CompoundTag) stack.save(registries, compoundTag);
+        return stack.save(compoundTag);
     }
 
     public static BlockState readBlockState(CompoundTag tag) {
@@ -189,6 +188,6 @@ public class YuushyaUtils {
     }
 
     public enum MirrorFace {
-        X,Y,Z
+        X, Y, Z
     }
 }

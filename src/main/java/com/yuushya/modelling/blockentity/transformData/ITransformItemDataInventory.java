@@ -1,6 +1,5 @@
 package com.yuushya.modelling.blockentity.transformData;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.ItemStack;
@@ -16,27 +15,27 @@ public interface ITransformItemDataInventory {
     }//interface ::=functional
 
     //readNbt from compoundTag
-    static void load(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
+    static void load(CompoundTag compoundTag, List<TransformItemData> transformDatas) {
         ListTag listTag = compoundTag.getList("Blocks", 10);//int index=0;//10 means Compound
         if (!transformDatas.isEmpty()) transformDatas.clear();
         for (int index = 0; index < listTag.size(); index++) {
             TransformItemData transformData = new TransformItemData();
             CompoundTag compoundTagTemp = listTag.getCompound(index);
-            transformData.load(compoundTagTemp, registries);
+            transformData.load(compoundTagTemp);
             transformDatas.add(transformData);
         }
         if (transformDatas.isEmpty()) transformDatas.add(new TransformItemData());
     }
 
     //writeNbt to compoundTag
-    static void saveAdditional(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
+    static void saveAdditional(CompoundTag compoundTag, List<TransformItemData> transformDatas) {
         ListTag listTag = new ListTag();
         int index = 0;
         for (TransformItemData transformData : transformDatas) {
             //if(!(transformData.blockState.getBlock() instanceof AirBlock)){
             CompoundTag compoundTagTemp = new CompoundTag();
             compoundTagTemp.putByte("Slot", (byte) index);
-            transformData.saveAdditional(compoundTagTemp, registries);
+            transformData.saveAdditional(compoundTagTemp);
             listTag.add(compoundTagTemp);
             //}
             index++;
@@ -44,14 +43,14 @@ public interface ITransformItemDataInventory {
         if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
     }
 
-    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
+    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformItemData> transformDatas) {
         ListTag listTag = new ListTag();
         int index = 0;
         for (TransformItemData transformData : transformDatas) {
             if (!(transformData.itemStack.isEmpty())) {
                 CompoundTag compoundTagTemp = new CompoundTag();
                 compoundTagTemp.putByte("Slot", (byte) index);
-                transformData.saveAdditional(compoundTagTemp, registries);
+                transformData.saveAdditional(compoundTagTemp);
                 listTag.add(compoundTagTemp);
             }
             index++;

@@ -1,6 +1,5 @@
 package com.yuushya.modelling.blockentity.transformData;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.jetbrains.annotations.NotNull;
@@ -27,27 +26,27 @@ public interface ITransformTextDataInventory {
     }
 
     //writeNbt to compoundTag
-    static void saveAdditional(CompoundTag compoundTag, List<TransformTextData> transformDatas, HolderLookup.Provider registries) {
+    static void saveAdditional(CompoundTag compoundTag, List<TransformTextData> transformDatas) {
         ListTag listTag = new ListTag();
         int index = 0;
         for (TransformTextData transformData : transformDatas) {
             CompoundTag compoundTagTemp = new CompoundTag();
             compoundTagTemp.putByte("Slot", (byte) index);
-            transformData.saveAdditional(compoundTagTemp, registries);
+            transformData.saveAdditional(compoundTagTemp);
             listTag.add(compoundTagTemp);
             index++;
         }
         if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
     }
 
-    static void saveAdditionalWithoutEmpty(CompoundTag compoundTag, List<TransformTextData> transformDatas, HolderLookup.Provider registries) {
+    static void saveAdditionalWithoutEmpty(CompoundTag compoundTag, List<TransformTextData> transformDatas) {
         ListTag listTag = new ListTag();
         int index = 0;
         for (TransformTextData transformData : transformDatas) {
             if (!transformData.textLines.isEmpty()) {
                 CompoundTag compoundTagTemp = new CompoundTag();
                 compoundTagTemp.putByte("Slot", (byte) index);
-                transformData.saveAdditional(compoundTagTemp, registries);
+                transformData.saveAdditional(compoundTagTemp);
                 listTag.add(compoundTagTemp);
             }
             index++;

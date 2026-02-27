@@ -41,6 +41,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.model.IQuadTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -52,6 +53,7 @@ import java.util.List;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static net.minecraft.client.renderer.RenderStateShard.*;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
+import static net.minecraftforge.client.model.QuadTransformers.toABGR;
 
 /**
  * @author ZhuRuoLing
@@ -337,7 +339,8 @@ public class CachedRegion {
             FullyBufferedBufferSource bufferSource = new FullyBufferedBufferSource();
             Minecraft mc = Minecraft.getInstance();
             for (BlockEntity be : new ArrayList<>(blockEntities)) {
-                if (be instanceof ItemBlockEntity itemBlockEntity && mc.player instanceof LocalPlayer localPlayer) {
+                if (be instanceof ItemBlockEntity itemBlockEntity) {
+                    LocalPlayer localPlayer = mc.player;
                     if (be.getLevel() == null) {
                         bufferSource.close();
                         return;

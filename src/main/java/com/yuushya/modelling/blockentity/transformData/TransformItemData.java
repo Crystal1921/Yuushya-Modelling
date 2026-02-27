@@ -1,7 +1,6 @@
 package com.yuushya.modelling.blockentity.transformData;
 
 import com.yuushya.modelling.utils.YuushyaUtils;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.FastColor;
@@ -63,25 +62,25 @@ public class TransformItemData implements ITransformDataProvider {
     }
 
     //readNbt from compoundTag
-    public void load(CompoundTag compoundTag, HolderLookup.Provider registries) {
+    public void load(CompoundTag compoundTag) {
         ListTag listTagPos = compoundTag.getList("ShowPos", 6);//6 means Double
         ListTag listTagRot = compoundTag.getList("ShowRotation", 6);//5 means Float
         ListTag listTagScales = compoundTag.getList("ShowScales", 6);//5 means Float
         this.pos.set(listTagPos.getDouble(0), listTagPos.getDouble(1), listTagPos.getDouble(2));
         this.rot.set(listTagRot.getDouble(0), listTagRot.getDouble(1), listTagRot.getDouble(2));
         this.scales.set(listTagScales.getDouble(0), listTagScales.getDouble(1), listTagScales.getDouble(2));
-        this.itemStack = ItemStack.parseOptional(registries, compoundTag.getCompound("ItemStack"));
+        this.itemStack = ItemStack.of(compoundTag.getCompound("ItemStack"));
         this.color = (compoundTag.getInt("Color"));
         this.isShown = compoundTag.getBoolean("isShown");
         this.enableBlock = compoundTag.getBoolean("enableBlock");
     }
 
     //writeNbt to compoundTag
-    public void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
+    public void saveAdditional(CompoundTag compoundTag) {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toDoubleListTag(rot));
         compoundTag.put("ShowScales", YuushyaUtils.toDoubleListTag(scales));
-        compoundTag.put("ItemStack", YuushyaUtils.itemStackTag(itemStack, registries));
+        compoundTag.put("ItemStack", YuushyaUtils.itemStackTag(itemStack));
         compoundTag.putInt("Color", color);
         compoundTag.putBoolean("isShown", isShown);
         compoundTag.putBoolean("enableBlock", enableBlock);

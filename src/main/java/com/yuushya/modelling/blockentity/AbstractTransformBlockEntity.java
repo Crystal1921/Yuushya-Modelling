@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
@@ -104,29 +103,29 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this, (blockEntity, access) -> {
-            CompoundTag compoundTag = getUpdateTag(access);
-            saveAdditional(compoundTag, access);
+        return ClientboundBlockEntityDataPacket.create(this, (blockEntity) -> {
+            CompoundTag compoundTag = getUpdateTag();
+            saveAdditional(compoundTag);
             return compoundTag;
         });
     }
 
     @Override
-    public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag compoundTag = super.getUpdateTag(registries);
+    public @NotNull CompoundTag getUpdateTag() {
+        CompoundTag compoundTag = super.getUpdateTag();
         compoundTag.putByte("ControlSlot", slot.byteValue());
         return compoundTag;
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
+    protected void saveAdditional(@NotNull CompoundTag compoundTag) {
+        super.saveAdditional(compoundTag);
         compoundTag.putByte("ControlSlot", slot.byteValue());
     }
 
     @Override
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
+    public void load(@NotNull CompoundTag compoundTag) {
+        super.load(compoundTag);
         slot = (int) compoundTag.getByte("ControlSlot");
 
         // Client chunk update

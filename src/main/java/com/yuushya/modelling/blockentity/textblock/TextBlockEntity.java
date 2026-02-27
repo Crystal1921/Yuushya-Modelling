@@ -3,19 +3,14 @@ package com.yuushya.modelling.blockentity.textblock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformTextDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
-import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.gui.engrave.EngraveTextResult;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
-import com.yuushya.modelling.utils.CustomRenderInstance;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +21,6 @@ import java.util.List;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
-import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP;
 import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_TEXTBLOCK_TEXT_MAP;
 
 public class TextBlockEntity extends AbstractTransformBlockEntity implements ITransformTextDataInventory {
@@ -55,15 +49,15 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     @Override
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
+    public void load(@NotNull CompoundTag compoundTag) {
+        super.load(compoundTag);
         ITransformTextDataInventory.load(compoundTag, transformData);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
-        ITransformTextDataInventory.saveAdditional(compoundTag, transformData, registries);
+    protected void saveAdditional(@NotNull CompoundTag compoundTag) {
+        super.saveAdditional(compoundTag);
+        ITransformTextDataInventory.saveAdditional(compoundTag, transformData);
     }
 
     @Override
@@ -73,8 +67,8 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     @Override
-    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider registries) {
-        return saveWithoutMetadata(registries);
+    public @NotNull CompoundTag getUpdateTag() {
+        return saveWithoutMetadata();
     }
 
     public void writeBlockState(ItemStack itemStack, BlockState blockState) {

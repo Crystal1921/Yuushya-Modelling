@@ -1,7 +1,6 @@
 package com.yuushya.modelling.blockentity.transformData;
 
 import com.yuushya.modelling.utils.YuushyaUtils;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -86,7 +85,7 @@ public class TransformTextData implements ITransformDataProvider {
     }
 
     //writeNbt to compoundTag
-    public void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
+    public void saveAdditional(CompoundTag compoundTag) {
         compoundTag.put("ShowPos", YuushyaUtils.toListTag(pos.x, pos.y, pos.z));
         compoundTag.put("ShowRotation", YuushyaUtils.toListTag(rot.x(), rot.y(), rot.z()));
         compoundTag.put("ShowScales", YuushyaUtils.toListTag(scales.x(), scales.y(), scales.z()));

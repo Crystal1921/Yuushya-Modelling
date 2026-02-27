@@ -9,7 +9,6 @@ import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -62,23 +61,23 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
 
     @Override
     //readNbt
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
+    public void load(@NotNull CompoundTag compoundTag) {
+        super.load(compoundTag);
         ITransformDataInventory.load(compoundTag, transformData);
     }
 
     @Override
     //writeNbt
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
-        ITransformDataInventory.saveAdditional(compoundTag, transformData, registries);
+    protected void saveAdditional(@NotNull CompoundTag compoundTag) {
+        super.saveAdditional(compoundTag);
+        ITransformDataInventory.saveAdditional(compoundTag, transformData);
     }
 
     @Override
     //toInitialChunkDataNbt //When you first load world it writeNbt firstly
-    public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag compoundTag = super.getUpdateTag(registries);
-        ITransformDataInventory.saveAdditional(compoundTag, transformData, registries);
+    public @NotNull CompoundTag getUpdateTag() {
+        CompoundTag compoundTag = super.getUpdateTag();
+        ITransformDataInventory.saveAdditional(compoundTag, transformData);
         return compoundTag;
     }
 
