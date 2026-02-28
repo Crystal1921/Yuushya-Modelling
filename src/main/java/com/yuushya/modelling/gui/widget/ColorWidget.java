@@ -157,23 +157,27 @@ public class ColorWidget extends AbstractWidget {
         RenderSystem.setShaderTexture(0, atlasLocation);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f matrix4f = poseStack.last().pose();
-        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, (float) 0).setUv((float) 0.0, (float) 0.0);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, (float) 0).setUv((float) 0.0, (float) 1.0);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, (float) 0).setUv((float) 1.0, (float) 1.0);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, (float) 0).setUv((float) 1.0, (float) 0.0);
-        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder bufferbuilder = tesselator.getBuilder();
+        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y1, 0.0f).uv(0.0f, 0.0f);
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y2, 0.0f).uv(0.0f, 1.0f);
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y2, 0.0f).uv(1.0f, 1.0f);
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y1, 0.0f).uv(1.0f, 0.0f);
+        BufferUploader.drawWithShader(bufferbuilder.end());
     }
 
     void renderSolidColor(PoseStack poseStack, int x1, int x2, int y1, int y2, int color) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader); // 使用颜色着色器
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         Matrix4f matrix4f = poseStack.last().pose();
-        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, 0).setColor(color);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, 0).setColor(color);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, 0).setColor(color);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, 0).setColor(color);
-        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder bufferbuilder = tesselator.getBuilder();
+        bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y1, 0.0f).color(color);
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y2, 0.0f).color(color);
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y2, 0.0f).color(color);
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y1, 0.0f).color(color);
+        BufferUploader.drawWithShader(bufferbuilder.end());
     }
 }

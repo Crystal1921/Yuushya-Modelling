@@ -3,7 +3,6 @@ package com.yuushya.modelling.client.anvilcraft.rendering;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.client.ByteBufferBuilder;
-import com.yuushya.modelling.client.MeshData;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import lombok.Getter;
@@ -30,7 +29,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     @Getter
     private final Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
     @Getter
-    private final Map<RenderType, MeshData.SortState> meshSorts = new HashMap<>();
+    private final Map<RenderType, BufferBuilder.SortState> meshSorts = new HashMap<>();
     private final Map<RenderType, RenderType> cachedRenderTypeConvertions = new HashMap<>();
 
     public FullyBufferedBufferSource() {
@@ -45,12 +44,11 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     public VertexConsumer getBuffer(RenderType renderType) {
         return bufferBuilders.computeIfAbsent(
                 forceUseBlockRenderTypes(renderType),
-                it -> new BufferBuilder(
-                        getByteBuffer(forceUseBlockRenderTypes(renderType)),
-                        it.mode,
-                        it.format()
-                )
-        );
+                it -> {
+                    BufferBuilder bufferBuilder = new BufferBuilder(256);
+                    bufferBuilder.begin(it.mode, it.format());
+                    return bufferBuilder;
+                });
     }
 
     private RenderType forceUseBlockRenderTypes(RenderType renderType) {
@@ -112,24 +110,23 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
                 ByteBufferBuilder byteBuffer = byteBuffers.get(renderType);
                 int compiledVertices = bufferBuilder.vertices * renderType.format().getVertexSize();
                 if (compiledVertices >= 0) {
-                    MeshData mesh = bufferBuilder.build();
+                    BufferBuilder.RenderedBuffer mesh = bufferBuilder.end();
                     indexCountMap.put(renderType, renderType.mode.indexCount(bufferBuilder.vertices));
-                    if (mesh != null) {
-                        if (renderType.sortOnUpload) {
-                            MeshData.SortState sortState = mesh.sortQuads(
-                                    byteBufferSupplier.apply(renderType),
-                                    RenderSystem.getVertexSorting()
-                            );
-                            meshSorts.put(
-                                    renderType,
-                                    sortState
-                            );
-                        }
-                        VertexBuffer vertexBuffer = vertexBufferGetter.apply(renderType);
-                        vertexBuffer.bind();
-                        vertexBuffer.upload(mesh);
-                        VertexBuffer.unbind();
+                    if (renderType.sortOnUpload) {
+//                        BufferBuilder.SortState sortState = mesh.sortQuads(
+//                                byteBufferSupplier.apply(renderType),
+//                                RenderSystem.getVertexSorting()
+//                        );
+//                        meshSorts.put(
+//                                renderType,
+//                                sortState
+//                        );
+                        //TODO : 这里不知道怎么排序
                     }
+                    VertexBuffer vertexBuffer = vertexBufferGetter.apply(renderType);
+                    vertexBuffer.bind();
+                    vertexBuffer.upload(mesh);
+                    VertexBuffer.unbind();
                 }
                 byteBuffer.close();
                 bufferBuilders.remove(renderType);

@@ -110,7 +110,8 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
             RenderSystem.defaultBlendFunc();
             RenderSystem.lineWidth(8.0f);
             
-            BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+            BufferBuilder bufferBuilder = tesselator.getBuilder();
+            bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
             translateAfterScale(matrixStack, pos, scales);
             translate(matrixStack, MIDDLE);
             
@@ -133,20 +134,20 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
             
             // Render Z axis (blue)
             if (showRotAxis) matrixStack.mulPose(Axis.ZP.rotationDegrees(rot.z()));
-            bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, 0.0f, -1.5f).setColor(blueZ).setNormal(0f, 0f, 1.5f);
-            bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, 0f, 1.5f).setColor(blueZ).setNormal(0f, 0f, 1.5f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 0.0f, -1.5f).color(blueZ).normal(0f, 0f, 1.5f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 0f, 1.5f).color(blueZ).normal(0f, 0f, 1.5f);
             
             // Render Y axis (green)
             if (showRotAxis) matrixStack.mulPose(Axis.YP.rotationDegrees(rot.y()));
-            bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, -1.5f, 0.0f).setColor(greenY).setNormal(0f, 1.5f, 0f);
-            bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, 1.5f, 0.0f).setColor(greenY).setNormal(0f, 1.5f, 0f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, -1.5f, 0.0f).color(greenY).normal(0f, 1.5f, 0f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 1.5f, 0.0f).color(greenY).normal(0f, 1.5f, 0f);
             
             // Render X axis (red)
             if (showRotAxis) matrixStack.mulPose(Axis.XP.rotationDegrees(rot.x()));
-            bufferBuilder.addVertex(matrixStack.last().pose(), -1.5f, 0.0f, 0.0f).setColor(redX).setNormal(1.5f, 0f, 0f);
-            bufferBuilder.addVertex(matrixStack.last().pose(), 1.5f, 0f, 0.0f).setColor(redX).setNormal(1.5f, 0f, 0f);
+            bufferBuilder.vertex(matrixStack.last().pose(), -1.5f, 0.0f, 0.0f).color(redX).normal(1.5f, 0f, 0f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 1.5f, 0f, 0.0f).color(redX).normal(1.5f, 0f, 0f);
             
-            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+            BufferUploader.drawWithShader(bufferBuilder.end());
             RenderSystem.depthMask(true);
             RenderSystem.disableBlend();
             RenderSystem.enableCull();

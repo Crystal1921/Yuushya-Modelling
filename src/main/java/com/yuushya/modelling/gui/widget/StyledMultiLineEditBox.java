@@ -13,13 +13,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.StringUtil;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static net.minecraft.SharedConstants.isAllowedChatCharacter;
 
 @OnlyIn(Dist.CLIENT)
 public class StyledMultiLineEditBox extends AbstractScrollWidget {
@@ -146,7 +147,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.visible && this.isFocused() && StringUtil.isAllowedChatCharacter(codePoint)) {
+        if (this.visible && this.isFocused() && isAllowedChatCharacter(codePoint)) {
             String string = Character.toString(codePoint);
             Component component = Component.literal(string)
                     .withStyle(Style.EMPTY
@@ -463,7 +464,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                         .withUnderlined(underlineButton.getValue())
                         .withStrikethrough(strikethroughButton.getValue())
                         .withObfuscated(obfuscatedButton.getValue())
-        , fontList.getSelectedFont());
+                , fontList.getSelectedFont());
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }

@@ -3,15 +3,11 @@ package com.yuushya.modelling.client.anvilcraft.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexBuffer;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.client.ByteBufferBuilder;
-import com.yuushya.modelling.client.MeshData;
 import com.yuushya.modelling.client.NeoItemBlockModel;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.YuushyaDataTags;
@@ -46,6 +42,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.model.IQuadTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import java.awt.*;
@@ -72,7 +69,7 @@ public class CachedRegion {
     private final Minecraft minecraft = Minecraft.getInstance();
     private final RandomSource random = RandomSource.create();
     private Map<RenderType, VertexBuffer> buffers = new HashMap<>();
-    private Map<RenderType, MeshData.SortState> meshSortings = new HashMap<>();
+    private Map<RenderType, BufferBuilder.SortState> meshSortings = new HashMap<>();
     private Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
     private ModelBlockRenderer.AmbientOcclusionFace aoFace = new ModelBlockRenderer.AmbientOcclusionFace();
     @Nullable
@@ -213,7 +210,11 @@ public class CachedRegion {
         if (indexCount <= 0) return;
         renderType.setupRenderState();
         ShaderInstance shader = RenderSystem.getShader();
-        shader.setDefaultUniforms(VertexFormat.Mode.QUADS, frustumMatrix, projectionMatrix, window);
+        //TODO : 这里可能会有问题
+        RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
+        Matrix3f pRotationMatrix = new Matrix3f(frustumMatrix);
+        RenderSystem.setInverseViewRotationMatrix(pRotationMatrix.invert());
+//        shader.setDefaultUniforms(VertexFormat.Mode.QUADS, frustumMatrix, projectionMatrix, window);
         Uniform uniform = shader.CHUNK_OFFSET;
         if (uniform != null) {
             uniform.set(
@@ -448,7 +449,7 @@ public class CachedRegion {
                         bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, aoFace.brightness, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, aoFace.lightmap, OverlayTexture.NO_OVERLAY, true);
                     } else {
                         int packedLight = LevelRenderer.getLightColor(level, pos.offset((int) (transformData.pos.x / 16), (int) (transformData.pos.y / 16), (int) (transformData.pos.z / 16)));
-                        bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], 1.0f, packedLight, OverlayTexture.NO_OVERLAY);
+                        bufferSource.getBuffer(TRANSLUCENT_MAIN).putBulkData(poseStack.last(), bakedQuad, colorComponents[0], colorComponents[1], colorComponents[2], packedLight, OverlayTexture.NO_OVERLAY);
                     }
                 }
                 poseStack.popPose();

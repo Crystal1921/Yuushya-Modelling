@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedModel, BakedModel {
+public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedModel {
     private static final Map<ItemStack, NeoShowBlockModel> itemModelCache = new HashMap<>();
     private static final ChunkRenderTypeSet CUTOUT_MIPPED = ChunkRenderTypeSet.of(RenderType.cutoutMipped());
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();

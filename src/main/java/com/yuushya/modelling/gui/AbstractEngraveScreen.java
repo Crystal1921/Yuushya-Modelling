@@ -70,7 +70,7 @@ public abstract class AbstractEngraveScreen<T extends AbstractEngraveMenu> exten
         guiGraphics.blit(BG_LOCATION, i, j, 0, 0, this.imageWidth, this.imageHeight);
         int k = (int)(41.0f * this.scrollOffs);
         ResourceLocation resourceLocation = this.isScrollBarActive() ? SCROLLER_SPRITE : SCROLLER_DISABLED_SPRITE;
-        guiGraphics.blitSprite(resourceLocation, i + 119, j + SCROLLER_HEIGHT + k, SCROLLER_WIDTH, SCROLLER_HEIGHT);
+        guiGraphics.blit(resourceLocation,i + 119, j + SCROLLER_HEIGHT + k, 0,0,SCROLLER_WIDTH, SCROLLER_HEIGHT);
         int l = this.leftPos + RECIPES_X;
         int m = this.topPos + RECIPES_Y;
         int n = this.startIndex + SCROLLER_WIDTH;
@@ -103,7 +103,7 @@ public abstract class AbstractEngraveScreen<T extends AbstractEngraveMenu> exten
             int l = j / RECIPES_COLUMNS;
             int m = y + l * RECIPES_IMAGE_SIZE_HEIGHT + 2;
             ResourceLocation resourceLocation = i == this.menu.getSelectedRecipeIndex() ? RECIPE_SELECTED_SPRITE : (mouseX >= k && mouseY >= m && mouseX < k + RECIPES_IMAGE_SIZE_WIDTH && mouseY < m + RECIPES_IMAGE_SIZE_HEIGHT ? RECIPE_HIGHLIGHTED_SPRITE : RECIPE_SPRITE);
-            guiGraphics.blitSprite(resourceLocation, k, m - 1, RECIPES_IMAGE_SIZE_WIDTH, RECIPES_IMAGE_SIZE_HEIGHT);
+            guiGraphics.blit(resourceLocation, k, m - 1,0,0, RECIPES_IMAGE_SIZE_WIDTH, RECIPES_IMAGE_SIZE_HEIGHT);
         }
     }
 

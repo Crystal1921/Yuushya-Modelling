@@ -3,6 +3,8 @@ package com.yuushya.modelling.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import com.yuushya.modelling.Yuushya;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockElementFace;
@@ -14,6 +16,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.BlockModelRotation;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.data.ModelData;
@@ -24,6 +27,7 @@ import org.joml.Vector3f;
 public class SimpleGeneratedModel implements BakedModel {
     final List<BakedQuad>[] face = new List[6];
     final TextureAtlasSprite texture;
+    final ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "simple_generated");
 
     public SimpleGeneratedModel(TextureAtlasSprite texture) {
         this.face[0] = new ArrayList<>();
@@ -74,7 +78,7 @@ public class SimpleGeneratedModel implements BakedModel {
                     throw new NullPointerException();
             }
 
-            BakedQuad g = faceBakery.bakeQuad(toB, fromB, bpf, texture, side, mr, bpr, false);
+            BakedQuad g = faceBakery.bakeQuad(toB, fromB, bpf, texture, side, mr, bpr, false, textureLocation);
             this.face[side.ordinal()].add(g);
         }
 

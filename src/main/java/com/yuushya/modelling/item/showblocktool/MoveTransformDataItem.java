@@ -42,7 +42,7 @@ public class MoveTransformDataItem extends AbstractToolItem {
             transformData.set();
             transformData.blockState = blockStateTarget;
         }
-        setTag(handItemStack, level.registryAccess());
+        setTag(handItemStack);
         player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".mainhand.success"), true);
         return InteractionResult.SUCCESS;
     }
@@ -74,9 +74,9 @@ public class MoveTransformDataItem extends AbstractToolItem {
         }
     }
 
-    public void setTag(ItemStack itemStack, HolderLookup.Provider registries) {
+    public void setTag(ItemStack itemStack) {
         CompoundTag transformDataTag = new CompoundTag();
-        transformData.saveAdditional(transformDataTag, registries);
+        transformData.saveAdditional(transformDataTag);
 
         CompoundTag compoundTag = new CompoundTag();
         compoundTag.put("TransformData", transformDataTag);

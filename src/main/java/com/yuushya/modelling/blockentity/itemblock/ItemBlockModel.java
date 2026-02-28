@@ -105,14 +105,13 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
         return Collections.emptyList();
     }
 
-    @Nullable
-    @Override
-    public BakedModel bake(ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState state) {
-        return this;
-    }
-
     @Override
     public void resolveParents(Function<ResourceLocation, UnbakedModel> function) {
 
+    }
+
+    @Override
+    public @Nullable BakedModel bake(ModelBaker pBaker, Function<Material, TextureAtlasSprite> pSpriteGetter, ModelState pState, ResourceLocation pLocation) {
+        return this;
     }
 }

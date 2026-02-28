@@ -49,11 +49,6 @@ public class EditScreen extends Screen {
     }
 
     @Override
-    protected void setInitialFocus() {
-        this.setInitialFocus(this.editBox);
-    }
-
-    @Override
     public void resize(Minecraft minecraft, int width, int height) {
         String string = this.editBox.getValue();
         this.init(minecraft, width, height);

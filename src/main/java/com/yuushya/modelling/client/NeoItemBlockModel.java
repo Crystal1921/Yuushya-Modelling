@@ -18,6 +18,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -89,7 +90,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
 
             {
                 this.transformDatas = new ArrayList<>();
-                ITransformItemDataInventory.load(tag, transformDatas, registryAccess);
+                ITransformItemDataInventory.load(tag, transformDatas);
             }
 
             @Override
