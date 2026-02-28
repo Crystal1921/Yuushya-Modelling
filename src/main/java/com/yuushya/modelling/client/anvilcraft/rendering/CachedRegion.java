@@ -199,7 +199,6 @@ public class CachedRegion {
             Vec3 cameraPosition,
             Window window
     ) {
-        GL46.glPushDebugGroup(GL46.GL_DEBUG_SOURCE_APPLICATION, 0, "Cached BER RenderRegion " + chunkPos);
         int indexCount = indexCountMap.getInt(renderType);
         if (indexCount <= 0) return;
 
@@ -225,7 +224,6 @@ public class CachedRegion {
             uniform.set(0.0F, 0.0F, 0.0F);
         }
         renderType.clearRenderState();
-        GL46.glPopDebugGroup();
     }
 
     public void replaceData(Collection<BlockPos> entityPos, ClientLevel clientLevel) {
