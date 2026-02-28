@@ -22,19 +22,19 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 
-@Mod.EventBusSubscriber(value = Dist.CLIENT)
+@Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD, modid = Yuushya.MOD_ID_USED)
 public class YuushyaClientNeoForge {
 
     @SuppressWarnings("resource")
     @SubscribeEvent
-    public void onInitializeClient(FMLClientSetupEvent event) {
+    public static void onInitializeClient(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             ColorTexture colorTexture = new ColorTexture();
         });
     }
 
     @SubscribeEvent
-    public void onModelBaked(ModelEvent.ModifyBakingResult event) {
+    public static void onModelBaked(ModelEvent.ModifyBakingResult event) {
         ModelResourceLocation inventory = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
         event.getModels().put(inventory, new NeoShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
         for (BlockState blockState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {

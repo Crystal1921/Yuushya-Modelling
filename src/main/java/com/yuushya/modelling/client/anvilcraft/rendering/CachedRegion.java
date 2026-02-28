@@ -59,11 +59,10 @@ import static net.minecraftforge.client.model.QuadTransformers.toABGR;
  */
 public class CachedRegion {
     public static final RenderType TRANSLUCENT_MAIN = RenderType.create(
-            "translucent_main", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
+            "translucent_main", DefaultVertexFormat.BLOCK, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
     );
     private static final Direction[] DIRECTIONS = Direction.values();
     private final ChunkPos chunkPos;
-    private final Map<RenderType, ByteBufferBuilder> sortBuffers = new HashMap<>();
     private final Set<BlockEntity> blockEntities = new HashSet<>();
     private final CacheableBERenderingPipeline pipeline;
     private final Minecraft minecraft = Minecraft.getInstance();
@@ -162,15 +161,6 @@ public class CachedRegion {
         return vb;
     }
 
-    private ByteBufferBuilder requestSortBuffer(RenderType renderType) {
-        if (sortBuffers.containsKey(renderType)) {
-            return sortBuffers.get(renderType);
-        }
-        ByteBufferBuilder builder = new ByteBufferBuilder(4096);
-        sortBuffers.put(renderType, builder);
-        return builder;
-    }
-
     private void renderInternal(
             Matrix4f frustumMatrix,
             Matrix4f projectionMatrix,
@@ -195,7 +185,6 @@ public class CachedRegion {
 
     public void releaseBuffers() {
         buffers.values().forEach(VertexBuffer::close);
-        sortBuffers.values().forEach(ByteBufferBuilder::close);
     }
 
     private void renderLayer(
@@ -208,13 +197,11 @@ public class CachedRegion {
     ) {
         int indexCount = indexCountMap.getInt(renderType);
         if (indexCount <= 0) return;
+
         renderType.setupRenderState();
         ShaderInstance shader = RenderSystem.getShader();
-        //TODO : 这里可能会有问题
-        RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
-        Matrix3f pRotationMatrix = new Matrix3f(frustumMatrix);
-        RenderSystem.setInverseViewRotationMatrix(pRotationMatrix.invert());
-//        shader.setDefaultUniforms(VertexFormat.Mode.QUADS, frustumMatrix, projectionMatrix, window);
+
+        // MC 1.20: drawWithShader 内部会处理 projection 和 modelView
         Uniform uniform = shader.CHUNK_OFFSET;
         if (uniform != null) {
             uniform.set(
@@ -222,21 +209,11 @@ public class CachedRegion {
                     (float) -cameraPosition.y,
                     (float) -cameraPosition.z);
         }
+
         vertexBuffer.bind();
-        // 禁用每帧排序以提高性能 - 透明物体可能显示顺序不正确
-        // if (renderType.sortOnUpload) {
-        //     MeshData.SortState sortState = this.meshSortings.get(renderType);
-        //     if (sortState != null) {
-        //         ByteBufferBuilder.Result result = sortState.buildSortedIndexBuffer(
-        //                 this.requestSortBuffer(renderType),
-        //                 VertexSorting.byDistance(cameraPosition.toVector3f()));
-        //         if (result != null) {
-        //             vertexBuffer.uploadIndexBuffer(result);
-        //         }
-        //     }
-        // }
         vertexBuffer.drawWithShader(frustumMatrix, projectionMatrix, shader);
         VertexBuffer.unbind();
+
         if (uniform != null) {
             uniform.set(0.0F, 0.0F, 0.0F);
         }
@@ -414,7 +391,6 @@ public class CachedRegion {
             CachedRegion.this.isEmpty = bufferSource.isEmpty();
             bufferSource.upload(
                     CachedRegion.this::getBuffer,
-                    CachedRegion.this::requestSortBuffer,
                     pipeline::submitUploadTask);
 
             CachedRegion.this.meshSortings = bufferSource.getMeshSorts();

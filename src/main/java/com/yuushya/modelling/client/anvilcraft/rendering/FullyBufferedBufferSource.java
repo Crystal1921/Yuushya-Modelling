@@ -1,8 +1,6 @@
 package com.yuushya.modelling.client.anvilcraft.rendering;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.yuushya.modelling.client.ByteBufferBuilder;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import lombok.Getter;
@@ -11,21 +9,16 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static net.minecraft.client.renderer.RenderStateShard.*;
 
-/**
- * @author ZhuRuoLing
- */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource implements AutoCloseable {
-    private final Map<RenderType, ByteBufferBuilder> byteBuffers = new HashMap<>();
-    private final Map<RenderType, BufferBuilder> bufferBuilders = new HashMap<>();
+    private final Map<RenderType, BufferBuilder> bufferBuilders = new LinkedHashMap<>();
     @Getter
     private final Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
     @Getter
@@ -36,16 +29,13 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
         super(null, null);
     }
 
-    private ByteBufferBuilder getByteBuffer(RenderType renderType) {
-        return byteBuffers.computeIfAbsent(renderType, it -> new ByteBufferBuilder(786432));
-    }
-
     @Override
     public VertexConsumer getBuffer(RenderType renderType) {
+        RenderType actualType = forceUseBlockRenderTypes(renderType);
         return bufferBuilders.computeIfAbsent(
-                forceUseBlockRenderTypes(renderType),
+                actualType,
                 it -> {
-                    BufferBuilder bufferBuilder = new BufferBuilder(256);
+                    BufferBuilder bufferBuilder = new BufferBuilder(786432);
                     bufferBuilder.begin(it.mode, it.format());
                     return bufferBuilder;
                 });
@@ -61,9 +51,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
         return renderType;
     }
 
-    private RenderType createBlockRenderType(
-            RenderType.CompositeRenderType renderType
-    ) {
+    private RenderType createBlockRenderType(RenderType.CompositeRenderType renderType) {
         RenderType.CompositeState state = renderType.state();
         return RenderType.create(
                 "yuushya_modelling:generated",
@@ -84,63 +72,48 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     }
 
     public boolean isEmpty() {
-        return !bufferBuilders.isEmpty() && bufferBuilders.values().stream().noneMatch(it -> it.vertices > 0);
+        if (bufferBuilders.isEmpty()) return true;
+        return bufferBuilders.values().stream().noneMatch(it -> it.vertices > 0);
     }
 
-    @Override
-    public void endBatch(RenderType renderType) {
-    }
-
-    @Override
-    public void endLastBatch() {
-    }
-
-    @Override
-    public void endBatch() {
-    }
+    @Override public void endBatch(RenderType renderType) {}
+    @Override public void endLastBatch() {}
+    @Override public void endBatch() {}
 
     public void upload(
             Function<RenderType, VertexBuffer> vertexBufferGetter,
-            Function<RenderType, ByteBufferBuilder> byteBufferSupplier,
             Consumer<Runnable> runner
     ) {
-        for (RenderType renderType : bufferBuilders.keySet()) {
+        List<RenderType> renderTypes = new ArrayList<>(bufferBuilders.keySet());
+        for (RenderType renderType : renderTypes) {
+            BufferBuilder bufferBuilder = bufferBuilders.get(renderType);
+            if (bufferBuilder == null) continue;
+
+            // ★ 在 end() 之前读取 vertices
+            int vertexCount = bufferBuilder.vertices;
+            int indexCount = renderType.mode.indexCount(vertexCount);
+
             runner.accept(() -> {
-                BufferBuilder bufferBuilder = bufferBuilders.get(renderType);
-                ByteBufferBuilder byteBuffer = byteBuffers.get(renderType);
-                int compiledVertices = bufferBuilder.vertices * renderType.format().getVertexSize();
-                if (compiledVertices >= 0) {
-                    BufferBuilder.RenderedBuffer mesh = bufferBuilder.end();
-                    indexCountMap.put(renderType, renderType.mode.indexCount(bufferBuilder.vertices));
-                    if (renderType.sortOnUpload) {
-//                        BufferBuilder.SortState sortState = mesh.sortQuads(
-//                                byteBufferSupplier.apply(renderType),
-//                                RenderSystem.getVertexSorting()
-//                        );
-//                        meshSorts.put(
-//                                renderType,
-//                                sortState
-//                        );
-                        //TODO : 这里不知道怎么排序
-                    }
-                    VertexBuffer vertexBuffer = vertexBufferGetter.apply(renderType);
-                    vertexBuffer.bind();
-                    vertexBuffer.upload(mesh);
-                    VertexBuffer.unbind();
+                if (vertexCount <= 0) {
+                    bufferBuilder.end().release();
+                    bufferBuilders.remove(renderType);
+                    return;
                 }
-                byteBuffer.close();
+                BufferBuilder.RenderedBuffer mesh = bufferBuilder.end();
+                indexCountMap.put(renderType, indexCount);
+
+                VertexBuffer vertexBuffer = vertexBufferGetter.apply(renderType);
+                vertexBuffer.bind();
+                vertexBuffer.upload(mesh);
+                VertexBuffer.unbind();
+
                 bufferBuilders.remove(renderType);
-                byteBuffers.remove(renderType);
             });
         }
     }
 
-    public void close(RenderType renderType) {
-        ByteBufferBuilder builder = byteBuffers.get(renderType);
-        builder.close();
-    }
-
+    @Override
     public void close() {
-        byteBuffers.keySet().forEach(this::close);
+        bufferBuilders.clear();
     }
 }
