@@ -44,6 +44,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL40;
+import org.lwjgl.opengl.GL46;
 
 import java.awt.*;
 import java.util.*;
@@ -164,7 +167,8 @@ public class CachedRegion {
     private void renderInternal(
             Matrix4f frustumMatrix,
             Matrix4f projectionMatrix,
-            Collection<RenderType> renderTypes) {
+            Collection<RenderType> renderTypes
+    ) {
         if (isEmpty) return;
         RenderSystem.enableBlend();
         Window window = Minecraft.getInstance().getWindow();
@@ -195,6 +199,7 @@ public class CachedRegion {
             Vec3 cameraPosition,
             Window window
     ) {
+        GL46.glPushDebugGroup(GL46.GL_DEBUG_SOURCE_APPLICATION, 0, "Cached BER RenderRegion " + chunkPos);
         int indexCount = indexCountMap.getInt(renderType);
         if (indexCount <= 0) return;
 
@@ -203,11 +208,13 @@ public class CachedRegion {
 
         // MC 1.20: drawWithShader 内部会处理 projection 和 modelView
         Uniform uniform = shader.CHUNK_OFFSET;
+
         if (uniform != null) {
             uniform.set(
-                    (float) -cameraPosition.x,
-                    (float) -cameraPosition.y,
-                    (float) -cameraPosition.z);
+                (float) (chunkPos.getMinBlockX() -cameraPosition.x),
+                (float) (-cameraPosition.y),
+                (float) (chunkPos.getMinBlockZ() -cameraPosition.z)
+            );
         }
 
         vertexBuffer.bind();
@@ -218,6 +225,7 @@ public class CachedRegion {
             uniform.set(0.0F, 0.0F, 0.0F);
         }
         renderType.clearRenderState();
+        GL46.glPopDebugGroup();
     }
 
     public void replaceData(Collection<BlockPos> entityPos, ClientLevel clientLevel) {
@@ -403,9 +411,9 @@ public class CachedRegion {
                 poseStack.pushPose();
                 {
                     poseStack.translate(
-                            pos.getX(),
-                            pos.getY(),
-                            pos.getZ()
+                        pos.getX() & 15,
+                        pos.getY(),
+                        pos.getZ() & 15
                     );
 
                     poseStack.translate(0.5f, 0.5f, 0.5f);

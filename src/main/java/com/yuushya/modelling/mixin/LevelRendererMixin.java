@@ -48,17 +48,14 @@ public abstract class LevelRendererMixin {
             method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/RenderBuffers;crumblingBufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;",
-                    ordinal = 2
+                    target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endLastBatch()V",
+                    ordinal = 0
             )
     )
     void renderCachedBE(
             PoseStack pPoseStack, float pPartialTick, long pFinishNanoTime, boolean pRenderBlockOutline, Camera pCamera, GameRenderer pGameRenderer, LightTexture pLightTexture, Matrix4f pProjectionMatrix, CallbackInfo ci
     ) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Quaternionf quaternionf = camera.rotation().conjugate(new Quaternionf());
-        Matrix4f frustumMatrix = new Matrix4f().rotation(quaternionf);
-        CacheableBERenderingPipeline.getInstance().render(frustumMatrix, pProjectionMatrix);
+        CacheableBERenderingPipeline.getInstance().render(pPoseStack.last().pose(), pProjectionMatrix);
     }
 
     // @WrapOperation(
