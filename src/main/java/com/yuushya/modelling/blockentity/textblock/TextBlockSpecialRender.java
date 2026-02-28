@@ -7,6 +7,7 @@ import com.yuushya.modelling.blockentity.transformData.ITransformTextDataInvento
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.client.SimpleGeneratedModel;
 import com.yuushya.modelling.registries.BlockRegistry;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -49,7 +50,7 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
     @Override
     @SuppressWarnings("deprecation")
     public void renderByItem(@NotNull ItemStack itemStack, @NotNull ItemDisplayContext transformType, @NotNull PoseStack matrixStack, @NotNull MultiBufferSource multiBufferSource, int combinedLightIn, int combinedOverlayIn) {
-        CompoundTag tag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
+        CompoundTag textDataTag = YuushyaDataTags.getTextData(itemStack);
         Minecraft mc = Minecraft.getInstance();
         ClientLevel clientLevel = mc.level;
         int light = LightTexture.FULL_BRIGHT;
@@ -57,13 +58,13 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
         if (clientLevel == null) {
             return;
         }
-        if (tag == null || tag.isEmpty()) {
+        if (textDataTag == null || textDataTag.isEmpty()) {
             mc.getBlockRenderer().getModelRenderer().renderModel(matrixStack.last(), multiBufferSource.getBuffer(RenderType.CUTOUT), BlockRegistry.TEXT_BLOCK.get().defaultBlockState(), backup, 1, 1, 1, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
             return;
         }
 
         List<TransformTextData> transformDatas = new ArrayList<>();
-        ITransformTextDataInventory.load(tag, transformDatas);
+        ITransformTextDataInventory.load(textDataTag, transformDatas);
 
         for (TransformTextData transformData : transformDatas) {
 

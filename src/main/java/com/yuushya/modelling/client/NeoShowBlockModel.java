@@ -5,6 +5,7 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -61,8 +62,8 @@ public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedMode
 
     @Override
     public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
-        CompoundTag tag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
-        if (tag == null || tag.isEmpty()) {
+        CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
+        if (transformDataTag == null || transformDataTag.isEmpty()) {
             return List.of(backup);
         }
         return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoShowBlockModel(Direction.SOUTH) {
@@ -70,7 +71,7 @@ public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedMode
 
             {
                 this.transformDatas = new ArrayList<>();
-                ITransformDataInventory.load(tag, transformDatas);
+                ITransformDataInventory.load(transformDataTag, transformDatas);
             }
 
             @Override

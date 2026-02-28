@@ -3,6 +3,7 @@ package com.yuushya.modelling.network;
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.gui.AbstractEngraveMenu;
 import com.yuushya.modelling.gui.engrave.IEngraveResult;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -48,8 +49,11 @@ public class TransformDataListPacket {
             tag = new CompoundTag();
         } else {
             ItemStack itemStack = itemResult.getResultItem();
-            CompoundTag blockEntityTag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
-            tag = blockEntityTag != null ? blockEntityTag : new CompoundTag();
+            CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
+            CompoundTag textDataTag = YuushyaDataTags.getTextData(itemStack);
+            // Use non-empty tag, prefer transform data for block/item blocks
+            tag = !transformDataTag.isEmpty() ? transformDataTag :
+                  !textDataTag.isEmpty() ? textDataTag : new CompoundTag();
         }
         tag.putString("ItemName", name);
         YuushyaModellingNetwork.INSTANCE.sendToServer(new TransformDataListPacket(tag));
@@ -76,7 +80,12 @@ public class TransformDataListPacket {
                     };
                     ItemStack itemStack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, itemType)).getDefaultInstance();
                     itemStack.setHoverName(Component.literal(name));
-                    itemStack.addTagElement(ItemStack.BLOCK_ENTITY_TAG, packet.tag);
+                    // Store data based on item type
+                    if (itemType.equals("textblock")) {
+                        YuushyaDataTags.setTextData(itemStack, packet.tag);
+                    } else {
+                        YuushyaDataTags.setTransformData(itemStack, packet.tag);
+                    }
                     HandlingCache.put(hash, itemStack);
                     menu.setupResultSlotServer(itemStack);
                 }

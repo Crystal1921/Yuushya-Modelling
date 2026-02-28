@@ -5,12 +5,14 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 public class YuushyaDataTags {
     public static final String TRANS_DIRECTION = "TransDirection";
     public static final String BLOCKSTATE = "BlockState";
     public static final String TRANSFORM_DATA = "TransformData";
     public static final String COLOR_DATA = "ColorData";
+    public static final String TEXT_DATA = "TextData";
 
     // Block State Properties
     public static final String LIT = "Lit";
@@ -103,4 +105,18 @@ public class YuushyaDataTags {
     public static void setEnableAO(ItemStack itemStack, boolean value) {
         itemStack.getOrCreateTag().putBoolean(ENABLE_AO, value);
     }
+
+    // Text Data (CompoundTag)
+    public static CompoundTag getTextData(ItemStack itemStack) {
+        CompoundTag tag = itemStack.getOrCreateTag();
+        if (tag.contains(TEXT_DATA)) {
+            return tag.getCompound(TEXT_DATA);
+        }
+        return new CompoundTag();
+    }
+
+    public static void setTextData(ItemStack itemStack, CompoundTag textData) {
+        itemStack.getOrCreateTag().put(TEXT_DATA, textData);
+    }
+
 }

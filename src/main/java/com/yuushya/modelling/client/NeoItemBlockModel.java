@@ -7,6 +7,7 @@ import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.utils.CustomRenderInstance;
+import com.yuushya.modelling.utils.YuushyaDataTags;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -76,13 +77,13 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
 
     @Override
     public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
-        CompoundTag tag = itemStack.getTagElement(ItemStack.BLOCK_ENTITY_TAG);
+        CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) {
             return Collections.emptyList();
         }
         RegistryAccess registryAccess = level.registryAccess();
-        if (tag == null || tag.isEmpty()) {
+        if (transformDataTag == null || transformDataTag.isEmpty()) {
             return List.of(backup);
         }
         return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoItemBlockModel(Direction.SOUTH) {
@@ -90,7 +91,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
 
             {
                 this.transformDatas = new ArrayList<>();
-                ITransformItemDataInventory.load(tag, transformDatas);
+                ITransformItemDataInventory.load(transformDataTag, transformDatas);
             }
 
             @Override
