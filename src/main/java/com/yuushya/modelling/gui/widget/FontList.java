@@ -20,16 +20,25 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
     private final TextBlockScreen parentScreen;
     private int itemHeight;
     private int itemWidth;
+    private boolean visible = true;
 
     public FontList(Minecraft minecraft, TextBlockScreen textBlockScreen, int width, int height, int x, int y0, int itemHeight) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
+        super(minecraft, width, height, y0, y0 + height, itemHeight);
+        this.setLeftPos(x);
         this.parentScreen = textBlockScreen;
         this.fontList = new ArrayList<>();
         this.centerListVertically = false;
         this.setRenderHeader(false, 0);
         this.itemWidth = width;
         this.itemHeight = itemHeight;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     public void updateRenderList(List<ResourceLocation> fonts) {
@@ -57,6 +66,43 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
     }
 
     @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (visible) {
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return visible && super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return visible && super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return visible && super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount) {
+        return visible && super.mouseScrolled(mouseX, mouseY, horizontalAmount);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return visible && super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        return visible && super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
     public void setSelected(@Nullable Entry selected) {
         super.setSelected(selected);
     }
@@ -68,12 +114,12 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
 
     @Override
     public int getRowLeft() {
-        return this.getX() + 4;
+        return this.getLeft() + 4;
     }
 
     @Override
     protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
+        return this.getLeft() + this.getWidth() - 4;
     }
 
     public class Entry extends ObjectSelectionList.Entry<Entry> {
@@ -101,7 +147,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
             ResourceLocation fontLoc = getFont();
             FontSet fontSet = Minecraft.getInstance().fontManager.fontSets.get(fontLoc);
             Font font = new Font(resourceLocation -> fontSet, true);
-            String fontName = fontSet.name().toString();
+            String fontName = fontSet.name.toString();
             int textY = y + (itemHeight - font.lineHeight) / 2;
             guiGraphics.drawString(font, fontName, x, textY, 0xFFFFFF, true);
 

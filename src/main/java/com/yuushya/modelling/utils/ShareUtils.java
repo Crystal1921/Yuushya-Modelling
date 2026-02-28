@@ -2,7 +2,6 @@ package com.yuushya.modelling.utils;
 
 import com.google.gson.*;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
@@ -10,8 +9,6 @@ import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -260,10 +257,7 @@ public class ShareUtils {
             ) {
                 public static ShareItemStack from(ItemStack stack) {
                     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-                    Tag tag = ItemStack.OPTIONAL_CODEC
-                            .encodeStart(NbtOps.INSTANCE, stack)
-                            .result()
-                            .orElse(new CompoundTag());
+                    CompoundTag tag = stack.save(new CompoundTag());
 
                     String asString = tag.getAsString();
                     JsonPrimitive jsonPrimitive = new JsonPrimitive(asString);
@@ -281,16 +275,12 @@ public class ShareUtils {
                         compoundTag = new CompoundTag();
                     }
 
-                    Pair<ItemStack, Tag> itemStackJsonElementPair = ItemStack.OPTIONAL_CODEC
-                            .decode(NbtOps.INSTANCE, compoundTag)
-                            .result()
-                            .orElse(Pair.of(ItemStack.EMPTY, new CompoundTag()));
-
-                    return itemStackJsonElementPair.getFirst();
+                    return ItemStack.of(compoundTag);
                 }
             }
         }
     }
+
     public record SharedTextInformation(
             Set<String> mods,
             List<TextShareData> texts

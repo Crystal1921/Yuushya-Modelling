@@ -74,8 +74,8 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 mixin {
-    add sourceSets.main, "danmaku.refmap.json"
-    config "danmaku.mixins.json"
+    add sourceSets.main, "yuushya_modelling.refmap.json"
+    config "yuushya_modelling.mixins.json"
 }
 
 repositories {

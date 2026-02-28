@@ -22,15 +22,15 @@ config="yuushya_modelling.mixins.json"
 file="META-INF/accesstransformer.cfg"
 
 [[dependencies.yuushya_modelling]]
-modId = "neoforge"
-type = "required"
-versionRange = "[21.0,)"
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.yuushya_modelling]]
 modId = "minecraft"
-type = "required"
-versionRange = "[1.21,)"
+mandatory = true
+versionRange = "[1.20.1,)"
 ordering = "NONE"
 side = "BOTH"

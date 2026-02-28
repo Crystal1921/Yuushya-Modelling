@@ -45,8 +45,8 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     public BlockStateIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                               List<TransformBlockData> transformDataList, ShowBlockScreen showBlockScreen
     ) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
+        super(minecraft, width, height, y0, y0 + height, itemHeight);
+        this.setLeftPos(x);
         this.transformDataList = transformDataList;
         this.screen = showBlockScreen;
         this.centerListVertically = false;
@@ -90,7 +90,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 
     @Override
     protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
+        return this.getLeft() + this.getWidth() - 4;
     }
 
     public void updateRenderList() {
@@ -130,7 +130,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 
     public int getChosenOne() {
         if (!this.chosen.isEmpty()) {
-            return chosen.getLast().slot;
+            return chosen.get(chosen.size() - 1).slot;
         }
         return -1;
     }

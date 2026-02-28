@@ -516,7 +516,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() - RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
-                            this.fontList.visible = bl;
+                            this.fontList.setVisible(bl);
                             if (this.colorWidget.visible) {
                                 this.colorWidget.visible = !bl;
                                 colorButton.showEditor = !bl;
@@ -535,8 +535,8 @@ public class TextBlockScreen extends AbstractColorScreen {
         colorButton = new ColorButton(leftColumnX() - RIGHT_BAR_WIDTH * 3, top(0, 0), PER_HEIGHT, PER_HEIGHT, (button) -> {
             colorButton.showEditor = !colorButton.showEditor;
             colorWidget.visible = colorButton.showEditor;
-            if (fontList.visible) {
-                fontList.visible = !colorButton.showEditor;
+            if (fontList.isVisible()) {
+                fontList.setVisible(!colorButton.showEditor);
                 fontButton.setValue(!colorButton.showEditor);
             }
             for (ColorButton rainbowColorButton : this.rainbowColorButtons) {
@@ -566,8 +566,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         colorButton.visible = false;
         colorEditBox.visible = false;
         colorWidget.visible = false;
-        fontList.visible = false;
-
+        fontList.setVisible(false);
 
         // Text editing section
         textEditBox = new StyledMultiLineEditBox(this.font, leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT * 8, Component.literal(""), Component.literal("Text"), this);

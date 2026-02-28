@@ -30,8 +30,8 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
     public ItemStackIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                              List<TransformItemData> transformDataList, ItemBlockScreen itemBlockScreen) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
+        super(minecraft, width, height, y0, y0 + height, itemHeight);
+        this.setLeftPos(x);
         this.transformDataList = transformDataList;
         this.screen = itemBlockScreen;
         this.centerListVertically = false;
@@ -63,7 +63,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
     // getChosenOne 返回最后选中的 Entry 的 index
     public int getChosenOne() {
         if (!this.chosen.isEmpty()) {
-            return this.chosen.getLast().slot;
+            return this.chosen.get(chosen.size() - 1).slot;
         }
         return -1;
     }
@@ -87,7 +87,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
     @Override
     protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
+        return this.getLeft() + this.getWidth() - 4;
     }
 
     public class Entry extends ObjectSelectionList.Entry<Entry> {

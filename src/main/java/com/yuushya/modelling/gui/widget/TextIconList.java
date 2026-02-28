@@ -22,8 +22,8 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
 
     public TextIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                         List<TransformTextData> transformDataList, TextBlockScreen textBlockScreen) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
+        super(minecraft, width, height, y0, y0 + height, itemHeight);
+        this.setLeftPos(x);
         this.transformDataList = transformDataList;
         this.screen = textBlockScreen;
         this.centerListVertically = false;
@@ -55,7 +55,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
     // getChosenOne returns the index of the last selected Entry
     public int getChosenOne() {
         if (!this.chosen.isEmpty()) {
-            return this.chosen.getLast().slot;
+            return this.chosen.get(chosen.size() - 1).slot;
         }
         return -1;
     }
@@ -79,7 +79,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
 
     @Override
     protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
+        return this.getLeft() + this.getWidth() - 4;
     }
 
     public class Entry extends ObjectSelectionList.Entry<Entry> {
@@ -120,7 +120,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
                 try {
                     var level = Minecraft.getInstance().level;
                     if (level != null) {
-                        Component component = Component.Serializer.fromJson(textLines.get(0), level.registryAccess());
+                        Component component = Component.Serializer.fromJson(textLines.get(0));
                         if (component != null) {
                             previewText = component.getString();
                         }

@@ -7,6 +7,8 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
@@ -56,7 +58,7 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
         StateDefinition<Block, BlockState> stateDefinition = holder.value().getStateDefinition();
         Collection<Property<?>> collection = stateDefinition.getProperties();
         if (collection.isEmpty()) {
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".empty", holder.getRegisteredName()), true);
+            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".empty", holder.get().getDescriptionId()), true);
             return false;
         }
 
@@ -65,7 +67,10 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
         Property<?> property = null;
         if (tag.contains("DebugState")) {
             CompoundTag debugState = tag.getCompound("DebugState");
-            Block block = NbtUtils.readBlockState(debugState.getCompound("Block")).getBlock();
+            HolderGetter<Block> blockGetter =
+                    accessor.registryAccess().lookupOrThrow(Registries.BLOCK);
+
+            Block block = NbtUtils.readBlockState(blockGetter,debugState.getCompound("Block")).getBlock();
             if (block == holder.value()) {
                 String propertyName = debugState.getString("Property");
                 property = stateDefinition.getProperty(propertyName);
