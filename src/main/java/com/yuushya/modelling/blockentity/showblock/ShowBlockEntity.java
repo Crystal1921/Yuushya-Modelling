@@ -75,12 +75,12 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     // 显示旋转的坐标轴
     private Integer showRotAxis = 0;
     public boolean showRotAxis() { return showRotAxis > 0; }
-    public void setShowRotAixs() { showRotAxis = 5; }
+    public void setShowRotAxis() { showRotAxis = 5; }
 
     // 显示平移的坐标轴
     private Integer showPosAxis = 0;
     public boolean showPosAxis() { return showPosAxis > 0; }
-    public void setShowPosAixs() { showPosAxis = 5; }
+    public void setShowPosAxis() { showPosAxis = 5; }
 
     private Integer showText = 0;
     public boolean showText() { return showText > 0; }
