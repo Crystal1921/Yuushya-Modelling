@@ -371,6 +371,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 .tooltip(Tooltip.create(Component.translatable("gui.itemBlockScreen.mirror.tip", "Z"))).build();
 
         itemStackList = new ItemStackIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
+        itemStackList.setRenderTopAndBottom(false);
 
         CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
                 .displayOnlyValue()

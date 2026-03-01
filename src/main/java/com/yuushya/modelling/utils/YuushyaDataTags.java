@@ -5,7 +5,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 
 public class YuushyaDataTags {
     public static final String TRANS_DIRECTION = "TransDirection";
@@ -54,9 +53,17 @@ public class YuushyaDataTags {
     // Transform Data (CompoundTag)
     public static CompoundTag getTransformData(ItemStack itemStack) {
         CompoundTag tag = itemStack.getOrCreateTag();
+
+        // Check TransformData tag first (for items created through engraving table)
         if (tag.contains(TRANSFORM_DATA)) {
             return tag.getCompound(TRANSFORM_DATA);
         }
+
+        // Check BlockEntityTag (for items obtained by picking up blocks)
+        if (tag.contains("BlockEntityTag")) {
+            return tag.getCompound("BlockEntityTag");
+        }
+
         return new CompoundTag();
     }
 

@@ -276,6 +276,7 @@ public class ShowBlockScreen extends Screen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4 + 60, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         blockStateList = new BlockStateIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
+        blockStateList.setRenderTopAndBottom(false);
 
         Button statisticButton = Button.builder(Component.literal("📊"),
                         (btn) -> this.faceCount = calculateFaces(blockEntity))

@@ -303,6 +303,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                 );
 
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
+        textIconList.setRenderTopAndBottom(false);
 
         CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
                 .displayOnlyValue()
@@ -464,6 +465,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         this.colorEditBox.setMaxLength(7);
 
         fontList = new FontList(this.minecraft, this, 200, 160, leftColumnX() - 200, top(0, 30), 30);
+        fontList.setRenderTopAndBottom(false);
 
         boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
                 .displayOnlyValue()
