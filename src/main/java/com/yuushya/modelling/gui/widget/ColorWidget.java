@@ -160,10 +160,10 @@ public class ColorWidget extends AbstractWidget {
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tesselator.getBuilder();
         bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferbuilder.vertex(matrix4f, (float) x1, (float) y1, 0.0f).uv(0.0f, 0.0f);
-        bufferbuilder.vertex(matrix4f, (float) x1, (float) y2, 0.0f).uv(0.0f, 1.0f);
-        bufferbuilder.vertex(matrix4f, (float) x2, (float) y2, 0.0f).uv(1.0f, 1.0f);
-        bufferbuilder.vertex(matrix4f, (float) x2, (float) y1, 0.0f).uv(1.0f, 0.0f);
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y1, 0.0f).uv(0.0f, 0.0f).endVertex();
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y2, 0.0f).uv(0.0f, 1.0f).endVertex();
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y2, 0.0f).uv(1.0f, 1.0f).endVertex();
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y1, 0.0f).uv(1.0f, 0.0f).endVertex();
         BufferUploader.drawWithShader(bufferbuilder.end());
     }
 
@@ -174,10 +174,10 @@ public class ColorWidget extends AbstractWidget {
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tesselator.getBuilder();
         bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferbuilder.vertex(matrix4f, (float) x1, (float) y1, 0.0f).color(color);
-        bufferbuilder.vertex(matrix4f, (float) x1, (float) y2, 0.0f).color(color);
-        bufferbuilder.vertex(matrix4f, (float) x2, (float) y2, 0.0f).color(color);
-        bufferbuilder.vertex(matrix4f, (float) x2, (float) y1, 0.0f).color(color);
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y1, 0.0f).color(color).endVertex();
+        bufferbuilder.vertex(matrix4f, (float) x1, (float) y2, 0.0f).color(color).endVertex();
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y2, 0.0f).color(color).endVertex();
+        bufferbuilder.vertex(matrix4f, (float) x2, (float) y1, 0.0f).color(color).endVertex();
         BufferUploader.drawWithShader(bufferbuilder.end());
     }
 }

@@ -134,18 +134,18 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
             
             // Render Z axis (blue)
             if (showRotAxis) matrixStack.mulPose(Axis.ZP.rotationDegrees(rot.z()));
-            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 0.0f, -1.5f).color(blueZ).normal(0f, 0f, 1.5f);
-            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 0f, 1.5f).color(blueZ).normal(0f, 0f, 1.5f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 0.0f, -1.5f).color(blueZ).normal(0f, 0f, 1.5f).endVertex();
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 0f, 1.5f).color(blueZ).normal(0f, 0f, 1.5f).endVertex();
             
             // Render Y axis (green)
             if (showRotAxis) matrixStack.mulPose(Axis.YP.rotationDegrees(rot.y()));
-            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, -1.5f, 0.0f).color(greenY).normal(0f, 1.5f, 0f);
-            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 1.5f, 0.0f).color(greenY).normal(0f, 1.5f, 0f);
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, -1.5f, 0.0f).color(greenY).normal(0f, 1.5f, 0f).endVertex();
+            bufferBuilder.vertex(matrixStack.last().pose(), 0.0f, 1.5f, 0.0f).color(greenY).normal(0f, 1.5f, 0f).endVertex();
             
             // Render X axis (red)
             if (showRotAxis) matrixStack.mulPose(Axis.XP.rotationDegrees(rot.x()));
-            bufferBuilder.vertex(matrixStack.last().pose(), -1.5f, 0.0f, 0.0f).color(redX).normal(1.5f, 0f, 0f);
-            bufferBuilder.vertex(matrixStack.last().pose(), 1.5f, 0f, 0.0f).color(redX).normal(1.5f, 0f, 0f);
+            bufferBuilder.vertex(matrixStack.last().pose(), -1.5f, 0.0f, 0.0f).color(redX).normal(1.5f, 0f, 0f).endVertex();
+            bufferBuilder.vertex(matrixStack.last().pose(), 1.5f, 0f, 0.0f).color(redX).normal(1.5f, 0f, 0f).endVertex();
             
             BufferUploader.drawWithShader(bufferBuilder.end());
             RenderSystem.depthMask(true);
