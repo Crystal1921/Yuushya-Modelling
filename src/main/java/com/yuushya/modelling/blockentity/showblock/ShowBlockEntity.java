@@ -69,7 +69,7 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     public boolean showFrame() { return showFrame > 0; }
     public void setShowFrame() { showFrame = 5; }
     public void consumeShowFrame() {
-        showFrame = showFrame < 0 ? 0 : showFrame - 1;
+        showFrame = showFrame <= 0 ? 0 : showFrame - 1;
     }
 
     // 显示旋转的坐标轴
@@ -94,9 +94,9 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void consumeShow() {
-        showRotAxis = showRotAxis < 0 ? 0 : showRotAxis - 1;
-        showPosAxis = showPosAxis < 0 ? 0 : showPosAxis - 1;
-        showText = showText < 0 ? 0 : showText - 1;
+        showRotAxis = showRotAxis <= 0 ? 0 : showRotAxis - 1;
+        showPosAxis = showPosAxis <= 0 ? 0 : showPosAxis - 1;
+        showText = showText <= 0 ? 0 : showText - 1;
     }
 
     @Override
@@ -105,6 +105,7 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     public void load(@NotNull CompoundTag compoundTag) {
         super.load(compoundTag);
         ITransformDataInventory.load(compoundTag, transformData);
+        // Slot is stored as byte (range 0-127) for NBT size efficiency
         slot = (int) compoundTag.getByte("ControlSlot");
 
         //client chunk update
@@ -139,11 +140,7 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        CompoundTag compoundTag = getUpdateTag();
-        return ClientboundBlockEntityDataPacket.create(this, (blockEntity) -> {
-            saveAdditional(compoundTag);
-            return compoundTag;
-        });
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     public void writeBlockState(ItemStack itemStack, BlockState blockState) {
