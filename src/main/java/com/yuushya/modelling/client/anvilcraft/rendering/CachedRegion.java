@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
-import com.yuushya.modelling.client.ByteBufferBuilder;
 import com.yuushya.modelling.client.NeoItemBlockModel;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.YuushyaDataTags;
@@ -42,11 +41,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.model.IQuadTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL40;
-import org.lwjgl.opengl.GL46;
 
 import java.awt.*;
 import java.util.*;
@@ -62,7 +57,7 @@ import static net.minecraftforge.client.model.QuadTransformers.toABGR;
  */
 public class CachedRegion {
     public static final RenderType TRANSLUCENT_MAIN = RenderType.create(
-            "translucent_main", DefaultVertexFormat.BLOCK, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
+            "translucent_main", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 786432, true, true, translucentState(RENDERTYPE_TRANSLUCENT_SHADER)
     );
     private static final Direction[] DIRECTIONS = Direction.values();
     private final ChunkPos chunkPos;
@@ -210,9 +205,9 @@ public class CachedRegion {
 
         if (uniform != null) {
             uniform.set(
-                (float) (chunkPos.getMinBlockX() -cameraPosition.x),
-                (float) (-cameraPosition.y),
-                (float) (chunkPos.getMinBlockZ() -cameraPosition.z)
+                    (float) (chunkPos.getMinBlockX() - cameraPosition.x),
+                    (float) (-cameraPosition.y),
+                    (float) (chunkPos.getMinBlockZ() - cameraPosition.z)
             );
         }
 
@@ -369,9 +364,9 @@ public class CachedRegion {
                                         poseStack.pushPose();
                                         {
                                             poseStack.translate(
-                                                    pos.getX(),
+                                                    pos.getX() & 15,
                                                     pos.getY(),
-                                                    pos.getZ()
+                                                    pos.getZ() & 15
                                             );
                                             YuushyaUtils.scale(poseStack, transformData.scales);
                                             YuushyaUtils.translate(poseStack, transformData.pos);
@@ -409,9 +404,9 @@ public class CachedRegion {
                 poseStack.pushPose();
                 {
                     poseStack.translate(
-                        pos.getX() & 15,
-                        pos.getY(),
-                        pos.getZ() & 15
+                            pos.getX() & 15,
+                            pos.getY(),
+                            pos.getZ() & 15
                     );
 
                     poseStack.translate(0.5f, 0.5f, 0.5f);
