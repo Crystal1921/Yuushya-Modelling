@@ -6,11 +6,11 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "yuushya.refmap.json",
+  "refmap": "yuushya_modelling.refmap.json",
   "client": [
     "BlockBehaviourMixin",
     "GlyphRenderTypesMixin",
     "LevelRendererMixin",
-    "MinecraftMixin",
+    "MinecraftMixin"
   ]
 }
