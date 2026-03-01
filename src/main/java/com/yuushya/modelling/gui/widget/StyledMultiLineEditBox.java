@@ -447,7 +447,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
                         .withUnderlined(underlineButton.getValue())
                         .withStrikethrough(strikethroughButton.getValue())
                         .withObfuscated(obfuscatedButton.getValue())
-                        .withColor(colorWidget.getColor())
+                        .withColor(colorWidget.getColor() & 0x00FFFFFF)
         );
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());
@@ -481,7 +481,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
             this.strikethroughButton.setValue(this.toBool(selectionStyle.isStrikethrough()));
             this.obfuscatedButton.setValue(this.toBool(selectionStyle.isObfuscated()));
             if (selectionStyle.getColor() != null) {
-                int value = selectionStyle.getColor().getValue();
+                int value = selectionStyle.getColor().getValue() & 0x00FFFFFF;
                 this.colorWidget.setColor(value);
                 this.textBlockScreen.colorButton.color = value;
             }
@@ -530,7 +530,7 @@ public class StyledMultiLineEditBox extends AbstractScrollWidget {
         if (!this.textField.hasSelection()) {
             return;
         }
-        this.textField.applyStyleToSelection(Style.EMPTY.withColor(Color.WHITE.getRGB()), Minecraft.DEFAULT_FONT);
+        this.textField.applyStyleToSelection(Style.EMPTY.withColor(Color.WHITE.getRGB() & 0x00FFFFFF), Minecraft.DEFAULT_FONT);
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }

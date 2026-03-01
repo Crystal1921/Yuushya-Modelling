@@ -49,7 +49,7 @@ public class ColorPickerItem extends AbstractToolItem {
             int r = (255 - buffer.get(0)) & 0xFF;
             int g = (255 - buffer.get(1)) & 0xFF;
             int b = (255 - buffer.get(2)) & 0xFF;
-            int color = (r << 16) | (g << 8) | b;
+            int color = (0xFF << 24) | (r << 16) | (g << 8) | b;
 
             YuushyaDataTags.setColorData(handItemStack, color);
 
