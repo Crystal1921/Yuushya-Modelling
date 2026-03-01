@@ -56,9 +56,9 @@ public class GuiOverlayEvent {
                 GL11.glReadPixels(centerX, centerY, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
 
                 // 取出像素值（注意 glReadPixels 的原点在左下角）
-                int r = (255 - buffer.get(0)) & 0xFF;
-                int g = (255 - buffer.get(1)) & 0xFF;
-                int b = (255 - buffer.get(2)) & 0xFF;
+                int r = buffer.get(0) & 0xFF;
+                int g = buffer.get(1) & 0xFF;
+                int b = buffer.get(2) & 0xFF;
                 int color = (0xFF << 24) | (r << 16) | (g << 8) | b;
 
                 guiGraphics.fill(guiWidth - 35, guiHeight - 35, guiWidth - 10, guiHeight - 10, Color.LIGHT_GRAY.getRGB());
