@@ -3,6 +3,7 @@ package com.yuushya.modelling.network;
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.gui.AbstractEngraveMenu;
 import com.yuushya.modelling.gui.engrave.IEngraveResult;
+import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.utils.YuushyaDataTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -83,7 +85,20 @@ public class TransformDataListPacket {
                     // Store data based on item type
                     if (itemType.equals("textblock")) {
                         YuushyaDataTags.setTextData(itemStack, packet.tag);
+                    } else if (itemType.equals("itemblock")) {
+                        // Use BlockEntityTag for ItemBlock so Minecraft loads data when placing
+                        CompoundTag blockEntityTag = new CompoundTag();
+                        // Remove ItemName from the tag before storing as BlockEntityTag
+                        CompoundTag dataTag = packet.tag.copy();
+                        dataTag.remove("ItemName");
+                        blockEntityTag.put("Blocks", dataTag.getList("Blocks", 10));
+                        blockEntityTag.putString("id", BlockEntityRegistry.ITEM_BLOCK_ENTITY.get().toString());
+                        if (packet.tag.contains("ControlSlot")) {
+                            blockEntityTag.putByte("ControlSlot", packet.tag.getByte("ControlSlot"));
+                        }
+                        BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.ITEM_BLOCK_ENTITY.get(), blockEntityTag);
                     } else {
+                        // For showblock, keep using TransformData tag
                         YuushyaDataTags.setTransformData(itemStack, packet.tag);
                     }
                     HandlingCache.put(hash, itemStack);
