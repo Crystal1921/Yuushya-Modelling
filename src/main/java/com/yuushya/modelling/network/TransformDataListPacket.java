@@ -82,25 +82,38 @@ public class TransformDataListPacket {
                     };
                     ItemStack itemStack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, itemType)).getDefaultInstance();
                     itemStack.setHoverName(Component.literal(name));
-                    // Store data based on item type
-                    if (itemType.equals("textblock")) {
-                        YuushyaDataTags.setTextData(itemStack, packet.tag);
-                    } else if (itemType.equals("itemblock")) {
-                        // Use BlockEntityTag for ItemBlock so Minecraft loads data when placing
-                        CompoundTag blockEntityTag = new CompoundTag();
-                        // Remove ItemName from the tag before storing as BlockEntityTag
-                        CompoundTag dataTag = packet.tag.copy();
-                        dataTag.remove("ItemName");
-                        blockEntityTag.put("Blocks", dataTag.getList("Blocks", 10));
-                        blockEntityTag.putString("id", BlockEntityRegistry.ITEM_BLOCK_ENTITY.get().toString());
-                        if (packet.tag.contains("ControlSlot")) {
-                            blockEntityTag.putByte("ControlSlot", packet.tag.getByte("ControlSlot"));
+
+                    // Store data using BlockEntityTag for all block types so Minecraft loads data when placing
+                    CompoundTag blockEntityTag = new CompoundTag();
+                    CompoundTag dataTag = packet.tag.copy();
+                    dataTag.remove("ItemName");
+                    blockEntityTag.put("Blocks", dataTag.getList("Blocks", 10));
+
+                    // Set appropriate BlockEntity type id
+                    switch (menu.getBlockType()) {
+                        case BLOCK -> {
+                            blockEntityTag.putString("id", BlockEntityRegistry.ITEM_BLOCK_ENTITY.get().toString());
+                            if (packet.tag.contains("ControlSlot")) {
+                                blockEntityTag.putByte("ControlSlot", packet.tag.getByte("ControlSlot"));
+                            }
+                            BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.ITEM_BLOCK_ENTITY.get(), blockEntityTag);
                         }
-                        BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.ITEM_BLOCK_ENTITY.get(), blockEntityTag);
-                    } else {
-                        // For showblock, keep using TransformData tag
-                        YuushyaDataTags.setTransformData(itemStack, packet.tag);
+                        case ITEM -> {
+                            blockEntityTag.putString("id", BlockEntityRegistry.SHOW_BLOCK_ENTITY.get().toString());
+                            if (packet.tag.contains("ControlSlot")) {
+                                blockEntityTag.putByte("ControlSlot", packet.tag.getByte("ControlSlot"));
+                            }
+                            BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.SHOW_BLOCK_ENTITY.get(), blockEntityTag);
+                        }
+                        case TEXT -> {
+                            blockEntityTag.putString("id", BlockEntityRegistry.TEXT_BLOCK_ENTITY.get().toString());
+                            if (packet.tag.contains("ControlSlot")) {
+                                blockEntityTag.putByte("ControlSlot", packet.tag.getByte("ControlSlot"));
+                            }
+                            BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.TEXT_BLOCK_ENTITY.get(), blockEntityTag);
+                        }
                     }
+
                     HandlingCache.put(hash, itemStack);
                     menu.setupResultSlotServer(itemStack);
                 }

@@ -1,16 +1,18 @@
 package com.yuushya.modelling.gui.engrave;
 
+import com.yuushya.modelling.blockentity.transformData.ITransformTextDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.yuushya.modelling.item.showblocktool.DestroyItem.saveToItem;
 
 public class EngraveTextResult implements IEngraveResult {
     @Getter
@@ -23,7 +25,13 @@ public class EngraveTextResult implements IEngraveResult {
         itemInfo.transferTexts(transformDataList);
         resultItemStack = ItemRegistry.TEXT_BLOCK.get().getDefaultInstance();
         resultItemStack.setHoverName(Component.literal(name));
-        saveToItem(resultItemStack, transformDataList);
+        saveTextBlockData(resultItemStack, transformDataList);
+    }
+
+    private static void saveTextBlockData(ItemStack itemStack, List<TransformTextData> transformDataList) {
+        CompoundTag compoundTag = new CompoundTag();
+        ITransformTextDataInventory.saveAdditional(compoundTag, transformDataList);
+        BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.TEXT_BLOCK_ENTITY.get(), compoundTag);
     }
 
     @Override
