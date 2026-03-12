@@ -425,9 +425,11 @@ public class ShowBlockScreen extends Screen {
         choose(SCALE_X).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
+                                    if (number == 0.0) number = 1.0;
                                     updateTransformData(SCALE_X, number);
                                     updateTransformData(SCALE_Y, number);
                                     updateTransformData(SCALE_Z, number);
+                                    choose(SCALE_X).sliderButton.setValidatedValue(number);
                                     choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
                                     choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
                                     choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());

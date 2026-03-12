@@ -442,9 +442,11 @@ public class TextBlockScreen extends AbstractColorScreen {
         choose(SCALE_X).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
+                                    if (number == 0.0) number = 1.0;
                                     updateTransformDataClient(SCALE_X, number);
                                     updateTransformDataClient(SCALE_Y, number);
                                     updateTransformDataClient(SCALE_Z, number);
+                                    choose(SCALE_X).sliderButton.setValidatedValue(number);
                                     choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
                                     choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
                                     choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
