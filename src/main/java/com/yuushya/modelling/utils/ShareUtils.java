@@ -30,6 +30,7 @@ public class ShareUtils {
     public static final Gson GSON = new GsonBuilder()
             .disableHtmlEscaping()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+            .serializeSpecialFloatingPointValues()
             .create();
 
     public static int getABGR(int rgb) {
@@ -39,6 +40,32 @@ public class ShareUtils {
         int b = rgb & 0xFF;
 
         return (a << 24) | (b << 16) | (g << 8) | r;
+    }
+
+    /**
+     * 清理 NaN 和 Infinity 值，将它们替换为默认值
+     * @param value 要清理的 double 值
+     * @param defaultValue 默认值
+     * @return 清理后的值
+     */
+    private static double sanitizeDouble(double value, double defaultValue) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return defaultValue;
+        }
+        return value;
+    }
+
+    /**
+     * 清理 NaN 和 Infinity 值，将它们替换为默认值
+     * @param value 要清理的 float 值
+     * @param defaultValue 默认值
+     * @return 清理后的值
+     */
+    private static float sanitizeFloat(float value, float defaultValue) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            return defaultValue;
+        }
+        return value;
     }
 
     public static String transfer(List<TransformBlockData> transformDataList) {
@@ -115,9 +142,21 @@ public class ShareUtils {
         ) {
             public static ShareData from(TransformBlockData data) {
                 return new ShareData(
-                        List.of(data.pos.x, data.pos.y, data.pos.z),
-                        List.of(data.rot.x, data.rot.y, data.rot.z),
-                        List.of(data.scales.x, data.scales.y, data.scales.z),
+                        List.of(
+                                sanitizeDouble(data.pos.x, 0.0),
+                                sanitizeDouble(data.pos.y, 0.0),
+                                sanitizeDouble(data.pos.z, 0.0)
+                        ),
+                        List.of(
+                                sanitizeFloat(data.rot.x, 0.0f),
+                                sanitizeFloat(data.rot.y, 0.0f),
+                                sanitizeFloat(data.rot.z, 0.0f)
+                        ),
+                        List.of(
+                                sanitizeFloat(data.scales.x, 1.0f),
+                                sanitizeFloat(data.scales.y, 1.0f),
+                                sanitizeFloat(data.scales.z, 1.0f)
+                        ),
                         ShareBlockState.from(data.blockState),
                         data.isShown
                 );
@@ -218,9 +257,21 @@ public class ShareUtils {
         ) {
             public static ItemShareData from(TransformItemData data) {
                 return new ItemShareData(
-                        List.of(data.pos.x(), data.pos.y(), data.pos.z()),
-                        List.of(data.rot.x(), data.rot.y(), data.rot.z()),
-                        List.of(data.scales.x(), data.scales.y(), data.scales.z()),
+                        List.of(
+                                sanitizeDouble(data.pos.x(), 0.0),
+                                sanitizeDouble(data.pos.y(), 0.0),
+                                sanitizeDouble(data.pos.z(), 0.0)
+                        ),
+                        List.of(
+                                sanitizeFloat(data.rot.x(), 0.0f),
+                                sanitizeFloat(data.rot.y(), 0.0f),
+                                sanitizeFloat(data.rot.z(), 0.0f)
+                        ),
+                        List.of(
+                                sanitizeFloat(data.scales.x(), 1.0f),
+                                sanitizeFloat(data.scales.y(), 1.0f),
+                                sanitizeFloat(data.scales.z(), 1.0f)
+                        ),
                         ShareItemStack.from(data.itemStack),
                         data.color,
                         data.isShown,
@@ -322,9 +373,21 @@ public class ShareUtils {
         ) {
             public static TextShareData from(TransformTextData data) {
                 return new TextShareData(
-                        List.of(data.pos.x, data.pos.y, data.pos.z),
-                        List.of(data.rot.x(), data.rot.y(), data.rot.z()),
-                        List.of(data.scales.x(), data.scales.y(), data.scales.z()),
+                        List.of(
+                                sanitizeDouble(data.pos.x, 0.0),
+                                sanitizeDouble(data.pos.y, 0.0),
+                                sanitizeDouble(data.pos.z, 0.0)
+                        ),
+                        List.of(
+                                sanitizeFloat(data.rot.x(), 0.0f),
+                                sanitizeFloat(data.rot.y(), 0.0f),
+                                sanitizeFloat(data.rot.z(), 0.0f)
+                        ),
+                        List.of(
+                                sanitizeFloat(data.scales.x(), 1.0f),
+                                sanitizeFloat(data.scales.y(), 1.0f),
+                                sanitizeFloat(data.scales.z(), 1.0f)
+                        ),
                         new ArrayList<>(data.textLines),
                         data.isCulled,
                         data.isMirror,
