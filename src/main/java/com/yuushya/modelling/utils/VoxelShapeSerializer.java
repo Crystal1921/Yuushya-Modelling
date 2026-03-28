@@ -6,6 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.Blocks;
@@ -60,17 +61,15 @@ public class VoxelShapeSerializer {
         tag.putString(SHAPE_TYPE_KEY, ShapeType.BOXES.name());
 
         ListTag boxesList = new ListTag();
-        List<Double> boxData = Lists.newArrayList();
-
         shape.forAllBoxes((x1, y1, z1, x2, y2, z2) -> {
-            CompoundTag boxTag = new CompoundTag();
-            boxTag.putDouble("x1", x1);
-            boxTag.putDouble("y1", y1);
-            boxTag.putDouble("z1", z1);
-            boxTag.putDouble("x2", x2);
-            boxTag.putDouble("y2", y2);
-            boxTag.putDouble("z2", z2);
-            boxesList.add(boxTag);
+            ListTag box = new ListTag();
+            box.add(DoubleTag.valueOf(x1));
+            box.add(DoubleTag.valueOf(y1));
+            box.add(DoubleTag.valueOf(z1));
+            box.add(DoubleTag.valueOf(x2));
+            box.add(DoubleTag.valueOf(y2));
+            box.add(DoubleTag.valueOf(z2));
+            boxesList.add(box);
         });
 
         tag.put(BOXES_KEY, boxesList);
@@ -113,7 +112,7 @@ public class VoxelShapeSerializer {
             return Shapes.empty();
         }
 
-        ListTag boxesList = tag.getList(BOXES_KEY, Tag.TAG_COMPOUND);
+        ListTag boxesList = tag.getList(BOXES_KEY, Tag.TAG_LIST);
         if (boxesList.isEmpty()) {
             return Shapes.empty();
         }
@@ -122,13 +121,13 @@ public class VoxelShapeSerializer {
         VoxelShape result = Shapes.empty();
 
         for (Tag boxTag : boxesList) {
-            CompoundTag box = (CompoundTag) boxTag;
-            double x1 = box.getDouble("x1");
-            double y1 = box.getDouble("y1");
-            double z1 = box.getDouble("z1");
-            double x2 = box.getDouble("x2");
-            double y2 = box.getDouble("y2");
-            double z2 = box.getDouble("z2");
+            ListTag box = (ListTag) boxTag;
+            double x1 = box.getDouble(0);
+            double y1 = box.getDouble(1);
+            double z1 = box.getDouble(2);
+            double x2 = box.getDouble(3);
+            double y2 = box.getDouble(4);
+            double z2 = box.getDouble(5);
 
             VoxelShape boxShape = Shapes.box(x1, y1, z1, x2, y2, z2);
             result = Shapes.joinUnoptimized(result, boxShape, BooleanOp.OR);

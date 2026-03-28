@@ -32,6 +32,7 @@ public class ShapeItem extends AbstractMultiPurposeToolItem {
             BlockEntity blockEntity = level.getBlockEntity(blockPos);
             if (blockEntity instanceof AbstractTransformBlockEntity transformBlockEntity) {
                 transformBlockEntity.setCustomShape(voxelShape);
+                transformBlockEntity.setChanged();
                 return InteractionResult.SUCCESS;
             }
         }
