@@ -53,11 +53,6 @@ public class ShowBlock extends AbstractTransformBlock {
         return super.getShape(state, level, pos, context);
     }
 
-    @Override
-    protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-        return blockState.getValue(SHAPES).voxelShape;
-    }
-
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {

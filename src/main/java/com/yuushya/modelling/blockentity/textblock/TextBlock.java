@@ -70,11 +70,6 @@ public class TextBlock extends AbstractTransformBlock {
     }
 
     @Override
-    protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-        return blockState.getValue(SHAPES).voxelShape;
-    }
-
-    @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new TextBlockEntity(blockPos, blockState);
     }
