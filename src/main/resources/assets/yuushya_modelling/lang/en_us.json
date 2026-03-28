@@ -91,6 +91,11 @@
   "item.yuushya.history_item.line1": "\u00A79Open the history list of the model blocks you break recently",
   "item.yuushya.history_item.line2": "\u00A79The secondary hand holds [entity block/item block] to open the corresponding list",
 
+  "item.yuushya.shape_item": "Shape Item",
+  "item.yuushya.shape_item.line1": "§9主手左键点击方块可记录其形状",
+  "item.yuushya.shape_item.line2": "§9主手右键点击方块，将记录的形状应用到该方块",
+  "item.yuushya.shape_item.line3": "§9Shift + 右键时，同时将该方块的碰撞箱模式设为自定义",
+
   "item.yuushya.the_encyclopedia": "\u00A7c「The Encyclopedia」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“The world is watching you”",
   "item.yuushya.shimmering_pearl": "\u00A79Shimmering Pearl",
@@ -211,6 +216,7 @@
   "gui.showBlockScreen.shape.bottom_half": "Bottom Half",
   "gui.showBlockScreen.shape.top_half": "Top Half",
   "gui.showBlockScreen.shape.block": "Block",
+  "gui.showBlockScreen.shape.custom": "Custom",
   "gui.showBlockScreen.calculate": "Calculate Face Count",
 
   "itemGroup.yuushya.primitive": "Yuushya - Modeling Primitive",

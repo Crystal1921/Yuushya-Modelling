@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -79,7 +80,20 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
 
     @Override
     protected @NotNull VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-        return blockState.getValue(SHAPES).voxelShape;
+        BlockShape value = blockState.getValue(SHAPES);
+        if (value != BlockShape.CUSTOM) {
+            return value.voxelShape;
+        }
+
+        BlockEntity blockEntity = blockGetter.getBlockEntity(blockPos);
+        if (blockEntity instanceof AbstractTransformBlockEntity transformBlockEntity) {
+            VoxelShape customShape = transformBlockEntity.getCustomShape();
+            if (customShape != null) {
+                return customShape;
+            }
+        }
+
+        return super.getCollisionShape(blockState, blockGetter, blockPos, collisionContext);
     }
 
     @Override

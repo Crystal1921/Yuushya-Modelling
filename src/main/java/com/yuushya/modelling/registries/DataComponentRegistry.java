@@ -2,6 +2,7 @@ package com.yuushya.modelling.registries;
 
 import com.yuushya.modelling.Yuushya;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.component.CustomData;
@@ -32,6 +33,11 @@ public class DataComponentRegistry {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> COLOR_DATA = DATA_COMPONENT_TYPES.registerComponentType(
             "color_data",
             builder -> builder.persistent(ExtraCodecs.NON_NEGATIVE_INT).networkSynchronized(ByteBufCodecs.VAR_INT)
+    );
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> SHAPE_DATA = DATA_COMPONENT_TYPES.registerComponentType(
+      "shape_data",
+        builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG)
     );
 
     public static void register(IEventBus bus) {

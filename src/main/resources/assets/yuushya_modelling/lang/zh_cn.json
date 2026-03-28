@@ -109,6 +109,11 @@
   "item.yuushya.history_item.line1": "\u00A79打开破坏过的方块列表",
   "item.yuushya.history_item.line2": "\u00A79副手持[实体方块/物品方块]打开对应的列表",
 
+  "item.yuushya.shape_item": "形状工具",
+  "item.yuushya.shape_item.line1": "§9Left-click a block with main hand to record its shape.",
+  "item.yuushya.shape_item.line2": "§9Right-click a block with main hand to apply the recorded shape to it.",
+  "item.yuushya.shape_item.line3": "§9Shift + right-click to also set the block's collision box mode to custom.",
+
   "item.yuushya.the_encyclopedia": "\u00A7c「世界的证明」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“你已被世界认可”",
 
@@ -229,6 +234,7 @@
   "gui.showBlockScreen.shape.bottom_half": "下半砖",
   "gui.showBlockScreen.shape.top_half": "上半砖",
   "gui.showBlockScreen.shape.block": "完整方块",
+  "gui.showBlockScreen.shape.custom": "自定义",
   "gui.showBlockScreen.calculate": "计算总面数",
   "gui.textBlockScreen.cull.on": "面剔除：开",
   "gui.textBlockScreen.cull.off": "面剔除：关",

@@ -31,6 +31,7 @@ public class GroupRegistry {
                 output.accept(ItemRegistry.ENGRAVE_ITEM.get());
                 output.accept(ItemRegistry.COLOR_PICKER_ITEM.get());
                 output.accept(ItemRegistry.HISTORY_ITEM.get());
+                output.accept(ItemRegistry.SHAPE_ITEM.get());
                 output.accept(ItemRegistry.SHOW_BLOCK.get());
                 output.accept(ItemRegistry.ITEM_BLOCK.get());
                 output.accept(ItemRegistry.TEXT_BLOCK.get());
