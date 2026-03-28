@@ -17,6 +17,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility class for serializing and deserializing VoxelShape to/from NBT format.
@@ -26,6 +28,12 @@ public class VoxelShapeSerializer {
 
     private static final String BOXES_KEY = "Boxes";
     private static final String SHAPE_TYPE_KEY = "ShapeType";
+
+    /**
+     * Cache for deserialized VoxelShapes to avoid reconstructing identical shapes.
+     * Uses CompoundTag as key (relies on its equals/hashCode implementation).
+     */
+    private static final Map<CompoundTag, VoxelShape> SHAPE_CACHE = new ConcurrentHashMap<>();
 
     /**
      * Shape types for optimized deserialization
@@ -77,7 +85,7 @@ public class VoxelShapeSerializer {
     }
 
     /**
-     * Deserializes a VoxelShape from NBT format.
+     * Deserializes a VoxelShape from NBT format with caching support.
      *
      * @param tag The CompoundTag containing the serialized shape data
      * @return The reconstructed VoxelShape
@@ -97,11 +105,24 @@ public class VoxelShapeSerializer {
             return deserializeLegacyFormat(tag);
         }
 
-        return switch (shapeType) {
-            case EMPTY -> Shapes.empty();
-            case BLOCK -> Shapes.block();
-            case BOXES -> deserializeBoxes(tag);
-        };
+        // Simple cases don't need caching (they return singletons)
+        if (shapeType == ShapeType.EMPTY) {
+            return Shapes.empty();
+        }
+        if (shapeType == ShapeType.BLOCK) {
+            return Shapes.block();
+        }
+
+        // For BOXES type, use cache to avoid expensive reconstruction
+        return SHAPE_CACHE.computeIfAbsent(tag, VoxelShapeSerializer::deserializeBoxesUncached);
+    }
+
+    /**
+     * Internal method that performs actual deserialization without caching.
+     * Used by the cache loader.
+     */
+    private static VoxelShape deserializeBoxesUncached(CompoundTag tag) {
+        return deserializeBoxes(tag);
     }
 
     /**
@@ -186,7 +207,7 @@ public class VoxelShapeSerializer {
         }
 
         if (shapeType == ShapeType.BOXES && tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
-            return tag.getList(BOXES_KEY, Tag.TAG_COMPOUND).size();
+            return tag.getList(BOXES_KEY, Tag.TAG_LIST).size();
         }
 
         return shapeType == ShapeType.BLOCK ? 1 : 0;
@@ -205,5 +226,21 @@ public class VoxelShapeSerializer {
 
         String shapeTypeName = tag.getString(SHAPE_TYPE_KEY);
         return ShapeType.EMPTY.name().equals(shapeTypeName);
+    }
+
+    /**
+     * Clears the shape cache. Useful for testing or memory management.
+     */
+    public static void clearCache() {
+        SHAPE_CACHE.clear();
+    }
+
+    /**
+     * Returns the current cache size for monitoring/debugging.
+     *
+     * @return Number of cached shapes
+     */
+    public static int getCacheSize() {
+        return SHAPE_CACHE.size();
     }
 }
