@@ -1,7 +1,10 @@
 package com.yuushya.modelling.client;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
@@ -38,12 +41,17 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import static net.neoforged.neoforge.client.model.QuadTransformers.applyingColor;
 import static net.neoforged.neoforge.client.model.QuadTransformers.toABGR;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExtension, BakedModel {
-    private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
+    private static final Cache<ItemStack, NeoItemBlockModel> itemModelCache = CacheBuilder.newBuilder()
+            .weakKeys()
+            .weakValues()
+            .maximumSize(1000)
+            .build();
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
     public NeoItemBlockModel(Direction facing) {
@@ -86,19 +94,24 @@ public class NeoItemBlockModel extends ItemBlockModel implements IBakedModelExte
         if (data == CustomData.EMPTY) {
             return List.of(backup);
         }
-        return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoItemBlockModel(Direction.SOUTH) {
-            private final List<TransformItemData> transformDatas;
+        try {
+            return List.of(itemModelCache.get(itemStack, () -> new NeoItemBlockModel(Direction.SOUTH) {
+                private final List<TransformItemData> transformDatas;
 
-            {
-                this.transformDatas = new ArrayList<>();
-                ITransformItemDataInventory.load(data.copyTag(), transformDatas, registryAccess);
-            }
+                {
+                    this.transformDatas = new ArrayList<>();
+                    ITransformItemDataInventory.load(data.copyTag(), transformDatas, registryAccess);
+                }
 
-            @Override
-            public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return this.getQuads(side, rand, transformDatas, null);
-            }
-        }));
+                @Override
+                public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+                    return this.getQuads(side, rand, transformDatas, null);
+                }
+            }));
+        } catch (ExecutionException e) {
+            Yuushya.LOGGER.error(e.getCause());
+            return List.of();
+        }
     }
 
     /**
