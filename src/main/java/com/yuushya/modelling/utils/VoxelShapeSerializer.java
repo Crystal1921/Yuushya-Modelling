@@ -1,5 +1,7 @@
 package com.yuushya.modelling.utils;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -18,7 +20,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Utility class for serializing and deserializing VoxelShape to/from NBT format.
@@ -27,22 +29,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VoxelShapeSerializer {
 
     private static final String BOXES_KEY = "Boxes";
-    private static final String SHAPE_TYPE_KEY = "ShapeType";
 
     /**
      * Cache for deserialized VoxelShapes to avoid reconstructing identical shapes.
-     * Uses CompoundTag as key (relies on its equals/hashCode implementation).
+     * Uses Guava Cache with weak references and automatic eviction.
      */
-    private static final Map<CompoundTag, VoxelShape> SHAPE_CACHE = new ConcurrentHashMap<>();
-
-    /**
-     * Shape types for optimized deserialization
-     */
-    private enum ShapeType {
-        EMPTY,
-        BLOCK,
-        BOXES
-    }
+    private static final Cache<CompoundTag, VoxelShape> SHAPE_CACHE = CacheBuilder.newBuilder()
+            .weakValues()
+            .maximumSize(500)
+            .build();
 
     /**
      * Serializes a VoxelShape to NBT format using box representation.
@@ -52,23 +47,8 @@ public class VoxelShapeSerializer {
      */
     public static CompoundTag serializeVoxelShape(VoxelShape shape) {
         CompoundTag tag = new CompoundTag();
-
-        if (shape.isEmpty()) {
-            tag.putString(SHAPE_TYPE_KEY, ShapeType.EMPTY.name());
-            return tag;
-        }
-
-        // Check if it's a full block (optimized case)
-        AABB bounds = shape.bounds();
-        if (isFullBlock(shape, bounds)) {
-            tag.putString(SHAPE_TYPE_KEY, ShapeType.BLOCK.name());
-            return tag;
-        }
-
-        // Serialize as collection of boxes
-        tag.putString(SHAPE_TYPE_KEY, ShapeType.BOXES.name());
-
         ListTag boxesList = new ListTag();
+
         shape.forAllBoxes((x1, y1, z1, x2, y2, z2) -> {
             ListTag box = new ListTag();
             box.add(DoubleTag.valueOf(x1));
@@ -91,38 +71,17 @@ public class VoxelShapeSerializer {
      * @return The reconstructed VoxelShape
      */
     public static VoxelShape deserializeVoxelShape(CompoundTag tag) {
-        if (!tag.contains(SHAPE_TYPE_KEY)) {
+        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
             return Shapes.empty();
         }
 
-        String shapeTypeName = tag.getString(SHAPE_TYPE_KEY);
-        ShapeType shapeType;
-
+        // Use cache to avoid expensive reconstruction
         try {
-            shapeType = ShapeType.valueOf(shapeTypeName);
-        } catch (IllegalArgumentException e) {
-            // Legacy format fallback or invalid type
-            return deserializeLegacyFormat(tag);
+            return SHAPE_CACHE.get(tag, () -> deserializeBoxes(tag));
+        } catch (ExecutionException e) {
+            // Fallback to direct deserialization if caching fails
+            return deserializeBoxes(tag);
         }
-
-        // Simple cases don't need caching (they return singletons)
-        if (shapeType == ShapeType.EMPTY) {
-            return Shapes.empty();
-        }
-        if (shapeType == ShapeType.BLOCK) {
-            return Shapes.block();
-        }
-
-        // For BOXES type, use cache to avoid expensive reconstruction
-        return SHAPE_CACHE.computeIfAbsent(tag, VoxelShapeSerializer::deserializeBoxesUncached);
-    }
-
-    /**
-     * Internal method that performs actual deserialization without caching.
-     * Used by the cache loader.
-     */
-    private static VoxelShape deserializeBoxesUncached(CompoundTag tag) {
-        return deserializeBoxes(tag);
     }
 
     /**
@@ -159,58 +118,16 @@ public class VoxelShapeSerializer {
     }
 
     /**
-     * Checks if the shape is a full block (1x1x1 cube from 0,0,0 to 1,1,1).
-     */
-    private static boolean isFullBlock(VoxelShape shape, AABB bounds) {
-        if (bounds.minX != 0.0 || bounds.minY != 0.0 || bounds.minZ != 0.0) {
-            return false;
-        }
-        if (bounds.maxX != 1.0 || bounds.maxY != 1.0 || bounds.maxZ != 1.0) {
-            return false;
-        }
-
-        // Check if shape matches block shape
-        return shape == Shapes.block() || shape.equals(Shapes.block());
-    }
-
-    /**
-     * Fallback for legacy format or unknown format.
-     * Attempts to read as list of AABB boxes.
-     */
-    private static VoxelShape deserializeLegacyFormat(CompoundTag tag) {
-        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
-            return Shapes.empty();
-        }
-
-        // Try to deserialize using the boxes list
-        return deserializeBoxes(tag);
-    }
-
-    /**
      * Utility method to get box count from serialized shape.
      *
      * @param tag The serialized shape tag
-     * @return Number of boxes in the shape, or 0 if empty/single block
+     * @return Number of boxes in the shape
      */
     public static int getBoxCount(CompoundTag tag) {
-        if (!tag.contains(SHAPE_TYPE_KEY)) {
+        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
             return 0;
         }
-
-        String shapeTypeName = tag.getString(SHAPE_TYPE_KEY);
-        ShapeType shapeType;
-
-        try {
-            shapeType = ShapeType.valueOf(shapeTypeName);
-        } catch (IllegalArgumentException e) {
-            return 0;
-        }
-
-        if (shapeType == ShapeType.BOXES && tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
-            return tag.getList(BOXES_KEY, Tag.TAG_LIST).size();
-        }
-
-        return shapeType == ShapeType.BLOCK ? 1 : 0;
+        return tag.getList(BOXES_KEY, Tag.TAG_LIST).size();
     }
 
     /**
@@ -220,19 +137,17 @@ public class VoxelShapeSerializer {
      * @return true if the shape is empty
      */
     public static boolean isEmpty(CompoundTag tag) {
-        if (!tag.contains(SHAPE_TYPE_KEY)) {
+        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
             return true;
         }
-
-        String shapeTypeName = tag.getString(SHAPE_TYPE_KEY);
-        return ShapeType.EMPTY.name().equals(shapeTypeName);
+        return tag.getList(BOXES_KEY, Tag.TAG_LIST).isEmpty();
     }
 
     /**
      * Clears the shape cache. Useful for testing or memory management.
      */
     public static void clearCache() {
-        SHAPE_CACHE.clear();
+        SHAPE_CACHE.invalidateAll();
     }
 
     /**
@@ -240,7 +155,7 @@ public class VoxelShapeSerializer {
      *
      * @return Number of cached shapes
      */
-    public static int getCacheSize() {
+    public static long getCacheSize() {
         return SHAPE_CACHE.size();
     }
 }
