@@ -1,6 +1,7 @@
 package com.yuushya.modelling.item.showblocktool;
 
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
+import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.utils.VoxelShapeSerializer;
@@ -14,6 +15,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class ShapeItem extends AbstractMultiPurposeToolItem {
     public ShapeItem(Properties properties, Integer tipLines) {
@@ -31,6 +34,9 @@ public class ShapeItem extends AbstractMultiPurposeToolItem {
             VoxelShape voxelShape = VoxelShapeSerializer.deserializeVoxelShape(compoundTag);
             BlockEntity blockEntity = level.getBlockEntity(blockPos);
             if (blockEntity instanceof AbstractTransformBlockEntity transformBlockEntity) {
+                if (player.isShiftKeyDown()) {
+                    level.setBlock(transformBlockEntity.getBlockPos(), transformBlockEntity.getBlockState().setValue(SHAPES, BlockShape.CUSTOM), 18);
+                }
                 transformBlockEntity.setCustomShape(voxelShape);
                 transformBlockEntity.setChanged();
                 return InteractionResult.SUCCESS;
