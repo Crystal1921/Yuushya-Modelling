@@ -20,10 +20,15 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClientMethod {
+    public static final Path ITEM_PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("modellings").resolve("items");
+    public static final Path BLOCK_PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("modellings").resolve("blocks");
+    public static final Path TEXT_PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("modellings").resolve("texts");
+
     public static void openGuiScreen(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
         ItemStack newItemStack = player.getItemInHand(InteractionHand.OFF_HAND);
         BlockEntity blockEntity = level.getBlockEntity(blockPos);

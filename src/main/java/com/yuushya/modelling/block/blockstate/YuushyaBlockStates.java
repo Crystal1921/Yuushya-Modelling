@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class YuushyaBlockStates {
     public static final IntegerProperty LIT = IntegerProperty.create("lit", 0, 15);
-    public static final IntegerProperty DISTANCE = IntegerProperty.create("distance", 0, 15);
     public static final EnumProperty<BlockShape> SHAPES = EnumProperty.create("shapes", BlockShape.class);
 
     public static <T extends Comparable<T>> BlockState cycleState(BlockState blockState, Property<T> property, boolean doGetPre) {
