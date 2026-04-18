@@ -2,10 +2,8 @@ package com.yuushya.modelling.gui.engrave;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.network.TransformDataListPacket;
+import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.RegistryAccess;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,14 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EngraveBlockResultLoader {
-    public static final Path PATH = Minecraft.getInstance().gameDirectory.toPath().resolve("modellings").resolve("blocks");
 
     public static final Map<String, EngraveBlockResult> SHOWBLOCK_ITEM_MAP = new HashMap<>();
 
     public static void load() {
-        if (Files.exists(PATH)) {
+        if (Files.exists(ClientMethod.BLOCK_PATH)) {
             try {
-                load(PATH);
+                load(ClientMethod.BLOCK_PATH);
             } catch (IOException e) {
                 Yuushya.LOGGER.error(e);
             }
@@ -66,7 +63,7 @@ public class EngraveBlockResultLoader {
         ShareUtils.ShareBlockInformation information = ShareUtils.from(string);
         SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information));
         TransformDataListPacket.updateSendingCache(name);
-        Path out = PATH.resolve(name + ".json");
+        Path out = ClientMethod.BLOCK_PATH.resolve(name + ".json");
         if (!Files.exists(out)) {
             if (!Files.exists(out.getParent())) Files.createDirectories(out.getParent());
             Files.createFile(out);
