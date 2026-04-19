@@ -15,15 +15,18 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_SPECIAL_RENDER;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.FULL_BLOCK;
 
-public record UpdateAOPacket(boolean enableAO, boolean fullBlock, BlockPos blockPos) implements CustomPacketPayload {
+public record UpdateAOPacket(boolean enableAO, boolean fullBlock, boolean enableSpecialRender, BlockPos blockPos) implements CustomPacketPayload {
 
     public static final StreamCodec<FriendlyByteBuf, UpdateAOPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.BOOL,
             UpdateAOPacket::enableAO,
             ByteBufCodecs.BOOL,
             UpdateAOPacket::fullBlock,
+            ByteBufCodecs.BOOL,
+            UpdateAOPacket::enableSpecialRender,
             BlockPos.STREAM_CODEC,
             UpdateAOPacket::blockPos,
             UpdateAOPacket::new
@@ -36,7 +39,10 @@ public record UpdateAOPacket(boolean enableAO, boolean fullBlock, BlockPos block
             if (level instanceof ServerLevel serverLevel) {
                 BlockEntity blockEntity = serverLevel.getBlockEntity(packet.blockPos);
                 if (blockEntity instanceof ItemBlockEntity) {
-                    level.setBlockAndUpdate(blockEntity.getBlockPos(), blockEntity.getBlockState().setValue(ENABLE_AO, packet.enableAO).setValue(FULL_BLOCK, packet.fullBlock));
+                    level.setBlockAndUpdate(blockEntity.getBlockPos(), blockEntity.getBlockState()
+                            .setValue(ENABLE_AO, packet.enableAO)
+                            .setValue(FULL_BLOCK, packet.fullBlock)
+                            .setValue(ENABLE_SPECIAL_RENDER, packet.enableSpecialRender));
                 }
             }
         });

@@ -188,6 +188,8 @@
   "gui.itemBlockScreen.ambientOcclusion.off": "禁用环境光遮蔽",
   "gui.itemBlockScreen.fullBlock.on": "启用整方块AO",
   "gui.itemBlockScreen.fullBlock.off": "关闭整方块AO",
+  "gui.itemBlockScreen.enableSpecialRender.on": "启用特殊渲染",
+  "gui.itemBlockScreen.enableSpecialRender.off": "禁用特殊渲染",
   "gui.itemBlockScreen.apply.pre_apply": "应用到所有",
   "gui.itemBlockScreen.apply.tip.pre_apply": "将该层的调整预应用到所有层",
   "gui.itemBlockScreen.apply.apply": "确认应用",

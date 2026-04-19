@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_SPECIAL_RENDER;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.FULL_BLOCK;
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
@@ -345,7 +346,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, enableAO) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockPos()));
+                                PacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER), blockEntity.getBlockPos()));
                             }
                         });
 
@@ -358,7 +359,20 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, fullBlock) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockPos()));
+                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER), blockEntity.getBlockPos()));
+                            }
+                        });
+
+        CycleButton<Boolean> enableSpecialRenderButton = CycleButton
+                .booleanBuilder(Component.literal("★"), Component.literal("☆"))
+                .displayOnlyValue()
+                .withInitialValue(blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER))
+                .withTooltip((on -> Tooltip.create(on ? Component.translatable("gui.itemBlockScreen.enableSpecialRender.on") : Component.translatable("gui.itemBlockScreen.enableSpecialRender.off"))))
+                .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 11, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
+                        (btn, enableSpecialRender) -> {
+                            Level level = blockEntity.getLevel();
+                            if (level != null) {
+                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), blockEntity.getBlockState().getValue(FULL_BLOCK), enableSpecialRender, blockEntity.getBlockPos()));
                             }
                         });
 
@@ -708,6 +722,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.addRenderableWidget(saveButton);
         this.addRenderableWidget(ambientOcclusionButton);
         this.addRenderableWidget(fullBlockButton);
+        this.addRenderableWidget(enableSpecialRenderButton);
         this.addRenderableWidget(xMirror);
         this.addRenderableWidget(yMirror);
         this.addRenderableWidget(zMirror);
