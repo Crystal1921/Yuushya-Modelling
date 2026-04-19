@@ -5,6 +5,7 @@ import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
+import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.client.NeoItemBlockModel;
@@ -90,7 +91,7 @@ public class CachedRegion {
                 .createCompositeState(true);
     }
 
-    private static float @NotNull [] getColorComponents(TransformItemData transformData, BakedModel model, BakedQuad bakedQuad) {
+    public static float @NotNull [] getColorComponents(TransformItemData transformData, BakedModel model, BakedQuad bakedQuad) {
         Color color = new Color(transformData.color);
 
         if (model instanceof NeoItemBlockModel) {
@@ -259,7 +260,7 @@ public class CachedRegion {
         }
     }
 
-    private void calculateShape(BlockAndTintGetter level, BlockState state, BlockPos pos, int[] vertices, Direction direction, @javax.annotation.Nullable float[] shape, BitSet shapeFlags) {
+    public static void calculateShape(BlockAndTintGetter level, BlockState state, BlockPos pos, int[] vertices, Direction direction, @javax.annotation.Nullable float[] shape, BitSet shapeFlags) {
         float f = 32.0F;
         float f1 = 32.0F;
         float f2 = 32.0F;
@@ -338,6 +339,9 @@ public class CachedRegion {
             Minecraft mc = Minecraft.getInstance();
             for (BlockEntity be : new ArrayList<>(blockEntities)) {
                 if (be instanceof ItemBlockEntity itemBlockEntity && mc.player instanceof LocalPlayer localPlayer) {
+                    if (itemBlockEntity.getBlockState().getValue(AbstractTransformBlock.ENABLE_SPECIAL_RENDER)) {
+                        return;
+                    }
                     if (be.getLevel() == null) {
                         bufferSource.close();
                         return;

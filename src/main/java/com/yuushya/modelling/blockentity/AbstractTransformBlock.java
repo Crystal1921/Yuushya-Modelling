@@ -43,9 +43,11 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implements EntityBlock {
     public static final BooleanProperty ENABLE_AO = BooleanProperty.create("enable_ao");
     public static final BooleanProperty FULL_BLOCK = BooleanProperty.create("full_block");
+    public static final BooleanProperty ENABLE_SPECIAL_RENDER = BooleanProperty.create("enable_special_render");
 
     public static final Boolean DEFAULT_ENABLE_AO = false;
     public static final Boolean DEFAULT_FULL_BLOCK = false;
+    public static final Boolean DEFAULT_ENABLE_SPECIAL_RENDER = false;
 
     public AbstractTransformBlock(Properties properties, Integer tipLines) {
         super(properties, tipLines);
@@ -54,12 +56,13 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
                 .setValue(LIT, 0)
                 .setValue(HORIZONTAL_FACING, Direction.SOUTH)
                 .setValue(ENABLE_AO, DEFAULT_ENABLE_AO)
-                .setValue(FULL_BLOCK, DEFAULT_FULL_BLOCK));
+                .setValue(FULL_BLOCK, DEFAULT_FULL_BLOCK)
+                .setValue(ENABLE_SPECIAL_RENDER, DEFAULT_ENABLE_SPECIAL_RENDER));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES).add(ENABLE_AO).add(FULL_BLOCK);
+        stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES).add(ENABLE_AO).add(FULL_BLOCK).add(ENABLE_SPECIAL_RENDER);
     }
 
     @Override
@@ -70,6 +73,7 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
             BlockState blockState = this.defaultBlockState();
             blockState.setValue(ENABLE_AO, DEFAULT_ENABLE_AO);
             blockState.setValue(FULL_BLOCK, DEFAULT_FULL_BLOCK);
+            blockState.setValue(ENABLE_SPECIAL_RENDER, DEFAULT_ENABLE_SPECIAL_RENDER);
             return blockPlaceContext.getClickedFace().getAxis() == Direction.Axis.Y
                     ? blockState.setValue(HORIZONTAL_FACING, blockPlaceContext.getHorizontalDirection())
                     : blockState.setValue(HORIZONTAL_FACING, blockPlaceContext.getClickedFace().getOpposite());

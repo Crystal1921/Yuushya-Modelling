@@ -25,6 +25,7 @@ import java.util.List;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
+import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_SPECIAL_RENDER;
 import static com.yuushya.modelling.item.showblocktool.HistoryItem.HISTORY_ITEMBLOCK_ITEM_MAP;
 
 public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITransformItemDataInventory {
@@ -80,7 +81,8 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
         itemStack.set(DataComponents.BLOCK_STATE, blockItemStateProperties
                 .with(LIT, blockState.getValue(LIT))
                 .with(SHAPES, blockState.getValue(SHAPES))
-                .with(ENABLE_AO, blockState.getValue(ENABLE_AO)));
+                .with(ENABLE_AO, blockState.getValue(ENABLE_AO))
+                .with(ENABLE_SPECIAL_RENDER, blockState.getValue(ENABLE_SPECIAL_RENDER)));
     }
 
     public void setRemoved() {
