@@ -5,7 +5,7 @@ license = "MIT"
 
 [[mods]]
 modId = "yuushya_modelling"
-version = "2.3.0"
+version = "${mod_version}"
 displayName = "Yuushya Modelling"
 logoFile = "pack.png"
 displayURL = "https://yuushya.com/townscape/"
