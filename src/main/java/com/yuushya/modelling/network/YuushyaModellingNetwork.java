@@ -67,5 +67,11 @@ public class YuushyaModellingNetwork {
                 .decoder(UpdateAOPacket::new)
                 .consumerMainThread(UpdateAOPacket::handle)
                 .add();
+
+        INSTANCE.messageBuilder(PickColorPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(PickColorPacket::encode)
+                .decoder(PickColorPacket::new)
+                .consumerMainThread(PickColorPacket::handle)
+                .add();
     }
 }
