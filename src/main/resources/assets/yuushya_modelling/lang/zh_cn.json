@@ -110,9 +110,9 @@
   "item.yuushya.history_item.line2": "\u00A79副手持[实体方块/物品方块]打开对应的列表",
 
   "item.yuushya.shape_item": "形状工具",
-  "item.yuushya.shape_item.line1": "§9Left-click a block with main hand to record its shape.",
-  "item.yuushya.shape_item.line2": "§9Right-click a block with main hand to apply the recorded shape to it.",
-  "item.yuushya.shape_item.line3": "§9Shift + right-click to also set the block's collision box mode to custom.",
+  "item.yuushya.shape_item.line1": "§9主手左键点击方块以记录其形状。",
+  "item.yuushya.shape_item.line2": "§9主手右键点击方块以应用记录的形状。",
+  "item.yuushya.shape_item.line3": "§9Shift + 右键同时将方块的碰撞箱模式设为自定义。",
 
   "item.yuushya.the_encyclopedia": "\u00A7c「世界的证明」",
   "item.yuushya.the_encyclopedia.line1": "\u00A77\u00A7o“你已被世界认可”",
