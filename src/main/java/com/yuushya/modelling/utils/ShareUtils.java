@@ -13,7 +13,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -206,7 +206,7 @@ public class ShareUtils {
                 }
 
                 public BlockState transfer() {
-                    Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(this.name));
+                    Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(this.name));
                     BlockState blockState = block.defaultBlockState();
                     StateDefinition<Block, BlockState> stateDefinition = block.getStateDefinition();
                     for (String string : this.properties.keySet()) {
@@ -310,7 +310,7 @@ public class ShareUtils {
                     JsonElement jsonElement
             ) {
                 public static ShareItemStack from(ItemStack stack) {
-                    ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                    Identifier itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
                     Tag tag = ItemStack.OPTIONAL_CODEC
                             .encodeStart(NbtOps.INSTANCE, stack)
                             .result()

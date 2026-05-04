@@ -4,11 +4,10 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.BlockShape;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
@@ -29,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class TextBlock extends AbstractTransformBlock {
-    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.dist == Dist.CLIENT ? new IClientItemExtensions() {
+    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.getDist() == Dist.CLIENT ? new IClientItemExtensions() {
         @Override
         public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
             Minecraft minecraft = Minecraft.getInstance();
@@ -45,23 +44,23 @@ public class TextBlock extends AbstractTransformBlock {
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         if (level.getBlockState(pos).is(state.getBlock()) && level.getBlockEntity(pos) instanceof TextBlockEntity textBlockEntity) {
 
-            if (context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "gui_item")))) {
+            if (context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "gui_item")))) {
                 textBlockEntity.setShowFrame();
-            } else if (context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
+            } else if (context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
                 textBlockEntity.setShowRotAxis();
                 textBlockEntity.setShowText();
-            } else if (context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "pos_trans_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "micro_pos_trans_item")))
+            } else if (context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "pos_trans_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "micro_pos_trans_item")))
             ) {
                 textBlockEntity.setShowPosAxis();
                 textBlockEntity.setShowText();
-            } else if (context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "slot_trans_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "get_showblock_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "move_transformdata_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "get_blockstate_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "scale_trans_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "debug_stick_item")))
-                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "destroy_item")))
+            } else if (context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "slot_trans_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "get_showblock_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "move_transformdata_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "get_blockstate_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "scale_trans_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "debug_stick_item")))
+                    || context.isHoldingItem(BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "destroy_item")))
             ) {
                 textBlockEntity.setShowText();
             }

@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class FontList extends ObjectSelectionList<FontList.Entry> {
 
-    protected final List<ResourceLocation> fontList;
+    protected final List<Identifier> fontList;
     private final TextBlockScreen parentScreen;
     private int itemHeight;
     private int itemWidth;
@@ -32,7 +32,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         this.itemHeight = itemHeight;
     }
 
-    public void updateRenderList(List<ResourceLocation> fonts) {
+    public void updateRenderList(List<Identifier> fonts) {
         this.fontList.clear();
         this.fontList.addAll(fonts);
         this.clearEntries();
@@ -42,7 +42,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         }
     }
 
-    public ResourceLocation getSelectedFont() {
+    public Identifier getSelectedFont() {
         Entry selected = this.getSelected();
         if (selected != null && selected.slot < fontList.size()) {
             return fontList.get(selected.slot);
@@ -88,7 +88,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
             this.slot = slot;
         }
 
-        public ResourceLocation getFont() {
+        public Identifier getFont() {
             if (parent.fontList.size() > slot) {
                 return parent.fontList.get(slot);
             }
@@ -98,9 +98,9 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         @Override
         public void render(@NotNull GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-            ResourceLocation fontLoc = getFont();
+            Identifier fontLoc = getFont();
             FontSet fontSet = Minecraft.getInstance().fontManager.fontSets.get(fontLoc);
-            Font font = new Font(resourceLocation -> fontSet, true);
+            Font font = new Font(Identifier -> fontSet, true);
             String fontName = fontSet.name().toString();
             int textY = y + (itemHeight - font.lineHeight) / 2;
             guiGraphics.drawString(font, fontName, x, textY, 0xFFFFFF, true);

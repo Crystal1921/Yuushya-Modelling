@@ -45,7 +45,7 @@ public class HistoryItem extends AbstractMultiPurposeToolItem {
 
     @Override
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
         ItemStack offhandItem = player.getOffhandItem();

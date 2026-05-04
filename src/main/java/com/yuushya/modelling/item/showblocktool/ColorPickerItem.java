@@ -25,7 +25,7 @@ public class ColorPickerItem extends AbstractToolItem {
     }
 
     public InteractionResult inMainHandRightClickInAir(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             ClientMethod.pickColor(level, handItemStack);
             return InteractionResult.SUCCESS;
         }
@@ -34,7 +34,7 @@ public class ColorPickerItem extends AbstractToolItem {
 
     //对方块主手右键
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             ClientMethod.pickColor(level, handItemStack);
             return InteractionResult.SUCCESS;
         }
@@ -43,7 +43,7 @@ public class ColorPickerItem extends AbstractToolItem {
 
     //对方块主手左键
     public InteractionResult inMainHandLeftClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             Integer i = handItemStack.get(DataComponentRegistry.COLOR_DATA);
             if (i != null) {
                 setClipboard(String.format("#%06X", i));

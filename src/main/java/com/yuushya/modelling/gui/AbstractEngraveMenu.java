@@ -227,7 +227,7 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
     }
 
     void setupResultSlot() {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             if (!this.recipes.isEmpty() && this.isValidRecipeIndex(this.selectedRecipeIndex.get())) {
                 IEngraveResult recipeHolder = this.recipes.get(this.selectedRecipeIndex.get());
                 ItemStack itemStack = recipeHolder.getResultItem().copy();

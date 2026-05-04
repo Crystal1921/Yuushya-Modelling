@@ -5,15 +5,15 @@ import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ColorTexture implements AutoCloseable {
     @Getter
-    private static ResourceLocation HueTextureLocation;
+    private static Identifier HueTextureLocation;
     @Getter
-    private static ResourceLocation WhiteTextureLocation;
+    private static Identifier WhiteTextureLocation;
     @Getter
-    private static ResourceLocation BlackTextureLocation;
+    private static Identifier BlackTextureLocation;
 
     private final DynamicTexture HueTexture;
     private final DynamicTexture WhiteTexture;

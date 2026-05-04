@@ -12,7 +12,7 @@ import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.registries.MenuRegistry;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
@@ -45,15 +45,15 @@ public class ClientEvent {
         event.enqueueWork(() -> {
             for (String s : List.of("rot_trans_item", "pos_trans_item", "micro_pos_trans_item", "get_showblock_item")) {
                 ItemProperties.register(
-                        BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, s)),
-                        ResourceLocation.parse("direction"),
+                        BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, s)),
+                        Identifier.parse("direction"),
                         (itemStack, clientWorld, livingEntity, i) -> itemStack.getOrDefault(DataComponentRegistry.TRANS_DIRECTION.get(), 0) * 0.1F
                 );
             }
 
             ItemProperties.register(
                     ItemRegistry.GET_BLOCKSTATE_ITEM.get(),
-                    ResourceLocation.parse("direction"),
+                    Identifier.parse("direction"),
                     (itemStack, clientWorld, livingEntity, i) -> {
                         BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE, Blocks.AIR.defaultBlockState());
                         if (!blockState.equals(Blocks.AIR.defaultBlockState())) return 1;

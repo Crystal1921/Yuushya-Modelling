@@ -10,7 +10,7 @@ import net.minecraft.client.gui.font.glyphs.EmptyGlyph;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
 import org.joml.Matrix4f;
@@ -124,7 +124,7 @@ public final class FontRenderUtil {
                     ? fontset.getRandomGlyph(glyphinfo)
                     : fontset.getGlyph(codePoint);
 
-            ResourceLocation resourceLocation = ((GlyphRenderTypesExt)(Object) bakedglyph.renderTypes).yuushya_Modelling$getId();
+            Identifier Identifier = ((GlyphRenderTypesExt)(Object) bakedglyph.renderTypes).yuushya_Modelling$getId();
 
             boolean bold = style.isBold();
             float alpha = this.a;
@@ -145,7 +145,7 @@ public final class FontRenderUtil {
             if (!(bakedglyph instanceof EmptyGlyph)) {
                 float boldOffset = bold ? glyphinfo.getBoldOffset() : 0.0F;
                 float shadowOffset = this.dropShadow ? glyphinfo.getShadowOffset() : 0.0F;
-                VertexConsumer vc = this.bufferSource.getBuffer(TextShader.TEXT.apply(resourceLocation));
+                VertexConsumer vc = this.bufferSource.getBuffer(TextShader.TEXT.apply(Identifier));
                 font.renderChar(
                         bakedglyph, bold, style.isItalic(), boldOffset,
                         this.x + shadowOffset, this.y + shadowOffset,
@@ -191,8 +191,8 @@ public final class FontRenderUtil {
 
             if (this.effects != null) {
                 BakedGlyph white = font.getFontSet(Style.DEFAULT_FONT).whiteGlyph();
-                ResourceLocation resourceLocation = ((GlyphRenderTypesExt)(Object) white.renderTypes).yuushya_Modelling$getId();
-                VertexConsumer vc = this.bufferSource.getBuffer(TextShader.TEXT.apply(resourceLocation));
+                Identifier Identifier = ((GlyphRenderTypesExt)(Object) white.renderTypes).yuushya_Modelling$getId();
+                VertexConsumer vc = this.bufferSource.getBuffer(TextShader.TEXT.apply(Identifier));
                 for (BakedGlyph.Effect e : this.effects) {
                     white.renderEffect(e, this.pose, vc, this.packedLight);
                 }

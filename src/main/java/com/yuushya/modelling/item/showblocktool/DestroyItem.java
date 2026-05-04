@@ -70,7 +70,7 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
     @Override
     public InteractionResult inMainHandLeftClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
         if (blockState.getBlock() instanceof AbstractTransformBlock showBlock && level.getBlockEntity(blockPos) instanceof AbstractTransformBlockEntity showBlockEntity) {
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 ItemStack itemStack = new ItemStack(showBlock);
                 showBlockEntity.saveToItem(itemStack, level.registryAccess());
                 showBlockEntity.writeBlockState(itemStack, blockState);

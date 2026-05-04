@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.neoforged.api.distmarker.Dist;
@@ -197,7 +197,7 @@ public class StyledMultilineTextField {
         applyStyleToSelection(style, null);
     }
 
-    public void applyStyleToSelection(Style style, @Nullable ResourceLocation font) {
+    public void applyStyleToSelection(Style style, @Nullable Identifier font) {
         if (!this.hasSelection()) {
             return;
         }

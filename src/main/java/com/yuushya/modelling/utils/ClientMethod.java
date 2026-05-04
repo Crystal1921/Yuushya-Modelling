@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -96,7 +97,7 @@ public class ClientMethod {
         int b = (255 - buffer.get(2)) & 0xFF;
         int color = (r << 16) | (g << 8) | b;
 
-        PacketDistributor.sendToServer(new PickColorPacket(color));
+        ClientPacketDistributor.sendToServer(new PickColorPacket(color));
 
         setClipboard(String.format("#%06X", color));
     }

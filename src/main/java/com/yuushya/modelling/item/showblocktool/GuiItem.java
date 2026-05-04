@@ -16,7 +16,7 @@ public class GuiItem extends AbstractToolItem {
 
     @Override
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockState, Level level, BlockPos blockPos, ItemStack handItemStack) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             ClientMethod.openGuiScreen(player, blockState, level, blockPos, handItemStack);
         }
         return InteractionResult.SUCCESS;

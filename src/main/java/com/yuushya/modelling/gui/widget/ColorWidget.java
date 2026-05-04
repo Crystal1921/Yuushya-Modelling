@@ -8,7 +8,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
@@ -153,7 +153,7 @@ public class ColorWidget extends AbstractWidget {
 
     }
 
-    void innerBlit(ResourceLocation atlasLocation, PoseStack poseStack, int x1, int x2, int y1, int y2) {
+    void innerBlit(Identifier atlasLocation, PoseStack poseStack, int x1, int x2, int y1, int y2) {
         RenderSystem.setShaderTexture(0, atlasLocation);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f matrix4f = poseStack.last().pose();

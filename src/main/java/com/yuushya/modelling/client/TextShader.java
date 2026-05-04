@@ -5,16 +5,16 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.client.NeoForgeRenderTypes;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 public class TextShader {
-    public static Function<ResourceLocation, RenderType> TEXT = Util.memoize(TextShader::getText);
+    public static Function<Identifier, RenderType> TEXT = Util.memoize(TextShader::getText);
 
-    private static RenderType getText(ResourceLocation locationIn) {
+    private static RenderType getText(Identifier locationIn) {
         var rendertype$state = RenderType.CompositeState.builder()
                 .setShaderState(RenderType.RENDERTYPE_TEXT_SHADER)
                 .setTextureState(new CustomizableTextureState(locationIn, () -> NeoForgeRenderTypes.enableTextTextureLinearFiltering, () -> false))
@@ -29,7 +29,7 @@ public class TextShader {
         private final BooleanSupplier blurSupplier;
         private final BooleanSupplier mipmapSupplier;
 
-        private CustomizableTextureState(ResourceLocation resLoc, BooleanSupplier blur, BooleanSupplier mipmap) {
+        private CustomizableTextureState(Identifier resLoc, BooleanSupplier blur, BooleanSupplier mipmap) {
             super(resLoc, blur.getAsBoolean(), mipmap.getAsBoolean());
             blurSupplier = blur;
             mipmapSupplier = mipmap;

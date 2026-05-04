@@ -7,9 +7,9 @@ import com.yuushya.modelling.registries.BlockRegistry;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.resources.model.ModelIdentifier;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,18 +39,18 @@ public class YuushyaClientNeoForge {
     }
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event) {
-        ModelResourceLocation inventory = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
+        ModelIdentifier inventory = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
         event.getModels().put(inventory, new NeoShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
         for (BlockState blockState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
-            ModelResourceLocation stateResourceLocation = BlockModelShaper.stateToModelLocation(blockState);
-            event.getModels().put(stateResourceLocation, new NeoShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateResourceLocation)));
+            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
+            event.getModels().put(stateIdentifier, new NeoShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
         }
 
-        ModelResourceLocation inventory2 = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
+        ModelIdentifier inventory2 = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
         event.getModels().put(inventory2, new NeoItemBlockModel(Direction.SOUTH, event.getModels().get(inventory2)));
         for (BlockState blockState : BlockRegistry.ITEM_BLOCK.get().getStateDefinition().getPossibleStates()) {
-            ModelResourceLocation stateResourceLocation = BlockModelShaper.stateToModelLocation(blockState);
-            event.getModels().put(stateResourceLocation, new NeoItemBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateResourceLocation)));
+            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
+            event.getModels().put(stateIdentifier, new NeoItemBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
         }
     }
 

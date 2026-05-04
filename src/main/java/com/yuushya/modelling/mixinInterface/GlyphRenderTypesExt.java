@@ -1,8 +1,8 @@
 package com.yuushya.modelling.mixinInterface;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface GlyphRenderTypesExt {
-    ResourceLocation yuushya_Modelling$getId();
-    void copilot$setId(ResourceLocation id);
+    Identifier yuushya_Modelling$getId();
+    void copilot$setId(Identifier id);
 }

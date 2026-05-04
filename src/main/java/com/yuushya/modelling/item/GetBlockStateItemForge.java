@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
 public class GetBlockStateItemForge extends GetBlockStateItem {
-    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.dist == Dist.CLIENT ? new IClientItemExtensions() {
+    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.getDist() == Dist.CLIENT ? new IClientItemExtensions() {
         @Override
         public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
             return new BlockEntityWithoutLevelRenderer(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels()) {

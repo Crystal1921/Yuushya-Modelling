@@ -2,7 +2,7 @@ package com.yuushya.modelling.mixin;
 
 import com.yuushya.modelling.mixinInterface.GlyphRenderTypesExt;
 import net.minecraft.client.gui.font.GlyphRenderTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,28 +12,28 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(GlyphRenderTypes.class)
 public class GlyphRenderTypesMixin implements GlyphRenderTypesExt {
     @Unique
-    private ResourceLocation copilot$id;
+    private Identifier copilot$id;
 
     @Override
-    public ResourceLocation yuushya_Modelling$getId() {
+    public Identifier yuushya_Modelling$getId() {
         return copilot$id;
     }
 
     @Override
-    public void copilot$setId(ResourceLocation id) {
+    public void copilot$setId(Identifier id) {
         this.copilot$id = id;
     }
 
     // 对 createForIntensityTexture 注入
     @Inject(method = "createForIntensityTexture", at = @At("RETURN"))
-    private static void copilot$storeIdIntensity(ResourceLocation id, CallbackInfoReturnable<GlyphRenderTypes> cir) {
+    private static void copilot$storeIdIntensity(Identifier id, CallbackInfoReturnable<GlyphRenderTypes> cir) {
         GlyphRenderTypes grt = cir.getReturnValue();
         ((GlyphRenderTypesExt) (Object) grt).copilot$setId(id);
     }
 
     // 对 createForColorTexture 注入
     @Inject(method = "createForColorTexture", at = @At("RETURN"))
-    private static void copilot$storeIdColor(ResourceLocation id, CallbackInfoReturnable<GlyphRenderTypes> cir) {
+    private static void copilot$storeIdColor(Identifier id, CallbackInfoReturnable<GlyphRenderTypes> cir) {
         GlyphRenderTypes grt = cir.getReturnValue();
         ((GlyphRenderTypesExt) (Object) grt).copilot$setId(id);
     }

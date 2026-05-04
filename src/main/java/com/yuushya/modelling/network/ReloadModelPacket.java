@@ -10,13 +10,13 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 public record ReloadModelPacket(ReloadModelCommand.ReloadType reloadType) implements CustomPacketPayload {
-    public static final ResourceLocation RELOAD_MODEL_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "reload_model_packet");
+    public static final Identifier RELOAD_MODEL_PACKET_ID = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "reload_model_packet");
     public static final Type<ReloadModelPacket> TYPE = new Type<>(RELOAD_MODEL_PACKET_ID);
 
     public static final StreamCodec<FriendlyByteBuf, ReloadModelPacket> STREAM_CODEC = StreamCodec.composite(

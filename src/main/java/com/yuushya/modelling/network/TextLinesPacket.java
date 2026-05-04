@@ -9,7 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -24,7 +24,7 @@ public record TextLinesPacket(
         int slot,
         List<String> textLines
 ) implements CustomPacketPayload {
-    public static final ResourceLocation TEXT_LINES_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "text_lines_packet");
+    public static final Identifier TEXT_LINES_PACKET_ID = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "text_lines_packet");
     public static final Type<TextLinesPacket> TYPE = new Type<>(TEXT_LINES_PACKET_ID);
     public static final StreamCodec<FriendlyByteBuf, TextLinesPacket> STREAM_CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,

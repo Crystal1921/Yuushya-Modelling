@@ -3,11 +3,12 @@ package com.yuushya.modelling.blockentity;
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.block.AbstractYuushyaBlock;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
+import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
@@ -68,8 +69,7 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
         if (blockPlaceContext.getPlayer() != null && 
-            blockPlaceContext.getPlayer().isHolding(BuiltInRegistries.ITEM.get(
-                ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "rot_trans_item")))) {
+            blockPlaceContext.getPlayer().isHolding(ItemRegistry.ROT_TRANS_ITEM.get())) {
             BlockState blockState = this.defaultBlockState();
             blockState.setValue(ENABLE_AO, DEFAULT_ENABLE_AO);
             blockState.setValue(FULL_BLOCK, DEFAULT_FULL_BLOCK);

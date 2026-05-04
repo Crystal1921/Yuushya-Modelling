@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -101,7 +101,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public @NotNull Collection<ResourceLocation> getDependencies() {
+    public @NotNull Collection<Identifier> getDependencies() {
         return Collections.emptyList();
     }
 
@@ -112,7 +112,7 @@ public class ItemBlockModel implements BakedModel, UnbakedModel {
     }
 
     @Override
-    public void resolveParents(Function<ResourceLocation, UnbakedModel> function) {
+    public void resolveParents(Function<Identifier, UnbakedModel> function) {
 
     }
 }

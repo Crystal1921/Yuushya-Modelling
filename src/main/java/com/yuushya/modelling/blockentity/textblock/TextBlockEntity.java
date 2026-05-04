@@ -86,7 +86,7 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void setRemoved() {
-        if (this.level != null && this.level.isClientSide) {
+        if (this.level != null && this.level.isClientSide()) {
             if (!this.isEmpty()) {
                 String res = ShareUtils.transferText(this.getTransformData());
                 ShareUtils.SharedTextInformation information = ShareUtils.fromText(res);

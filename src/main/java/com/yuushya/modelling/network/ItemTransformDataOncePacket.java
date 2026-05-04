@@ -9,7 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -23,7 +23,7 @@ public record ItemTransformDataOncePacket(
         int slot,
         double number
 ) implements CustomPacketPayload {
-    public static final ResourceLocation ITEM_TRANSFORM_DATA_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "item_transform_data_packet");
+    public static final Identifier ITEM_TRANSFORM_DATA_PACKET_ID = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "item_transform_data_packet");
     public static final Type<ItemTransformDataOncePacket> TYPE = new Type<>(ITEM_TRANSFORM_DATA_PACKET_ID);
     public static final StreamCodec<FriendlyByteBuf, ItemTransformDataOncePacket> STREAM_CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC,

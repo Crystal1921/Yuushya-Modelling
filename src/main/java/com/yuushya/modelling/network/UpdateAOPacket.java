@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -31,7 +31,7 @@ public record UpdateAOPacket(boolean enableAO, boolean fullBlock, boolean enable
             UpdateAOPacket::blockPos,
             UpdateAOPacket::new
     );
-    public static final Type<UpdateAOPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "diable_ao_packet"));
+    public static final Type<UpdateAOPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "diable_ao_packet"));
 
     public static void handler(UpdateAOPacket packet, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {

@@ -1,7 +1,7 @@
 package com.yuushya.modelling.block.blockstate;
 
 import com.yuushya.modelling.blockentity.BlockShape;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;

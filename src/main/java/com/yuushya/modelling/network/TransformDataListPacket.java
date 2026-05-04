@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -28,7 +28,7 @@ import java.util.Set;
 public record TransformDataListPacket(
         CompoundTag tag
 ) implements CustomPacketPayload {
-    public static final ResourceLocation TRANSFORM_DATA_LIST_PACKET_ID = ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "transform_data_list_packet");
+    public static final Identifier TRANSFORM_DATA_LIST_PACKET_ID = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID_USED, "transform_data_list_packet");
     public static final Type<TransformDataListPacket> TYPE = new Type<>(TRANSFORM_DATA_LIST_PACKET_ID);
     public static final StreamCodec<FriendlyByteBuf, TransformDataListPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.COMPOUND_TAG,
@@ -76,7 +76,7 @@ public record TransformDataListPacket(
                         case ITEM -> "showblock";
                         case TEXT -> "textblock";
                     };
-                    ItemStack itemStack = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, itemType)).getDefaultInstance();
+                    ItemStack itemStack = BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, itemType)).getDefaultInstance();
                     itemStack.set(DataComponents.ITEM_NAME, Component.literal(name));
                     itemStack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(packet.tag));
                     HandlingCache.put(hash, itemStack);

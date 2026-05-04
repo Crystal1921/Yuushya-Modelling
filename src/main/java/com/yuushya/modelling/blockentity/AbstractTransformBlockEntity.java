@@ -103,7 +103,7 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
     // Block entity synchronization
     public void saveChanged() {
         this.setChanged();
-        if (this.getLevel() != null && !this.getLevel().isClientSide) {
+        if (this.getLevel() != null && !this.getLevel().isClientSide()) {
             this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         }
     }
@@ -142,7 +142,7 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
         }
 
         // Client chunk update
-        if (this.getLevel() != null && this.getLevel().isClientSide) {
+        if (this.getLevel() != null && this.getLevel().isClientSide()) {
             this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         }
     }

@@ -10,38 +10,39 @@ import com.yuushya.modelling.registries.BlockRegistry;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.special.NoDataSpecialModelRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.client.resources.model.SimpleBakedModel;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Brightness;
+import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Vector3fc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.rotate;
 import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.scale;
 import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
 
-public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
-    public static final ResourceLocation BLOCK_ATLAS = ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png");
-    protected final BakedModel backup = new SimpleGeneratedModel(getTexture(ResourceLocation.fromNamespaceAndPath(Yuushya.MOD_ID, "item/abandon_textblock")));;
+public class TextBlockSpecialRender implements NoDataSpecialModelRenderer {
+    protected final Model<Unit> backup = new SimpleGeneratedModel(getTexture(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "item/abandon_textblock")));;
     protected final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
 
     public TextBlockSpecialRender(BlockEntityRenderDispatcher blockEntityRenderDispatcher, EntityModelSet entityModelSet) {
@@ -55,7 +56,7 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
         CustomData data = itemStack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
         Minecraft mc = Minecraft.getInstance();
         ClientLevel clientLevel = mc.level;
-        int light = LightTexture.FULL_BRIGHT;
+        int light = Brightness.FULL_BRIGHT;
         Font font = mc.font;
         if (clientLevel == null) {
             return;
@@ -115,7 +116,17 @@ public class TextBlockSpecialRender extends BlockEntityWithoutLevelRenderer {
         }
     }
 
-    public static TextureAtlasSprite getTexture(ResourceLocation resource) {
-        return Minecraft.getInstance().getTextureAtlas(BLOCK_ATLAS).apply(resource);
+    public static TextureAtlasSprite getTexture(Identifier resource) {
+        return Minecraft.getInstance().getAtlasManager().get(TextureAtlas.LOCATION_BLOCKS).apply(resource);
+    }
+
+    @Override
+    public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int i1, boolean b, int i2) {
+
+    }
+
+    @Override
+    public void getExtents(Consumer<Vector3fc> consumer) {
+
     }
 }

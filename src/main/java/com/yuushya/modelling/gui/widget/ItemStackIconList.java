@@ -133,7 +133,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
             this.animStartMs = System.currentTimeMillis();
             this.animating = true;
 
-//            if (!level.isClientSide){
+//            if (!level.isClientSide()){
 //                level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS,1f,0.2f);
 //            }
         }

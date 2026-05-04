@@ -86,7 +86,7 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     public void setRemoved() {
-        if (this.level != null && this.level.isClientSide) {
+        if (this.level != null && this.level.isClientSide()) {
             CustomRenderInstance.getINSTANCE().dirty = true;
             if (!this.isEmpty()) {
                 String res = ShareUtils.transferItems(this.getTransformData());

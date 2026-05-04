@@ -32,7 +32,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.NotNull;
 
@@ -528,7 +528,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                                     rainbowColorButton.visible = !bl;
                                 }
                             }
-                            Map<ResourceLocation, FontSet> fontSets = Minecraft.getInstance().fontManager.fontSets;
+                            Map<Identifier, FontSet> fontSets = Minecraft.getInstance().fontManager.fontSets;
                             this.fontList.updateRenderList(new ArrayList<>(fontSets.keySet()));
                         });
 

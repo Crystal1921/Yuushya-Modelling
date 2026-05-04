@@ -12,7 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
@@ -165,7 +165,7 @@ public class YuushyaUtils {
         if (!tag.contains("Name", 8)) {
             return Blocks.AIR.defaultBlockState();
         } else {
-            Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(tag.getString("Name")));
+            Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(tag.getString("Name")));
             BlockState blockState = block.defaultBlockState();
             if (tag.contains("Properties", 10)) {
                 CompoundTag compoundTag = tag.getCompound("Properties");
