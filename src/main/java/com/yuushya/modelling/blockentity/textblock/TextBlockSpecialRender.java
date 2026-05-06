@@ -2,7 +2,6 @@ package com.yuushya.modelling.blockentity.textblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.transformData.ITransformTextDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.client.SimpleGeneratedModel;
@@ -10,11 +9,11 @@ import com.yuushya.modelling.registries.BlockRegistry;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.special.NoDataSpecialModelRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -25,7 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Brightness;
-import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -42,11 +40,10 @@ import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.
 import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
 
 public class TextBlockSpecialRender implements NoDataSpecialModelRenderer {
-    protected final Model<Unit> backup = new SimpleGeneratedModel(getTexture(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "item/abandon_textblock")));;
+    protected final BlockStateModel backup = SimpleGeneratedModel.simpleModel();
     protected final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
 
     public TextBlockSpecialRender(BlockEntityRenderDispatcher blockEntityRenderDispatcher, EntityModelSet entityModelSet) {
-        super(blockEntityRenderDispatcher, entityModelSet);
         this.blockEntityRenderDispatcher = blockEntityRenderDispatcher;
     }
 

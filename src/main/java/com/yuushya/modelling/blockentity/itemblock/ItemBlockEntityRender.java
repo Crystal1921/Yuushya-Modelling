@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
+import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRenderState;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
@@ -65,7 +66,7 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<It
     }
 
     @Override
-    protected void renderSpecific(ItemBlockEntity blockEntity, float tickDelta, PoseStack matrixStack,
+    protected void renderSpecific(AbstractTransformBlockEntityRenderState state, float tickDelta, PoseStack matrixStack,
                                   MultiBufferSource multiBufferSource, int light, int overlay) {
         TransformItemData transformData = blockEntity.getTransFormDataNow();
 

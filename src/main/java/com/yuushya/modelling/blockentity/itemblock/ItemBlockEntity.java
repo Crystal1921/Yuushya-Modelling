@@ -92,7 +92,7 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
                 String res = ShareUtils.transferItems(this.getTransformData());
                 ShareUtils.ShareItemInformation information = ShareUtils.fromItems(res);
                 if (this.level != null) {
-                    String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
+                    String name = this.level.dimension().identifier() + "/" + this.getBlockPos().toShortString();
                     HISTORY_ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
                 }
             }

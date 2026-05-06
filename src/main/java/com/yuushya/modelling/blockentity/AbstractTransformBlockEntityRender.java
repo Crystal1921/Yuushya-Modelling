@@ -1,25 +1,32 @@
 package com.yuushya.modelling.blockentity;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
+import net.minecraft.gizmos.GizmoStyle;
+import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
+import org.jspecify.annotations.Nullable;
 
 import static com.yuushya.modelling.utils.YuushyaUtils.translate;
 import static com.yuushya.modelling.utils.YuushyaUtils.translateAfterScale;
@@ -29,28 +36,28 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
  * Abstract base class for transform block entity renderers that provides common functionality
  * for rendering frames, axes, and text.
  */
-public abstract class AbstractTransformBlockEntityRender<T extends AbstractTransformBlockEntity> implements BlockEntityRenderer<T> {
+public abstract class AbstractTransformBlockEntityRender<T extends AbstractTransformBlockEntity> implements BlockEntityRenderer<T, @NotNull AbstractTransformBlockEntityRenderState> {
 
     public static final Vector3d MIDDLE = new Vector3d(8, 8, 8);
     public static final Vector3d _MIDDLE = new Vector3d(-8, -8, -8);
-    
+
     protected final Font font;
     protected final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
 
     public AbstractTransformBlockEntityRender(BlockEntityRendererProvider.Context context) {
-        this.font = context.getFont();
-        this.blockEntityRenderDispatcher = context.getBlockEntityRenderDispatcher();
+        this.font = context.font();
+        this.blockEntityRenderDispatcher = context.blockEntityRenderDispatcher();
     }
 
     /**
      * Renders text with camera-facing orientation
      */
-    public static void renderText(Font font, Component component, float high, PoseStack matrixStack, 
-                                MultiBufferSource buffer, int packedLight, Camera camera) {
+    public static void renderText(Font font, Component component, float high, PoseStack matrixStack,
+                                  MultiBufferSource buffer, int packedLight, Camera camera) {
         matrixStack.pushPose();
         {
-            Quaternionf quaternion = new Quaternionf().rotationYXZ(-0.017453292F * cameraYRot(camera), 
-                                                                   0.017453292F * cameraXRot(camera), 0.0F);
+            Quaternionf quaternion = new Quaternionf().rotationYXZ(-0.017453292F * cameraYRot(camera),
+                    0.017453292F * cameraXRot(camera), 0.0F);
             matrixStack.mulPose(quaternion);
             matrixStack.translate(2.0f, 2f + high, 1f);
             matrixStack.scale(-0.025f, -0.025f, 0.025f);
@@ -63,62 +70,75 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
     }
 
     private static float cameraYRot(Camera camera) {
-        return camera.getYRot();
+        return camera.yRot();
     }
 
     private static float cameraXRot(Camera camera) {
-        return camera.getXRot();
+        return camera.xRot();
     }
 
-    /**
-     * Renders the frame outline around the block
-     */
-    protected void renderFrame(T blockEntity, PoseStack matrixStack, MultiBufferSource multiBufferSource) {
-        VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
-        LevelRenderer.renderLineBox(matrixStack, vertexConsumer, -0.01, -0.01, -0.01, 1.01, 1.01, 1.01, 
-                                  1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F);
-        blockEntity.consumeShowFrame();
+    @Override
+    public void extractRenderState(T blockEntity, @NotNull AbstractTransformBlockEntityRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
+        BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
+        if (blockEntity.showFrame()) {
+            blockEntity.consumeShowFrame();
+        }
+        if (state.isShowAxis) {
+            blockEntity.consumeShow();
+            blockEntity.consumeShowAxis();
+        }
+        state.isShowFrame = blockEntity.showFrame();
+        state.isShowAxis = blockEntity.showRotAxis() || blockEntity.showPosAxis() || blockEntity.showText();
+        state.showAxis = blockEntity.getShowAxis();
+        state.facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
+    }
+
+    @Override
+    public void submit(@NotNull AbstractTransformBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        if (state.isShowFrame) {
+            Gizmos.cuboid(
+                    new AABB(0, 0, 0, 1, 1, 1).move(state.blockPos),
+                    GizmoStyle.stroke(ARGB.colorFromFloat(1.0F, 0.9F, 0.9F, 0.9F)),
+                    true
+            );
+        }
+
+        if (state.isShowAxis) {
+            renderSpecific(state, poseStack, submitNodeCollector, cameraRenderState);
+        }
     }
 
     /**
      * Renders coordinate axes for rotation and position using the common interface
      */
-    protected void renderAxes(T blockEntity, PoseStack matrixStack, MultiBufferSource multiBufferSource, 
-                            ITransformDataProvider transformData) {
-        renderAxes(blockEntity, matrixStack, multiBufferSource, 
-                  transformData.getPosition(), transformData.getRotation(), transformData.getScale());
+    protected void renderAxes(AbstractTransformBlockEntityRenderState state, PoseStack matrixStack, MultiBufferSource multiBufferSource,
+                              ITransformDataProvider transformData) {
+        renderAxes(state, matrixStack, multiBufferSource,
+                transformData.getPosition(), transformData.getRotation(), transformData.getScale());
     }
 
     /**
      * Renders coordinate axes for rotation and position
      */
-    protected void renderAxes(T blockEntity, PoseStack matrixStack, MultiBufferSource multiBufferSource, 
-                            org.joml.Vector3d pos, org.joml.Vector3f rot, org.joml.Vector3f scales) {
+    protected void renderAxes(AbstractTransformBlockEntityRenderState state, PoseStack matrixStack, MultiBufferSource multiBufferSource,
+                              org.joml.Vector3d pos, org.joml.Vector3f rot, org.joml.Vector3f scales) {
         matrixStack.pushPose();
         {
-            Direction facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
+            Direction facing = state.facing;
             float f = facing.toYRot();
             matrixStack.translate(0.5f, 0.5f, 0.5f);
             matrixStack.mulPose(Axis.YP.rotationDegrees(-f));
             matrixStack.translate(-0.5f, -0.5f, -0.5f);
-            
-            Tesselator tesselator = Tesselator.getInstance();
-            RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-            RenderSystem.depthMask(true);
-            RenderSystem.disableCull();
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.lineWidth(8.0f);
-            
-            BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+
+            VertexConsumer bufferBuilder = multiBufferSource.getBuffer(RenderTypes.lines());
             translateAfterScale(matrixStack, pos, scales);
             translate(matrixStack, MIDDLE);
-            
-            boolean showRotAxis = blockEntity.showRotAxis();
+
+            boolean showRotAxis = state.isShowAxis;
             int redX = 0x64E65A46, greenY = 0x64A0DC5A, blueZ = 0x645AB4DC;
-            
-            if (blockEntity.getShowAxis() != null) {
-                switch (blockEntity.getShowAxis()) {
+
+            if (showRotAxis) {
+                switch (state.showAxis) {
                     case X:
                         redX = 0xFFE65A46;
                         break;
@@ -130,49 +150,29 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
                         break;
                 }
             }
-            
+
             // Render Z axis (blue)
             if (showRotAxis) matrixStack.mulPose(Axis.ZP.rotationDegrees(rot.z()));
             bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, 0.0f, -1.5f).setColor(blueZ).setNormal(0f, 0f, 1.5f);
             bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, 0f, 1.5f).setColor(blueZ).setNormal(0f, 0f, 1.5f);
-            
+
             // Render Y axis (green)
             if (showRotAxis) matrixStack.mulPose(Axis.YP.rotationDegrees(rot.y()));
             bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, -1.5f, 0.0f).setColor(greenY).setNormal(0f, 1.5f, 0f);
             bufferBuilder.addVertex(matrixStack.last().pose(), 0.0f, 1.5f, 0.0f).setColor(greenY).setNormal(0f, 1.5f, 0f);
-            
+
             // Render X axis (red)
             if (showRotAxis) matrixStack.mulPose(Axis.XP.rotationDegrees(rot.x()));
             bufferBuilder.addVertex(matrixStack.last().pose(), -1.5f, 0.0f, 0.0f).setColor(redX).setNormal(1.5f, 0f, 0f);
             bufferBuilder.addVertex(matrixStack.last().pose(), 1.5f, 0f, 0.0f).setColor(redX).setNormal(1.5f, 0f, 0f);
-            
-            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-            RenderSystem.depthMask(true);
-            RenderSystem.disableBlend();
-            RenderSystem.enableCull();
+
+            //TODO : 这个轴不知道亮不亮
         }
         matrixStack.popPose();
-    }
-
-    @Override
-    public void render(T blockEntity, float tickDelta, @NotNull PoseStack matrixStack, 
-                      @NotNull MultiBufferSource multiBufferSource, int light, int overlay) {
-        // Render frame if requested
-        if (blockEntity.showFrame()) {
-            renderFrame(blockEntity, matrixStack, multiBufferSource);
-        }
-        
-        // Handle axis and text rendering (implemented by subclasses)
-        if (blockEntity.showRotAxis() || blockEntity.showPosAxis() || blockEntity.showText()) {
-            renderSpecific(blockEntity, tickDelta, matrixStack, multiBufferSource, light, overlay);
-            blockEntity.consumeShow();
-            blockEntity.consumeShowAxis();
-        }
     }
 
     /**
      * Abstract method for specific rendering implementation by subclasses
      */
-    protected abstract void renderSpecific(T blockEntity, float tickDelta, PoseStack matrixStack, 
-                                         MultiBufferSource multiBufferSource, int light, int overlay);
+    protected abstract void renderSpecific(@NotNull AbstractTransformBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState);
 }
