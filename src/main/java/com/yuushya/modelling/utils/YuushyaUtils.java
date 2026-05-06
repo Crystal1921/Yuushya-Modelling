@@ -158,14 +158,14 @@ public class YuushyaUtils {
     public static CompoundTag itemStackTag(ItemStack stack, HolderLookup.Provider registries) {
         if (stack.isEmpty()) return new CompoundTag();
         CompoundTag compoundTag = new CompoundTag();
-        return (CompoundTag) stack.save(registries, compoundTag);
+        return (CompoundTag) DeprecatedMethod.save(registries, compoundTag, stack);
     }
 
     public static BlockState readBlockState(CompoundTag tag) {
         if (!tag.contains("Name", 8)) {
             return Blocks.AIR.defaultBlockState();
         } else {
-            Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(tag.getString("Name")));
+            Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(tag.getString("Name").orElse("")));
             BlockState blockState = block.defaultBlockState();
             if (tag.contains("Properties", 10)) {
                 CompoundTag compoundTag = tag.getCompound("Properties");

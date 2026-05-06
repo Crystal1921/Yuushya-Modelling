@@ -1,10 +1,11 @@
 package com.yuushya.modelling.blockentity.transformData;
 
+import com.yuushya.modelling.utils.DeprecatedMethod;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.joml.Vector3d;
@@ -23,7 +24,7 @@ public class TransformItemData implements ITransformDataProvider {
         this.pos = new Vector3d(0, 0, 0);
         this.rot = new Vector3f(0, 0, 0);
         this.scales = new Vector3f(1, 1, 1);
-        this.color = FastColor.ARGB32.color(255, 255, 255, 255);
+        this.color = ARGB.color(255, 255, 255, 255);
         this.itemStack = Items.AIR.getDefaultInstance();
         this.isShown = false;
     }
@@ -64,16 +65,16 @@ public class TransformItemData implements ITransformDataProvider {
 
     //readNbt from compoundTag
     public void load(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        ListTag listTagPos = compoundTag.getList("ShowPos", 6);//6 means Double
-        ListTag listTagRot = compoundTag.getList("ShowRotation", 6);//5 means Float
-        ListTag listTagScales = compoundTag.getList("ShowScales", 6);//5 means Float
-        this.pos.set(listTagPos.getDouble(0), listTagPos.getDouble(1), listTagPos.getDouble(2));
-        this.rot.set(listTagRot.getDouble(0), listTagRot.getDouble(1), listTagRot.getDouble(2));
-        this.scales.set(listTagScales.getDouble(0), listTagScales.getDouble(1), listTagScales.getDouble(2));
-        this.itemStack = ItemStack.parseOptional(registries, compoundTag.getCompound("ItemStack"));
-        this.color = (compoundTag.getInt("Color"));
-        this.isShown = compoundTag.getBoolean("isShown");
-        this.enableBlock = compoundTag.getBoolean("enableBlock");
+        ListTag listTagPos = compoundTag.getList("ShowPos").orElse(new ListTag());
+        ListTag listTagRot = compoundTag.getList("ShowRotation").orElse(new ListTag());
+        ListTag listTagScales = compoundTag.getList("ShowScales").orElse(new ListTag());
+        this.pos.set(listTagPos.getDouble(0).orElse(0D), listTagPos.getDouble(1).orElse(0D), listTagPos.getDouble(2).orElse(0D));
+        this.rot.set(listTagRot.getDouble(0).orElse(0D), listTagRot.getDouble(1).orElse(0D), listTagRot.getDouble(2).orElse(0D));
+        this.scales.set(listTagScales.getDouble(0).orElse(0D), listTagScales.getDouble(1).orElse(0D), listTagScales.getDouble(2).orElse(0D));
+        this.itemStack = DeprecatedMethod.parseOptional(registries, compoundTag.getCompound("ItemStack").orElse(new CompoundTag()));
+        this.color = (compoundTag.getInt("Color").orElse(0));
+        this.isShown = compoundTag.getBoolean("isShown").orElse(false);
+        this.enableBlock = compoundTag.getBoolean("enableBlock").orElse(false);
     }
 
     //writeNbt to compoundTag

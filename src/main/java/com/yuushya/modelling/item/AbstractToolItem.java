@@ -5,7 +5,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
@@ -24,26 +24,29 @@ public class AbstractToolItem extends AbstractYuushyaItem{
     }
 
     @Override
-    public boolean canAttackBlock(@NotNull BlockState blockState, @NotNull Level level, @NotNull BlockPos blockPos, @NotNull Player player) {
-        InteractionResult result = inMainHandLeftClickOnBlock(player, blockState, level, blockPos, player.getItemInHand(InteractionHand.MAIN_HAND));
-        if (!level.isClientSide()&&result.consumesAction()) {
-            level.playSound(null, blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 1f, 0.2f);
+    public boolean canDestroyBlock(ItemStack itemStack, BlockState blockState, Level level, BlockPos blockPos, LivingEntity livingEntity) {
+        if (livingEntity instanceof Player player) {
+            InteractionResult result = inMainHandLeftClickOnBlock(player, blockState, level, blockPos, player.getItemInHand(InteractionHand.MAIN_HAND));
+            if (!level.isClientSide()&&result.consumesAction()) {
+                level.playSound(null, blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 1f, 0.2f);
+            }
+            return true;
         }
         return false;
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
+    public InteractionResult use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
         BlockPos blockPos = player.blockPosition();
         ItemStack handItemStack = player.getItemInHand(hand);
 
-        InteractionResultHolder<ItemStack> resultHolder;
+        InteractionResult resultHolder;
         if (hand == InteractionHand.OFF_HAND)
-            resultHolder = new  InteractionResultHolder<>(inOffHandRightClickInAir(player,level.getBlockState(blockPos),level,blockPos,handItemStack),handItemStack);
+            resultHolder = inOffHandRightClickInAir(player,level.getBlockState(blockPos),level,blockPos,handItemStack);
         else
-            resultHolder = new InteractionResultHolder<>(inMainHandRightClickInAir(player,level.getBlockState(blockPos),level,blockPos,handItemStack),handItemStack);
+            resultHolder = inMainHandRightClickInAir(player,level.getBlockState(blockPos),level,blockPos,handItemStack);
 
-        if (!level.isClientSide() && resultHolder.getResult().consumesAction()){
+        if (!level.isClientSide() && resultHolder.consumesAction()){
             level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS,1f,0.2f);
         }
         return resultHolder;
