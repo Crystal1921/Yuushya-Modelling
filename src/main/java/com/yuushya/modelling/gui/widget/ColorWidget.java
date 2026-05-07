@@ -3,13 +3,11 @@ package com.yuushya.modelling.gui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 

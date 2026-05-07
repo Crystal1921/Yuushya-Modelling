@@ -3,15 +3,17 @@ package com.yuushya.modelling.blockentity.textblock;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
+import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRenderState;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.Level;
@@ -20,13 +22,10 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
-
-public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<TextBlockEntity> {
+public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@NotNull TextBlockEntity> {
     private final java.util.LinkedHashMap<String, MutableComponent> componentCacheMap =
             new java.util.LinkedHashMap<>(100, 0.75f, true) {
                 @Override
@@ -38,6 +37,29 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
 
     public TextBlockEntityRender(BlockEntityRendererProvider.Context context) {
         super(context);
+    }
+
+    public static void scale(PoseStack arg, Vector3f scales) {
+        if (scales.x() != 1 || scales.y() != 1 || scales.z() != 1) {
+            arg.scale(scales.x(), scales.y(), scales.z());
+        }
+    }
+
+    public static void rotate(PoseStack arg, Vector3f rot) {
+        float roll = rot.z(), yaw = rot.y(), pitch = rot.x();
+        if (roll != 0.0F || yaw != 0.0F || pitch != 0.0F) {
+            if (roll != 0.0F)
+                arg.mulPose(Axis.ZP.rotationDegrees(roll));
+            if (yaw != 0.0F)
+                arg.mulPose(Axis.YP.rotationDegrees(yaw));
+            if (pitch != 0.0F)
+                arg.mulPose(Axis.XP.rotationDegrees(pitch));
+        }
+    }
+
+    @Override
+    protected void renderSpecific(@NotNull AbstractTransformBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+
     }
 
     @Override
@@ -157,22 +179,9 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<Te
         matrixStack.popPose();
     }
 
-    public static void scale(PoseStack arg, Vector3f scales) {
-        if (scales.x() != 1 || scales.y() != 1 || scales.z() != 1) {
-            arg.scale(scales.x(), scales.y(), scales.z());
-        }
-    }
-
-    public static void rotate(PoseStack arg, Vector3f rot) {
-        float roll = rot.z(), yaw = rot.y(), pitch = rot.x();
-        if (roll != 0.0F || yaw != 0.0F || pitch != 0.0F) {
-            if (roll != 0.0F)
-                arg.mulPose(Axis.ZP.rotationDegrees(roll));
-            if (yaw != 0.0F)
-                arg.mulPose(Axis.YP.rotationDegrees(yaw));
-            if (pitch != 0.0F)
-                arg.mulPose(Axis.XP.rotationDegrees(pitch));
-        }
+    @Override
+    public @NotNull AbstractTransformBlockEntityRenderState createRenderState() {
+        return null;
     }
 
     @Override

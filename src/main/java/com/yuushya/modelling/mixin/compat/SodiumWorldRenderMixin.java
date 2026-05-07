@@ -1,17 +1,7 @@
 package com.yuushya.modelling.mixin.compat;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
-import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(SodiumWorldRenderer.class)
 public class SodiumWorldRenderMixin {

@@ -7,12 +7,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.client.extensions.IBlockEntityRendererExtension;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
@@ -20,28 +19,12 @@ import java.util.Queue;
  * @author ZhuRuoLing
  */
 public class CacheableBERenderingPipeline {
-    /**
-     * 最大缓存区域数量（区块数）
-     * 假设渲染距离为12格区块，玩家周围约为 12*12 = 144个区块
-     * 限制为256个以提供足够的缓冲
-     */
-    private static final int MAX_CACHED_REGIONS = 256;
-
     @Nullable
     private static CacheableBERenderingPipeline instance;
     private final ClientLevel level;
     private final Queue<Runnable> pendingCompiles = new ArrayDeque<>();
     private final Queue<Runnable> pendingUploads = new ArrayDeque<>();
-    private final Map<ChunkPos, CachedRegion> regions = new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<ChunkPos, CachedRegion> eldest) {
-            boolean shouldRemove = size() > MAX_CACHED_REGIONS;
-            if (shouldRemove) {
-                eldest.getValue().releaseBuffers();
-            }
-            return shouldRemove;
-        }
-    };
+    private final Map<ChunkPos, CachedRegion> regions = new HashMap<>();
     private boolean valid = true;
 
     public CachedRegion getRenderRegion(ChunkPos chunkPos) {
@@ -86,10 +69,10 @@ public class CacheableBERenderingPipeline {
      */
     public void blockRemoved(BlockEntity be) {
         IBlockEntityRendererExtension<?> renderer = Minecraft.getInstance()
-            .getBlockEntityRenderDispatcher()
-            .getRenderer(be);
+                .getBlockEntityRenderDispatcher()
+                .getRenderer(be);
         if (renderer == null) return;
-        ChunkPos chunkPos = new ChunkPos(be.getBlockPos());
+        ChunkPos chunkPos = ChunkPos.containing(be.getBlockPos());
         getRenderRegion(chunkPos).blockRemoved(be);
     }
 
@@ -103,11 +86,11 @@ public class CacheableBERenderingPipeline {
      * @param be The updated {@link BlockEntity}
      */
     public void update(BlockEntity be) {
-        BlockEntityRenderer<?> renderer = Minecraft.getInstance()
-            .getBlockEntityRenderDispatcher()
-            .getRenderer(be);
+        BlockEntityRenderer<?, ?> renderer = Minecraft.getInstance()
+                .getBlockEntityRenderDispatcher()
+                .getRenderer(be);
         if (renderer == null) return;
-        ChunkPos chunkPos = new ChunkPos(be.getBlockPos());
+        ChunkPos chunkPos = ChunkPos.containing(be.getBlockPos());
         getRenderRegion(chunkPos).update(be);
     }
 
@@ -127,8 +110,8 @@ public class CacheableBERenderingPipeline {
         valid = false;
     }
 
-    public void render(Matrix4f frustumMatrix, Matrix4f projectionMatrix) {
-        regions.values().forEach(it -> it.render(frustumMatrix, projectionMatrix));
+    public void render() {
+        regions.values().forEach(CachedRegion::render);
     }
 
     /**
@@ -143,6 +126,6 @@ public class CacheableBERenderingPipeline {
     }
 
     public void forcedUpdate(BlockPos pos) {
-        getRenderRegion(new ChunkPos(pos)).forcedUpdate();
+        getRenderRegion(ChunkPos.containing(pos)).forcedUpdate();
     }
 }

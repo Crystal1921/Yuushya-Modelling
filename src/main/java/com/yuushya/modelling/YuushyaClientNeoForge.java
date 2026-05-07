@@ -64,6 +64,7 @@ public class YuushyaClientNeoForge {
      * 前24位为原方块的blockState，后8位为原方块的tint（若其为正）
      */
     public void handleBlockColor(RegisterColorHandlersEvent.BlockTintSources event) {
+        //TODO 这里不知道新版tintColor是怎么实现的，先注释掉了
 //        event.register(
 //                (state, view, pos, tintIndex) -> {
 //                    if (tintIndex > -1) {
@@ -81,6 +82,7 @@ public class YuushyaClientNeoForge {
     }
 
     public void handleItemColor(RegisterColorHandlersEvent.ItemTintSources event) {
+        //TODO 这里不知道新版tintColor是怎么实现的，先注释掉了
 //        event.register(
 //                (itemStack, i) -> {
 //                    BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());

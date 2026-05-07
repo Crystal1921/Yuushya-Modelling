@@ -1,21 +1,23 @@
 package com.yuushya.modelling.client.anvilcraft.rendering;
 
+import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import lombok.Getter;
-import net.minecraft.MethodsReturnNonnullByDefault;
+import com.mojang.logging.annotations.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import static net.minecraft.client.renderer.RenderStateShard.*;
 
 /**
  * @author ZhuRuoLing
@@ -23,63 +25,28 @@ import static net.minecraft.client.renderer.RenderStateShard.*;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource implements AutoCloseable {
-    private final Map<RenderType, ByteBufferBuilder> byteBuffers = new HashMap<>();
-    private final Map<RenderType, BufferBuilder> bufferBuilders = new HashMap<>();
-    @Getter
-    private final Reference2IntMap<RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
-    @Getter
-    private final Map<RenderType, MeshData.SortState> meshSorts = new HashMap<>();
-    private final Map<RenderType, RenderType> cachedRenderTypeConvertions = new HashMap<>();
+    private final Map<net.minecraft.client.renderer.rendertype.RenderType, ByteBufferBuilder> byteBuffers = new HashMap<>();
+    private final Map<net.minecraft.client.renderer.rendertype.RenderType, BufferBuilder> bufferBuilders = new HashMap<>();
+    private final Reference2IntMap<net.minecraft.client.renderer.rendertype.RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
+    private final Map<net.minecraft.client.renderer.rendertype.RenderType, MeshData.SortState> meshSorts = new HashMap<>();
 
     public FullyBufferedBufferSource() {
         super(null, null);
     }
 
-    private ByteBufferBuilder getByteBuffer(RenderType renderType) {
+    private ByteBufferBuilder getByteBuffer(net.minecraft.client.renderer.rendertype.RenderType renderType) {
         return byteBuffers.computeIfAbsent(renderType, it -> new ByteBufferBuilder(786432));
     }
 
     @Override
-    public VertexConsumer getBuffer(RenderType renderType) {
+    public VertexConsumer getBuffer(net.minecraft.client.renderer.rendertype.RenderType renderType) {
         return bufferBuilders.computeIfAbsent(
-                forceUseBlockRenderTypes(renderType),
+                renderType,
                 it -> new BufferBuilder(
-                        getByteBuffer(forceUseBlockRenderTypes(renderType)),
-                        it.mode,
-                        it.format
+                        getByteBuffer(renderType),
+                        it.mode(),
+                        it.format()
                 )
-        );
-    }
-
-    private RenderType forceUseBlockRenderTypes(RenderType renderType) {
-        if (renderType.format == DefaultVertexFormat.NEW_ENTITY && renderType instanceof RenderType.CompositeRenderType compositeRenderType) {
-            return cachedRenderTypeConvertions.computeIfAbsent(
-                    renderType,
-                    it -> createBlockRenderType(compositeRenderType)
-            );
-        }
-        return renderType;
-    }
-
-    private RenderType createBlockRenderType(
-            RenderType.CompositeRenderType renderType
-    ) {
-        RenderType.CompositeState state = renderType.state();
-        return RenderType.create(
-                "yuushya_modelling:generated",
-                DefaultVertexFormat.BLOCK,
-                renderType.mode,
-                786432,
-                renderType.affectsCrumbling,
-                renderType.sortOnUpload,
-                RenderType.CompositeState.builder()
-                        .setCullState(state.cullState)
-                        .setOutputState(MAIN_TARGET)
-                        .setShaderState(RENDERTYPE_CUTOUT_SHADER)
-                        .setTextureState(state.textureState)
-                        .setLightmapState(LIGHTMAP)
-                        .setTransparencyState(state.transparencyState)
-                        .createCompositeState(false)
         );
     }
 
@@ -88,7 +55,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     }
 
     @Override
-    public void endBatch(RenderType renderType) {
+    public void endBatch(net.minecraft.client.renderer.rendertype.RenderType renderType) {
     }
 
     @Override
@@ -100,33 +67,33 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     }
 
     public void upload(
-            Function<RenderType, VertexBuffer> vertexBufferGetter,
-            Function<RenderType, ByteBufferBuilder> byteBufferSupplier,
+            BiFunction<net.minecraft.client.renderer.rendertype.RenderType, Integer, GpuBuffer> vertexBufferGetter,
+            Function<net.minecraft.client.renderer.rendertype.RenderType, ByteBufferBuilder> byteBufferSupplier,
             Consumer<Runnable> runner
     ) {
-        for (RenderType renderType : bufferBuilders.keySet()) {
+        for (net.minecraft.client.renderer.rendertype.RenderType renderType : bufferBuilders.keySet()) {
             runner.accept(() -> {
                 BufferBuilder bufferBuilder = bufferBuilders.get(renderType);
                 ByteBufferBuilder byteBuffer = byteBuffers.get(renderType);
-                int compiledVertices = bufferBuilder.vertices * renderType.format.getVertexSize();
+                int compiledVertices = bufferBuilder.vertices * renderType.format().getVertexSize();
                 if (compiledVertices >= 0) {
                     MeshData mesh = bufferBuilder.build();
-                    indexCountMap.put(renderType, renderType.mode.indexCount(bufferBuilder.vertices));
+                    indexCountMap.put(renderType, renderType.mode().indexCount(bufferBuilder.vertices));
                     if (mesh != null) {
-                        if (renderType.sortOnUpload) {
+                        if (renderType.sortOnUpload()) {
                             MeshData.SortState sortState = mesh.sortQuads(
                                     byteBufferSupplier.apply(renderType),
-                                    RenderSystem.getVertexSorting()
+                                    ProjectionType.PERSPECTIVE.vertexSorting()
                             );
+
                             meshSorts.put(
                                     renderType,
                                     sortState
                             );
                         }
-                        VertexBuffer vertexBuffer = vertexBufferGetter.apply(renderType);
-                        vertexBuffer.bind();
-                        vertexBuffer.upload(mesh);
-                        VertexBuffer.unbind();
+
+                        GpuBuffer vertexBuffer = vertexBufferGetter.apply(renderType, compiledVertices);
+                        RenderSystem.getDevice().createCommandEncoder().writeToBuffer(vertexBuffer.slice(), mesh.vertexBuffer());
                     }
                 }
                 byteBuffer.close();
@@ -136,9 +103,17 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
         }
     }
 
-    public void close(RenderType renderType) {
+    public void close(net.minecraft.client.renderer.rendertype.RenderType renderType) {
         ByteBufferBuilder builder = byteBuffers.get(renderType);
         builder.close();
+    }
+
+    public Reference2IntMap<net.minecraft.client.renderer.rendertype.RenderType> getIndexCountMap() {
+        return indexCountMap;
+    }
+
+    public Map<net.minecraft.client.renderer.rendertype.RenderType, MeshData.SortState> getMeshSorts() {
+        return meshSorts;
     }
 
     public void close() {
