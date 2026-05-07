@@ -168,3 +168,9 @@ idea {
         downloadJavadoc = true
     }
 }
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.compilerArgs << '-Xmaxerrs' << '2000'
+    options.compilerArgs << "-Xlint:-removal"
+}

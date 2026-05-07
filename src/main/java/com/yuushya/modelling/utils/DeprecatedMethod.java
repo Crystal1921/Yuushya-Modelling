@@ -9,7 +9,6 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -20,7 +19,7 @@ public class DeprecatedMethod {
     }
 
     public static ItemStack parseOptional(HolderLookup.Provider lookupProvider, CompoundTag tag) {
-        return tag.isEmpty() ? ItemStack.EMPTY : (ItemStack)parse(lookupProvider, tag).orElse(ItemStack.EMPTY);
+        return tag.isEmpty() ? ItemStack.EMPTY : parse(lookupProvider, tag).orElse(ItemStack.EMPTY);
     }
 
     public static Tag save(HolderLookup.Provider levelRegistryAccess, Tag outputTag, ItemStack stack) {
@@ -46,7 +45,7 @@ public class DeprecatedMethod {
         try {
             return codec.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), componentHolder).getOrThrow();
         } catch (Exception exception) {
-            logDataComponentSaveError(componentHolder, exception, (Tag)null);
+            logDataComponentSaveError(componentHolder, exception, null);
             throw exception;
         }
     }
@@ -64,7 +63,6 @@ public class DeprecatedMethod {
     }
 
     /**
-     *
      * <pre>
      * Example:
      * Error saving [1 minecraft:dirt]. Original cause: java.lang.NullPointerException
@@ -85,9 +83,7 @@ public class DeprecatedMethod {
         StringBuilder cause = new StringBuilder("Error saving [" + componentHolder + "]. Original cause: " + original);
 
         cause.append("\nWith components:\n{");
-        componentHolder.getComponents().forEach((component) -> {
-            cause.append("\n\t").append(component);
-        });
+        componentHolder.getComponents().forEach((component) -> cause.append("\n\t").append(component));
         cause.append("\n}");
         if (tag != null) {
             cause.append("\nWith tag: ").append(tag);

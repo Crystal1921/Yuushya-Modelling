@@ -1,17 +1,10 @@
 package com.yuushya.modelling;
 
-import com.yuushya.modelling.client.NeoItemBlockModel;
-import com.yuushya.modelling.client.NeoShowBlockModel;
+import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
+import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.registries.BlockRegistry;
-import com.yuushya.modelling.registries.DataComponentRegistry;
-import com.yuushya.modelling.registries.ItemRegistry;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.resources.model.ModelIdentifier;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -20,7 +13,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
+import java.util.Map;
 
 @Mod(value = Yuushya.MOD_ID_USED, dist = Dist.CLIENT)
 public class YuushyaClientNeoForge {
@@ -39,19 +32,28 @@ public class YuushyaClientNeoForge {
     }
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event) {
-        ModelIdentifier inventory = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
-        event.getModels().put(inventory, new NeoShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
-        for (BlockState blockState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
-            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
-            event.getModels().put(stateIdentifier, new NeoShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
+        Map<BlockState, BlockStateModel> blockStateBlockStateModelMap = event.getBakingResult().blockStateModels();
+        for (BlockState possibleState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
+            blockStateBlockStateModelMap.put(possibleState, new ShowBlockModel());
         }
 
-        ModelIdentifier inventory2 = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
-        event.getModels().put(inventory2, new NeoItemBlockModel(Direction.SOUTH, event.getModels().get(inventory2)));
-        for (BlockState blockState : BlockRegistry.ITEM_BLOCK.get().getStateDefinition().getPossibleStates()) {
-            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
-            event.getModels().put(stateIdentifier, new NeoItemBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
+        for (BlockState possibleState : BlockRegistry.ITEM_BLOCK.get().getStateDefinition().getPossibleStates()) {
+            blockStateBlockStateModelMap.put(possibleState, new ItemBlockModel());
         }
+
+//        ModelIdentifier inventory = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
+//        event.getModels().put(inventory, new NeoShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
+//        for (BlockState blockState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
+//            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
+//            event.getModels().put(stateIdentifier, new NeoShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
+//        }
+//
+//        ModelIdentifier inventory2 = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
+//        event.getModels().put(inventory2, new NeoItemBlockModel(Direction.SOUTH, event.getModels().get(inventory2)));
+//        for (BlockState blockState : BlockRegistry.ITEM_BLOCK.get().getStateDefinition().getPossibleStates()) {
+//            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
+//            event.getModels().put(stateIdentifier, new NeoItemBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
+//        }
     }
 
     /**
@@ -61,43 +63,43 @@ public class YuushyaClientNeoForge {
      * Block类刚好可以将方块状态和id互相转换
      * 前24位为原方块的blockState，后8位为原方块的tint（若其为正）
      */
-    public void handleBlockColor(RegisterColorHandlersEvent.Block event) {
-        event.register(
-                (state, view, pos, tintIndex) -> {
-                    if (tintIndex > -1) {
-                        // decodeTintWithState
-                        // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
-                        BlockState trueState = Block.stateById(tintIndex >> 8);
-                        int trueTint = tintIndex & 0xFF;
-                        return event.getBlockColors().getColor(trueState, view, pos, trueTint);
-                    } else {
-                        return 0xFFFFFFFF;
-                    }
-                },
-                BlockRegistry.SHOW_BLOCK.get()
-        );
+    public void handleBlockColor(RegisterColorHandlersEvent.BlockTintSources event) {
+//        event.register(
+//                (state, view, pos, tintIndex) -> {
+//                    if (tintIndex > -1) {
+//                        // decodeTintWithState
+//                        // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
+//                        BlockState trueState = Block.stateById(tintIndex >> 8);
+//                        int trueTint = tintIndex & 0xFF;
+//                        return event.getBlockColors().getColor(trueState, view, pos, trueTint);
+//                    } else {
+//                        return 0xFFFFFFFF;
+//                    }
+//                },
+//                BlockRegistry.SHOW_BLOCK.get()
+//        );
     }
 
-    public void handleItemColor(RegisterColorHandlersEvent.Item event) {
-        event.register(
-                (itemStack, i) -> {
-                    BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
-                    return event.getBlockColors().getColor(blockState, null, null, i);
-                }, ItemRegistry.GET_BLOCKSTATE_ITEM.get()
-        );
-        event.register(
-                (arg, tintIndex) -> {
-                    if (tintIndex > -1) {
-                        // decodeTintWithState
-                        // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
-                        BlockState trueState = Block.stateById(tintIndex >> 8);
-                        int trueTint = tintIndex & 0xFF;
-                        return event.getBlockColors().getColor(trueState, null, null, trueTint);
-                    } else {
-                        return 0xFFFFFFFF;
-                    }
-                }, ItemRegistry.SHOW_BLOCK.get()
-        );
+    public void handleItemColor(RegisterColorHandlersEvent.ItemTintSources event) {
+//        event.register(
+//                (itemStack, i) -> {
+//                    BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
+//                    return event.getBlockColors().getColor(blockState, null, null, i);
+//                }, ItemRegistry.GET_BLOCKSTATE_ITEM.get()
+//        );
+//        event.register(
+//                (arg, tintIndex) -> {
+//                    if (tintIndex > -1) {
+//                        // decodeTintWithState
+//                        // 假设原tint为负数，则最高位为1，通常可以返回空气（因为不太可能出现上千万的方块状态），那么空气也不会被染色
+//                        BlockState trueState = Block.stateById(tintIndex >> 8);
+//                        int trueTint = tintIndex & 0xFF;
+//                        return event.getBlockColors().getColor(trueState, null, null, trueTint);
+//                    } else {
+//                        return 0xFFFFFFFF;
+//                    }
+//                }, ItemRegistry.SHOW_BLOCK.get()
+//        );
     }
 
 }

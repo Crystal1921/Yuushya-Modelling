@@ -127,13 +127,14 @@ public class YuushyaUtils {
     }
 
     public static String getBlockStateProperties(BlockState blockState) {
-        StringBuilder stringBuilder = new StringBuilder();
-        if (!blockState.getValues().isEmpty()) {
-            stringBuilder.append('[');
-            stringBuilder.append(blockState.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.joining(",")));
-            stringBuilder.append(']');
+        StringBuilder builder = new StringBuilder();
+        if (!blockState.isSingletonState()) {
+            builder.append('[');
+            builder.append(blockState.getValues().map(Property.Value::toString).collect(Collectors.joining(",")));
+            builder.append(']');
         }
-        return stringBuilder.toString();
+
+        return builder.toString();
     }
 
     public static ListTag toListTag(Number... values) {
@@ -162,29 +163,34 @@ public class YuushyaUtils {
     }
 
     public static BlockState readBlockState(CompoundTag tag) {
-        if (!tag.contains("Name", 8)) {
+        if (!tag.contains("Name")) {
             return Blocks.AIR.defaultBlockState();
         } else {
-            Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(tag.getString("Name").orElse("")));
-            BlockState blockState = block.defaultBlockState();
-            if (tag.contains("Properties", 10)) {
-                CompoundTag compoundTag = tag.getCompound("Properties");
-                StateDefinition<Block, BlockState> stateDefinition = block.getStateDefinition();
+            final BlockState[] blockState = new BlockState[1];
+            BuiltInRegistries.BLOCK.get(Identifier.parse(tag.getString("Name").orElse(""))).ifPresent(
+                blockReference -> {
+                    Block block = blockReference.value();
+                    blockState[0] = block.defaultBlockState();
+                    if (tag.contains("Properties")) {
+                        CompoundTag compoundTag = tag.getCompound("Properties").orElse(new CompoundTag());
+                        StateDefinition<Block, BlockState> stateDefinition = block.getStateDefinition();
 
-                for (String string : compoundTag.getAllKeys()) {
-                    Property<?> property = stateDefinition.getProperty(string);
-                    if (property != null) {
-                        blockState = setValueHelper(blockState, property, string, compoundTag, tag);
+                        for (String string : compoundTag.keySet()) {
+                            Property<?> property = stateDefinition.getProperty(string);
+                            if (property != null) {
+                                blockState[0] = setValueHelper(blockState[0], property, string, compoundTag, tag);
+                            }
+                        }
                     }
                 }
-            }
+            );
 
-            return blockState;
+            return blockState[0];
         }
     }
 
     private static <S extends StateHolder<?, S>, T extends Comparable<T>> S setValueHelper(S stateHolder, Property<T> property, String propertyName, CompoundTag propertiesTag, CompoundTag blockStateTag) {
-        Optional<T> optional = property.getValue(propertiesTag.getString(propertyName));
+        Optional<T> optional = property.getValue(propertiesTag.getString(propertyName).orElse(""));
         return optional.map(t -> stateHolder.setValue(property, t)).orElse(stateHolder);
     }
 

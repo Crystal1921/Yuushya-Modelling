@@ -3,169 +3,105 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.utils.BakedQuadModel;
 import com.yuushya.modelling.utils.YuushyaUtils;
+import lombok.NonNull;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemOverrides;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.*;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockStateModelSet;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.sprite.Material;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.Identifier;
+import net.minecraft.data.AtlasIds;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.joml.Vector4f;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class ShowBlockModel implements BakedModel, UnbakedModel {
-    protected final Direction facing;
-    protected final BakedModel backup;
-
-    public ShowBlockModel(Direction facing) {
-        this.facing = facing;
-        this.backup = this;
+public class ShowBlockModel implements BlockStateModel {
+    @Override
+    public void collectParts(final @NotNull RandomSource random, final @NotNull List<BlockStateModelPart> output) {
+        //Noop
     }
 
-    public ShowBlockModel(Direction facing, BakedModel backup) {
-        this.facing = facing;
-        this.backup = backup;
+    @Override
+    public Material.@NonNull Baked particleMaterial() {
+        return new Material.Baked(
+                Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS).getSprite(MissingTextureAtlasSprite.getLocation()),
+                false
+        );
     }
 
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource rand, List<TransformBlockData> transformDatas) {
-        int vertexSize = YuushyaUtils.vertexSize();
-        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-        List<BakedQuad> finalQuads = new ArrayList<>();
-        if (side != null) {
-            return Collections.emptyList();
-        }
-        ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
-        directions.add(null); // 加个null
-        float f = facing.toYRot();
-        PoseStack stack = new PoseStack();
-        stack.translate(0.5f, 0.5f, 0.5f);
-        stack.mulPose(Axis.YP.rotationDegrees(-f));
-        stack.translate(-0.5f, -0.5f, -0.5f);
-        for (TransformBlockData transformData : transformDatas)
-            if (transformData.isShown) {
-                BlockState blockState = transformData.blockState;
-                BakedModel blockModel = blockRenderDispatcher.getBlockModel(blockState);
-                for (Direction value : directions) {
-                    List<BakedQuad> blockModelQuads = blockModel.getQuads(blockState, value, rand);
+    @Override
+    public @BakedQuad.MaterialFlags int materialFlags() {
+        return 0;
+    }
+
+    @Override
+    public void collectParts(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random, List<BlockStateModelPart> parts) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        if (blockEntity instanceof ShowBlockEntity showBlockEntity) {
+            List<TransformBlockData> transformDatas = showBlockEntity.getTransformData();
+            BlockStateModelSet blockModelSet = Minecraft.getInstance().getModelManager().getBlockStateModelSet();
+            int vertexSize = YuushyaUtils.vertexSize();
+
+            ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+            directions.add(null); // 加个null
+
+            float f = facing.toYRot();
+            PoseStack stack = new PoseStack();
+            stack.translate(0.5f, 0.5f, 0.5f);
+            stack.mulPose(Axis.YP.rotationDegrees(-f));
+            stack.translate(-0.5f, -0.5f, -0.5f);
+            for (TransformBlockData transformData : transformDatas)
+                if (transformData.isShown) {
+                    BlockState blockState = transformData.blockState;
+                    BlockStateModel blockStateModel = blockModelSet.get(blockState);
+                    List<BlockStateModelPart> newParts = new ArrayList<>();
+                    blockStateModel.collectParts(level, pos, blockState, random, newParts);
+                    List<BakedQuad> blockModelQuads = new ArrayList<>();
+                    List<BakedQuad> newQuads = new ArrayList<>();
+
+                    newParts.forEach(modelPart -> directions.forEach(direction -> blockModelQuads.addAll(modelPart.getQuads(direction))));
+
                     for (BakedQuad bakedQuad : blockModelQuads) {
-                        int[] vertex = bakedQuad.getVertices().clone();
-                        // 执行核心方块的位移和旋转
                         stack.pushPose();
-                        {
-                            YuushyaUtils.scale(stack, transformData.scales);
-                            YuushyaUtils.translate(stack, transformData.pos);
-                            YuushyaUtils.rotate(stack, transformData.rot);
-                            for (int i = 0; i < 4; i++) {
-                                Vector4f vector4f = new Vector4f(// 顶点的原坐标
-                                        Float.intBitsToFloat(vertex[vertexSize * i]),
-                                        Float.intBitsToFloat(vertex[vertexSize * i + 1]),
-                                        Float.intBitsToFloat(vertex[vertexSize * i + 2]), 1);
-                                stack.last().pose().transform(vector4f);
-                                vertex[vertexSize * i] = Float.floatToRawIntBits(vector4f.x());
-                                vertex[vertexSize * i + 1] = Float.floatToRawIntBits(vector4f.y());
-                                vertex[vertexSize * i + 2] = Float.floatToRawIntBits(vector4f.z());
-                            }
+                        YuushyaUtils.scale(stack, transformData.scales);
+                        YuushyaUtils.translate(stack, transformData.pos);
+                        YuushyaUtils.rotate(stack, transformData.rot);
+                        Vector3fc[] vector4fs = new Vector3fc[4];
+                        for (int i = 0; i < 4; i++) {
+                            Vector3fc position = bakedQuad.position(i);
+                            Vector4f vector4f = new Vector4f(position.x(), position.y(), position.z(), 1);
+                            stack.last().pose().transform(vector4f);
+                            vector4fs[i] = new Vector3f(vector4f.x(), vector4f.y(), vector4f.z());
                         }
                         stack.popPose();
-                        if (bakedQuad.getTintIndex() > -1)//将方块状态和颜色编码到tintindex上，在渲染时解码找到对应颜色
-                            finalQuads.add(new BakedQuad(vertex, YuushyaUtils.encodeTintWithState(bakedQuad.getTintIndex(), blockState), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade()));
-                        else
-                            finalQuads.add(new BakedQuad(vertex, bakedQuad.getTintIndex(), bakedQuad.getDirection(), bakedQuad.getSprite(), bakedQuad.isShade()));
+
+                        newQuads.add(new BakedQuad(
+                                vector4fs[0], vector4fs[1], vector4fs[2], vector4fs[3],
+                                bakedQuad.packedUV0(), bakedQuad.packedUV1(), bakedQuad.packedUV2(), bakedQuad.packedUV3(),
+                                bakedQuad.direction(), bakedQuad.materialInfo(), bakedQuad.bakedNormals(), bakedQuad.bakedColors()
+                        ));
                     }
+
+                    int materialFlags = BakedQuadModel.computeMaterialFlags(newQuads);
+                    // TODO : 这里useAmbientOcclusion暂时写死了，后续可以考虑从原模型里获取
+                    parts.add(new BakedQuadModel(newQuads, true, blockStateModel.particleMaterial(level, pos, state), materialFlags));
                 }
-            }
-        return finalQuads;
-    }
-
-
-    @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-        if (backup != this) {
-            return backup.getQuads(blockState, side, rand);
         }
-        return Collections.emptyList();
-    }
-
-    @Override
-    public boolean useAmbientOcclusion() {
-        if (backup != this) {
-            return backup.usesBlockLight();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isGui3d() {
-        if (backup != this) {
-            return backup.isGui3d();
-        }
-        return true;
-    }
-
-    @Override
-    public boolean usesBlockLight() {
-        if (backup != this) {
-            return backup.usesBlockLight();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isCustomRenderer() {
-        if (backup != this) {
-            return backup.isCustomRenderer();
-        }
-        return false;
-    }
-
-    @Override
-    public @NotNull TextureAtlasSprite getParticleIcon() {
-        if (backup != this) {
-            return backup.getParticleIcon();
-        }
-        return Minecraft.getInstance().getBlockRenderer().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getParticleIcon();
-
-    }
-
-    @Override
-    public @NotNull ItemTransforms getTransforms() {
-        if (backup != this) {
-            return backup.getTransforms();
-        }
-        return Minecraft.getInstance().getBlockRenderer().getBlockModel(Blocks.IRON_BLOCK.defaultBlockState()).getTransforms();
-    }
-
-    @Override
-    public @NotNull ItemOverrides getOverrides() {
-        if (backup != this) {
-            return backup.getOverrides();
-        }
-        return ItemOverrides.EMPTY;
-    }
-
-    @Override
-    public Collection<Identifier> getDependencies() {
-        return Collections.emptyList();
-    }
-
-    @Nullable
-    @Override
-    public BakedModel bake(ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState state) {
-        return this;
-    }
-
-    @Override
-    public void resolveParents(Function<Identifier, UnbakedModel> function) {
-
     }
 }
