@@ -13,6 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -57,9 +58,8 @@ public record TransformDataOncePacket(
         sendToServerSide(blockPos, 0, TransformType.SUCCESS, 0);
     }
 
-    //architectury提供的另一种风格的api
     public static void sendToServerSide(BlockPos blockPos, int slot, TransformType type, double number) {
-        PacketDistributor.sendToServer(new TransformDataOncePacket(blockPos, type, slot, number));
+        ClientPacketDistributor.sendToServer(new TransformDataOncePacket(blockPos, type, slot, number));
     }
 
     @Override

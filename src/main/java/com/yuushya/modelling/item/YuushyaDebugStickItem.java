@@ -56,7 +56,7 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
         StateDefinition<Block, BlockState> stateDefinition = holder.value().getStateDefinition();
         Collection<Property<?>> collection = stateDefinition.getProperties();
         if (collection.isEmpty()) {
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".empty", holder.getRegisteredName()), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".empty", holder.getRegisteredName()), true);
             return false;
         }
         DebugStickState debugStickState = debugStack.get(DataComponents.DEBUG_STICK_STATE);
@@ -76,11 +76,11 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
             } else {
                 accessor.setBlock(pos, blockStateNew, 18);
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".update", property.getName(), getNameHelper(blockStateNew, property)), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".update", property.getName(), getNameHelper(blockStateNew, property)), true);
         } else {
             property = YuushyaBlockStates.getRelative(collection, property, player.isSecondaryUseActive());
             debugStack.set(DataComponents.DEBUG_STICK_STATE, debugStickState.withProperty(holder, property));
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".select", property.getName(), getNameHelper(stateClicked, property)), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".select", property.getName(), getNameHelper(stateClicked, property)), true);
         }
         return true;
     }

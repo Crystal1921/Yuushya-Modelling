@@ -104,6 +104,7 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
         }
     }
 
+    // TODO : AI改的，需要检查
     public void renderAxes(@NotNull ShowBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, List<TransformBlockData> transformData) {
         poseStack.pushPose();
         {
@@ -113,28 +114,79 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
             poseStack.mulPose(Axis.YP.rotationDegrees(-f));
             poseStack.translate(-0.5f, -0.5f, -0.5f);
 
-            Gizmos.line(
-                    new Vec3(0, 0, -1.5),
-                    new Vec3(0, 0, 1.5),
-                    ARGB.colorFromFloat(1.0F, 0.6F, 0.6F, 1.0F)
-            );
+            // Calculate color alpha based on which axis is selected
+            float redX = 0.39f, greenX = 0.35f, blueX = 0.27f; // 0x64E65A46
+            float redY = 0.63f, greenY = 0.86f, blueY = 0.35f; // 0x64A0DC5A
+            float redZ = 0.35f, greenZ = 0.71f, blueZ = 0.86f; // 0x645AB4DC
 
-            Gizmos.line(
-                    new Vec3(0, -1.5, 0),
-                    new Vec3(0, 1.5, 0),
-                    ARGB.colorFromFloat(1.0F, 0.6F, 1.0F, 0.6F)
-            );
+            if (state.isShowAxis) {
+                switch (state.showAxis) {
+                    case X:
+                        redX = 1.0f; greenX = 0.35f; blueX = 0.27f; // 0xFFE65A46
+                        break;
+                    case Y:
+                        redY = 0.63f; greenY = 0.86f; blueY = 0.35f; // 0xFFA0DC5A
+                        break;
+                    case Z:
+                        redZ = 0.35f; greenZ = 0.71f; blueZ = 0.86f; // 0xFF5AB4DC
+                        break;
+                }
+            }
 
-            Gizmos.line(
-                    new Vec3(-1.5, 0, 0),
-                    new Vec3(1.5, 0, 0),
-                    ARGB.colorFromFloat(1.0F, 1.0F, 0.6F, 0.6F)
-            );
+            for (TransformBlockData data : transformData) {
+                poseStack.pushPose();
+                {
+                    translateAfterScale(poseStack, data.pos, data.scales);
+                    translate(poseStack, MIDDLE);
+
+                    Vector3f rot = data.rot;
+
+                    // Calculate transformed axis endpoints
+                    Vec3 origin = new Vec3(0, 0, 0);
+
+                    // Z axis (blue)
+                    poseStack.pushPose();
+                    if (state.isShowAxis) poseStack.mulPose(Axis.ZP.rotationDegrees(rot.z()));
+                    Vec3 zStart = transformPoint(poseStack, 0.0f, 0.0f, -1.5f);
+                    Vec3 zEnd = transformPoint(poseStack, 0.0f, 0.0f, 1.5f);
+                    poseStack.popPose();
+
+                    // Y axis (green)
+                    poseStack.pushPose();
+                    if (state.isShowAxis) poseStack.mulPose(Axis.YP.rotationDegrees(rot.y()));
+                    Vec3 yStart = transformPoint(poseStack, 0.0f, -1.5f, 0.0f);
+                    Vec3 yEnd = transformPoint(poseStack, 0.0f, 1.5f, 0.0f);
+                    poseStack.popPose();
+
+                    // X axis (red)
+                    poseStack.pushPose();
+                    if (state.isShowAxis) poseStack.mulPose(Axis.XP.rotationDegrees(rot.x()));
+                    Vec3 xStart = transformPoint(poseStack, -1.5f, 0.0f, 0.0f);
+                    Vec3 xEnd = transformPoint(poseStack, 1.5f, 0.0f, 0.0f);
+                    poseStack.popPose();
+
+                    // Render axes with calculated colors
+                    Gizmos.line(zStart, zEnd, ARGB.colorFromFloat(0.39f, redZ, greenZ, blueZ));
+                    Gizmos.line(yStart, yEnd, ARGB.colorFromFloat(0.39f, redY, greenY, blueY));
+                    Gizmos.line(xStart, xEnd, ARGB.colorFromFloat(0.39f, redX, greenX, blueX));
+                }
+                poseStack.popPose();
+            }
         }
         poseStack.popPose();
     }
 
-//    /**
+    /**
+     * Transforms a point using the current pose stack matrix
+     */
+    private Vec3 transformPoint(PoseStack poseStack, float x, float y, float z) {
+        Matrix4f matrix = poseStack.last().pose();
+        org.joml.Vector4f vec = new org.joml.Vector4f(x, y, z, 1.0f);
+        matrix.transform(vec);
+        return new Vec3(vec.x(), vec.y(), vec.z());
+    }
+
+    //    /**
 //     * Renders coordinate axes for rotation and position using the common interface
 //     */
 //    protected void renderAxes(V state, PoseStack matrixStack, MultiBufferSource multiBufferSource,
@@ -192,7 +244,6 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
 //            bufferBuilder.addVertex(matrixStack.last().pose(), -1.5f, 0.0f, 0.0f).setColor(redX).setNormal(1.5f, 0f, 0f);
 //            bufferBuilder.addVertex(matrixStack.last().pose(), 1.5f, 0f, 0.0f).setColor(redX).setNormal(1.5f, 0f, 0f);
 //
-//            //TODO : 这个轴不知道亮不亮
 //        }
 //        matrixStack.popPose();
 //    }

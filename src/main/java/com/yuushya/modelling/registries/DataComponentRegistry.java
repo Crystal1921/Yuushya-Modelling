@@ -2,6 +2,7 @@ package com.yuushya.modelling.registries;
 
 import com.yuushya.modelling.Yuushya;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.util.ExtraCodecs;
@@ -13,7 +14,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class DataComponentRegistry {
     @SuppressWarnings("removal")
-    public static final DeferredRegister.DataComponents DATA_COMPONENT_TYPES = DeferredRegister.createDataComponents(Yuushya.MOD_ID);
+    public static final DeferredRegister.DataComponents DATA_COMPONENT_TYPES = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, Yuushya.MOD_ID);
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> TRANS_DIRECTION = DATA_COMPONENT_TYPES.registerComponentType(
             "trans",
@@ -36,8 +37,8 @@ public class DataComponentRegistry {
     );
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<CompoundTag>> SHAPE_DATA = DATA_COMPONENT_TYPES.registerComponentType(
-      "shape_data",
-        builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG)
+            "shape_data",
+            builder -> builder.persistent(CompoundTag.CODEC).networkSynchronized(ByteBufCodecs.COMPOUND_TAG)
     );
 
     public static void register(IEventBus bus) {

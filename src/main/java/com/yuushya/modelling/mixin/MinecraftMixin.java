@@ -1,5 +1,6 @@
 package com.yuushya.modelling.mixin;
 
+import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.spongepowered.asm.mixin.Mixin;

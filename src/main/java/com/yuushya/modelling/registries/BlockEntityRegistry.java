@@ -14,9 +14,9 @@ import java.util.function.Supplier;
 public class BlockEntityRegistry {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, Yuushya.MOD_ID);
 
-    public static final Supplier<BlockEntityType<ShowBlockEntity>> SHOW_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("showblockentity", () -> BlockEntityType.Builder.of(ShowBlockEntity::new, BlockRegistry.SHOW_BLOCK.get()).build(null));
-    public static final Supplier<BlockEntityType<ItemBlockEntity>> ITEM_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("itemblockentity", () -> BlockEntityType.Builder.of(ItemBlockEntity::new, BlockRegistry.ITEM_BLOCK.get()).build(null));
-    public static final Supplier<BlockEntityType<TextBlockEntity>> TEXT_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("textblockentity", () -> BlockEntityType.Builder.of(TextBlockEntity::new, BlockRegistry.TEXT_BLOCK.get()).build(null));
+    public static final Supplier<BlockEntityType<ShowBlockEntity>> SHOW_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("showblockentity", () -> new BlockEntityType<>(ShowBlockEntity::new, false, BlockRegistry.SHOW_BLOCK.get()));
+    public static final Supplier<BlockEntityType<ItemBlockEntity>> ITEM_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("itemblockentity", () -> new BlockEntityType<>(ItemBlockEntity::new, false, BlockRegistry.ITEM_BLOCK.get()));
+    public static final Supplier<BlockEntityType<TextBlockEntity>> TEXT_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("textblockentity", () -> new BlockEntityType<>(TextBlockEntity::new, false, BlockRegistry.TEXT_BLOCK.get()));
 
     public static void register(IEventBus bus) {
         BLOCK_ENTITY_TYPES.register(bus);

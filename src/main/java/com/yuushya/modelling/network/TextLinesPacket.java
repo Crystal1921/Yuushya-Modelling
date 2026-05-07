@@ -13,6 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +38,7 @@ public record TextLinesPacket(
     );
 
     public static void sendToServerSide(BlockPos blockPos, int slot, List<String> textLines) {
-        PacketDistributor.sendToServer(new TextLinesPacket(blockPos, slot, textLines));
+        ClientPacketDistributor.sendToServer(new TextLinesPacket(blockPos, slot, textLines));
     }
 
     //after receive

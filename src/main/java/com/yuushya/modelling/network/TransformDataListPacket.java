@@ -17,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,7 +54,7 @@ public record TransformDataListPacket(
             tag = data.copyTag();
         }
         tag.putString("ItemName", name);
-        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new TransformDataListPacket(tag));
+        ClientPacketDistributor.sendToServer(new TransformDataListPacket(tag));
     }
 
     //after receive
@@ -65,7 +66,7 @@ public record TransformDataListPacket(
                 if (!menu.stillValid(player)) {
                     return;
                 }
-                String name = packet.tag.getString("ItemName");
+                String name = packet.tag.getString("ItemName").orElse("");
                 String hash = player.getStringUUID() + name;
                 if (!packet.tag.contains("Blocks") && HandlingCache.containsKey(hash)) {
                     menu.setupResultSlotServer(HandlingCache.get(hash));

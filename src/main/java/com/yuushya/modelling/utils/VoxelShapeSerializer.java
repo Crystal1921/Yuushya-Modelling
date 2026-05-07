@@ -71,7 +71,7 @@ public class VoxelShapeSerializer {
      * @return The reconstructed VoxelShape
      */
     public static VoxelShape deserializeVoxelShape(CompoundTag tag) {
-        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
+        if (!tag.contains(BOXES_KEY)) {
             return Shapes.empty();
         }
 
@@ -88,11 +88,11 @@ public class VoxelShapeSerializer {
      * Deserializes boxes from NBT and reconstructs the VoxelShape.
      */
     private static VoxelShape deserializeBoxes(CompoundTag tag) {
-        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
+        if (!tag.contains(BOXES_KEY)) {
             return Shapes.empty();
         }
 
-        ListTag boxesList = tag.getList(BOXES_KEY, Tag.TAG_LIST);
+        ListTag boxesList = tag.getList(BOXES_KEY).orElse(new ListTag());
         if (boxesList.isEmpty()) {
             return Shapes.empty();
         }
@@ -102,12 +102,12 @@ public class VoxelShapeSerializer {
 
         for (Tag boxTag : boxesList) {
             ListTag box = (ListTag) boxTag;
-            double x1 = box.getDouble(0);
-            double y1 = box.getDouble(1);
-            double z1 = box.getDouble(2);
-            double x2 = box.getDouble(3);
-            double y2 = box.getDouble(4);
-            double z2 = box.getDouble(5);
+            double x1 = box.getDouble(0).orElse(0D);
+            double y1 = box.getDouble(1).orElse(0D);
+            double z1 = box.getDouble(2).orElse(0D);
+            double x2 = box.getDouble(3).orElse(0D);
+            double y2 = box.getDouble(4).orElse(0D);
+            double z2 = box.getDouble(5).orElse(0D);
 
             VoxelShape boxShape = Shapes.box(x1, y1, z1, x2, y2, z2);
             result = Shapes.joinUnoptimized(result, boxShape, BooleanOp.OR);
@@ -124,10 +124,10 @@ public class VoxelShapeSerializer {
      * @return Number of boxes in the shape
      */
     public static int getBoxCount(CompoundTag tag) {
-        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
+        if (!tag.contains(BOXES_KEY)) {
             return 0;
         }
-        return tag.getList(BOXES_KEY, Tag.TAG_LIST).size();
+        return tag.getList(BOXES_KEY).orElse(new ListTag()).size();
     }
 
     /**
@@ -137,10 +137,10 @@ public class VoxelShapeSerializer {
      * @return true if the shape is empty
      */
     public static boolean isEmpty(CompoundTag tag) {
-        if (!tag.contains(BOXES_KEY, Tag.TAG_LIST)) {
+        if (!tag.contains(BOXES_KEY)) {
             return true;
         }
-        return tag.getList(BOXES_KEY, Tag.TAG_LIST).isEmpty();
+        return tag.getList(BOXES_KEY).isEmpty();
     }
 
     /**
