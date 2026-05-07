@@ -3,6 +3,7 @@ package com.yuushya.modelling.blockentity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.yuushya.modelling.blockentity.renderstate.AbstractTransformBlockEntityRenderState;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -36,7 +37,7 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
  * Abstract base class for transform block entity renderers that provides common functionality
  * for rendering frames, axes, and text.
  */
-public abstract class AbstractTransformBlockEntityRender<T extends AbstractTransformBlockEntity> implements BlockEntityRenderer<T, @NotNull AbstractTransformBlockEntityRenderState> {
+public abstract class AbstractTransformBlockEntityRender<T extends AbstractTransformBlockEntity, V extends AbstractTransformBlockEntityRenderState> implements BlockEntityRenderer<T, V> {
 
     public static final Vector3d MIDDLE = new Vector3d(8, 8, 8);
     public static final Vector3d _MIDDLE = new Vector3d(-8, -8, -8);
@@ -78,7 +79,7 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
     }
 
     @Override
-    public void extractRenderState(T blockEntity, @NotNull AbstractTransformBlockEntityRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
+    public void extractRenderState(T blockEntity, @NotNull V state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         if (blockEntity.showFrame()) {
             blockEntity.consumeShowFrame();
