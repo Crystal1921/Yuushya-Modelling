@@ -108,7 +108,7 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
             }
 
             public void onTake(@NotNull Player player, @NotNull ItemStack stack) {
-                stack.onCraftedBy(player.level(), player, stack.getCount());
+                stack.onCraftedBy(player, stack.getCount());
                 ItemStack itemStack = AbstractEngraveMenu.this.inputSlot.remove(1);
                 if (!itemStack.isEmpty()) {
                     AbstractEngraveMenu.this.setupResultSlotServer(stack);
@@ -264,7 +264,7 @@ public abstract class AbstractEngraveMenu extends AbstractContainerMenu {
             Item item = itemStack2.getItem();
             itemStack = itemStack2.copy();
             if (index == RESULT_SLOT) {
-                item.onCraftedBy(itemStack2, player.level(), player);
+                item.onCraftedBy(itemStack2, player);
                 if (!this.moveItemStackTo(itemStack2, INV_SLOT_START, USE_ROW_SLOT_END, true)) {
                     return ItemStack.EMPTY;
                 }

@@ -52,18 +52,19 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
         }
         boolean isShowBlock = stateClicked.getBlock() instanceof ShowBlock;
         stateClicked = YuushyaUtils.getBlockState(stateClicked, accessor, pos);
-        Holder<Block> holder = stateClicked.getBlockHolder();
-        StateDefinition<Block, BlockState> stateDefinition = holder.value().getStateDefinition();
+        Block block = stateClicked.getBlock();
+        Holder<Block> blockHolder = stateClicked.typeHolder();
+        StateDefinition<Block, BlockState> stateDefinition = block.getStateDefinition();
         Collection<Property<?>> collection = stateDefinition.getProperties();
         if (collection.isEmpty()) {
-            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".empty", holder.getRegisteredName()), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".empty", block.getDescriptionId()));
             return false;
         }
         DebugStickState debugStickState = debugStack.get(DataComponents.DEBUG_STICK_STATE);
         if (debugStickState == null) {
             return false;
         }
-        Property<?> property = debugStickState.properties().get(holder);
+        Property<?> property = debugStickState.properties().get(block);
         if (shouldCycleState) {
             if (property == null) {
                 property = collection.iterator().next();
@@ -76,11 +77,11 @@ public class YuushyaDebugStickItem extends AbstractToolItem {
             } else {
                 accessor.setBlock(pos, blockStateNew, 18);
             }
-            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".update", property.getName(), getNameHelper(blockStateNew, property)), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".update", property.getName(), getNameHelper(blockStateNew, property)));
         } else {
             property = YuushyaBlockStates.getRelative(collection, property, player.isSecondaryUseActive());
-            debugStack.set(DataComponents.DEBUG_STICK_STATE, debugStickState.withProperty(holder, property));
-            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".select", property.getName(), getNameHelper(stateClicked, property)), true);
+            debugStack.set(DataComponents.DEBUG_STICK_STATE, debugStickState.withProperty(blockHolder, property));
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".select", property.getName(), getNameHelper(stateClicked, property)));
         }
         return true;
     }
