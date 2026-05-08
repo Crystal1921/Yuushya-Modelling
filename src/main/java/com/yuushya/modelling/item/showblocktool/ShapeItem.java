@@ -50,7 +50,7 @@ public class ShapeItem extends AbstractMultiPurposeToolItem {
         VoxelShape collisionShape = blockState.getCollisionShape(level, blockPos);
         CompoundTag compoundTag = VoxelShapeSerializer.serializeVoxelShape(collisionShape);
         handItemStack.set(DataComponentRegistry.SHAPE_DATA, compoundTag);
-        player.displayClientMessage(Component.literal("Save Successfully"), true);
+        player.sendOverlayMessage(Component.literal("Save Successfully"));
         return InteractionResult.SUCCESS;
     }
 }

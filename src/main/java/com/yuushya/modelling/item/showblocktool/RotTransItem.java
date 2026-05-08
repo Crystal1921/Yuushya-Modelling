@@ -28,7 +28,7 @@ public class RotTransItem extends PosTransItem{
                 case 1-> rot.set(rot.x(),getDegreeAfterRotation(rot.y(),1),rot.z());
                 case 2-> rot.set(rot.x(),rot.y(),getDegreeAfterRotation(rot.z(),1));
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",rot.x(),rot.y(),rot.z()),true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId()+".switch",rot.x(),rot.y(),rot.z()));
         });
     }
     @Override

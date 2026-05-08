@@ -37,7 +37,7 @@ public class MoveTransformDataItem extends AbstractToolItem {
                 showBlockEntity.removeTransFormDataNow();
                 showBlockEntity.saveChanged();
             } else {
-                player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".mainhand.pass"), true);
+                player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".mainhand.pass"));
                 return InteractionResult.PASS;
             }
         } else {
@@ -45,7 +45,7 @@ public class MoveTransformDataItem extends AbstractToolItem {
             transformData.blockState = blockStateTarget;
         }
         setTag(handItemStack, level.registryAccess());
-        player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".mainhand.success"), true);
+        player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".mainhand.success"));
         return InteractionResult.SUCCESS;
     }
 
@@ -54,14 +54,14 @@ public class MoveTransformDataItem extends AbstractToolItem {
         //左手右键放置状态到展示方块里//with off hand right-click can put all state to showblock
         getTag(level, handItemStack);
         if (transformData.blockState.getBlock() instanceof AirBlock) {
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".offhand.fail"), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".offhand.fail"));
             return InteractionResult.SUCCESS;
         }
         if (blockStateTarget.getBlock() instanceof ShowBlock) {
             ShowBlockEntity showBlockEntity = (ShowBlockEntity) level.getBlockEntity(blockPos);
             showBlockEntity.getTransFormDataNow().set(transformData);
             showBlockEntity.saveChanged();
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".offhand.success"), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".offhand.success"));
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;
@@ -73,12 +73,12 @@ public class MoveTransformDataItem extends AbstractToolItem {
         CustomData customData = itemStack.getOrDefault(DataComponentRegistry.TRANSFORM_DATA, CustomData.EMPTY);
         CompoundTag compoundTag = customData.copyTag();
         if (compoundTag.contains("TransformData")) {
-            transformData.load(compoundTag.getCompound("TransformData"));
+            transformData.load(compoundTag.getCompound("TransformData").orElse(new CompoundTag()));
         } else { // to load the 1.20.4 below data //TODO: will remove in next version
             customData = itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
             compoundTag = customData.copyTag();
             if (compoundTag.contains("TransformData")) {
-                transformData.load(compoundTag.getCompound("TransformData"));
+                transformData.load(compoundTag.getCompound("TransformData").orElse(new CompoundTag()));
             }
         }
     }

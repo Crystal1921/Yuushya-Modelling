@@ -27,7 +27,7 @@ public class MicroPosTransItem extends PosTransItem {
                 case 2 -> pos.z -= 0.001;
                 case 3 -> pos.set(Math.round(pos.x) % 17, Math.round(pos.y) % 17, Math.round(pos.z) % 17);
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".switch", pos.x, pos.y, pos.z), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".switch", pos.x, pos.y, pos.z));
         });
     }
 
@@ -42,7 +42,7 @@ public class MicroPosTransItem extends PosTransItem {
                 case 1 -> pos.y += 0.001;
                 case 2 -> pos.z += 0.001;
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".switch", pos.x, pos.y, pos.z), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".switch", pos.x, pos.y, pos.z));
         });
     }
 

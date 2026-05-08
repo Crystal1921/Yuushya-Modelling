@@ -31,13 +31,13 @@ public class GetLitItem extends AbstractToolItem {
         if (blockState.hasProperty(property)){
             BlockState blockState2 = YuushyaBlockStates.cycleState(blockState, property, doGetPre);
             level.setBlock(blockPos, blockState2, 18);
-            player.displayClientMessage(Component.translatable(handItemStack.getDescriptionId()+".select", property.getName(),property.getName(blockState2.getValue(property))),true);
+            player.sendOverlayMessage(Component.translatable(handItemStack.getDisplayName()+".select", property.getName(),property.getName(blockState2.getValue(property))));
             return InteractionResult.CONSUME;
         }
         else if (blockState.hasProperty(property2)){
             BlockState blockState2 = YuushyaBlockStates.cycleState(blockState, property2, doGetPre);
             level.setBlock(blockPos, blockState2, 18);
-            player.displayClientMessage(Component.translatable(handItemStack.getDescriptionId()+".select", property2.getName(),property2.getName(blockState2.getValue(property2))),true);
+            player.sendOverlayMessage(Component.translatable(handItemStack.getDisplayName()+".select", property2.getName(),property2.getName(blockState2.getValue(property2))));
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;

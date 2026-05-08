@@ -23,7 +23,7 @@ public class ScaleTransItem extends PosTransItem {
             if (getForm() == 0) {
                 scales.add(0.1f, 0.1f, 0.1f);
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".switch", scales.x(), scales.y(), scales.z()), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".switch", scales.x(), scales.y(), scales.z()));
         });
     }
 
@@ -35,7 +35,7 @@ public class ScaleTransItem extends PosTransItem {
             if (getForm() == 0) {
                 scales.add(-0.1f, -0.1f, -0.1f);
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".switch", scales.x()), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".switch", scales.x()));
         });
     }
 

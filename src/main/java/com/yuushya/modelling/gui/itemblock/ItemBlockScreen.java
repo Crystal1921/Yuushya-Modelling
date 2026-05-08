@@ -43,6 +43,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -346,7 +347,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, enableAO) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER), blockEntity.getBlockPos()));
+                                ClientPacketDistributor.sendToServer(new UpdateAOPacket(enableAO, blockEntity.getBlockState().getValue(FULL_BLOCK), blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER), blockEntity.getBlockPos()));
                             }
                         });
 
@@ -359,7 +360,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, fullBlock) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER), blockEntity.getBlockPos()));
+                                ClientPacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), fullBlock, blockEntity.getBlockState().getValue(ENABLE_SPECIAL_RENDER), blockEntity.getBlockPos()));
                             }
                         });
 
@@ -372,7 +373,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         (btn, enableSpecialRender) -> {
                             Level level = blockEntity.getLevel();
                             if (level != null) {
-                                PacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), blockEntity.getBlockState().getValue(FULL_BLOCK), enableSpecialRender, blockEntity.getBlockPos()));
+                                ClientPacketDistributor.sendToServer(new UpdateAOPacket(blockEntity.getBlockState().getValue(ENABLE_AO), blockEntity.getBlockState().getValue(FULL_BLOCK), enableSpecialRender, blockEntity.getBlockPos()));
                             }
                         });
 

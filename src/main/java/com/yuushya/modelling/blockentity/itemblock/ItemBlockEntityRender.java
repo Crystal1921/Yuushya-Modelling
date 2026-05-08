@@ -1,6 +1,7 @@
 package com.yuushya.modelling.blockentity.itemblock;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
 import com.yuushya.modelling.blockentity.renderstate.ItemBlockEntityRenderState;
@@ -13,15 +14,20 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.core.Direction;
+import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import java.util.List;
 
@@ -122,5 +128,73 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
         }
 
         poseStack.popPose();
+    }
+
+    private void renderAxes(@NotNull ItemBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, TransformItemData transformData) {
+        poseStack.pushPose();
+        {
+            Direction facing = state.facing;
+            float f = facing.toYRot();
+            poseStack.translate(0.5f, 0.5f, 0.5f);
+            poseStack.mulPose(Axis.YP.rotationDegrees(-f));
+            poseStack.translate(-0.5f, -0.5f, -0.5f);
+
+            float redX = 0.39f, greenX = 0.35f, blueX = 0.27f;
+            float redY = 0.63f, greenY = 0.86f, blueY = 0.35f;
+            float redZ = 0.35f, greenZ = 0.71f, blueZ = 0.86f;
+
+            if (state.isShowAxis) {
+                switch (state.showAxis) {
+                    case X:
+                        redX = 1.0f; greenX = 0.35f; blueX = 0.27f;
+                        break;
+                    case Y:
+                        redY = 0.63f; greenY = 0.86f; blueY = 0.35f;
+                        break;
+                    case Z:
+                        redZ = 0.35f; greenZ = 0.71f; blueZ = 0.86f;
+                        break;
+                }
+            }
+
+            poseStack.pushPose();
+            {
+                YuushyaUtils.translateAfterScale(poseStack, transformData.pos, transformData.scales);
+                YuushyaUtils.translate(poseStack, AbstractTransformBlockEntityRender.MIDDLE);
+
+                Vector3f rot = transformData.rot;
+
+                poseStack.pushPose();
+                if (state.isShowAxis) poseStack.mulPose(Axis.ZP.rotationDegrees(rot.z()));
+                Vec3 zStart = transformPoint(poseStack, 0.0f, 0.0f, -1.5f);
+                Vec3 zEnd = transformPoint(poseStack, 0.0f, 0.0f, 1.5f);
+                poseStack.popPose();
+
+                poseStack.pushPose();
+                if (state.isShowAxis) poseStack.mulPose(Axis.YP.rotationDegrees(rot.y()));
+                Vec3 yStart = transformPoint(poseStack, 0.0f, -1.5f, 0.0f);
+                Vec3 yEnd = transformPoint(poseStack, 0.0f, 1.5f, 0.0f);
+                poseStack.popPose();
+
+                poseStack.pushPose();
+                if (state.isShowAxis) poseStack.mulPose(Axis.XP.rotationDegrees(rot.x()));
+                Vec3 xStart = transformPoint(poseStack, -1.5f, 0.0f, 0.0f);
+                Vec3 xEnd = transformPoint(poseStack, 1.5f, 0.0f, 0.0f);
+                poseStack.popPose();
+
+                Gizmos.line(zStart, zEnd, ARGB.colorFromFloat(0.39f, redZ, greenZ, blueZ));
+                Gizmos.line(yStart, yEnd, ARGB.colorFromFloat(0.39f, redY, greenY, blueY));
+                Gizmos.line(xStart, xEnd, ARGB.colorFromFloat(0.39f, redX, greenX, blueX));
+            }
+            poseStack.popPose();
+        }
+        poseStack.popPose();
+    }
+
+    private Vec3 transformPoint(PoseStack poseStack, float x, float y, float z) {
+        Matrix4f matrix = poseStack.last().pose();
+        org.joml.Vector4f vec = new org.joml.Vector4f(x, y, z, 1.0f);
+        matrix.transform(vec);
+        return new Vec3(vec.x(), vec.y(), vec.z());
     }
 }
