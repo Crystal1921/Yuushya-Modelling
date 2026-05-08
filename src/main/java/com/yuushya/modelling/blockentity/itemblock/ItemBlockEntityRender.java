@@ -3,20 +3,25 @@ package com.yuushya.modelling.blockentity.itemblock;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
-import com.yuushya.modelling.blockentity.renderstate.AbstractTransformBlockEntityRenderState;
+import com.yuushya.modelling.blockentity.renderstate.ItemBlockEntityRenderState;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -27,10 +32,21 @@ import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.
  * Renderer for ItemBlockEntity that displays items with transform data.
  * Based on ShowBlockEntityRender but adapted for item data.
  */
-public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<ItemBlockEntity> {
+public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@NotNull ItemBlockEntity, ItemBlockEntityRenderState> {
 
     public ItemBlockEntityRender(BlockEntityRendererProvider.Context context) {
         super(context);
+    }
+
+    @Override
+    public @NonNull ItemBlockEntityRenderState createRenderState() {
+        return new ItemBlockEntityRenderState();
+    }
+
+    @Override
+    public void extractRenderState(@NotNull ItemBlockEntity blockEntity, @NotNull ItemBlockEntityRenderState state, float partialTicks, Vec3 cameraPosition, @Nullable ModelFeatureRenderer.CrumblingOverlay breakProgress) {
+        super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
+        state.transformData = blockEntity.getTransformData();
     }
 
     @Override
@@ -64,63 +80,47 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<It
     }
 
     @Override
-    protected void renderSpecific(AbstractTransformBlockEntityRenderState state, float tickDelta, PoseStack matrixStack,
-                                  MultiBufferSource multiBufferSource, int light, int overlay) {
-        TransformItemData transformData = blockEntity.getTransFormDataNow();
+    protected void renderSpecific(@NotNull ItemBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        List<TransformItemData> transformData = state.transformData;
+        if (state.slot >= 0 && state.slot < transformData.size()) {
+            TransformItemData transformItemData = transformData.get(state.slot);
 
-        if (transformData.isShown && (blockEntity.showPosAxis() || blockEntity.showRotAxis())) {
-            renderAxes(blockEntity, matrixStack, multiBufferSource, transformData);
-        }
+            if (state.isShowAxis) {
+                renderAxes(state, poseStack, submitNodeCollector, cameraRenderState, transformItemData);
+            }
 
-        if (blockEntity.showText()) {
-            renderTextInfo(blockEntity, transformData, matrixStack, multiBufferSource, light);
+            if (state.isShowText) {
+                renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformItemData);
+            }
         }
     }
 
-    private void renderTextInfo(ItemBlockEntity blockEntity, TransformItemData transformData,
-                                PoseStack matrixStack, MultiBufferSource multiBufferSource, int light) {
-        matrixStack.pushPose();
-        {
-            Camera camera = this.blockEntityRenderDispatcher.camera;
+    private void renderTextInfo(@NotNull ItemBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, TransformItemData transformData) {
+        poseStack.pushPose();
 
-            // Render position information
-            renderText(font,
-                    Component.translatable("block.yuushya.itemblock.pos_text")
-                            .append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", transformData.pos.x)).withStyle(ChatFormatting.DARK_RED))
-                            .append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", transformData.pos.y)).withStyle(ChatFormatting.GREEN))
-                            .append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", transformData.pos.z)).withStyle(ChatFormatting.BLUE)),
-                    0.8f, matrixStack, multiBufferSource, light, camera);
-
-            // Render rotation information
-            renderText(font,
-                    Component.translatable("block.yuushya.itemblock.rot_text")
-                            .append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", transformData.rot.x())).withStyle(ChatFormatting.DARK_RED))
-                            .append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", transformData.rot.y())).withStyle(ChatFormatting.GREEN))
-                            .append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", transformData.rot.z())).withStyle(ChatFormatting.BLUE)),
-                    0.55f, matrixStack, multiBufferSource, light, camera);
-
-            // Render scale information
-            renderText(font, Component.translatable("block.yuushya.itemblock.scale_text", transformData.scales.x()),
-                    0.3f, matrixStack, multiBufferSource, light, camera);
-
-            // Render item slot information
-            float high = 0.3f;
-            for (TransformItemData everyTransformData : blockEntity.getTransformData()) {
-                int slot = blockEntity.getTransformData().indexOf(everyTransformData);
-                Style style = blockEntity.getSlot() == slot ? Style.EMPTY.withColor(ChatFormatting.GOLD).withBold(true)
-                        : everyTransformData.isShown ? Style.EMPTY.withColor(ChatFormatting.WHITE)
-                        : Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(true);
-
-                ItemStack itemStack = everyTransformData.itemStack;
-                MutableComponent displayName = itemStack.isEmpty() ?
-                        Component.literal("Air") :
-                        (MutableComponent) itemStack.getDisplayName();
-
-                Component component = Component.translatable("block.yuushya.itemblock.slot_text", String.format("%2d", slot))
-                        .append(displayName.withStyle(style));
-                renderText(font, component, high -= 0.25f, matrixStack, multiBufferSource, light, camera);
-            }
+        renderTextInfo(Component.translatable("block.yuushya.itemblock.pos_text")
+                        .append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", transformData.pos.x)).withStyle(ChatFormatting.DARK_RED))
+                        .append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", transformData.pos.y)).withStyle(ChatFormatting.GREEN))
+                        .append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", transformData.pos.z)).withStyle(ChatFormatting.BLUE)), 0.8f, poseStack, submitNodeCollector, cameraRenderState);
+        renderTextInfo(Component.translatable("block.yuushya.itemblock.rot_text")
+                        .append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", transformData.rot.x())).withStyle(ChatFormatting.DARK_RED))
+                        .append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", transformData.rot.y())).withStyle(ChatFormatting.GREEN))
+                        .append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", transformData.rot.z())).withStyle(ChatFormatting.BLUE)), 0.55f, poseStack, submitNodeCollector, cameraRenderState);
+        renderTextInfo(Component.translatable("block.yuushya.itemblock.scale_text", transformData.scales.x()), 0.3f, poseStack, submitNodeCollector, cameraRenderState);
+        float high = 0.3f;
+        for (TransformItemData everyTransformData : state.transformData) {
+            int slot = state.transformData.indexOf(everyTransformData);
+            Style style = state.slot == slot ? Style.EMPTY.withColor(ChatFormatting.GOLD).withBold(true)
+                    : everyTransformData.isShown ? Style.EMPTY.withColor(ChatFormatting.WHITE)
+                    : Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(true);
+            ItemStack itemStack = everyTransformData.itemStack;
+            MutableComponent displayName = itemStack.isEmpty() ?
+                    Component.literal("Air") :
+                    (MutableComponent) itemStack.getDisplayName();
+            Component component = Component.translatable("block.yuushya.itemblock.slot_text", String.format("%2d", slot)).append(displayName.withStyle(style));
+            renderTextInfo(component, high -= 0.25f, poseStack, submitNodeCollector, cameraRenderState);
         }
-        matrixStack.popPose();
+
+        poseStack.popPose();
     }
 }

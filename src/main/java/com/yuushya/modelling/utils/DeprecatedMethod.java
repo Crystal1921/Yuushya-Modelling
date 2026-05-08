@@ -2,11 +2,14 @@ package com.yuushya.modelling.utils;
 
 import com.mojang.serialization.Codec;
 import com.yuushya.modelling.Yuushya;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentHolder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -89,5 +92,13 @@ public class DeprecatedMethod {
             cause.append("\nWith tag: ").append(tag);
         }
         Util.logAndPauseIfInIde(cause.toString());
+    }
+
+    public static void blit(GuiGraphicsExtractor guiGraphics, Identifier resourceLocation, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, uOffset, vOffset, uWidth, vHeight, 256, 256);
+    }
+
+    public static void blitSprite(GuiGraphicsExtractor guiGraphics, Identifier resourceLocation,int x, int y, int width, int height) {
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, width, height);
     }
 }
