@@ -67,21 +67,21 @@ public class TransformTextData implements ITransformDataProvider {
 
     //readNbt from compoundTag
     public void load(CompoundTag compoundTag) {
-        ListTag listTagPos = compoundTag.getList("ShowPos", 6);//6 means Double
-        ListTag listTagRot = compoundTag.getList("ShowRotation", 5);//5 means Float
-        ListTag listTagScales = compoundTag.getList("ShowScales", 5);//5 means Float
-        this.pos.set(listTagPos.getDouble(0), listTagPos.getDouble(1), listTagPos.getDouble(2));
-        this.rot.set(listTagRot.getFloat(0), listTagRot.getFloat(1), listTagRot.getFloat(2));
-        this.scales.set(listTagScales.getFloat(0), listTagScales.getFloat(1), listTagScales.getFloat(2));
-        this.isCulled = compoundTag.getBoolean("Culled");
-        this.isMirror = compoundTag.getBoolean("Mirrored");
-        this.isShown = compoundTag.getBoolean("isShown");
+        ListTag listTagPos = compoundTag.getList("ShowPos").orElse(new ListTag());
+        ListTag listTagRot = compoundTag.getList("ShowRotation").orElse(new ListTag());
+        ListTag listTagScales = compoundTag.getList("ShowScales").orElse(new ListTag());
+        this.pos.set(listTagPos.getDouble(0).orElse(0D), listTagPos.getDouble(1).orElse(0D), listTagPos.getDouble(2).orElse(0D));
+        this.rot.set(listTagRot.getDouble(0).orElse(0D), listTagRot.getDouble(1).orElse(0D), listTagRot.getDouble(2).orElse(0D));
+        this.scales.set(listTagScales.getDouble(0).orElse(0D), listTagScales.getDouble(1).orElse(0D), listTagScales.getDouble(2).orElse(0D));
+        this.isCulled = compoundTag.getBoolean("Culled").orElse(false);
+        this.isMirror = compoundTag.getBoolean("Mirrored").orElse(false);
+        this.isShown = compoundTag.getBoolean("isShown").orElse(false);
 
         // Load text lines
         this.textLines.clear();
-        ListTag textListTag = compoundTag.getList("TextLines", 8); // 8 means String
+        ListTag textListTag = compoundTag.getList("TextLines").orElse(new ListTag());
         for (int i = 0; i < textListTag.size(); i++) {
-            this.textLines.add(textListTag.getString(i));
+            this.textLines.add(textListTag.getString(i).orElse(""));
         }
     }
 

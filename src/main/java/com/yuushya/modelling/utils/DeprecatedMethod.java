@@ -1,6 +1,8 @@
 package com.yuushya.modelling.utils;
 
+import com.google.gson.*;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 import com.yuushya.modelling.Yuushya;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -9,6 +11,9 @@ import net.minecraft.core.component.DataComponentHolder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
@@ -17,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 public class DeprecatedMethod {
+    private static final Gson GSON = (new GsonBuilder()).disableHtmlEscaping().create();
     public static Optional<ItemStack> parse(HolderLookup.Provider lookupProvider, Tag tag) {
         return ItemStack.CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial((p_330102_) -> Yuushya.LOGGER.error("Tried to load invalid item: '{}'", p_330102_));
     }
@@ -100,5 +106,23 @@ public class DeprecatedMethod {
 
     public static void blitSprite(GuiGraphicsExtractor guiGraphics, Identifier resourceLocation,int x, int y, int width, int height) {
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, width, height);
+    }
+
+    static MutableComponent deserialize(JsonElement json, HolderLookup.Provider provider) {
+        return (MutableComponent) ComponentSerialization.CODEC.parse(provider.createSerializationContext(JsonOps.INSTANCE), json).getOrThrow(JsonParseException::new);
+    }
+
+    static JsonElement serialize(Component component, HolderLookup.Provider provider) {
+        return (JsonElement)ComponentSerialization.CODEC.encodeStart(provider.createSerializationContext(JsonOps.INSTANCE), component).getOrThrow(JsonParseException::new);
+    }
+
+    public static String toJson(Component component, HolderLookup.Provider registries) {
+        return GSON.toJson(serialize(component, registries));
+    }
+
+    @javax.annotation.Nullable
+    public static MutableComponent fromJson(String json, HolderLookup.Provider registries) {
+        JsonElement jsonelement = JsonParser.parseString(json);
+        return jsonelement == null ? null : deserialize(jsonelement, registries);
     }
 }
