@@ -37,7 +37,6 @@ import java.util.function.Consumer;
 
 import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.rotate;
 import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.scale;
-import static com.yuushya.modelling.client.FontRenderUtil.drawStringUnified;
 
 public class TextBlockSpecialRender implements NoDataSpecialModelRenderer {
     protected final BlockStateModel backup = SimpleGeneratedModel.simpleModel();

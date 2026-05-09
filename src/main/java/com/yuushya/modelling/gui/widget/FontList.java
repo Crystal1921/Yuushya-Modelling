@@ -3,7 +3,6 @@ package com.yuushya.modelling.gui.widget;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.network.chat.Component;

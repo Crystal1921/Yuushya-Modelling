@@ -2,9 +2,10 @@ package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
+import com.yuushya.modelling.utils.DeprecatedMethod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +28,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
         this.transformDataList = transformDataList;
         this.screen = textBlockScreen;
         this.centerListVertically = false;
-        this.setRenderHeader(false, 0);
+        //TODO  this.setRenderHeader(false, 0);
         this.itemWidth = itemWidth;
         this.itemHeight = itemHeight;
         this.updateRenderList();
@@ -108,7 +109,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
+        public void render(GuiGraphicsExtractor guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
             List<String> textLines = updateRenderTextLines();
             Font font = Minecraft.getInstance().font;
@@ -120,14 +121,14 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
                 try {
                     var level = Minecraft.getInstance().level;
                     if (level != null) {
-                        Component component = Component.Serializer.fromJson(textLines.get(0), level.registryAccess());
+                        Component component = DeprecatedMethod.fromJson(textLines.getFirst(), level.registryAccess());
                         if (component != null) {
                             previewText = component.getString();
                         }
                     }
                 } catch (Exception e) {
                     // If deserialization fails, use raw string as fallback
-                    previewText = textLines.get(0);
+                    previewText = textLines.getFirst();
                 }
             }
             if (previewText.length() > 6) {

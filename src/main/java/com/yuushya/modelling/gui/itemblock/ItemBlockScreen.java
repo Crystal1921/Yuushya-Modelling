@@ -29,7 +29,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.core.BlockPos;
@@ -766,19 +766,19 @@ public class ItemBlockScreen extends AbstractColorScreen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.itemStackList.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.itemStackList.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         ItemStack itemStack = getItemStack();
-        guiGraphics.drawString(this.font, itemStack.getDisplayName(), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
+        guiGraphics.text(this.font, itemStack.getDisplayName(), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
 
         if (modeButton.getValue() == Mode.EDIT) {
             for (ItemTransformComponent component : this.panel.values()) {
-                guiGraphics.drawString(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
-                component.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
+                guiGraphics.text(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
+                component.editBox.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
 
@@ -786,13 +786,13 @@ public class ItemBlockScreen extends AbstractColorScreen {
             BlockState blockState = getBlockState();
             if (blockState != null && property != null) {
                 String propertyName = property.getName();
-                guiGraphics.drawString(this.font, propertyName, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyName) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 2 + 5, 0xFFFFFFFF, false);
+                guiGraphics.text(this.font, propertyName, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyName) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 2 + 5, 0xFFFFFFFF, false);
                 String propertyValue = YuushyaDebugStickItem.getNameHelper(blockState, property);
-                guiGraphics.drawString(this.font, propertyValue, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyValue) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3 + 5, 0xFFFFFFFF, false);
+                guiGraphics.text(this.font, propertyValue, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyValue) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3 + 5, 0xFFFFFFFF, false);
             }
         }
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override

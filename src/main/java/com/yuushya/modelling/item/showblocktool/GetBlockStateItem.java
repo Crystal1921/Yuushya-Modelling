@@ -8,8 +8,6 @@ import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -49,13 +47,13 @@ public class GetBlockStateItem extends AbstractToolItem {
                 showBlockEntity.removeTransFormDataNow();
                 showBlockEntity.saveChanged();
             } else {
-                player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".mainhand.pass"), true);
+                player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".mainhand.pass"));
                 return InteractionResult.PASS;
             }
         }
         blockState = blockStateTarget;
         setTag(handItemStack);
-        player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".mainhand.success"), true);
+        player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".mainhand.success"));
         return InteractionResult.SUCCESS;
     }
 
@@ -64,7 +62,7 @@ public class GetBlockStateItem extends AbstractToolItem {
         //左手右键放置状态到展示方块里//with off hand right-click can put blockstate to showblock
         getTag(handItemStack);
         if (blockState.getBlock() instanceof AirBlock) {
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".offhand.fail"), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".offhand.fail"));
             return InteractionResult.SUCCESS;
         }
         if (blockStateTarget.getBlock() instanceof ShowBlock) {
@@ -72,7 +70,7 @@ public class GetBlockStateItem extends AbstractToolItem {
             showBlockEntity.setSlotBlockStateNow(blockState);
             showBlockEntity.setSlotShown(showBlockEntity.getSlot(), true);
             showBlockEntity.saveChanged();
-            player.displayClientMessage(Component.translatable(this.getDescriptionId() + ".offhand.success"), true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + ".offhand.success"));
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;

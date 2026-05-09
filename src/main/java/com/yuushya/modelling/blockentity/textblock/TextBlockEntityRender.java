@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,7 @@ import org.jspecify.annotations.NonNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +55,31 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@N
     public void extractRenderState(@NotNull TextBlockEntity blockEntity, @NotNull TextBlockEntityRenderState state, float partialTicks, Vec3 cameraPosition, @Nullable ModelFeatureRenderer.CrumblingOverlay breakProgress) {
         super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
         state.transformData = blockEntity.getTransformData();
+
+        Level level = blockEntity.getLevel();
+        if (level instanceof ClientLevel clientLevel) {
+            ArrayList<MutableComponent> components = new ArrayList<>();
+            for (TransformTextData transformData : state.transformData) {
+                List<String> textLines = transformData.textLines;
+                String cacheKey = String.join("", textLines);
+
+                MutableComponent mutableComponent = componentCacheMap.get(cacheKey);
+
+                if (mutableComponent == null) {
+                    final MutableComponent tempComp = Component.empty();
+                    textLines.forEach(line -> {
+                        MutableComponent lineComponent = DeprecatedMethod.fromJson(line, clientLevel.registryAccess());
+                        if (lineComponent != null) {
+                            tempComp.append(lineComponent);
+                        }
+                    });
+                    mutableComponent = tempComp;
+                    componentCacheMap.put(cacheKey, tempComp);
+                }
+                components.add(mutableComponent);
+            }
+            state.textComponents = List.copyOf(components);
+        }
     }
 
     public static void scale(PoseStack arg, Vector3f scales) {
@@ -89,65 +116,53 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@N
         }
     }
 
-    public void render(@NotNull TextBlockEntity blockEntity, float tickDelta, @NotNull PoseStack matrixStack,
-                       @NotNull MultiBufferSource multiBufferSource, int light, int overlay) {
-        super.render(blockEntity, tickDelta, matrixStack, multiBufferSource, light, overlay);
+    @Override
+    public void submit(@NonNull TextBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        super.submit(state, poseStack, submitNodeCollector, cameraRenderState);
 
-        Level level = blockEntity.getLevel();
-        if (level instanceof ClientLevel clientLevel) {
-            for (TransformTextData transformData : blockEntity.getTransformData()) {
+        List<TransformTextData> transformData = state.transformData;
+        List<MutableComponent> textComponents = state.textComponents;
+        if (transformData.isEmpty() || textComponents == null || textComponents.size() != transformData.size()) {
+            return;
+        }
 
-                List<String> textLines = transformData.textLines;
-                String cacheKey = String.join("", textLines);
+        for (int i = 0; i < transformData.size(); i++) {
+            TransformTextData transformDatum = transformData.get(i);
+            MutableComponent mutableComponent = textComponents.get(i);
 
-                MutableComponent mutableComponent = componentCacheMap.get(cacheKey);
+            poseStack.pushPose();
 
-                if (mutableComponent == null) {
-                    final MutableComponent tempComp = Component.empty();
-                    textLines.forEach(line -> {
-                        MutableComponent lineComponent = DeprecatedMethod.fromJson(line, clientLevel.registryAccess());
-                        if (lineComponent != null) {
-                            tempComp.append(lineComponent);
-                        }
-                    });
-                    mutableComponent = tempComp;
-                    componentCacheMap.put(cacheKey, tempComp);
-                }
+            poseStack.translate(0.0D, 1.0D, 0.0D);
 
-                matrixStack.pushPose();
+            scale(poseStack, transformDatum.scales);
+            YuushyaUtils.translate(poseStack, transformDatum.pos);
+            rotate(poseStack, transformDatum.rot);
 
-                matrixStack.translate(0.0D, 1.0D, 0.0D);
+            poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+            poseStack.scale(0.1F, 0.1F, 0.1F);
+            Matrix4f matrix4f = poseStack.last().pose();
 
-                scale(matrixStack, transformData.scales);
-                YuushyaUtils.translate(matrixStack, transformData.pos);
-                rotate(matrixStack, transformData.rot);
+            boolean isCulled = transformDatum.isCulled;
+            boolean isMirror = transformDatum.isMirror;
 
-                matrixStack.mulPose(Axis.XP.rotationDegrees(180.0F));
-                matrixStack.scale(0.1F, 0.1F, 0.1F);
-                Matrix4f matrix4f = matrixStack.last().pose();
-
-                boolean isCulled = transformData.isCulled;
-                boolean isMirror = transformData.isMirror;
-
-                if (!isCulled && !isMirror) {
-                    //TODO 这里也要渲染两次
-//                    drawStringUnified(font, mutableComponent.getVisualOrderText(), 0, 0, -1, false, matrix4f, multiBufferSource, 0, light);
-                }
-
-                if (!isCulled && isMirror) {
-                    font.drawInBatch(mutableComponent, 0, 0, -1, false, matrix4f, multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
-                    matrixStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-                    matrixStack.translate(-font.width(mutableComponent), 0.0D, 0.0D);
-                    Matrix4f matrix4fMirror = matrixStack.last().pose();
-                    font.drawInBatch(mutableComponent, 0, 0, -1, false, matrix4fMirror, multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
-                }
-
-                if (isCulled) {
-                    font.drawInBatch(mutableComponent, 0, 0, -1, false, matrix4f, multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
-                }
-
-                matrixStack.popPose();
+            if (!isCulled && !isMirror) {
+                //TODO 这里也要渲染两次
+//                    submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
             }
+
+            if (!isCulled && isMirror) {
+                //TODO 不知道这里行不行
+                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
+                poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+                poseStack.translate(-font.width(mutableComponent), 0.0D, 0.0D);
+                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
+            }
+
+            if (isCulled) {
+                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
+            }
+
+            poseStack.popPose();
         }
     }
 

@@ -3,7 +3,6 @@ package com.yuushya.modelling.item;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -33,7 +32,6 @@ public class GetBlockStateItemForge extends GetBlockStateItem {
         super(properties, tipLines);
     }
 
-    @SuppressWarnings("removal")
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(ITEM_EXTENSIONS);

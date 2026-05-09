@@ -18,7 +18,7 @@ import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -26,9 +26,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -476,36 +473,36 @@ public class ShowBlockScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.blockStateList.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.blockStateList.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         BlockState blockState = getBlockState();
-        guiGraphics.drawString(this.font, this.blockStateList.updateRenderDisplayName(blockState), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
+        guiGraphics.text(this.font, this.blockStateList.updateRenderDisplayName(blockState), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
         List<String> properties = this.blockStateList.updateRenderBlockStateProperties(blockState);
         for (int i = 0; i < properties.size(); i++) {
             MutableComponent displayBlockState = Component.literal(properties.get(i));
-            guiGraphics.drawString(this.font, displayBlockState, RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT + this.font.lineHeight * (i + 1) + 1, 0xFFEBC6, false);
+            guiGraphics.text(this.font, displayBlockState, RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT + this.font.lineHeight * (i + 1) + 1, 0xFFEBC6, false);
         }
         if (updateStateButtonVisible(false)) {
-            guiGraphics.drawString(this.font, property.getName(), RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2, RIGHT_STATE_PANEL_Y + 5, 0xFFFFFFFF, false);
-            guiGraphics.drawString(this.font, YuushyaDebugStickItem.getNameHelper(blockState, property), RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2, RIGHT_STATE_PANEL_Y + 5 + PER_HEIGHT, 0xFFFFFFFF, false);
+            guiGraphics.text(this.font, property.getName(), RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2, RIGHT_STATE_PANEL_Y + 5, 0xFFFFFFFF, false);
+            guiGraphics.text(this.font, YuushyaDebugStickItem.getNameHelper(blockState, property), RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2, RIGHT_STATE_PANEL_Y + 5 + PER_HEIGHT, 0xFFFFFFFF, false);
         }
         if (modeButton.getValue() == Mode.EDIT) {
             for (TransformComponent component : this.panel.values()) {
-                guiGraphics.drawString(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
-                component.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
+                guiGraphics.text(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
+                component.editBox.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
 
         if (faceCount > 0) {
             String text = String.valueOf(faceCount);
             guiGraphics.fill(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 85, TOP, RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 95 + font.width(text), TOP + 20, 0x80000000);
-            guiGraphics.drawString(this.font, Component.literal(text), RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 90, TOP + 5, 0xFFFFFFFF, false);
+            guiGraphics.text(this.font, Component.literal(text), RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 6 + 90, TOP + 5, 0xFFFFFFFF, false);
         }
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override

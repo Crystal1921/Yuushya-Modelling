@@ -10,7 +10,6 @@ import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.registries.MenuRegistry;
-import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Blocks;
