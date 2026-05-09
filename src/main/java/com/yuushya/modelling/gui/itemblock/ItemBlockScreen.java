@@ -40,6 +40,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.fml.ModList;
@@ -401,41 +402,44 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 .withInitialValue(Mode.SLIDER)
                 .withTooltip((mode) -> Tooltip.create(
                         switch (mode) {
-                            case SLIDER -> Component.translatable("gui.itemBlockScreen.mode.slider.tooltip");
-                            case FINE_TUNE -> Component.translatable("gui.itemBlockScreen.mode.fine_tune.tooltip");
-                            case EDIT -> Component.translatable("gui.itemBlockScreen.mode.edit.tooltip");
-                            case COLOR -> Component.translatable("gui.showBlockScreen.mode.color.tooltip");
-                            case CUSTOM_SIZE -> Component.translatable("gui.itemBlockScreen.mode.custom_size.tooltip");
+                            case Mode.SLIDER -> Component.translatable("gui.itemBlockScreen.mode.slider.tooltip");
+                            case Mode.FINE_TUNE -> Component.translatable("gui.itemBlockScreen.mode.fine_tune.tooltip");
+                            case Mode.EDIT -> Component.translatable("gui.itemBlockScreen.mode.edit.tooltip");
+                            case Mode.COLOR -> Component.translatable("gui.showBlockScreen.mode.color.tooltip");
+                            case Mode.CUSTOM_SIZE -> Component.translatable("gui.itemBlockScreen.mode.custom_size.tooltip");
+                            default -> throw new IllegalStateException("Unexpected value: " + mode);
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
                         (btn, mode) -> {
                             switch (mode) {
-                                case SLIDER -> panel.values().forEach(ItemTransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE ->
+                                case Mode.SLIDER -> panel.values().forEach(ItemTransformComponent::setSliderStep);
+                                case Mode.EDIT, Mode.FINE_TUNE ->
                                         panel.values().forEach(ItemTransformComponent::setSliderFineTune);
+                                default -> {}
                             }
                             switch (mode) {
-                                case SLIDER, FINE_TUNE -> {
+                                case Mode.SLIDER, Mode.FINE_TUNE -> {
                                     panel.values().forEach((it) -> it.triggerVisible(true));
                                     panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(false);
                                 }
-                                case EDIT -> {
+                                case Mode.EDIT -> {
                                     panel.values().forEach((it) -> it.triggerVisible(false));
                                     panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(false);
                                 }
-                                case COLOR -> {
+                                case Mode.COLOR -> {
                                     panel.values().forEach(ItemTransformComponent::setInvisible);
                                     panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(true);
                                 }
-                                case CUSTOM_SIZE -> {
+                                case Mode.CUSTOM_SIZE -> {
                                     panel.values().forEach(ItemTransformComponent::setInvisible);
                                     panelSize.values().forEach((it) -> it.triggerVisible(true));
                                     updateColorVisible(false);
                                 }
+                                default -> throw new IllegalStateException("Unexpected value: " + mode);
                             }
                         }
                 );
@@ -673,7 +677,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                                         if (i == slot) continue;
                                         updateTransformDataSever(COLOR, (double) color, i);
                                     }
-                                    this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+                                    this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
                                     this.colorApplyButton.setValue(PRE_APPLY);
                                 }
                             }
@@ -831,7 +835,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         shareInformation.transferItems(dataList);
 
         int nextSize = dataList.size();
-        this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+        this.blockEntity.getLevel().sendBlockUpdated(pos, blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         this.storage.clear();
         for (int slot = 0; slot < nextSize; slot++) {
             TransformItemData data = dataList.get(slot);
@@ -895,7 +899,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
     public void updateTransformDataClient(ItemTransformType type, Double number) {
         this.storage.put(type, number);
         type.modify(blockEntity, slot, number);
-        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
     }
 
     public void updateTransformDataSever(ItemTransformType type, Double number, int slot) {
@@ -906,7 +910,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
     private void updateItemStack(ItemStack itemStack) {
         this.itemStack = itemStack.copy();
         ITEM_STACK.modify(blockEntity, slot, itemStack);
-        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
+        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
     }
 
     // AbstractColorScreen 接口实现
