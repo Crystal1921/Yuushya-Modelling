@@ -194,10 +194,9 @@ public class ShowBlockScreen extends Screen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
         shownStateButton = CycleButton.booleanBuilder(
-                        Component.literal("🕶"),//Component.translatable("gui.showBlockScreen.display.on"),
-                        Component.literal("👀"))//Component.translatable("gui.showBlockScreen.display.off"))
+                        Component.literal("🕶"),
+                        Component.literal("👀"), true)
                 .displayOnlyValue()
-                .withInitialValue(true)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> updateTransformData(SHOWN, bl ? 1.0 : 0.0)
@@ -209,7 +208,7 @@ public class ShowBlockScreen extends Screen {
                         (btn) -> {
                             String res = ShareUtils.transfer(blockEntity.getTransformData());
                             setClipboard(res);
-                            this.minecraft.getToasts().addToast(
+                            this.minecraft.getToastManager().addToast(
                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                             );
                         }
@@ -224,18 +223,18 @@ public class ShowBlockScreen extends Screen {
                             try {
                                 ShareUtils.ShareBlockInformation shareBlockInformation = ShareUtils.from(string);
                                 if (shareBlockInformation.blocks().isEmpty()) {
-                                    this.minecraft.getToasts().addToast(
+                                    this.minecraft.getToastManager().addToast(
                                             SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No block data found")));
                                     return;
                                 }
                                 checkModLack(shareBlockInformation);
                                 updateAllTransformData(shareBlockInformation);
                                 updateStateButtonVisible(true);
-                                this.minecraft.getToasts().addToast(
+                                this.minecraft.getToastManager().addToast(
                                         new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
                                 );
                             } catch (Exception e) {
-                                this.minecraft.getToasts().addToast(
+                                this.minecraft.getToastManager().addToast(
                                         SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
                                 );
                             }
@@ -253,11 +252,11 @@ public class ShowBlockScreen extends Screen {
                                         String res = ShareUtils.transfer(blockEntity.getTransformData());
                                         try {
                                             EngraveBlockResultLoader.saveBlock(res, string);
-                                            this.minecraft.getToasts().addToast(
+                                            this.minecraft.getToastManager().addToast(
                                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                                             );
                                         } catch (IOException e) {
-                                            this.minecraft.getToasts().addToast(
+                                            this.minecraft.getToastManager().addToast(
                                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
                                             );
                                         }
@@ -303,33 +302,33 @@ public class ShowBlockScreen extends Screen {
                 .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2 * 3, RIGHT_STATE_PANEL_Y + PER_HEIGHT, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
 
-        CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
+        CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol, SHAPE.extractShape(blockEntity))
                 .displayOnlyValue()
                 .withValues(BlockShape.values())
-                .withInitialValue(SHAPE.extractShape(blockEntity))
                 .create(leftColumnX() - 50, TOP, 40, PER_HEIGHT, Component.literal("shape"),
                         (button, shape) -> updateTransformData(SHAPE, (double) shape.ordinal()));
 
-        modeButton = CycleButton.builder(Mode::getSymbol)
+        modeButton = CycleButton.builder(Mode::getSymbol, Mode.SLIDER)
                 .displayOnlyValue()
                 .withValues(Mode.values())
-                .withInitialValue(Mode.SLIDER)
                 .withTooltip((mode) -> Tooltip.create(
                         switch (mode) {
-                            case SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
-                            case FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
-                            case EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
+                            case Mode.SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
+                            case Mode.FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
+                            case Mode.EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
                         (btn, mode) -> {
                             switch (mode) {
-                                case SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE -> panel.values().forEach(TransformComponent::setSliderFineTune);
+                                case Mode.SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
+                                case Mode.EDIT, Mode.FINE_TUNE ->
+                                        panel.values().forEach(TransformComponent::setSliderFineTune);
                             }
                             switch (mode) {
-                                case SLIDER, FINE_TUNE -> panel.values().forEach((it) -> it.triggerVisible(true));
-                                case EDIT -> panel.values().forEach((it) -> it.triggerVisible(false));
+                                case Mode.SLIDER, Mode.FINE_TUNE ->
+                                        panel.values().forEach((it) -> it.triggerVisible(true));
+                                case Mode.EDIT -> panel.values().forEach((it) -> it.triggerVisible(false));
                             }
                         }
                 );
@@ -521,7 +520,7 @@ public class ShowBlockScreen extends Screen {
 
     public void checkModLack(ShareUtils.ShareBlockInformation shareBlockInformation) {
         List<String> unLoaded = shareBlockInformation.mods().stream().filter(id -> !ModList.get().isLoaded(id)).toList();
-        Minecraft.getInstance().getToasts().addToast(
+        Minecraft.getInstance().getToastManager().addToast(
                 SystemToast.multiline(Minecraft.getInstance(), SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.literal("Mod Lack"), Component.literal(String.join(", ", unLoaded)))
         );
     }

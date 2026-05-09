@@ -214,7 +214,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                         (btn) -> {
                             String res = ShareUtils.transferText(blockEntity.getTransformData());
                             setClipboard(res);
-                            this.minecraft.getToasts().addToast(
+                            this.minecraft.getToastManager().addToast(
                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                             );
                         }
@@ -228,16 +228,16 @@ public class TextBlockScreen extends AbstractColorScreen {
                             try {
                                 ShareUtils.SharedTextInformation shareInformation = ShareUtils.fromText(string);
                                 if (shareInformation.texts().isEmpty()) {
-                                    this.minecraft.getToasts().addToast(
+                                    this.minecraft.getToastManager().addToast(
                                             SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No item data found")));
                                     return;
                                 }
                                 updateAllTransformData(shareInformation);
-                                this.minecraft.getToasts().addToast(
+                                this.minecraft.getToastManager().addToast(
                                         new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
                                 );
                             } catch (Exception e) {
-                                this.minecraft.getToasts().addToast(
+                                this.minecraft.getToastManager().addToast(
                                         SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
                                 );
                             }
@@ -255,11 +255,11 @@ public class TextBlockScreen extends AbstractColorScreen {
                                         String res = ShareUtils.transferText(blockEntity.getTransformData());
                                         try {
                                             EngraveTextResultLoader.saveItem(res, string);
-                                            this.minecraft.getToasts().addToast(
+                                            this.minecraft.getToastManager().addToast(
                                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
                                             );
                                         } catch (IOException e) {
-                                            this.minecraft.getToasts().addToast(
+                                            this.minecraft.getToastManager().addToast(
                                                     SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
                                             );
                                         }
