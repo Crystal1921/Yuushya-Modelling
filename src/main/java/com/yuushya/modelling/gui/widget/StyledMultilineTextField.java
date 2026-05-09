@@ -376,7 +376,7 @@ public class StyledMultilineTextField {
     // ==================== 键盘处理 ====================
 
     public boolean keyPressed(int keyCode) {
-        this.selecting = Screen.hasShiftDown();
+        this.selecting = Minecraft.getInstance().hasShiftDown();
 
         if (Screen.isSelectAll(keyCode)) {
             this.cursor = this.plainText.length();
