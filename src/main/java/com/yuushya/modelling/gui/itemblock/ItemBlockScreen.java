@@ -57,7 +57,6 @@ import java.util.*;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_AO;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.ENABLE_SPECIAL_RENDER;
 import static com.yuushya.modelling.blockentity.AbstractTransformBlock.FULL_BLOCK;
-import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 import static com.yuushya.modelling.utils.YuushyaUtils.normalizeAngle;
@@ -117,7 +116,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         }
 
         if (!itemStack.isEmpty()) {
-            PacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
+            ClientPacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
         }
 
         this.itemStack = ItemStack.EMPTY;
@@ -265,12 +264,11 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
         shownStateButton = CycleButton.booleanBuilder(
                         Component.literal("🕶"),
-                        Component.literal("👀"))
+                        Component.literal("👀"), true)
                 .displayOnlyValue()
-                .withInitialValue(true)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
-                        (btn, bl) -> updateTransformDataClient(SHOWN, bl ? 1.0 : 0.0)
+                        (btn, bl) -> updateTransformDataClient(ItemTransformType.SHOWN, bl ? 1.0 : 0.0)
                 );
 
         Button copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),
@@ -596,9 +594,8 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .bounds(leftColumnX(), top(4, 20), leftColumnWidth(), PER_HEIGHT).build();
 
         boolean enableBlock = ENABLE_BLOCK.extract(blockEntity, slot) == 1;
-        enableBlockButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.block"), Component.translatable("gui.textBlockScreen.item"))
+        enableBlockButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.block"), Component.translatable("gui.textBlockScreen.item"), enableBlock)
                 .displayOnlyValue()
-                .withInitialValue(enableBlock)
                 .create(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH , TOP + PER_HEIGHT + PER_HEIGHT, RIGHT_LIST_WIDTH, PER_HEIGHT, Component.empty(), (button, bool) -> {
                     updateBlockStateButtonVisible(bool);
                     updateTransformDataClient(ENABLE_BLOCK, bool ? 1.0 : 0.0);
@@ -661,10 +658,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
             }
         })).bounds(leftColumnX() + leftColumnWidth() - 5, top(6, 30), SMALL_BUTTON_WIDTH, PER_HEIGHT).build();
 
-        colorApplyButton = CycleButton.builder(ApplyColor::getSymbol)
+        colorApplyButton = CycleButton.builder(ApplyColor::getSymbol, PRE_APPLY)
                 .displayOnlyValue()
                 .withValues(ApplyColor.values())
-                .withInitialValue(ApplyColor.PRE_APPLY)
                 .withTooltip((mode) -> Tooltip.create(mode.getDescription()))
                 .create(leftColumnX() + 30, top(-2, 30) + 5, 50, PER_HEIGHT, Component.literal("TYPE"),
                         (button, mode) -> {
@@ -678,7 +674,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                                         updateTransformDataSever(COLOR, (double) color, i);
                                     }
                                     this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
-                                    this.colorApplyButton.setValue(ApplyColor.PRE_APPLY);
+                                    this.colorApplyButton.setValue(PRE_APPLY);
                                 }
                             }
                         }
@@ -806,7 +802,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
             ItemTransformDataOncePacket.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
         }
         if (!itemStack.isEmpty()) {
-            PacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
+            ClientPacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
         }
 
         this.itemStack = ItemStack.EMPTY;
@@ -872,7 +868,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, ENABLE_BLOCK, data.enableBlock ? 1 : 0);
         ItemTransformDataOncePacket.sendToServerSide(pos, slot, COLOR, data.color);
 
-        PacketDistributor.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));
+        ClientPacketDistributor.sendToServer(new ItemStackPacket(pos, slot, data.itemStack));
 
     }
 
