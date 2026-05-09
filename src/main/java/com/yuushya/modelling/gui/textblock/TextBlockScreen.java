@@ -15,6 +15,7 @@ import com.yuushya.modelling.gui.widget.*;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
 import com.yuushya.modelling.network.TextLinesPacket;
 import com.yuushya.modelling.network.TextTransformDataOncePacket;
+import com.yuushya.modelling.utils.DeprecatedMethod;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.ChatFormatting;
@@ -142,7 +143,7 @@ public class TextBlockScreen extends AbstractColorScreen {
             List<Component> components = new ArrayList<>();
             for (String line : currentLines) {
                 if (level != null) {
-                    components.add(Component.Serializer.fromJson(line, level.registryAccess()));
+                    components.add(DeprecatedMethod.fromJson(line, level.registryAccess()));
                 }
             }
             textEditBox.setValue(components);
@@ -167,7 +168,6 @@ public class TextBlockScreen extends AbstractColorScreen {
 
     @Override
     protected void init() {
-        if (minecraft == null) return;
         Button addTextButton = Button.builder(Component.literal("+"),
                         (btn) -> {
                             textIconList.addSlot();
@@ -182,7 +182,7 @@ public class TextBlockScreen extends AbstractColorScreen {
                                 List<String> defaultText = new ArrayList<>();
                                 List<Component> components = new ArrayList<>();
                                 components.add(Component.literal("New Text"));
-                                defaultText.add(Component.Serializer.toJson(Component.literal("New Text"), level.registryAccess()));
+                                defaultText.add(DeprecatedMethod.toJson(Component.literal("New Text"), level.registryAccess()));
                                 this.textEditBox.setValue(components);
                                 updateTextLines(defaultText);
                                 updateTransformDataClient(SHOWN, 1.0);
@@ -276,9 +276,8 @@ public class TextBlockScreen extends AbstractColorScreen {
 
         shownStateButton = CycleButton.booleanBuilder(
                         Component.literal("🕶"),
-                        Component.literal("👀"))
+                        Component.literal("👀"), true)
                 .displayOnlyValue()
-                .withInitialValue(true)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> updateTransformDataClient(SHOWN, bl ? 1.0 : 0.0)
@@ -286,9 +285,8 @@ public class TextBlockScreen extends AbstractColorScreen {
 
         cullButton = CycleButton.booleanBuilder(
                         Component.literal("▢"),
-                        Component.literal("■"))
+                        Component.literal("■"), CULLED.extract(blockEntity, slot) != 0)
                 .displayOnlyValue()
-                .withInitialValue(CULLED.extract(blockEntity, slot) != 0)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.textBlockScreen.cull.on") : Component.translatable("gui.textBlockScreen.cull.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> updateTransformDataClient(CULLED, bl ? 1.0 : 0.0)
@@ -296,9 +294,8 @@ public class TextBlockScreen extends AbstractColorScreen {
 
         mirrorButton = CycleButton.booleanBuilder(
                         Component.literal("⇢"),
-                        Component.literal("⇠"))
+                        Component.literal("⇠"), MIRROR.extract(blockEntity, slot) != 0)
                 .displayOnlyValue()
-                .withInitialValue(MIRROR.extract(blockEntity, slot) != 0)
                 .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.textBlockScreen.mirror.on") : Component.translatable("gui.textBlockScreen.mirror.off")))
                 .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 5, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> updateTransformDataClient(MIRROR, bl ? 1.0 : 0.0)
@@ -306,46 +303,44 @@ public class TextBlockScreen extends AbstractColorScreen {
 
         textIconList = new TextIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
-        CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
+        CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol, SHAPE.extractShape(blockEntity))
                 .displayOnlyValue()
                 .withValues(BlockShape.values())
-                .withInitialValue(SHAPE.extractShape(blockEntity))
                 .create(leftColumnX() - 50, TOP, 40, PER_HEIGHT, Component.literal("shape"),
                         (button, shape) -> updateTransformDataClient(SHAPE, (double) shape.ordinal()));
 
-        modeButton = CycleButton.builder(Mode::getSymbol)
+        modeButton = CycleButton.builder(Mode::getSymbol, Mode.SLIDER)
                 .displayOnlyValue()
                 .withValues(Mode.values())
-                .withInitialValue(Mode.SLIDER)
                 .withTooltip((mode) -> Tooltip.create(
                         switch (mode) {
-                            case SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
-                            case FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
-                            case EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
-                            case TEXT -> Component.translatable("gui.showBlockScreen.mode.text.tooltip");
+                            case Mode.SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
+                            case Mode.FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
+                            case Mode.EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
+                            case Mode.TEXT -> Component.translatable("gui.showBlockScreen.mode.text.tooltip");
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
                         (btn, mode) -> {
                             var values = panel.values();
                             switch (mode) {
-                                case SLIDER -> values.forEach(it -> {
+                                case Mode.SLIDER -> values.forEach(it -> {
                                     it.setSliderStep();
                                     it.triggerVisible(true);
                                     setTextInputVisible(false);
                                 });
-                                case EDIT -> values.forEach(it -> {
+                                case Mode.EDIT -> values.forEach(it -> {
                                     it.setSliderFineTune();
                                     it.triggerVisible(false);
                                     setTextInputVisible(false);
                                 });
-                                case FINE_TUNE -> values.forEach(it -> {
+                                case Mode.FINE_TUNE -> values.forEach(it -> {
                                     it.setSliderFineTune();
                                     it.triggerVisible(true);
                                     setTextInputVisible(false);
                                 });
 
-                                case TEXT -> values.forEach(textTransformComponent -> {
+                                case Mode.TEXT -> values.forEach(textTransformComponent -> {
                                     textTransformComponent.setInvisible();
                                     setTextInputVisible(true);
                                 });
@@ -469,54 +464,48 @@ public class TextBlockScreen extends AbstractColorScreen {
 
         fontList = new FontList(this.minecraft, this, 200, 160, leftColumnX() - 200, top(0, 30), 30);
 
-        boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)))
+        boldButton = CycleButton.booleanBuilder(Component.literal("B").withStyle(Style.EMPTY.withBold(true).withColor(Color.RED.getRGB())), Component.literal("B").withStyle(Style.EMPTY.withBold(true)), Boolean.FALSE)
                 .displayOnlyValue()
-                .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() - RIGHT_BAR_WIDTH, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
 
-        italicButton = CycleButton.booleanBuilder(Component.literal("I").withStyle(Style.EMPTY.withItalic(true).withColor(Color.RED.getRGB())), Component.literal("I").withStyle(Style.EMPTY.withItalic(true)))
+        italicButton = CycleButton.booleanBuilder(Component.literal("I").withStyle(Style.EMPTY.withItalic(true).withColor(Color.RED.getRGB())), Component.literal("I").withStyle(Style.EMPTY.withItalic(true)), Boolean.FALSE)
                 .displayOnlyValue()
-                .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX(), top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
 
-        underlineButton = CycleButton.booleanBuilder(Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true).withColor(Color.RED.getRGB())), Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true)))
+        underlineButton = CycleButton.booleanBuilder(Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true).withColor(Color.RED.getRGB())), Component.literal("U").withStyle(Style.EMPTY.withUnderlined(true)), Boolean.FALSE)
                 .displayOnlyValue()
-                .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() + RIGHT_BAR_WIDTH, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
 
-        strikethroughButton = CycleButton.booleanBuilder(Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true).withColor(Color.RED.getRGB())), Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true)))
+        strikethroughButton = CycleButton.booleanBuilder(Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true).withColor(Color.RED.getRGB())), Component.literal("S").withStyle(Style.EMPTY.withStrikethrough(true)), Boolean.FALSE)
                 .displayOnlyValue()
-                .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() + RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
 
-        obfuscatedButton = CycleButton.booleanBuilder(Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true).withColor(Color.RED.getRGB())), Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true)))
+        obfuscatedButton = CycleButton.booleanBuilder(Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true).withColor(Color.RED.getRGB())), Component.literal("O").withStyle(Style.EMPTY.withObfuscated(true)), Boolean.FALSE)
                 .displayOnlyValue()
-                .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() + RIGHT_BAR_WIDTH * 3, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
                             this.textEditBox.setTextStyle();
                         });
 
-        fontButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.font"), Component.translatable("gui.textBlockScreen.font"))
+        fontButton = CycleButton.booleanBuilder(Component.translatable("gui.textBlockScreen.font"), Component.translatable("gui.textBlockScreen.font"), Boolean.FALSE)
                 .displayOnlyValue()
-                .withInitialValue(Boolean.FALSE)
                 .withTooltip((on) -> Tooltip.create(Component.empty()))
                 .create(leftColumnX() - RIGHT_BAR_WIDTH * 2, top(0, 0), RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
                         (btn, bl) -> {
@@ -583,7 +572,7 @@ public class TextBlockScreen extends AbstractColorScreen {
             List<Component> components = new ArrayList<>();
             for (String line : currentLines) {
                 if (level != null) {
-                    components.add(Component.Serializer.fromJson(line, level.registryAccess()));
+                    components.add(DeprecatedMethod.fromJson(line, level.registryAccess()));
                 }
             }
             textEditBox.setValue(components);
@@ -756,7 +745,7 @@ public class TextBlockScreen extends AbstractColorScreen {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
         for (Component line : textLines) {
-            lines.add(Component.Serializer.toJson(line, level.registryAccess()));
+            lines.add(DeprecatedMethod.toJson(line, level.registryAccess()));
         }
         updateTextLines(lines);
     }

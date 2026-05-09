@@ -402,7 +402,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
                             case Mode.EDIT -> Component.translatable("gui.itemBlockScreen.mode.edit.tooltip");
                             case Mode.COLOR -> Component.translatable("gui.showBlockScreen.mode.color.tooltip");
                             case Mode.CUSTOM_SIZE -> Component.translatable("gui.itemBlockScreen.mode.custom_size.tooltip");
-                            default -> throw new IllegalStateException("Unexpected value: " + mode);
                         }
                 ))
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
@@ -434,7 +433,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
                                     panelSize.values().forEach((it) -> it.triggerVisible(true));
                                     updateColorVisible(false);
                                 }
-                                default -> throw new IllegalStateException("Unexpected value: " + mode);
                             }
                         }
                 );
