@@ -198,27 +198,17 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
             MutableComponent displayName = this.parent.updateRenderDisplayName(blockState);
             Font font = this.minecraft.font;
             int fontHeight = font.lineHeight;
-            guiGraphics.text(font, displayName, x + 3, y + 32, 0xFFFFFF);
+            guiGraphics.text(font, displayName, getX() + 3, getY() + 32, 0xFFFFFF);
 
             if (updateRenderShown())
-                guiGraphics.fill(x, y, x + 32 + 4, y + fontHeight + 32, -1601138544);
+                guiGraphics.fill(getX(), getY() + 1, getX() + 39, getY() + fontHeight + 35, -1601138544);
             if (chosen)
-                guiGraphics.fill(x, y, x + 32 + 4, y + fontHeight + 32, 0x5FD85C2F);
+                guiGraphics.fill(getX(),getY() + 1, getX() + 39, getY() + fontHeight + 35, 0x5FD85C2F);
 
             // TODO: Extract pose-based rendering
             if (Minecraft.getInstance().level != null) {
-                guiGraphics.item(blockState.getBlock().asItem().getDefaultInstance(), x + 8, y + 24);
+                guiGraphics.item(blockState.getBlock().asItem().getDefaultInstance(), getX() + 8, getY() + 24);
             }
-//            PoseStack pose = guiGraphics.pose();
-//            pose.pushPose();
-//            pose.translate(x + 8, y + 24, 100);
-//            pose.scale(16.0f, -16.0f, 16.0f);
-//            pose.mulPose(Axis.XP.rotationDegrees(30));
-//            pose.mulPose(Axis.YP.rotationDegrees(45));
-//
-//            BakedModel blockModel = this.minecraft.getBlockRenderer().getBlockModel(blockState);
-//            this.minecraft.getBlockRenderer().getModelRenderer().renderModel(pose.last(), guiGraphics.bufferSource().getBuffer(RenderType.TRANSLUCENT), blockState, blockModel, 1.0f, 1.0f, 1.0f, 0xF000F0, OverlayTexture.NO_OVERLAY);
-//            pose.popPose();
         }
 
     }
