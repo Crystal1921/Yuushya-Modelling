@@ -1,34 +1,27 @@
 package com.yuushya.modelling.gui.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
-
-import static com.yuushya.modelling.utils.YuushyaUtils.PROPERTY_ENTRY_TO_STRING_FUNCTION;
 
 public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.Entry> {
 
@@ -51,7 +44,6 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         this.transformDataList = transformDataList;
         this.screen = showBlockScreen;
         this.centerListVertically = false;
-        this.setRenderHeader(false, 0);
         this.itemWidth = itemWidth;
         this.itemHeight = itemHeight;
         this.updateRenderList();
@@ -68,7 +60,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
 
     public List<String> updateRenderBlockStateProperties(BlockState blockState) {
         return rememberBlockStateProperties.computeIfAbsent(Block.getId(blockState),
-                (id) -> Block.stateById(id).getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).toList());
+                (id) -> Block.stateById(id).getValues().map(Property.Value::toString).toList());
     }
 
     public ItemStack updateRenderItemstack(BlockState blockState) {
@@ -90,7 +82,7 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return this.getX() + this.getWidth() - 4;
     }
 
@@ -177,14 +169,14 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         }
 
         @Override
-        public @NotNull Component getNarration() {
+        public @NonNull Component getNarration() {
             BlockState blockState = updateRenderState();
             Item item = blockState.getBlock().asItem();
             return (item == Items.AIR) ? blockState.getBlock().getName() : (MutableComponent) item.getName(item.getDefaultInstance());
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             Entry preSelected = this.parent.getSelected();
             this.parent.setSelected(this);
             if (preSelected == this) {
@@ -201,27 +193,32 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, int x, int y, boolean hovered, float v) {
             BlockState blockState = updateRenderState();
             MutableComponent displayName = this.parent.updateRenderDisplayName(blockState);
             Font font = this.minecraft.font;
             int fontHeight = font.lineHeight;
-            guiGraphics.drawString(font, displayName, left + 3, top + 32, 0xFFFFFF, false);
+            guiGraphics.text(font, displayName, x + 3, y + 32, 0xFFFFFF);
 
             if (updateRenderShown())
-                guiGraphics.fill(left, top, left + 32 + 4, top + fontHeight + 32, -1601138544);
+                guiGraphics.fill(x, y, x + 32 + 4, y + fontHeight + 32, -1601138544);
             if (chosen)
-                guiGraphics.fill(left, top, left + 32 + 4, top + fontHeight + 32, 0x5FD85C2F);
-            PoseStack pose = guiGraphics.pose();
-            pose.pushPose();
-            pose.translate(left + 8, top + 24, 100);
-            pose.scale(16.0f, -16.0f, 16.0f);
-            pose.mulPose(Axis.XP.rotationDegrees(30));
-            pose.mulPose(Axis.YP.rotationDegrees(45));
+                guiGraphics.fill(x, y, x + 32 + 4, y + fontHeight + 32, 0x5FD85C2F);
 
-            BakedModel blockModel = this.minecraft.getBlockRenderer().getBlockModel(blockState);
-            this.minecraft.getBlockRenderer().getModelRenderer().renderModel(pose.last(), guiGraphics.bufferSource().getBuffer(RenderType.TRANSLUCENT), blockState, blockModel, 1.0f, 1.0f, 1.0f, 0xF000F0, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
+            // TODO: Extract pose-based rendering
+            if (Minecraft.getInstance().level != null) {
+                guiGraphics.item(blockState.getBlock().asItem().getDefaultInstance(), x + 8, y + 24);
+            }
+//            PoseStack pose = guiGraphics.pose();
+//            pose.pushPose();
+//            pose.translate(x + 8, y + 24, 100);
+//            pose.scale(16.0f, -16.0f, 16.0f);
+//            pose.mulPose(Axis.XP.rotationDegrees(30));
+//            pose.mulPose(Axis.YP.rotationDegrees(45));
+//
+//            BakedModel blockModel = this.minecraft.getBlockRenderer().getBlockModel(blockState);
+//            this.minecraft.getBlockRenderer().getModelRenderer().renderModel(pose.last(), guiGraphics.bufferSource().getBuffer(RenderType.TRANSLUCENT), blockState, blockModel, 1.0f, 1.0f, 1.0f, 0xF000F0, OverlayTexture.NO_OVERLAY);
+//            pose.popPose();
         }
 
     }

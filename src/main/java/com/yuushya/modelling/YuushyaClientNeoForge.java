@@ -24,11 +24,11 @@ public class YuushyaClientNeoForge {
         modBus.addListener(this::handleItemColor);
     }
 
-    @SuppressWarnings("resource")
     public void onInitializeClient(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            ColorTexture colorTexture = new ColorTexture();
-        });
+        //TODO 这里要改
+//        event.enqueueWork(() -> {
+//            ColorTexture colorTexture = new ColorTexture();
+//        });
     }
 
     public void onModelBaked(ModelEvent.ModifyBakingResult event) {

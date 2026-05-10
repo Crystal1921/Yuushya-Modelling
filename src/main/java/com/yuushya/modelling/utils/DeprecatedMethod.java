@@ -15,8 +15,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.Util;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -24,7 +29,7 @@ import java.util.Optional;
 public class DeprecatedMethod {
     private static final Gson GSON = (new GsonBuilder()).disableHtmlEscaping().create();
     public static Optional<ItemStack> parse(HolderLookup.Provider lookupProvider, Tag tag) {
-        return ItemStack.CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial((p_330102_) -> Yuushya.LOGGER.error("Tried to load invalid item: '{}'", p_330102_));
+        return ItemStack.CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial((p_330102_) -> Yuushya.LOG_LOGGER.error("Tried to load invalid item: '{}'", p_330102_));
     }
 
     public static ItemStack parseOptional(HolderLookup.Provider lookupProvider, CompoundTag tag) {
@@ -124,5 +129,15 @@ public class DeprecatedMethod {
     public static MutableComponent fromJson(String json, HolderLookup.Provider registries) {
         JsonElement jsonelement = JsonParser.parseString(json);
         return jsonelement == null ? null : deserialize(jsonelement, registries);
+    }
+
+    public static void saveToItem(BlockEntity blockEntity, ItemStack stack, HolderLookup.Provider registries) {
+        try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(blockEntity.problemPath(), Yuushya.SLF_LOGGER)) {
+            TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
+            blockEntity.saveCustomOnly(output);
+            blockEntity.saveCustomOnly(output);
+            BlockItem.setBlockEntityData(stack, blockEntity.getType(), output);
+            stack.applyComponents(blockEntity.collectComponents());
+        }
     }
 }

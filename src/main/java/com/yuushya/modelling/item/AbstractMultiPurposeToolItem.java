@@ -44,7 +44,7 @@ public class AbstractMultiPurposeToolItem extends AbstractToolItem {
         getTag(handItemStack);
         changeForm();
         setTag(handItemStack);
-        player.displayClientMessage(Component.translatable(this.getDescriptionId() + "." + _form_now), true);
+        player.sendOverlayMessage(Component.translatable(this.getDescriptionId() + "." + _form_now));
         return InteractionResult.PASS;
     }
 }

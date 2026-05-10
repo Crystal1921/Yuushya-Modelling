@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,7 +80,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return this.getX() + this.getWidth() - 4;
     }
 
@@ -109,8 +110,7 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
         }
 
         @Override
-        public void render(GuiGraphicsExtractor guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
-                           int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, int x, int y, boolean hovered, float v) {
             List<String> textLines = updateRenderTextLines();
             Font font = Minecraft.getInstance().font;
 
@@ -134,36 +134,36 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
             if (previewText.length() > 6) {
                 previewText = previewText.substring(0, 6) + "...";
             }
-            guiGraphics.drawString(font, previewText, x + 2, y + itemHeight / 2 - font.lineHeight / 2, 0xFFFFFF, false);
+            guiGraphics.text(font, previewText, x + 2, y + parent.itemHeight / 2 - font.lineHeight / 2, 0xFFFFFF);
 
             // Render index number
             String indexStr = String.valueOf(this.slot);
-            int textX = x + itemWidth - font.width(indexStr) - 2;
+            int textX = x + parent.itemWidth - font.width(indexStr) - 2;
             int textY = y + 2;
-            guiGraphics.drawString(font, indexStr, textX, textY, 0xFFFFFF, true);
+            guiGraphics.text(font, indexStr, textX, textY, 0xFFFFFF);
 
             // Render line count
             String lineCountStr = "(" + textLines.size() + ")";
-            guiGraphics.drawString(font, lineCountStr, x + 2, y + itemHeight - font.lineHeight - 2, 0xAAAAAA, false);
+            guiGraphics.text(font, lineCountStr, x + 2, y + parent.itemHeight - font.lineHeight - 2, 0xAAAAAA);
 
             // Render selection indicator
-            if (isMouseOver || this == TextIconList.this.getSelected()) {
-                guiGraphics.fill(x - 1, y - 1, x + itemWidth + 1, y + itemHeight + 1, 0x80FFFFFF);
+            if (hovered || this == TextIconList.this.getSelected()) {
+                guiGraphics.fill(x - 1, y - 1, x + parent.itemWidth + 1, y + parent.itemHeight + 1, 0x80FFFFFF);
             }
 
             // Render chosen indicator
             if (chosen) {
-                guiGraphics.fill(x, y, x + itemWidth, y + itemHeight, 0x5FD85C2F);
+                guiGraphics.fill(x, y, x + parent.itemWidth, y + parent.itemHeight, 0x5FD85C2F);
             }
 
             // Render shown state indicator
             if (updateRenderShown()) {
-                guiGraphics.fill(x, y, x + 3, y + itemHeight, 0x8000FF00);
+                guiGraphics.fill(x, y, x + 3, y + parent.itemHeight, 0x8000FF00);
             }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             TextIconList.Entry previousSelected = this.parent.getSelected();
             this.parent.setSelected(this);
 

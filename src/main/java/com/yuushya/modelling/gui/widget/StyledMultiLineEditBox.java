@@ -8,7 +8,6 @@ import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -19,12 +18,12 @@ import net.minecraft.util.StringUtil;
 import net.minecraft.util.Util;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-@OnlyIn(Dist.CLIENT)
 public class StyledMultiLineEditBox extends AbstractScrollArea {
     private static final int CURSOR_INSERT_WIDTH = 1;
     private static final int CURSOR_INSERT_COLOR = -3092272;
@@ -147,8 +146,8 @@ public class StyledMultiLineEditBox extends AbstractScrollArea {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
-        return this.textField.keyPressed(event.key());
+    public boolean keyPressed(@NonNull KeyEvent event) {
+        return this.textField.keyPressed(event);
     }
 
     @Override

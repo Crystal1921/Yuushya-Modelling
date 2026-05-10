@@ -111,7 +111,7 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, Player player) {
         ItemStack itemStack = new ItemStack(this);
         Map<String, String> properties = state.getProperties().stream().collect(Collectors.toMap((Property::getName), property -> YuushyaDebugStickItem.getNameHelper(state, property)));
         BlockItemStateProperties stateProperties = new BlockItemStateProperties(properties);

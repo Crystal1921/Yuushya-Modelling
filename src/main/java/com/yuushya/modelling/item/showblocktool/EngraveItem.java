@@ -6,6 +6,7 @@ import com.yuushya.modelling.blockentity.textblock.TextBlock;
 import com.yuushya.modelling.gui.engrave.EngraveMenu;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -63,6 +64,6 @@ public class EngraveItem extends AbstractMultiPurposeToolItem {
     }
 
     public MenuProvider getMenuProvider(Level level, BlockPos pos, ItemStack itemStack) {
-        return new SimpleMenuProvider((i, inventory, _player) -> getEngraveMenu(i, inventory, level, pos, itemStack), getDescription());
+        return new SimpleMenuProvider((i, inventory, _player) -> getEngraveMenu(i, inventory, level, pos, itemStack), Component.literal(descriptionId));
     }
 }

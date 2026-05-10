@@ -26,12 +26,18 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.block.BlockStateModelSet;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -90,21 +96,28 @@ public class ShowBlockScreen extends Screen {
     }
 
     public static long calculateFaces(ShowBlockEntity showBlockEntity) {
-        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-        ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
-        directions.add(null); // 加个null
-        return showBlockEntity.getTransformData().stream().mapToInt(
-                data -> {
-                    int countFace = 0;
-                    BlockState blockState = data.blockState;
-                    BakedModel blockModel = blockRenderDispatcher.getBlockModel(blockState);
-                    for (Direction value : directions) {
-                        List<BakedQuad> blockModelQuads = blockModel.getQuads(blockState, value, random);
-                        countFace += blockModelQuads.size();
+        Level level = showBlockEntity.getLevel();
+        if (level instanceof ClientLevel clientLevel) {
+            BlockStateModelSet blockModelSet = Minecraft.getInstance().getModelManager().getBlockStateModelSet();
+            ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+            directions.add(null); // 加个null
+            BlockPos blockPos = showBlockEntity.getBlockPos();
+            return showBlockEntity.getTransformData().stream().mapToInt(
+                    data -> {
+                        int countFace = 0;
+                        BlockState blockState = data.blockState;
+                        BlockStateModel blockStateModel = blockModelSet.get(blockState);
+                        List<BlockStateModelPart> newParts = new ArrayList<>();
+                        blockStateModel.collectParts(clientLevel, blockPos, blockState, random, newParts);
+                        for (Direction value : directions) {
+                            for (BlockStateModelPart newPart : newParts) {
+                                countFace += newPart.getQuads(value).size();
+                            }
+                        }
+                        return countFace;
                     }
-                    return countFace;
-                }
-        ).sum();
+            ).sum();
+        } else return 0;
     }
 
     public void setSlot(int slot) {
@@ -150,7 +163,6 @@ public class ShowBlockScreen extends Screen {
 
     @Override
     protected void init() {
-        if (minecraft == null) return;
 
         Button addStateButton = Button.builder(Component.literal("+"),
                         (btn) -> {

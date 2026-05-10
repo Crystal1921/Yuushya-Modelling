@@ -1,7 +1,6 @@
 package com.yuushya.modelling.gui.engrave;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.core.RegistryAccess;
@@ -21,7 +20,7 @@ public class EngraveTextResultLoader {
             try {
                 load(ClientMethod.TEXT_PATH, registryAccess);
             } catch (IOException e) {
-                Yuushya.LOGGER.error(e);
+                Yuushya.LOG_LOGGER.error(e);
             }
         }
     }
@@ -34,7 +33,7 @@ public class EngraveTextResultLoader {
         try (FileSystem fileSystem = FileSystems.newFileSystem(path)) {
             load(fileSystem.getPath("."), registryAccess);
         } catch (IOException e) {
-            Yuushya.LOGGER.error(e);
+            Yuushya.LOG_LOGGER.error(e);
         }
     }
 
@@ -62,7 +61,6 @@ public class EngraveTextResultLoader {
     public static void saveItem(String string, String name) throws IOException {
         ShareUtils.SharedTextInformation information = ShareUtils.fromText(string);
         TEXTBLOCK_ITEM_MAP.put(name, new EngraveTextResult(name, information));
-        TransformDataListPacket.updateSendingCache(name);
         Path out = ClientMethod.TEXT_PATH.resolve(name + ".json");
         if (!Files.exists(out)) {
             if (!Files.exists(out.getParent())) Files.createDirectories(out.getParent());

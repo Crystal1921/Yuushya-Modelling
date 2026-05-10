@@ -3,11 +3,15 @@ package com.yuushya.modelling.gui.widget;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GlyphSource;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.client.gui.font.glyphs.EffectGlyph;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -26,7 +30,6 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         this.parentScreen = textBlockScreen;
         this.fontList = new ArrayList<>();
         this.centerListVertically = false;
-        this.setRenderHeader(false, 0);
         this.itemWidth = width;
         this.itemHeight = itemHeight;
     }
@@ -71,7 +74,7 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return this.getX() + this.getWidth() - 4;
     }
 
@@ -95,23 +98,32 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
-                           int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, int x, int y, boolean hovered, float v) {
             Identifier fontLoc = getFont();
             FontSet fontSet = Minecraft.getInstance().fontManager.fontSets.get(fontLoc);
-            Font font = new Font(Identifier -> fontSet, true);
-            String fontName = fontSet.name().toString();
+            Font font = new Font(new Font.Provider() {
+                @Override
+                public GlyphSource glyphs(FontDescription fontDescription) {
+                    return fontSet.source(false);
+                }
+
+                @Override
+                public EffectGlyph effect() {
+                    return fontSet.whiteGlyph();
+                }
+            });
+            String fontName = fontLoc.toString();
             int textY = y + (itemHeight - font.lineHeight) / 2;
-            guiGraphics.drawString(font, fontName, x, textY, 0xFFFFFF, true);
+            guiGraphics.text(font, fontName, x, textY, 0xFFFFFF, true);
 
             // Render selection indicator
-            if (isMouseOver || this == FontList.this.getSelected()) {
-                guiGraphics.fill(x - 1, y - 1, x + itemWidth + 1, y + itemHeight + 1, 0x80FFFFFF);
+            if (hovered || this == FontList.this.getSelected()) {
+                guiGraphics.fill(x - 1, y - 1, x + parent.itemWidth + 1, y + parent.itemHeight + 1, 0x80FFFFFF);
             }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             this.parent.setSelected(this);
             this.parent.parentScreen.textEditBox.setFontTextStyle();
             return true;

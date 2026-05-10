@@ -1,5 +1,6 @@
 package com.yuushya.modelling.item.showblocktool;
 
+import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
@@ -7,9 +8,11 @@ import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.item.AbstractMultiPurposeToolItem;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
+import com.yuushya.modelling.utils.DeprecatedMethod;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -20,6 +23,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,10 +43,13 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
         saveToItem(itemStack, transformDataList, registries);
     }
 
+    //TODO 不知道这个IndexedPathElement怎么办
     public static void saveToItem(ItemStack itemStack, List<? extends ITransformDataProvider> transformDataList, HolderLookup.Provider registries) {
-        CompoundTag compoundTag = new CompoundTag();
-        ITransformDataInventory.saveAdditional(compoundTag, transformDataList, registries);
-        BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.SHOW_BLOCK_ENTITY.get(), compoundTag);
+        try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(new ProblemReporter.IndexedPathElement(1), Yuushya.SLF_LOGGER)) {
+            TagValueOutput output = TagValueOutput.createWithContext(reporter, registries);
+            ITransformDataInventory.saveAdditional(output, transformDataList, registries);
+            BlockItem.setBlockEntityData(itemStack, BlockEntityRegistry.SHOW_BLOCK_ENTITY.get(), output);
+        }
     }
 
     @Override
@@ -57,7 +65,7 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
 
         if (blockState.getBlock() instanceof AbstractTransformBlock) {
             if (level.getBlockEntity(blockPos) instanceof AbstractTransformBlockEntity showBlockEntity) {
-                showBlockEntity.saveToItem(offhandItem, level.registryAccess());
+                DeprecatedMethod.saveToItem(showBlockEntity, offhandItem, level.registryAccess());
                 showBlockEntity.writeBlockState(offhandItem, blockState);
             }
         } else {
@@ -72,7 +80,7 @@ public class DestroyItem extends AbstractMultiPurposeToolItem {
         if (blockState.getBlock() instanceof AbstractTransformBlock showBlock && level.getBlockEntity(blockPos) instanceof AbstractTransformBlockEntity showBlockEntity) {
             if (!level.isClientSide()) {
                 ItemStack itemStack = new ItemStack(showBlock);
-                showBlockEntity.saveToItem(itemStack, level.registryAccess());
+                DeprecatedMethod.saveToItem(showBlockEntity, itemStack, level.registryAccess());
                 showBlockEntity.writeBlockState(itemStack, blockState);
                 level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 35);
                 level.levelEvent(player, 2001, blockPos, Block.getId(blockState));

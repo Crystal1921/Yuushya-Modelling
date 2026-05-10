@@ -33,22 +33,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class YuushyaUtils {
-    public static final Function<Map.Entry<Property<?>, Comparable<?>>, String> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<>() {
-        @Override
-        public String apply(@Nullable Map.Entry<Property<?>, Comparable<?>> propertyValueMap) {
-            if (propertyValueMap == null) {
-                return "<NULL>";
-            }
-            Property<?> property = propertyValueMap.getKey();
-            return property.getName() + "=" + this.getName(property, propertyValueMap.getValue());
-        }
-
-        private <T extends Comparable<T>> String getName(Property<T> property, Comparable<?> value) {
-            return property.getName((T) value);
-        }
-
-    };
-
     public static int vertexSize() {
         return DefaultVertexFormat.BLOCK.getVertexSize() / 4;
     } // 一个顶点用多少位int表示，原版和开了光影的OptiFine不同所以得在这算出来

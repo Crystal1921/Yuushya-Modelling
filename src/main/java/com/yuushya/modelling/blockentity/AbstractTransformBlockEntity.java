@@ -13,6 +13,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
@@ -110,11 +112,7 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this, (blockEntity, access) -> {
-            CompoundTag compoundTag = getUpdateTag(access);
-            saveAdditional(compoundTag, access);
-            return compoundTag;
-        });
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
@@ -125,21 +123,19 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
-        compoundTag.putByte("ControlSlot", slot.byteValue());
-        compoundTag.put("CustomShape",  VoxelShapeSerializer.serializeVoxelShape(customShape));
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.putByte("ControlSlot", slot.byteValue());
+        output.store("CustomShape", CompoundTag.CODEC, VoxelShapeSerializer.serializeVoxelShape(customShape));
     }
 
     @Override
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
-        slot = (int) compoundTag.getByte("ControlSlot");
-        if (compoundTag.contains("CustomShape")) {
-            customShape = VoxelShapeSerializer.deserializeVoxelShape(compoundTag.getCompound("CustomShape"));
-        } else {
-            customShape = Shapes.empty();
-        }
+    public void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        slot = (int) input.getByteOr("ControlSlot",(byte) 0);
+        input.read("CustomShape", CompoundTag.CODEC).ifPresent(compoundTag -> {
+            customShape = VoxelShapeSerializer.deserializeVoxelShape(compoundTag);
+        });
 
         // Client chunk update
         if (this.getLevel() != null && this.getLevel().isClientSide()) {

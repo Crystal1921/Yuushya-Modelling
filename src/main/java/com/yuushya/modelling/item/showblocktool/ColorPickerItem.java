@@ -53,16 +53,18 @@ public class ColorPickerItem extends AbstractToolItem {
         return InteractionResult.PASS;
     }
 
-    @Override
-    public void appendHoverText(@NotNull ItemStack itemStack, Item.TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag tooltipFlag) {
-        Integer i = itemStack.get(DataComponentRegistry.COLOR_DATA);
-        if (i != null) {
-            String hex = String.format("#%08X", i);
-            tooltips.add(Component.literal(hex).withColor(i));
-        } else {
-            tooltips.add(Component.translatable("item.yuushya.color_picker.none").withColor(Color.LIGHT_GRAY.getRGB()));
-        }
+    //TODO 写在BlockItem里面
 
-        super.appendHoverText(itemStack, context, tooltips, tooltipFlag);
-    }
+//    @Override
+//    public void appendHoverText(@NotNull ItemStack itemStack, Item.TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag tooltipFlag) {
+//        Integer i = itemStack.get(DataComponentRegistry.COLOR_DATA);
+//        if (i != null) {
+//            String hex = String.format("#%08X", i);
+//            tooltips.add(Component.literal(hex).withColor(i));
+//        } else {
+//            tooltips.add(Component.translatable("item.yuushya.color_picker.none").withColor(Color.LIGHT_GRAY.getRGB()));
+//        }
+//
+//        super.appendHoverText(itemStack, context, tooltips, tooltipFlag);
+//    }
 }

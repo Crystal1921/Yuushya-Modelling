@@ -1,16 +1,14 @@
 package com.yuushya.modelling.gui.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
-import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
@@ -84,7 +82,7 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return this.getX() + this.getWidth() - 4;
     }
 
@@ -130,10 +128,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
             this.cachedScaleZ = td.scales.z();
             this.animStartMs = System.currentTimeMillis();
             this.animating = true;
-
-//            if (!level.isClientSide()){
-//                level.playSound(null,blockPos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS,1f,0.2f);
-//            }
         }
 
         private void applyAnimationIfNeeded() {
@@ -169,47 +163,9 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, int index, int y, int x, int itemWidth, int itemHeight,
-                           int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-            // Advance and apply animation (if running) BEFORE rendering so the preview sees updated values
-            applyAnimationIfNeeded();
-
-            ItemStack itemStack = updateRenderState();
-
-            // Render item icon
-            if (!itemStack.isEmpty()) {
-                BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
-                PoseStack pose = guiGraphics.pose();
-                pose.pushPose();
-                pose.translate(x + itemWidth / 2.0f, y + itemHeight / 2.0f, 100.0f);
-                pose.scale(24.0f, -24.0f, 24.0f);
-
-                boolean flatItem = !bakedModel.usesBlockLight();
-                if (flatItem) {
-                    pose.mulPose(Axis.YP.rotationDegrees(180.0f));
-                }
-                Minecraft.getInstance().getItemRenderer().render(itemStack, ItemDisplayContext.GUI, false,
-                        pose, guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
-                pose.popPose();
-            }
-
-            // Render index number
-            Font font = Minecraft.getInstance().font;
-            String indexStr = String.valueOf(this.slot);
-            int textX = x + itemWidth - font.width(indexStr) - 2;
-            int textY = y + 2;
-            guiGraphics.drawString(font, indexStr, textX, textY, 0xFFFFFF, true);
-
-            // Render selection indicator
-            if (isMouseOver || this == ItemStackIconList.this.getSelected()) {
-                guiGraphics.fill(x - 1, y - 1, x + itemWidth + 1, y + itemHeight + 1, 0x80FFFFFF);
-            }
-        }
-
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
             ItemStackIconList.Entry previousSelected = this.parent.getSelected();
-            if(previousSelected != this){
+            if (previousSelected != this) {
                 // Start popup animation when clicked (indicate selection)
                 // setSelected above will call screen.setSlot(selected.slot) so the screen's current slot will be this.slot
                 startPopupAnimation();
@@ -234,6 +190,45 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         @Override
         public Component getNarration() {
             return Component.translatable("narrator.select", this.slot);
+        }
+
+        @Override
+        public void extractContent(GuiGraphicsExtractor guiGraphics, int x, int y, boolean hovered, float v) {
+            // Advance and apply animation (if running) BEFORE rendering so the preview sees updated values
+            applyAnimationIfNeeded();
+
+            ItemStack itemStack = updateRenderState();
+
+            // Render item icon
+            if (!itemStack.isEmpty()) {
+                guiGraphics.item(itemStack, (int) (x + itemWidth / 2.0f), (int) (y + itemHeight / 2.0f));
+                //TODO 不知道这样渲染对不对
+//                BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
+//                PoseStack pose = guiGraphics.pose();
+//                pose.pushPose();
+//                pose.translate(x + itemWidth / 2.0f, y + itemHeight / 2.0f, 100.0f);
+//                pose.scale(24.0f, -24.0f, 24.0f);
+//
+//                boolean flatItem = !bakedModel.usesBlockLight();
+//                if (flatItem) {
+//                    pose.mulPose(Axis.YP.rotationDegrees(180.0f));
+//                }
+//                Minecraft.getInstance().getItemRenderer().render(itemStack, ItemDisplayContext.GUI, false,
+//                        pose, guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
+//                pose.popPose();
+            }
+
+            // Render index number
+            Font font = Minecraft.getInstance().font;
+            String indexStr = String.valueOf(this.slot);
+            int textX = x + itemWidth - font.width(indexStr) - 2;
+            int textY = y + 2;
+            guiGraphics.text(font, indexStr, textX, textY, 0xFFFFFF, true);
+
+            // Render selection indicator
+            if (hovered || this == ItemStackIconList.this.getSelected()) {
+                guiGraphics.fill(x - 1, y - 1, x + itemWidth + 1, y + itemHeight + 1, 0x80FFFFFF);
+            }
         }
     }
 }

@@ -1,11 +1,14 @@
 package com.yuushya.modelling.blockentity.textblock;
 
+import com.yuushya.modelling.YuushyaNeoForge;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
@@ -26,16 +29,18 @@ import org.jetbrains.annotations.Nullable;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class TextBlock extends AbstractTransformBlock {
-    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.getDist() == Dist.CLIENT ? new IClientItemExtensions() {
-        @Override
-        public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
-            Minecraft minecraft = Minecraft.getInstance();
-            return new TextBlockSpecialRender(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
-        }
-    } : null;
+//    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.getDist() == Dist.CLIENT ? new IClientItemExtensions() {
+//        @Override
+//        public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
+//            Minecraft minecraft = Minecraft.getInstance();
+//            return new TextBlockSpecialRender(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
+//        }
+//    } : null;
+
+    //TODO : 这里要新model，getCustomRenderer已被移除
 
     public TextBlock(Properties properties, Integer tipLines) {
-        super(properties, tipLines);
+        super(properties.setId(ResourceKey.create(Registries.BLOCK, YuushyaNeoForge.id("text_block"))), tipLines);
     }
 
     @Override
@@ -77,7 +82,7 @@ public class TextBlock extends AbstractTransformBlock {
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, Player player) {
         ItemStack itemStack = new ItemStack(this);
         BlockItemStateProperties stateProperties = itemStack.get(DataComponents.BLOCK_STATE);
         if (stateProperties == null) stateProperties = BlockItemStateProperties.EMPTY;

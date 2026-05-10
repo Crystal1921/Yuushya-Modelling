@@ -45,7 +45,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
@@ -650,7 +649,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                     colorWidget.setColor(color);
                     updateTransformDataClient(ItemTransformType.COLOR, (double) color);
                 } catch (NumberFormatException ignored) {
-                    Yuushya.LOGGER.error("Invalid color number");
+                    Yuushya.LOG_LOGGER.error("Invalid color number");
                 }
             }
         })).bounds(leftColumnX() + leftColumnWidth() - 5, top(6, 30), SMALL_BUTTON_WIDTH, PER_HEIGHT).build();

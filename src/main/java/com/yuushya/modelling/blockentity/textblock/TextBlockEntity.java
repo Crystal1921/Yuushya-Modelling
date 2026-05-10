@@ -17,6 +17,8 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,15 +57,15 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     @Override
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
-        ITransformTextDataInventory.load(compoundTag, transformData);
+    public void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        ITransformTextDataInventory.load(input, transformData);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
-        ITransformTextDataInventory.saveAdditional(compoundTag, transformData, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        ITransformTextDataInventory.saveAdditional(output, transformData, null);
     }
 
     @Override
@@ -91,7 +93,7 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
                 String res = ShareUtils.transferText(this.getTransformData());
                 ShareUtils.SharedTextInformation information = ShareUtils.fromText(res);
                 if (this.level != null) {
-                    String name = this.level.dimension().location() + "/" + this.getBlockPos().toShortString();
+                    String name = this.level.dimension().identifier() + "/" + this.getBlockPos().toShortString();
                     HISTORY_TEXTBLOCK_TEXT_MAP.put(name, new EngraveTextResult(name, information));
                 }
             }

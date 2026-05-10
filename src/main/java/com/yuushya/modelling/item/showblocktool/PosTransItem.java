@@ -53,7 +53,7 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
                 case 1-> pos.y=getUpdate(false,pos.y,scale.y);
                 case 2-> pos.z=getUpdate(false,pos.z,scale.z);
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z),true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z));
         });
     }
     @Override
@@ -68,7 +68,7 @@ public class PosTransItem extends AbstractMultiPurposeToolItem {
                 case 1-> pos.y=getUpdate(true,pos.y,scale.y);
                 case 2-> pos.z=getUpdate(true,pos.z,scale.z);
             }
-            player.displayClientMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z),true);
+            player.sendOverlayMessage(Component.translatable(this.getDescriptionId()+".switch",pos.x,pos.y,pos.z));
         });
     }
 

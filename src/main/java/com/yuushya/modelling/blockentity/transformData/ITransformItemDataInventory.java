@@ -5,6 +5,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -17,15 +19,30 @@ public interface ITransformItemDataInventory {
 
     //readNbt from compoundTag
     static void load(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
-        ListTag listTag = compoundTag.getList("Blocks", 10);//int index=0;//10 means Compound
+        ListTag listTag = compoundTag.getList("Blocks").orElse(new ListTag());//int index=0;//10 means Compound
         if (!transformDatas.isEmpty()) transformDatas.clear();
         for (int index = 0; index < listTag.size(); index++) {
             TransformItemData transformData = new TransformItemData();
-            CompoundTag compoundTagTemp = listTag.getCompound(index);
+            CompoundTag compoundTagTemp = listTag.getCompound(index).orElse(new CompoundTag());
             transformData.load(compoundTagTemp, registries);
             transformDatas.add(transformData);
         }
         if (transformDatas.isEmpty()) transformDatas.add(new TransformItemData());
+    }
+
+    //readNbt from ValueInput
+    static void load(ValueInput input, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
+        input.read("Blocks", CompoundTag.CODEC).ifPresent(compoundTag -> {
+            ListTag listTag = compoundTag.getList("Blocks").orElse(new ListTag());
+            if (!transformDatas.isEmpty()) transformDatas.clear();
+            for (int index = 0; index < listTag.size(); index++) {
+                TransformItemData transformData = new TransformItemData();
+                CompoundTag compoundTagTemp = listTag.getCompound(index).orElse(new CompoundTag());
+                transformData.load(compoundTagTemp, registries);
+                transformDatas.add(transformData);
+            }
+            if (transformDatas.isEmpty()) transformDatas.add(new TransformItemData());
+        });
     }
 
     //writeNbt to compoundTag
@@ -42,6 +59,24 @@ public interface ITransformItemDataInventory {
             index++;
         }
         if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
+    }
+
+    //writeNbt to ValueOutput
+    static void saveAdditional(ValueOutput output, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
+        ListTag listTag = new ListTag();
+        int index = 0;
+        for (TransformItemData transformData : transformDatas) {
+            CompoundTag compoundTagTemp = new CompoundTag();
+            compoundTagTemp.putByte("Slot", (byte) index);
+            transformData.saveAdditional(compoundTagTemp, registries);
+            listTag.add(compoundTagTemp);
+            index++;
+        }
+        if (!listTag.isEmpty()) {
+            CompoundTag compoundTag = new CompoundTag();
+            compoundTag.put("Blocks", listTag);
+            output.store("Blocks", CompoundTag.CODEC, compoundTag);
+        }
     }
 
     static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {

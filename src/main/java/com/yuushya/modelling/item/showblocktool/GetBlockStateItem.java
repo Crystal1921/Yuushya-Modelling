@@ -27,13 +27,14 @@ public class GetBlockStateItem extends AbstractToolItem {
         blockState = Blocks.AIR.defaultBlockState();
     }
 
-    public static void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource vertexConsumers, int light, int overlay) {
-        if (stack.is(ItemRegistry.GET_BLOCKSTATE_ITEM)) return ;
-        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        BlockState blockState = stack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
-        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-        itemRenderer.render(stack, displayContext, false, poseStack, vertexConsumers, light, overlay, blockRenderDispatcher.getBlockModel(blockState));
-    }
+    //TODO 先注释掉
+//    public static void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource vertexConsumers, int light, int overlay) {
+//        if (stack.is(ItemRegistry.GET_BLOCKSTATE_ITEM)) return ;
+//        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
+//        BlockState blockState = stack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
+//        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
+//        itemRenderer.render(stack, displayContext, false, poseStack, vertexConsumers, light, overlay, blockRenderDispatcher.getBlockModel(blockState));
+//    }
 
     @Override
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockStateTarget, Level level, BlockPos blockPos, ItemStack handItemStack) {

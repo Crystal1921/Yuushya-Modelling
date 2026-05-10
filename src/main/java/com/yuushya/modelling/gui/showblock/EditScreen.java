@@ -1,10 +1,11 @@
 package com.yuushya.modelling.gui.showblock;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
@@ -12,7 +13,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class EditScreen extends Screen {
-
     private final Component editBoxLabel;
     private final Consumer<String> callback;
     private final Predicate<String> isValidText;
@@ -29,12 +29,13 @@ public class EditScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
         if (this.selectButton.active && this.getFocused() == this.editBox && (keyCode == 257 || keyCode == 335)) {
             this.onSelect();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
@@ -54,9 +55,9 @@ public class EditScreen extends Screen {
     }
 
     @Override
-    public void resize(Minecraft minecraft, int width, int height) {
+    public void resize(int width, int height) {
         String string = this.editBox.getValue();
-        this.init(minecraft, width, height);
+        this.init(width, height);
         this.editBox.setValue(string);
     }
 
@@ -79,10 +80,10 @@ public class EditScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
-        guiGraphics.drawString(this.font, this.editBoxLabel, this.width / 2 - 100 + 1, 100, 0xA0A0A0);
-        this.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
+        guiGraphics.text(this.font, this.editBoxLabel, this.width / 2 - 100 + 1, 100, 0xA0A0A0);
+        this.editBox.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
     }
 }

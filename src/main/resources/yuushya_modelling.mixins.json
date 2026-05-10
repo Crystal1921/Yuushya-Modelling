@@ -11,8 +11,6 @@
     "BlockBehaviourMixin",
     "GlyphRenderTypesMixin",
     "LevelRendererMixin",
-    "MinecraftMixin",
-    "compat.EmbeddiumWorldRenderMixin",
-    "compat.SodiumWorldRenderMixin"
+    "MinecraftMixin"
   ]
 }

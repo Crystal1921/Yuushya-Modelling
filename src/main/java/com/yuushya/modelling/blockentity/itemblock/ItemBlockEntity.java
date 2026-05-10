@@ -16,6 +16,8 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,15 +56,15 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
     }
 
     @Override
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
-        ITransformItemDataInventory.load(compoundTag, transformData, registries);
+    public void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        ITransformItemDataInventory.load(input, transformData, null);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
-        ITransformItemDataInventory.saveAdditional(compoundTag, transformData, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        ITransformItemDataInventory.saveAdditional(output, transformData, null);
     }
 
     @Override

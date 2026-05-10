@@ -6,6 +6,7 @@ import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -31,27 +32,24 @@ public class ColorWidget extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float tick) {
         String hsv = String.format("H: %.2f S: %.2f V: %.2f", hsbVals[0], hsbVals[1], hsbVals[2]);
         guiGraphics.fill(getX() - 1, getY() - 1, getX() + getWidth() + 1, getY()+ getHeight()+26,ARGB.color(72, 0, 0, 0));
         guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() + 25, ARGB.color(72, 0, 0, 0));
 
-        guiGraphics.drawString(colorScreen.getColorFont(), hsv, getX() + yPadding, getY() + 145, ARGB.color(255, 255, 255, 255), false);
-        RenderSystem.enableBlend();
+        guiGraphics.text(colorScreen.getColorFont(), hsv, getX() + yPadding, getY() + 145, ARGB.color(255, 255, 255, 255), false);
 
-        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, 0, WIDTH, 10, WIDTH, 10);
-        PoseStack pose = guiGraphics.pose();
+        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, WIDTH, 10, WIDTH, 10);
 
-        this.renderSolidColor(pose, getX() + xPadding -1, getX() + xPadding + WIDTH + 1 , getY()+ yHeight -1, getY() + yHeight + WIDTH + 1, ARGB.color(72, 255, 255, 255));
-        this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
-
-        this.innerBlit(ColorTexture.getWhiteTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
-        this.innerBlit(ColorTexture.getBlackTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
+        //TODO 带透明通道的blit
+//        this.renderSolidColor(pose, getX() + xPadding -1, getX() + xPadding + WIDTH + 1 , getY()+ yHeight -1, getY() + yHeight + WIDTH + 1, ARGB.color(72, 255, 255, 255));
+//        this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
+//
+//        this.innerBlit(ColorTexture.getWhiteTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
+//        this.innerBlit(ColorTexture.getBlackTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
 
         guiGraphics.fill(getX() + xPadding - 1, getY() + yPadding - 1, getX() + 25 + 1, getY() + 25 + 1, ARGB.color(72, 255, 255, 255));
         guiGraphics.fill(getX() + xPadding, getY() + yPadding, getX() + 25, getY() + 25, Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2]));
-
-        RenderSystem.disableBlend();
 
         int hueX = (int) (getX() + xPadding + (hsbVals[0] * WIDTH));
         int hueY = getY() + 35;
@@ -62,39 +60,39 @@ public class ColorWidget extends AbstractWidget {
         drawCross(guiGraphics, satX, valY);
     }
 
-    private void drawCross(GuiGraphics guiGraphics, int x, int y) {
-        guiGraphics.hLine(x - 2, x + 2 , y, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x, y - 3, y + 3, ARGB.color(255, 0, 0, 0));
+    private void drawCross(GuiGraphicsExtractor guiGraphics, int x, int y) {
+        guiGraphics.horizontalLine(x - 2, x + 2 , y, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x, y - 3, y + 3, ARGB.color(255, 0, 0, 0));
     }
 
     private void drawArrow(GuiGraphicsExtractor guiGraphics, int x, int y){
         guiGraphics.verticalLine(x, y - 4, y + 4, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x - 1, y - 4, y + 3, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x + 1, y - 4, y + 3, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x - 2, y - 4, y + 2, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x + 2, y - 4, y + 2, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x - 3, y - 4, y + 1, ARGB.color(255, 0, 0, 0));
-        guiGraphics.vLine(x + 3, y - 4, y + 1, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x - 1, y - 4, y + 3, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x + 1, y - 4, y + 3, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x - 2, y - 4, y + 2, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x + 2, y - 4, y + 2, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x - 3, y - 4, y + 1, ARGB.color(255, 0, 0, 0));
+        guiGraphics.verticalLine(x + 3, y - 4, y + 1, ARGB.color(255, 0, 0, 0));
 
-        guiGraphics.vLine(x, y - 3, y + 3, ARGB.color(255, 255, 255, 255));
-        guiGraphics.vLine(x - 1, y - 3, y + 2, ARGB.color(255, 255, 255, 255));
-        guiGraphics.vLine(x + 1, y - 3, y + 2, ARGB.color(255, 255, 255, 255));
-        guiGraphics.vLine(x - 2, y - 3, y + 1, ARGB.color(255, 255, 255, 255));
-        guiGraphics.vLine(x + 2, y - 3, y + 1, ARGB.color(255, 255, 255, 255));
+        guiGraphics.verticalLine(x, y - 3, y + 3, ARGB.color(255, 255, 255, 255));
+        guiGraphics.verticalLine(x - 1, y - 3, y + 2, ARGB.color(255, 255, 255, 255));
+        guiGraphics.verticalLine(x + 1, y - 3, y + 2, ARGB.color(255, 255, 255, 255));
+        guiGraphics.verticalLine(x - 2, y - 3, y + 1, ARGB.color(255, 255, 255, 255));
+        guiGraphics.verticalLine(x + 2, y - 3, y + 1, ARGB.color(255, 255, 255, 255));
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         this.colorScreen.setColorFocused(this);
         this.colorScreen.setColorDragging(true);
 
-        changeColor(mouseX, mouseY);
+        changeColor(event.x(), event.y());
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        super.onDrag(mouseX, mouseY, dragX, dragY);
-        changeColor(mouseX, mouseY);
+    protected void onDrag(MouseButtonEvent event, double dragX, double dragY) {
+        super.onDrag(event, dragX, dragY);
+        changeColor(event.x(), event.y());
     }
 
     private void changeColor(double mouseX, double mouseY) {
@@ -153,27 +151,27 @@ public class ColorWidget extends AbstractWidget {
 
     }
 
-    void innerBlit(Identifier atlasLocation, PoseStack poseStack, int x1, int x2, int y1, int y2) {
-        RenderSystem.setShaderTexture(0, atlasLocation);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        Matrix4f matrix4f = poseStack.last().pose();
-        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, (float) 0).setUv((float) 0.0, (float) 0.0);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, (float) 0).setUv((float) 0.0, (float) 1.0);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, (float) 0).setUv((float) 1.0, (float) 1.0);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, (float) 0).setUv((float) 1.0, (float) 0.0);
-        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
-    }
-
-    void renderSolidColor(PoseStack poseStack, int x1, int x2, int y1, int y2, int color) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader); // 使用颜色着色器
-
-        Matrix4f matrix4f = poseStack.last().pose();
-        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, 0).setColor(color);
-        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, 0).setColor(color);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, 0).setColor(color);
-        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, 0).setColor(color);
-        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
-    }
+//    void innerBlit(Identifier atlasLocation, PoseStack poseStack, int x1, int x2, int y1, int y2) {
+//        RenderSystem.setShaderTexture(0, atlasLocation);
+//        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+//        Matrix4f matrix4f = poseStack.last().pose();
+//        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+//        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, (float) 0).setUv((float) 0.0, (float) 0.0);
+//        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, (float) 0).setUv((float) 0.0, (float) 1.0);
+//        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, (float) 0).setUv((float) 1.0, (float) 1.0);
+//        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, (float) 0).setUv((float) 1.0, (float) 0.0);
+//        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+//    }
+//
+//    void renderSolidColor(PoseStack poseStack, int x1, int x2, int y1, int y2, int color) {
+//        RenderSystem.setShader(GameRenderer::getPositionColorShader); // 使用颜色着色器
+//
+//        Matrix4f matrix4f = poseStack.last().pose();
+//        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+//        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y1, 0).setColor(color);
+//        bufferbuilder.addVertex(matrix4f, (float) x1, (float) y2, 0).setColor(color);
+//        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y2, 0).setColor(color);
+//        bufferbuilder.addVertex(matrix4f, (float) x2, (float) y1, 0).setColor(color);
+//        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+//    }
 }

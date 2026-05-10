@@ -1,7 +1,6 @@
 package com.yuushya.modelling.gui.engrave;
 
 import com.yuushya.modelling.Yuushya;
-import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.core.RegistryAccess;
@@ -21,7 +20,7 @@ public class EngraveBlockResultLoader {
             try {
                 load(ClientMethod.BLOCK_PATH, registryAccess);
             } catch (IOException e) {
-                Yuushya.LOGGER.error(e);
+                Yuushya.LOG_LOGGER.error(e);
             }
         }
     }
@@ -34,7 +33,7 @@ public class EngraveBlockResultLoader {
         try (FileSystem fileSystem = FileSystems.newFileSystem(path)) {
             load(fileSystem.getPath("."), registryAccess);
         } catch (IOException e) {
-            Yuushya.LOGGER.error(e);
+            Yuushya.LOG_LOGGER.error(e);
         }
     }
 
@@ -51,7 +50,7 @@ public class EngraveBlockResultLoader {
                         ShareUtils.ShareBlockInformation information = ShareUtils.from(fileString);
                         SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information, registryAccess));
                     } catch (Exception e) {
-                        Yuushya.LOGGER.error(e);
+                        Yuushya.LOG_LOGGER.error(e);
                     }
                 }
                 return FileVisitResult.CONTINUE;
@@ -62,7 +61,6 @@ public class EngraveBlockResultLoader {
     public static void saveBlock(String string, String name) throws IOException {
         ShareUtils.ShareBlockInformation information = ShareUtils.from(string);
         SHOWBLOCK_ITEM_MAP.put(name, new EngraveBlockResult(name, information));
-        TransformDataListPacket.updateSendingCache(name);
         Path out = ClientMethod.BLOCK_PATH.resolve(name + ".json");
         if (!Files.exists(out)) {
             if (!Files.exists(out.getParent())) Files.createDirectories(out.getParent());

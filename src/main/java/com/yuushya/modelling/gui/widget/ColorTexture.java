@@ -7,25 +7,27 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 
+import static com.yuushya.modelling.YuushyaNeoForge.id;
+
 public class ColorTexture implements AutoCloseable {
     @Getter
-    private static Identifier HueTextureLocation;
+    private static Identifier HueTextureLocation = id("hue");
     @Getter
-    private static Identifier WhiteTextureLocation;
+    private static Identifier WhiteTextureLocation =  id("white");
     @Getter
-    private static Identifier BlackTextureLocation;
+    private static Identifier BlackTextureLocation =  id("black");
 
     private final DynamicTexture HueTexture;
     private final DynamicTexture WhiteTexture;
     private final DynamicTexture BlackTexture;
 
     public ColorTexture() {
-        this.HueTexture = new DynamicTexture(256, 1, false);
-        this.WhiteTexture = new DynamicTexture(256, 1, false);
-        this.BlackTexture = new DynamicTexture(1, 256, false);
-        HueTextureLocation = Minecraft.getInstance().getTextureManager().register("dynamic", this.HueTexture);
-        WhiteTextureLocation = Minecraft.getInstance().getTextureManager().register("dynamic", this.WhiteTexture);
-        BlackTextureLocation = Minecraft.getInstance().getTextureManager().register("dynamic", this.BlackTexture);
+        this.HueTexture = new DynamicTexture("hue_texture",256, 1, false);
+        this.WhiteTexture = new DynamicTexture("white_texture",256, 1, false);
+        this.BlackTexture = new DynamicTexture("black_texture",1, 256, false);
+        Minecraft.getInstance().getTextureManager().register(getHueTextureLocation(), this.HueTexture);
+        Minecraft.getInstance().getTextureManager().register(getWhiteTextureLocation(), this.WhiteTexture);
+        Minecraft.getInstance().getTextureManager().register(getBlackTextureLocation(), this.BlackTexture);
 
         NativeImage lightPixels = this.HueTexture.getPixels();
         NativeImage whitePixels = this.WhiteTexture.getPixels();
@@ -39,7 +41,7 @@ public class ColorTexture implements AutoCloseable {
             int abgr = ShareUtils.getABGR(rgba);
 
             for (int y = 0; y < 1; y++) {
-                lightPixels.setPixelRGBA(x, y, abgr);
+                lightPixels.setPixelABGR(x, y, abgr);
             }
         }
 
@@ -52,7 +54,7 @@ public class ColorTexture implements AutoCloseable {
             int abgr = ShareUtils.getABGR(rgba);
 
             for (int y = 0; y < 1; y++) {
-                whitePixels.setPixelRGBA(x, y, abgr);
+                whitePixels.setPixelABGR(x, y, abgr);
             }
         }
 
@@ -65,7 +67,7 @@ public class ColorTexture implements AutoCloseable {
             int abgr = ShareUtils.getABGR(rgba);
 
             for (int y = 0; y < 1; y++) {
-                blackPixels.setPixelRGBA(y, x, abgr);
+                blackPixels.setPixelABGR(y, x, abgr);
             }
         }
 

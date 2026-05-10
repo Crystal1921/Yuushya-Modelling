@@ -1,22 +1,30 @@
 package com.yuushya.modelling.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.resource.ResourceHandle;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import com.yuushya.modelling.utils.CustomRenderInstance;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -58,20 +66,20 @@ public abstract class LevelRendererMixin {
         CacheableBERenderingPipeline.getInstance().render();
     }
 
-    @Inject(at = @At("TAIL"), method = "renderLevel")
-    void callRebuild(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
-        CustomRenderInstance instance = CustomRenderInstance.getINSTANCE();
-        if (level == null) return;
-        if (instance.dirty) {
-            Map<ChunkPos, Set<BlockPos>> cachedModeData = instance.getCachedModeData();
-            cachedModeData.forEach((chunkPos, blockPosSet) -> {
-                if (blockPosSet.isEmpty()) return;
-                List<BlockPos> list = blockPosSet.stream()
-                        .filter(blockPos -> level.getBlockEntity(blockPos) instanceof ItemBlockEntity)
-                        .toList();
-                CachedModeClient.INSTANCE.updateCachedModeData(chunkPos, list);
-            });
-            instance.dirty = false;
+    @WrapOperation(
+            method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;tryExtractRenderState(Lnet/minecraft/world/level/block/entity/BlockEntity;FLnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;Lnet/minecraft/client/renderer/culling/Frustum;)Lnet/minecraft/client/renderer/blockentity/state/BlockEntityRenderState;"
+            )
+    )
+    <E extends BlockEntity, S extends BlockEntityRenderState> S wrapRenderBlockEntity(BlockEntityRenderDispatcher instance, E blockEntity, float partialTicks, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress, @Nullable Frustum frustum, Operation<S> original) {
+        if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
+            CacheableBERenderingPipeline.getInstance().getRenderRegion(ChunkPos.containing(blockEntity.getBlockPos()))
+                    .addIfPossible(blockEntity);
+            return null;
         }
+
+        return original.call(instance, blockEntity, partialTicks, breakProgress, frustum);
     }
 }

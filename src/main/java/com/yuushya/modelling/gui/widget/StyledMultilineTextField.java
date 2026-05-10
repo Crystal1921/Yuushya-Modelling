@@ -8,10 +8,8 @@ import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
@@ -24,7 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-@OnlyIn(Dist.CLIENT)
 public class StyledMultilineTextField {
     public static final int NO_CHARACTER_LIMIT = Integer.MAX_VALUE;
     private static final int LINE_SEEK_PIXEL_BIAS = 2;
@@ -219,7 +216,9 @@ public class StyledMultilineTextField {
                 newComponents.add(comp);
             } else {
                 Style compStyle = comp.getStyle();
-                style = style.withFont(Objects.requireNonNullElseGet(font, compStyle::getFont));
+                if (font != null) {
+                    style = style.withFont(new FontDescription.Resource(font));
+                }
                 if (currentIndex < selection.beginIndex) {
                     int beforeEnd = selection.beginIndex - currentIndex;
                     if (beforeEnd > 0) {
@@ -375,20 +374,21 @@ public class StyledMultilineTextField {
 
     // ==================== 键盘处理 ====================
 
-    public boolean keyPressed(int keyCode) {
+    public boolean keyPressed(KeyEvent event) {
         this.selecting = Minecraft.getInstance().hasShiftDown();
+        int keyCode = event.key();
 
-        if (Screen.isSelectAll(keyCode)) {
+        if (event.isSelectAll()) {
             this.cursor = this.plainText.length();
             this.selectCursor = 0;
             return true;
-        } else if (Screen.isCopy(keyCode)) {
+        } else if (event.isCopy()) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getSelectedText());
             return true;
-        } else if (Screen.isPaste(keyCode)) {
+        } else if (event.isPaste()) {
             this.insertText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
-        } else if (Screen.isCut(keyCode)) {
+        } else if (event.isCut()) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getSelectedText());
             this.insertText("");
             return true;
@@ -400,7 +400,7 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 259 -> {
-                if (Screen.hasControlDown()) {
+                if (event.hasControlDown()) {
                     StringView word = this.getPreviousWord();
                     this.deleteText(word.beginIndex - this.cursor);
                 } else {
@@ -409,7 +409,7 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 261 -> {
-                if (Screen.hasControlDown()) {
+                if (event.hasControlDown()) {
                     StringView word = this.getNextWord();
                     this.deleteText(word.beginIndex - this.cursor);
                 } else {
@@ -418,7 +418,7 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 262 -> {
-                if (Screen.hasControlDown()) {
+                if (event.hasControlDown()) {
                     StringView word = this.getNextWord();
                     this.seekCursor(Whence.ABSOLUTE, word.beginIndex);
                 } else {
@@ -427,7 +427,7 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 263 -> {
-                if (Screen.hasControlDown()) {
+                if (event.hasControlDown()) {
                     StringView word = this.getPreviousWord();
                     this.seekCursor(Whence.ABSOLUTE, word.beginIndex);
                 } else {
@@ -436,13 +436,13 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 264 -> {
-                if (!Screen.hasControlDown()) {
+                if (!event.hasControlDown()) {
                     this.seekCursorLine(1);
                 }
                 yield true;
             }
             case 265 -> {
-                if (!Screen.hasControlDown()) {
+                if (!event.hasControlDown()) {
                     this.seekCursorLine(-1);
                 }
                 yield true;
@@ -456,7 +456,7 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 268 -> {
-                if (Screen.hasControlDown()) {
+                if (event.hasControlDown()) {
                     this.seekCursor(Whence.ABSOLUTE, 0);
                 } else {
                     this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().beginIndex);
@@ -464,7 +464,7 @@ public class StyledMultilineTextField {
                 yield true;
             }
             case 269 -> {
-                if (Screen.hasControlDown()) {
+                if (event.hasControlDown()) {
                     this.seekCursor(Whence.END, 0);
                 } else {
                     this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().endIndex);
@@ -629,7 +629,6 @@ public class StyledMultilineTextField {
         END
     }
 
-    @OnlyIn(Dist.CLIENT)
     public static record StringView(int beginIndex, int endIndex) {
         static final StringView EMPTY = new StringView(0, 0);
     }

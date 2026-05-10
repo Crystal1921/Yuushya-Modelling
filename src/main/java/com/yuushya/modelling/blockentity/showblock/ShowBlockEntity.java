@@ -15,6 +15,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -64,16 +66,16 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
 
     @Override
     //readNbt
-    public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.loadAdditional(compoundTag, registries);
-        ITransformDataInventory.load(compoundTag, transformData);
+    public void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        ITransformDataInventory.load(input, transformData);
     }
 
     @Override
     //writeNbt
-    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {
-        super.saveAdditional(compoundTag, registries);
-        ITransformDataInventory.saveAdditional(compoundTag, transformData, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        ITransformDataInventory.saveAdditional(output, transformData, null);
     }
 
     @Override

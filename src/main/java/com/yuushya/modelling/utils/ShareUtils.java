@@ -8,6 +8,7 @@ import com.mojang.serialization.JsonOps;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -16,6 +17,7 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.StateHolder;
@@ -103,11 +105,11 @@ public class ShareUtils {
 
     public static class StringSerialization {
         public static CompoundTag transfer(String string) throws CommandSyntaxException {
-            return TagParser.parseTag(string);
+            return TagParser.parseCompoundFully(string);
         }
 
         public static String from(CompoundTag tag) {
-            return tag.getAsString();
+            return tag.asString().orElse("");
         }
     }
 
@@ -187,13 +189,12 @@ public class ShareUtils {
             ) {
                 public static ShareBlockState from(BlockState state) {
                     String name = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-                    Map<Property<?>, Comparable<?>> map = state.getValues();
                     Map<String, String> properties = new HashMap<>();
-                    for (Map.Entry<Property<?>, Comparable<?>> entry : map.entrySet()) {
-                        Property<?> property = entry.getKey();
-                        Comparable<?> value = entry.getValue();
-                        properties.put(property.getName(), getName(property, (Comparable) value));
-                    }
+                    state.getValues().forEach(value -> {
+                        String[] split = value.toString().split("=");
+                        properties.put(split[0], split[1]);
+                    });
+
                     return new ShareBlockState(name, properties);
                 }
 
@@ -206,7 +207,9 @@ public class ShareUtils {
                 }
 
                 public BlockState transfer() {
-                    Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(this.name));
+                    Holder.Reference<Block> blockReference = BuiltInRegistries.BLOCK.get(Identifier.parse(this.name)).orElse(null);
+                    if (blockReference == null) return Blocks.AIR.defaultBlockState();
+                    Block block = blockReference.value();
                     BlockState blockState = block.defaultBlockState();
                     StateDefinition<Block, BlockState> stateDefinition = block.getStateDefinition();
                     for (String string : this.properties.keySet()) {
@@ -316,7 +319,7 @@ public class ShareUtils {
                             .result()
                             .orElse(new CompoundTag());
 
-                    String asString = tag.getAsString();
+                    String asString = tag.asString().orElse("");
                     JsonPrimitive jsonPrimitive = new JsonPrimitive(asString);
 
                     return new ShareItemStack(itemId.toString(), jsonPrimitive);
@@ -327,7 +330,7 @@ public class ShareUtils {
                     String snbtFromJson = jsonElement.getAsJsonPrimitive().getAsString();
                     CompoundTag compoundTag;
                     try {
-                        compoundTag = TagParser.parseTag(snbtFromJson);
+                        compoundTag = TagParser.parseCompoundFully(snbtFromJson);
                     } catch (Exception e) {
                         compoundTag = new CompoundTag();
                     }
