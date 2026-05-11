@@ -58,13 +58,16 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
     @Override
     public void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        ITransformItemDataInventory.load(input, transformData, this.getLevel().registryAccess());
+        input.read("transformData", TransformItemData.TRANSFORM_ITEM_DATA_CODEC.listOf()).ifPresent(list -> {
+            transformData.clear();
+            transformData.addAll(list);
+        });
     }
 
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
-        ITransformItemDataInventory.saveAdditional(output, transformData, this.getLevel().registryAccess());
+        output.store("transformData", TransformItemData.TRANSFORM_ITEM_DATA_CODEC.listOf(), transformData);
     }
 
     @Override

@@ -1,5 +1,8 @@
 package com.yuushya.modelling.blockentity.transformData;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.yuushya.modelling.utils.CodecUtils;
 import com.yuushya.modelling.utils.DeprecatedMethod;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.HolderLookup;
@@ -19,6 +22,17 @@ public class TransformItemData implements ITransformDataProvider {
     public ItemStack itemStack;
     public boolean isShown;
     public boolean enableBlock;
+    public static final Codec<TransformItemData> TRANSFORM_ITEM_DATA_CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+            CodecUtils.VECTOR_3D_CODEC.fieldOf("pos").forGetter(data -> data.pos),
+            CodecUtils.VECTOR_3F_CODEC.fieldOf("rot").forGetter(data -> data.rot),
+            CodecUtils.VECTOR_3F_CODEC.fieldOf("scales").forGetter(data -> data.scales),
+            ItemStack.CODEC.fieldOf("itemStack").forGetter(data -> data.itemStack),
+            Codec.INT.fieldOf("color").forGetter(data -> data.color),
+            Codec.BOOL.fieldOf("isShown").forGetter(data -> data.isShown),
+            Codec.BOOL.fieldOf("enableBlock").forGetter(data -> data.enableBlock)
+    ).apply(instance, TransformItemData::new));
+
+
 
     public TransformItemData() {
         this.pos = new Vector3d(0, 0, 0);

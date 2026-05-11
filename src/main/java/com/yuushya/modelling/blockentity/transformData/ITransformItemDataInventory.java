@@ -45,55 +45,6 @@ public interface ITransformItemDataInventory {
         });
     }
 
-    //writeNbt to compoundTag
-    static void saveAdditional(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
-        ListTag listTag = new ListTag();
-        int index = 0;
-        for (TransformItemData transformData : transformDatas) {
-            //if(!(transformData.blockState.getBlock() instanceof AirBlock)){
-            CompoundTag compoundTagTemp = new CompoundTag();
-            compoundTagTemp.putByte("Slot", (byte) index);
-            transformData.saveAdditional(compoundTagTemp, registries);
-            listTag.add(compoundTagTemp);
-            //}
-            index++;
-        }
-        if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
-    }
-
-    //writeNbt to ValueOutput
-    static void saveAdditional(ValueOutput output, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
-        ListTag listTag = new ListTag();
-        int index = 0;
-        for (TransformItemData transformData : transformDatas) {
-            CompoundTag compoundTagTemp = new CompoundTag();
-            compoundTagTemp.putByte("Slot", (byte) index);
-            transformData.saveAdditional(compoundTagTemp, registries);
-            listTag.add(compoundTagTemp);
-            index++;
-        }
-        if (!listTag.isEmpty()) {
-            CompoundTag compoundTag = new CompoundTag();
-            compoundTag.put("Blocks", listTag);
-            output.store("Blocks", CompoundTag.CODEC, compoundTag);
-        }
-    }
-
-    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformItemData> transformDatas, HolderLookup.Provider registries) {
-        ListTag listTag = new ListTag();
-        int index = 0;
-        for (TransformItemData transformData : transformDatas) {
-            if (!(transformData.itemStack.isEmpty())) {
-                CompoundTag compoundTagTemp = new CompoundTag();
-                compoundTagTemp.putByte("Slot", (byte) index);
-                transformData.saveAdditional(compoundTagTemp, registries);
-                listTag.add(compoundTagTemp);
-            }
-            index++;
-        }
-        if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
-    }
-
     //作为lambda类型的唯一抽象方法 the unique abstract function of interface and provide the lambda type.
     List<TransformItemData> getTransformData();
 
