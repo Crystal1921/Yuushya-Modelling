@@ -8,26 +8,40 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.ScissorState;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
+import com.yuushya.modelling.blockentity.renderstate.ItemBlockEntityRenderState;
+import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.OutlineBufferSource;
+import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4fStack;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.joml.Vector4f;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
+
+import static net.minecraft.client.renderer.item.ItemStackRenderState.LayerRenderState.EMPTY_TINTS;
 
 /**
  * @author ZhuRuoLing
@@ -55,8 +69,8 @@ public class CachedRegion {
      * Updates the block entities collection and triggers a rebuild of the region.
      * <p>
      *
-     * @see CacheableBERenderingPipeline#update(BlockEntity)
      * @param be The block entity to update.
+     * @see CacheableBERenderingPipeline#update(BlockEntity)
      */
     public void update(BlockEntity be) {
         if (lastRebuildTask != null) {
@@ -83,8 +97,8 @@ public class CachedRegion {
      * It cancels any ongoing rebuild tasks, removes the specified block entity from the collection,
      * cleans up any other removed block entities, and then submits a new rebuild task to the pipeline.
      *
-     * @see CacheableBERenderingPipeline#blockRemoved(BlockEntity)
      * @param be The block entity that has been removed.
+     * @see CacheableBERenderingPipeline#blockRemoved(BlockEntity)
      */
     public void blockRemoved(BlockEntity be) {
         if (lastRebuildTask != null) {
@@ -170,9 +184,9 @@ public class CachedRegion {
         }
 
         modelViewStack.translate(
-                - (float) cameraPosition.x + chunkPos.getMinBlockX(),
-                - (float) cameraPosition.y,
-                - (float) cameraPosition.z + chunkPos.getMinBlockZ()
+                -(float) cameraPosition.x + chunkPos.getMinBlockX(),
+                -(float) cameraPosition.y,
+                -(float) cameraPosition.z + chunkPos.getMinBlockZ()
         );
 
         GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrix(), new Vector4f(1.0F, 1.0F, 1.0F, 1.0F), new Vector3f(), renderType.state.textureTransform.getMatrix());
@@ -189,7 +203,7 @@ public class CachedRegion {
                     this.requestSortBuffer(renderType),
                     VertexSorting.byDistance(cameraPosition.toVector3f()));
 
-            if (result != null){
+            if (result != null) {
                 indices = renderType.state.pipeline.getVertexFormat().uploadImmediateIndexBuffer(result.byteBuffer());
                 indexType = sortState.indexType();
                 result.close();
@@ -215,7 +229,7 @@ public class CachedRegion {
             renderPass.setUniform("DynamicTransforms", dynamicTransforms);
             renderPass.setVertexBuffer(0, vertexBuffer);
 
-            for(Map.Entry<String, RenderSetup.TextureAndSampler> entry : textures.entrySet()) {
+            for (Map.Entry<String, RenderSetup.TextureAndSampler> entry : textures.entrySet()) {
                 renderPass.bindTexture(entry.getKey(), entry.getValue().textureView(), entry.getValue().sampler());
             }
 
@@ -247,6 +261,10 @@ public class CachedRegion {
         }
     }
 
+    public void submitCompileTask() {
+        pipeline.submitCompileTask(new RebuildTask());
+    }
+
     private class RebuildTask implements Runnable {
         private boolean cancelled = false;
 
@@ -274,22 +292,46 @@ public class CachedRegion {
                 SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();
                 BlockEntityRenderState renderState = Minecraft.getInstance().levelRenderer.blockEntityRenderDispatcher.tryExtractRenderState(be, 0, null, null);
 
-                if (renderState != null) {
-                    Minecraft.getInstance().levelRenderer.blockEntityRenderDispatcher.submit(renderState, poseStack, submitNodeStorage, Minecraft.getInstance().gameRenderer.getGameRenderState().levelRenderState.cameraRenderState);
+                if (renderState instanceof ItemBlockEntityRenderState itemBlockEntityRenderState) {
+                    List<ItemStackRenderState> renderData = itemBlockEntityRenderState.renderData;
+                    List<TransformItemData> transformData = itemBlockEntityRenderState.transformData;
+                    PoseStack stack = new PoseStack();
+                    if (renderData.size() != transformData.size()) {
+                        break;
+                    }
+                    for (int j = 0, renderDataSize = renderData.size(); j < renderDataSize; j++) {
+                        TransformItemData transformDatum = transformData.get(j);
+                        ItemStackRenderState renderDatum = renderData.get(j);
+                        for (ItemStackRenderState.LayerRenderState layer : renderDatum.layers) {
+                            List<BakedQuad> bakedQuads = layer.prepareQuadList();
+                            List<BakedQuad> newQuads = new ArrayList<>();
+                            for (BakedQuad bakedQuad : bakedQuads) {
+                                stack.pushPose();
+                                YuushyaUtils.scale(stack, transformDatum.scales);
+                                YuushyaUtils.translate(stack, transformDatum.pos);
+                                YuushyaUtils.rotate(stack, transformDatum.rot);
+                                Vector3fc[] vector4fs = new Vector3fc[4];
+                                for (int i = 0; i < 4; i++) {
+                                    Vector3fc position = bakedQuad.position(i);
+                                    Vector4f vector4f = new Vector4f(position.x(), position.y(), position.z(), 1);
+                                    stack.last().pose().transform(vector4f);
+                                    vector4fs[i] = new Vector3f(vector4f.x(), vector4f.y(), vector4f.z());
+                                }
+                                stack.popPose();
+
+                                newQuads.add(new BakedQuad(
+                                        vector4fs[0], vector4fs[1], vector4fs[2], vector4fs[3],
+                                        bakedQuad.packedUV0(), bakedQuad.packedUV1(), bakedQuad.packedUV2(), bakedQuad.packedUV3(),
+                                        bakedQuad.direction(), bakedQuad.materialInfo(), bakedQuad.bakedNormals(), bakedQuad.bakedColors()
+                                ));
+                            }
+
+                            submitNodeStorage.submitItem(poseStack, ItemDisplayContext.NONE, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0, EMPTY_TINTS, newQuads, ItemStackRenderState.FoilType.NONE);
+                        }
+                    }
                 }
 
-                FeatureRenderDispatcher dispatcher = new FeatureRenderDispatcher(
-                        submitNodeStorage,
-                        Minecraft.getInstance().getModelManager(),
-                        bufferSource,
-                        Minecraft.getInstance().getAtlasManager(),
-                        EmptyOutlineBufferSource.INSTANCE,
-                        EmptyBufferSource.INSTANCE,
-                        Minecraft.getInstance().font,
-                        Minecraft.getInstance().gameRenderer.getGameRenderState()
-                );
-
-                dispatcher.renderAllFeatures();
+                FeatureRenderDispatcher dispatcher = getFeatureRenderDispatcher(submitNodeStorage, bufferSource);
                 dispatcher.endFrame();
 
                 poseStack.popPose();
@@ -304,6 +346,22 @@ public class CachedRegion {
             CachedRegion.this.meshSortings = bufferSource.getMeshSorts();
             CachedRegion.this.indexCountMap = bufferSource.getIndexCountMap();
             lastRebuildTask = null;
+        }
+
+        private @NonNull FeatureRenderDispatcher getFeatureRenderDispatcher(SubmitNodeStorage submitNodeStorage, FullyBufferedBufferSource bufferSource) {
+            FeatureRenderDispatcher dispatcher = new FeatureRenderDispatcher(
+                    submitNodeStorage,
+                    Minecraft.getInstance().getModelManager(),
+                    bufferSource,
+                    Minecraft.getInstance().getAtlasManager(),
+                    EmptyOutlineBufferSource.INSTANCE,
+                    EmptyBufferSource.INSTANCE,
+                    Minecraft.getInstance().font,
+                    Minecraft.getInstance().gameRenderer.getGameRenderState()
+            );
+
+            dispatcher.renderAllFeatures();
+            return dispatcher;
         }
 
         void cancel() {

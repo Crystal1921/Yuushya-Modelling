@@ -3,40 +3,29 @@ package com.yuushya.modelling.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.resource.ResourceHandle;
-import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
 import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
-import com.yuushya.modelling.utils.CustomRenderInstance;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Mixin(LevelRenderer.class)
@@ -81,5 +70,18 @@ public abstract class LevelRendererMixin {
         }
 
         return original.call(instance, blockEntity, partialTicks, breakProgress, frustum);
+    }
+
+    @Inject(method = "extractVisibleBlockEntities(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/culling/Frustum;)V",
+            at = @At(
+                    value = "TAIL"
+            ))
+    public void submitTask(Camera camera, float deltaPartialTick, LevelRenderState levelRenderState, Frustum frustum, CallbackInfo ci) {
+        Set<ChunkPos> safeSet = CachedModeClient.INSTANCE.safeSet;
+        if (!safeSet.isEmpty()) {
+            safeSet.forEach((chunkPos) -> {
+                CacheableBERenderingPipeline.getInstance().getRenderRegion(chunkPos).submitCompileTask();
+            });
+        }
     }
 }

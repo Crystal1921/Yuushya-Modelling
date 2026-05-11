@@ -3,9 +3,9 @@ package com.yuushya.modelling.blockentity.itemblock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
-import com.yuushya.modelling.utils.CustomRenderInstance;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -15,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -89,7 +90,7 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
 
     public void setRemoved() {
         if (this.level != null && this.level.isClientSide()) {
-            CustomRenderInstance.getINSTANCE().dirty = true;
+            CachedModeClient.INSTANCE.safeSet.add(ChunkPos.containing(this.getBlockPos()));
             if (!this.isEmpty()) {
                 String res = ShareUtils.transferItems(this.getTransformData());
                 ShareUtils.ShareItemInformation information = ShareUtils.fromItems(res);

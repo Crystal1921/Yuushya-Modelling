@@ -1,8 +1,6 @@
 package com.yuushya.modelling;
 
-import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
-import com.yuushya.modelling.gui.widget.ColorTexture;
 import com.yuushya.modelling.registries.BlockRegistry;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,10 +33,6 @@ public class YuushyaClientNeoForge {
         Map<BlockState, BlockStateModel> blockStateBlockStateModelMap = event.getBakingResult().blockStateModels();
         for (BlockState possibleState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
             blockStateBlockStateModelMap.put(possibleState, new ShowBlockModel());
-        }
-
-        for (BlockState possibleState : BlockRegistry.ITEM_BLOCK.get().getStateDefinition().getPossibleStates()) {
-            blockStateBlockStateModelMap.put(possibleState, new ItemBlockModel());
         }
 
 //        ModelIdentifier inventory = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
