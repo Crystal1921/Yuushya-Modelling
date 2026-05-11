@@ -1,5 +1,8 @@
 package com.yuushya.modelling.blockentity.transformData;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.yuushya.modelling.utils.CodecUtils;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -12,6 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransformTextData implements ITransformDataProvider {
+    public static final Codec<TransformTextData> TRANSFORM_TEXT_DATA_CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+            CodecUtils.VECTOR_3D_CODEC.fieldOf("pos").forGetter(data -> data.pos),
+            CodecUtils.VECTOR_3F_CODEC.fieldOf("rot").forGetter(data -> data.rot),
+            CodecUtils.VECTOR_3F_CODEC.fieldOf("scales").forGetter(data -> data.scales),
+            Codec.STRING.listOf().fieldOf("textLines").forGetter(data -> data.textLines),
+            Codec.BOOL.fieldOf("isCulled").forGetter(data -> data.isCulled),
+            Codec.BOOL.fieldOf("isMirror").forGetter(data -> data.isMirror),
+            Codec.BOOL.fieldOf("isShown").forGetter(data -> data.isShown)
+    ).apply(instance, TransformTextData::new));
     public Vector3d pos;
     public Vector3f rot;
     public Vector3f scales;

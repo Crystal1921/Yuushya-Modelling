@@ -56,13 +56,16 @@ public class TextBlockEntity extends AbstractTransformBlockEntity implements ITr
     @Override
     public void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        ITransformTextDataInventory.load(input, transformData);
+        input.read("transformData", TransformTextData.TRANSFORM_TEXT_DATA_CODEC.listOf()).ifPresent(list -> {
+            transformData.clear();
+            transformData.addAll(list);
+        });
     }
 
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
-        ITransformTextDataInventory.saveAdditional(output, transformData, null);
+        output.store("transformData", TransformTextData.TRANSFORM_TEXT_DATA_CODEC.listOf(), transformData);
     }
 
     @Override

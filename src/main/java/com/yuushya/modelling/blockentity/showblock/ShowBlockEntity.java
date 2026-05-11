@@ -68,22 +68,23 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
     //readNbt
     public void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        ITransformDataInventory.load(input, transformData);
+        input.read("transformData", TransformBlockData.TRANSFORM_BLOCK_DATA_CODEC.listOf()).ifPresent(list -> {
+            transformData.clear();
+            transformData.addAll(list);
+        });
     }
 
     @Override
     //writeNbt
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
-        ITransformDataInventory.saveAdditional(output, transformData, null);
+        output.store("transformData", TransformBlockData.TRANSFORM_BLOCK_DATA_CODEC.listOf(), transformData);
     }
 
     @Override
     //toInitialChunkDataNbt //When you first load world it writeNbt firstly
     public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag compoundTag = super.getUpdateTag(registries);
-        ITransformDataInventory.saveAdditional(compoundTag, transformData, registries);
-        return compoundTag;
+        return saveWithoutMetadata(registries);
     }
 
     public void writeBlockState(ItemStack itemStack, BlockState blockState) {

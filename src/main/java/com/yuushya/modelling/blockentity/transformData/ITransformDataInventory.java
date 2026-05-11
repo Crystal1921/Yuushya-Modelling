@@ -6,7 +6,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,37 +16,6 @@ public interface ITransformDataInventory {
     static ITransformDataInventory of(List<TransformBlockData> transformDatas) {
         return () -> transformDatas;
     }//interface ::=functional
-
-    //readNbt from ValueInput
-    static void load(ValueInput input, List<TransformBlockData> transformDatas) {
-        input.read("Blocks", CompoundTag.CODEC).ifPresent(compoundTag -> {
-            ListTag listTag = compoundTag.getList("Blocks").orElse(new ListTag());
-            if (!transformDatas.isEmpty()) transformDatas.clear();
-            for (int index = 0; index < listTag.size(); index++) {
-                TransformBlockData transformData = new TransformBlockData();
-                CompoundTag compoundTagTemp = listTag.getCompound(index).orElse(new CompoundTag());
-                transformData.load(compoundTagTemp);
-                transformDatas.add(transformData);
-            }
-            if (transformDatas.isEmpty()) transformDatas.add(new TransformBlockData());
-        });
-    }
-
-    //writeNbt to compoundTag
-    static void saveAdditional(CompoundTag compoundTag, List<? extends ITransformDataProvider> transformDatas, HolderLookup.Provider registries) {
-        ListTag listTag = new ListTag();
-        int index = 0;
-        for (ITransformDataProvider transformData : transformDatas) {
-            //if(!(transformData.blockState.getBlock() instanceof AirBlock)){
-            CompoundTag compoundTagTemp = new CompoundTag();
-            compoundTagTemp.putByte("Slot", (byte) index);
-            transformData.saveAdditional(compoundTagTemp, registries);
-            listTag.add(compoundTagTemp);
-            //}
-            index++;
-        }
-        if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
-    }
 
     //writeNbt to ValueOutput
     static void saveAdditional(ValueOutput output, List<? extends ITransformDataProvider> transformDatas, HolderLookup.Provider registries) {
@@ -65,21 +33,6 @@ public interface ITransformDataInventory {
             compoundTag.put("Blocks", listTag);
             output.store("Blocks", CompoundTag.CODEC, compoundTag);
         }
-    }
-
-    static void saveAdditionalWithoutAir(CompoundTag compoundTag, List<TransformBlockData> transformDatas, HolderLookup.Provider registries) {
-        ListTag listTag = new ListTag();
-        int index = 0;
-        for (TransformBlockData transformData : transformDatas) {
-            if (!(transformData.blockState.getBlock() instanceof AirBlock)) {
-                CompoundTag compoundTagTemp = new CompoundTag();
-                compoundTagTemp.putByte("Slot", (byte) index);
-                transformData.saveAdditional(compoundTagTemp, registries);
-                listTag.add(compoundTagTemp);
-            }
-            index++;
-        }
-        if (!listTag.isEmpty()) compoundTag.put("Blocks", listTag);
     }
 
     //作为lambda类型的唯一抽象方法 the unique abstract function of interface and provide the lambda type.
