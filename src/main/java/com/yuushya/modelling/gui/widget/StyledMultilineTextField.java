@@ -2,32 +2,34 @@ package com.yuushya.modelling.gui.widget;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.mojang.logging.LogUtils;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
-import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class StyledMultilineTextField {
-    public static final int NO_CHARACTER_LIMIT = Integer.MAX_VALUE;
+    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final int NO_LIMIT = Integer.MAX_VALUE;
     private static final int LINE_SEEK_PIXEL_BIAS = 2;
 
     private final Font font;
-    private final List<StyledMultilineTextField.StringView> displayLines = Lists.newArrayList();
+    private final List<StringView> displayLines = Lists.newArrayList();
 
     // 核心：使用 List<Component> 替代 String
     private final List<Component> components;
@@ -44,7 +46,6 @@ public class StyledMultilineTextField {
     @Setter
     private Consumer<List<Component>> valueListener = components -> {
     };
-    @Setter
     private Runnable cursorListener = () -> {
     };
 
@@ -71,6 +72,10 @@ public class StyledMultilineTextField {
         this.characterLimit = characterLimit;
     }
 
+    public void setCursorListener(Runnable cursorListener) {
+        this.cursorListener = cursorListener;
+    }
+
     public boolean hasCharacterLimit() {
         return this.characterLimit != Integer.MAX_VALUE;
     }
@@ -79,7 +84,7 @@ public class StyledMultilineTextField {
 
     public void setValue(List<Component> components) {
         this.components.clear();
-        this.components.addAll(mergeSameStyle(components)); // << 修改点：加合并
+        this.components.addAll(mergeSameStyle(components));
         rebuildCombinedText();
 
         this.cursor = this.plainText.length();
@@ -179,7 +184,7 @@ public class StyledMultilineTextField {
         }
 
         this.components.clear();
-        this.components.addAll(mergeSameStyle(newComponents)); // << 修改点：加合并
+        this.components.addAll(mergeSameStyle(newComponents));
 
         this.textBlockScreen.updateComponentLines(this.components);
 
@@ -216,9 +221,11 @@ public class StyledMultilineTextField {
                 newComponents.add(comp);
             } else {
                 Style compStyle = comp.getStyle();
+                Style applyStyle = style;
                 if (font != null) {
-                    style = style.withFont(new FontDescription.Resource(font));
+                    applyStyle = style.withFont(new net.minecraft.network.chat.FontDescription.Resource(font));
                 }
+
                 if (currentIndex < selection.beginIndex) {
                     int beforeEnd = selection.beginIndex - currentIndex;
                     if (beforeEnd > 0) {
@@ -229,14 +236,14 @@ public class StyledMultilineTextField {
                 int selectedStart = Math.max(0, selection.beginIndex - currentIndex);
                 int selectedEnd = Math.min(compLength, selection.endIndex - currentIndex);
                 if (selectedEnd > selectedStart) {
-                    TextColor newTextColor = style.getColor();
+                    TextColor newTextColor = applyStyle.getColor();
                     TextColor oldTextColor = compStyle.getColor();
                     if (newTextColor != null && !newTextColor.equals(oldTextColor)) {
-                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style.withColor(newTextColor)));
+                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(applyStyle.withColor(newTextColor)));
                     } else if (oldTextColor != null) {
-                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style.withColor(oldTextColor)));
+                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(applyStyle.withColor(oldTextColor)));
                     } else {
-                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(style));
+                        newComponents.add(Component.literal(compText.substring(selectedStart, selectedEnd)).setStyle(applyStyle));
                     }
                 }
 
@@ -261,9 +268,9 @@ public class StyledMultilineTextField {
         this.onValueChange();
     }
 
-    public void deleteText(int length) {
+    public void deleteText(int dir) {
         if (!this.hasSelection()) {
-            this.selectCursor = Mth.clamp(this.cursor + length, 0, this.plainText.length());
+            this.selectCursor = Mth.clamp(this.cursor + dir, 0, this.plainText.length());
         }
         this.insertText("");
     }
@@ -289,38 +296,32 @@ public class StyledMultilineTextField {
         return Math.max(this.selectCursor, this.cursor);
     }
 
-    public void seekCursor(Whence whence, int position) {
+    public void seekCursor(Whence whence, int cursor) {
         switch (whence) {
-            case ABSOLUTE:
-                this.cursor = position;
-                break;
-            case RELATIVE:
-                this.cursor += position;
-                break;
-            case END:
-                this.cursor = this.plainText.length() + position;
+            case ABSOLUTE -> this.cursor = cursor;
+            case RELATIVE -> this.cursor += cursor;
+            case END -> this.cursor = this.plainText.length() + cursor;
         }
 
         this.cursor = Mth.clamp(this.cursor, 0, this.plainText.length());
         this.cursorListener.run();
-
         if (!this.selecting) {
             this.selectCursor = this.cursor;
         }
     }
 
-    public void seekCursorLine(int offset) {
-        if (offset != 0) {
+    public void seekCursorLine(int lineOffset) {
+        if (lineOffset != 0) {
             StringView currentLine = this.getCursorLineView();
-            int pixelPos = this.font.width(this.plainText.substring(currentLine.beginIndex, this.cursor)) + LINE_SEEK_PIXEL_BIAS;
+            int oldCursorLeft = this.font.width(this.plainText.substring(currentLine.beginIndex(), this.cursor())) + LINE_SEEK_PIXEL_BIAS;
 
-            StringView targetLine = this.getCursorLineView(offset);
-            int charOffset = this.font.plainSubstrByWidth(
-                    this.plainText.substring(targetLine.beginIndex, targetLine.endIndex),
-                    pixelPos
+            StringView targetLine = this.getCursorLineView(lineOffset);
+            int newCursor = this.font.plainSubstrByWidth(
+                    this.plainText.substring(targetLine.beginIndex(), targetLine.endIndex()),
+                    oldCursorLeft
             ).length();
 
-            this.seekCursor(Whence.ABSOLUTE, targetLine.beginIndex + charOffset);
+            this.seekCursor(Whence.ABSOLUTE, targetLine.beginIndex() + newCursor);
         }
     }
 
@@ -329,11 +330,11 @@ public class StyledMultilineTextField {
         StringView line = this.displayLines.get(lineIndex);
 
         int charOffset = this.font.plainSubstrByWidth(
-                this.plainText.substring(line.beginIndex, line.endIndex),
+                this.plainText.substring(line.beginIndex(), line.endIndex()),
                 Mth.floor(x)
         ).length();
 
-        this.seekCursor(Whence.ABSOLUTE, line.beginIndex + charOffset);
+        this.seekCursor(Whence.ABSOLUTE, line.beginIndex() + charOffset);
     }
 
     // ==================== 行操作 ====================
@@ -345,7 +346,7 @@ public class StyledMultilineTextField {
     public int getLineAtCursor() {
         for (int i = 0; i < this.displayLines.size(); i++) {
             StringView view = this.displayLines.get(i);
-            if (this.cursor >= view.beginIndex && this.cursor <= view.endIndex) {
+            if (this.cursor >= view.beginIndex() && this.cursor <= view.endIndex()) {
                 return i;
             }
         }
@@ -364,18 +365,19 @@ public class StyledMultilineTextField {
         return this.getCursorLineView(0);
     }
 
-    private StringView getCursorLineView(int offset) {
+    private StringView getCursorLineView(int lineOffset) {
         int lineIndex = this.getLineAtCursor();
         if (lineIndex < 0) {
-            throw new IllegalStateException("Cursor is not within text (cursor = " + this.cursor + ", length = " + this.plainText.length() + ")");
+            LOGGER.error("Cursor is not within text (cursor = {}, length = {})", this.cursor, this.plainText.length());
+            return this.displayLines.getLast();
         }
-        return this.displayLines.get(Mth.clamp(lineIndex + offset, 0, this.displayLines.size() - 1));
+        return this.displayLines.get(Mth.clamp(lineIndex + lineOffset, 0, this.displayLines.size() - 1));
     }
 
     // ==================== 键盘处理 ====================
 
     public boolean keyPressed(KeyEvent event) {
-        this.selecting = Minecraft.getInstance().hasShiftDown();
+        this.selecting = event.hasShiftDown();
         int keyCode = event.key();
 
         if (event.isSelectAll()) {
@@ -394,80 +396,91 @@ public class StyledMultilineTextField {
             return true;
         }
 
-        return switch (keyCode) { // Enter
+        return switch (keyCode) {
+            // Enter
             case 257, 335 -> {
                 this.insertText("\n");
                 yield true;
             }
+            // Backspace
             case 259 -> {
-                if (event.hasControlDown()) {
+                if (event.hasControlDownWithQuirk()) {
                     StringView word = this.getPreviousWord();
-                    this.deleteText(word.beginIndex - this.cursor);
+                    this.deleteText(word.beginIndex() - this.cursor());
                 } else {
                     this.deleteText(-1);
                 }
                 yield true;
             }
+            // Delete
             case 261 -> {
-                if (event.hasControlDown()) {
+                if (event.hasControlDownWithQuirk()) {
                     StringView word = this.getNextWord();
-                    this.deleteText(word.beginIndex - this.cursor);
+                    this.deleteText(word.beginIndex() - this.cursor());
                 } else {
                     this.deleteText(1);
                 }
                 yield true;
             }
+            // Right Arrow
             case 262 -> {
-                if (event.hasControlDown()) {
+                if (event.hasControlDownWithQuirk()) {
                     StringView word = this.getNextWord();
-                    this.seekCursor(Whence.ABSOLUTE, word.beginIndex);
+                    this.seekCursor(Whence.ABSOLUTE, word.beginIndex());
                 } else {
                     this.seekCursor(Whence.RELATIVE, 1);
                 }
                 yield true;
             }
+            // Left Arrow
             case 263 -> {
-                if (event.hasControlDown()) {
+                if (event.hasControlDownWithQuirk()) {
                     StringView word = this.getPreviousWord();
-                    this.seekCursor(Whence.ABSOLUTE, word.beginIndex);
+                    this.seekCursor(Whence.ABSOLUTE, word.beginIndex());
                 } else {
                     this.seekCursor(Whence.RELATIVE, -1);
                 }
                 yield true;
             }
+            // Down Arrow
             case 264 -> {
-                if (!event.hasControlDown()) {
+                if (!event.hasControlDownWithQuirk()) {
                     this.seekCursorLine(1);
                 }
                 yield true;
             }
+            // Up Arrow
             case 265 -> {
-                if (!event.hasControlDown()) {
+                if (!event.hasControlDownWithQuirk()) {
                     this.seekCursorLine(-1);
                 }
                 yield true;
             }
+            // Home
             case 266 -> {
                 this.seekCursor(Whence.ABSOLUTE, 0);
                 yield true;
             }
+            // End
             case 267 -> {
                 this.seekCursor(Whence.END, 0);
                 yield true;
             }
+            // Home (Ctrl)
             case 268 -> {
-                if (event.hasControlDown()) {
+                if (event.hasControlDownWithQuirk()) {
                     this.seekCursor(Whence.ABSOLUTE, 0);
                 } else {
-                    this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().beginIndex);
+                    this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().beginIndex());
                 }
                 yield true;
             }
+            // End (Ctrl)
             case 269 -> {
-                if (event.hasControlDown()) {
+                if (event.hasControlDownWithQuirk()) {
                     this.seekCursor(Whence.END, 0);
                 } else {
-                    this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().endIndex);
+                    this.seekCursor(Whence.ABSOLUTE, this.getCursorLineView().endIndex());
                 }
                 yield true;
             }
@@ -484,7 +497,7 @@ public class StyledMultilineTextField {
     @VisibleForTesting
     public String getSelectedText() {
         StringView selection = this.getSelected();
-        return this.plainText.substring(selection.beginIndex, selection.endIndex);
+        return this.plainText.substring(selection.beginIndex(), selection.endIndex());
     }
 
     @VisibleForTesting
@@ -493,17 +506,17 @@ public class StyledMultilineTextField {
             return StringView.EMPTY;
         }
 
-        int i = Mth.clamp(this.cursor, 0, this.plainText.length() - 1);
-
-        while (i > 0 && Character.isWhitespace(this.plainText.charAt(i - 1))) {
-            i--;
+        int startPosition;
+        for (startPosition = Mth.clamp(this.cursor, 0, this.plainText.length() - 1);
+             startPosition > 0 && Character.isWhitespace(this.plainText.charAt(startPosition - 1));
+             --startPosition) {
         }
 
-        while (i > 0 && !Character.isWhitespace(this.plainText.charAt(i - 1))) {
-            i--;
+        while (startPosition > 0 && !Character.isWhitespace(this.plainText.charAt(startPosition - 1))) {
+            --startPosition;
         }
 
-        return new StringView(i, this.getWordEndPosition(i));
+        return new StringView(startPosition, this.getWordEndPosition(startPosition));
     }
 
     @VisibleForTesting
@@ -512,25 +525,24 @@ public class StyledMultilineTextField {
             return StringView.EMPTY;
         }
 
-        int i = Mth.clamp(this.cursor, 0, this.plainText.length() - 1);
-
-        while (i < this.plainText.length() && !Character.isWhitespace(this.plainText.charAt(i))) {
-            i++;
+        int startPosition;
+        for (startPosition = Mth.clamp(this.cursor, 0, this.plainText.length() - 1);
+             startPosition < this.plainText.length() && !Character.isWhitespace(this.plainText.charAt(startPosition));
+             ++startPosition) {
         }
 
-        while (i < this.plainText.length() && Character.isWhitespace(this.plainText.charAt(i))) {
-            i++;
+        while (startPosition < this.plainText.length() && Character.isWhitespace(this.plainText.charAt(startPosition))) {
+            ++startPosition;
         }
 
-        return new StringView(i, this.getWordEndPosition(i));
+        return new StringView(startPosition, this.getWordEndPosition(startPosition));
     }
 
-    private int getWordEndPosition(int start) {
-        int i = start;
-        while (i < this.plainText.length() && !Character.isWhitespace(this.plainText.charAt(i))) {
-            i++;
+    private int getWordEndPosition(int from) {
+        int end;
+        for (end = from; end < this.plainText.length() && !Character.isWhitespace(this.plainText.charAt(end)); ++end) {
         }
-        return i;
+        return end;
     }
 
     // ==================== 合并相同样式Component的辅助方法 ====================
@@ -607,7 +619,7 @@ public class StyledMultilineTextField {
         } else {
             // 使用 String 版本的 splitLines 来获取索引
             this.font.getSplitter().splitLines(
-                    this.plainText,     // 使用纯文本
+                    this.plainText,
                     this.width,
                     Style.EMPTY,
                     false,
@@ -629,7 +641,15 @@ public class StyledMultilineTextField {
         END
     }
 
-    public static record StringView(int beginIndex, int endIndex) {
-        static final StringView EMPTY = new StringView(0, 0);
+    public record StringView(int beginIndex, int endIndex) {
+        private static final StringView EMPTY = new StringView(0, 0);
+
+        public int beginIndex() {
+            return this.beginIndex;
+        }
+
+        public int endIndex() {
+            return this.endIndex;
+        }
     }
 }
