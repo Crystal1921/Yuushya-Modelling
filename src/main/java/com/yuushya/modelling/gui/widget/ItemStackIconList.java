@@ -194,14 +194,13 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
         @Override
         public void extractContent(GuiGraphicsExtractor guiGraphics, int x, int y, boolean hovered, float v) {
-            // Advance and apply animation (if running) BEFORE rendering so the preview sees updated values
             applyAnimationIfNeeded();
 
             ItemStack itemStack = updateRenderState();
 
             // Render item icon
             if (!itemStack.isEmpty()) {
-                guiGraphics.item(itemStack, (int) (x + itemWidth / 2.0f), (int) (y + itemHeight / 2.0f));
+                guiGraphics.item(itemStack, (int) (getX() + itemWidth / 2.0f) - 8, (int) (getY() + itemHeight / 2.0f) - 8);
                 //TODO 不知道这样渲染对不对
 //                BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
 //                PoseStack pose = guiGraphics.pose();
@@ -221,13 +220,13 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
             // Render index number
             Font font = Minecraft.getInstance().font;
             String indexStr = String.valueOf(this.slot);
-            int textX = x + itemWidth - font.width(indexStr) - 2;
-            int textY = y + 2;
+            int textX = getX() + itemWidth - font.width(indexStr) - 2;
+            int textY = getY() + 2;
             guiGraphics.text(font, indexStr, textX, textY, 0xFFFFFF, true);
 
             // Render selection indicator
             if (hovered || this == ItemStackIconList.this.getSelected()) {
-                guiGraphics.fill(x - 1, y - 1, x + itemWidth + 1, y + itemHeight + 1, 0x80FFFFFF);
+                guiGraphics.fill(getX() - 1, getY() - 1, getX() + itemWidth + 1, getY() + itemHeight + 1, 0x80FFFFFF);
             }
         }
     }

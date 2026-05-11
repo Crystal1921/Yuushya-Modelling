@@ -76,11 +76,6 @@ public class TextBlock extends AbstractTransformBlock {
         return new TextBlockEntity(blockPos, blockState);
     }
 
-    public @NotNull BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        this.spawnDestroyParticles(level, player, pos, state);
-        return state;
-    }
-
     @Override
     public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, Player player) {
         ItemStack itemStack = new ItemStack(this);

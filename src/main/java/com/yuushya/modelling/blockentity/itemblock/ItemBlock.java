@@ -53,9 +53,4 @@ public class ItemBlock extends AbstractTransformBlock {
     public @Nullable BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
         return new ItemBlockEntity(blockPos, blockState);
     }
-
-    public @NotNull BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        this.spawnDestroyParticles(level, player, pos, state);
-        return state;
-    }
 }

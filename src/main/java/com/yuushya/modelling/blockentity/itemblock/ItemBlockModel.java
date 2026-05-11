@@ -1,9 +1,12 @@
 package com.yuushya.modelling.blockentity.itemblock;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.resources.model.sprite.Material;
+import net.minecraft.data.AtlasIds;
 import net.minecraft.util.RandomSource;
 
 import java.util.List;
@@ -16,7 +19,10 @@ public class ItemBlockModel implements BlockStateModel {
 
     @Override
     public Material.Baked particleMaterial() {
-        return null;
+        return new Material.Baked(
+                Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS).getSprite(MissingTextureAtlasSprite.getLocation()),
+                false
+        );
     }
 
     @Override
