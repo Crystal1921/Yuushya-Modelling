@@ -9,25 +9,21 @@ import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.utils.DeprecatedMethod;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -140,26 +136,16 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@N
 
             poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
             poseStack.scale(0.1F, 0.1F, 0.1F);
-            Matrix4f matrix4f = poseStack.last().pose();
 
             boolean isCulled = transformDatum.isCulled;
             boolean isMirror = transformDatum.isMirror;
 
-            if (!isCulled && !isMirror) {
-                //TODO 这里也要渲染两次
-//                    submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
-            }
+            submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0xFFFFFFFF, 0, 0);
 
-            if (!isCulled && isMirror) {
-                //TODO 不知道这里行不行
-                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
+            if (!isCulled) {
                 poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
                 poseStack.translate(-font.width(mutableComponent), 0.0D, 0.0D);
-                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
-            }
-
-            if (isCulled) {
-                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0, 0, 0);
+                submitNodeCollector.submitText(poseStack, 0, 0, mutableComponent.getVisualOrderText(), false, Font.DisplayMode.NORMAL, state.lightCoords, 0xFFFFFFFF, 0, 0);
             }
 
             poseStack.popPose();
@@ -170,13 +156,13 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@N
         poseStack.pushPose();
 
         renderTextInfo(Component.translatable("block.yuushya.showblock.pos_text")
-                        .append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", transformData.pos.x)).withStyle(ChatFormatting.DARK_RED))
-                        .append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", transformData.pos.y)).withStyle(ChatFormatting.GREEN))
-                        .append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", transformData.pos.z)).withStyle(ChatFormatting.BLUE)), 0.8f, poseStack, submitNodeCollector, cameraRenderState);
+                .append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", transformData.pos.x)).withStyle(ChatFormatting.DARK_RED))
+                .append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", transformData.pos.y)).withStyle(ChatFormatting.GREEN))
+                .append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", transformData.pos.z)).withStyle(ChatFormatting.BLUE)), 0.8f, poseStack, submitNodeCollector, cameraRenderState);
         renderTextInfo(Component.translatable("block.yuushya.showblock.rot_text")
-                        .append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", transformData.rot.x())).withStyle(ChatFormatting.DARK_RED))
-                        .append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", transformData.rot.y())).withStyle(ChatFormatting.GREEN))
-                        .append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", transformData.rot.z())).withStyle(ChatFormatting.BLUE)), 0.55f, poseStack, submitNodeCollector, cameraRenderState);
+                .append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", transformData.rot.x())).withStyle(ChatFormatting.DARK_RED))
+                .append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", transformData.rot.y())).withStyle(ChatFormatting.GREEN))
+                .append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", transformData.rot.z())).withStyle(ChatFormatting.BLUE)), 0.55f, poseStack, submitNodeCollector, cameraRenderState);
         renderTextInfo(Component.translatable("block.yuushya.showblock.scale_text", transformData.scales.x()), 0.3f, poseStack, submitNodeCollector, cameraRenderState);
         float high = 0.3f;
         for (TransformTextData everyTransformData : state.transformData) {

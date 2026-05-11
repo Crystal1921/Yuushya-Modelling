@@ -134,31 +134,31 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
             if (previewText.length() > 6) {
                 previewText = previewText.substring(0, 6) + "...";
             }
-            guiGraphics.text(font, previewText, x + 2, y + parent.itemHeight / 2 - font.lineHeight / 2, 0xFFFFFF);
+            guiGraphics.text(font, previewText, getX() + 2, getY() + parent.itemHeight / 2 - font.lineHeight / 2, 0xFFFFFFFF);
 
             // Render index number
             String indexStr = String.valueOf(this.slot);
-            int textX = x + parent.itemWidth - font.width(indexStr) - 2;
-            int textY = y + 2;
-            guiGraphics.text(font, indexStr, textX, textY, 0xFFFFFF);
+            int textX = getX() + parent.itemWidth - font.width(indexStr) - 2;
+            int textY = getY() + 2;
+            guiGraphics.text(font, indexStr, textX, textY, 0xFFFFFFFF);
 
             // Render line count
             String lineCountStr = "(" + textLines.size() + ")";
-            guiGraphics.text(font, lineCountStr, x + 2, y + parent.itemHeight - font.lineHeight - 2, 0xAAAAAA);
+            guiGraphics.text(font, lineCountStr, getX() + 2, getY() + parent.itemHeight - font.lineHeight - 2, 0xFFAAAAAA);
 
             // Render selection indicator
             if (hovered || this == TextIconList.this.getSelected()) {
-                guiGraphics.fill(x - 1, y - 1, x + parent.itemWidth + 1, y + parent.itemHeight + 1, 0x80FFFFFF);
+                guiGraphics.fill(getX() - 1, getY() - 1, getX() + parent.itemWidth + 1, getY() + parent.itemHeight + 1, 0x80FFFFFF);
             }
 
             // Render chosen indicator
             if (chosen) {
-                guiGraphics.fill(x, y, x + parent.itemWidth, y + parent.itemHeight, 0x5FD85C2F);
+                guiGraphics.fill(getX(), getY(), getX() + parent.itemWidth, getY() + parent.itemHeight, 0x5FD85C2F);
             }
 
             // Render shown state indicator
             if (updateRenderShown()) {
-                guiGraphics.fill(x, y, x + 3, y + parent.itemHeight, 0x8000FF00);
+                guiGraphics.fill(getX(), getY(), getX() + 3, getY() + parent.itemHeight, 0x8000FF00);
             }
         }
 
