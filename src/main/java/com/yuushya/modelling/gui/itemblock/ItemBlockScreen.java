@@ -6,6 +6,7 @@ import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -39,6 +40,7 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -889,6 +891,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
     }
 
     public void updateTransformDataClient(ItemTransformType type, Double number) {
+        CachedModeClient.INSTANCE.safeSet.add(ChunkPos.containing(blockEntity.getBlockPos()));
         this.storage.put(type, number);
         type.modify(blockEntity, slot, number);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
