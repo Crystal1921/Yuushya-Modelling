@@ -1,40 +1,35 @@
-package com.yuushya.modelling;
+package com.yuushya.modelling.event;
 
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
+import com.yuushya.modelling.blockentity.textblock.TextModelSpecialRenderer;
 import com.yuushya.modelling.registries.BlockRegistry;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.neoforged.neoforge.client.event.RegisterSpecialModelRendererEvent;
 
 import java.util.Map;
 
-@Mod(value = Yuushya.MOD_ID_USED, dist = Dist.CLIENT)
-public class YuushyaClientNeoForge {
-    public YuushyaClientNeoForge(IEventBus modBus) {
-        modBus.addListener(this::onInitializeClient);
-        modBus.addListener(this::onModelBaked);
-        modBus.addListener(this::handleBlockColor);
-        modBus.addListener(this::handleItemColor);
-    }
-
-    public void onInitializeClient(FMLClientSetupEvent event) {
+@EventBusSubscriber(value = Dist.CLIENT)
+public class ModelEvent {
+    @SubscribeEvent
+    public static void onInitializeClient(FMLClientSetupEvent event) {
         //TODO 这里要改
 //        event.enqueueWork(() -> {
 //            ColorTexture colorTexture = new ColorTexture();
 //        });
     }
 
-    public void onModelBaked(ModelEvent.ModifyBakingResult event) {
+    @SubscribeEvent
+    public static void onModelBaked(net.neoforged.neoforge.client.event.ModelEvent.ModifyBakingResult event) {
         Map<BlockState, BlockStateModel> blockStateBlockStateModelMap = event.getBakingResult().blockStateModels();
         for (BlockState possibleState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
             blockStateBlockStateModelMap.put(possibleState, new ShowBlockModel());
         }
-
 //        ModelIdentifier inventory = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
 //        event.getModels().put(inventory, new NeoShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
 //        for (BlockState blockState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
@@ -50,6 +45,11 @@ public class YuushyaClientNeoForge {
 //        }
     }
 
+    @SubscribeEvent
+    public static void registerSpecialModelRenderers(RegisterSpecialModelRendererEvent event) {
+        event.register(TextModelSpecialRenderer.TEXT_MODEL_RENDERER, TextModelSpecialRenderer.Unbaked.MAP_CODEC);
+    }
+
     /**
      * getColor是对面片执行的，所以只需要知道这个面片事实上来自哪个方块就能知道颜色
      * 而且原版方块的tintIndex的值除了-1之外似乎设为多少都无所谓
@@ -57,7 +57,8 @@ public class YuushyaClientNeoForge {
      * Block类刚好可以将方块状态和id互相转换
      * 前24位为原方块的blockState，后8位为原方块的tint（若其为正）
      */
-    public void handleBlockColor(RegisterColorHandlersEvent.BlockTintSources event) {
+    @SubscribeEvent
+    public static void handleBlockColor(RegisterColorHandlersEvent.BlockTintSources event) {
         //TODO 这里不知道新版tintColor是怎么实现的，先注释掉了
 //        event.register(
 //                (state, view, pos, tintIndex) -> {
@@ -75,7 +76,8 @@ public class YuushyaClientNeoForge {
 //        );
     }
 
-    public void handleItemColor(RegisterColorHandlersEvent.ItemTintSources event) {
+    @SubscribeEvent
+    public static void handleItemColor(RegisterColorHandlersEvent.ItemTintSources event) {
         //TODO 这里不知道新版tintColor是怎么实现的，先注释掉了
 //        event.register(
 //                (itemStack, i) -> {
@@ -97,5 +99,4 @@ public class YuushyaClientNeoForge {
 //                }, ItemRegistry.SHOW_BLOCK.get()
 //        );
     }
-
 }

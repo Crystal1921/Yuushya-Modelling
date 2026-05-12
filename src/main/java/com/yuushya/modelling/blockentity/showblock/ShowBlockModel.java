@@ -56,7 +56,6 @@ public class ShowBlockModel implements BlockStateModel {
         if (blockEntity instanceof ShowBlockEntity showBlockEntity) {
             List<TransformBlockData> transformDatas = showBlockEntity.getTransformData();
             BlockStateModelSet blockModelSet = Minecraft.getInstance().getModelManager().getBlockStateModelSet();
-            int vertexSize = YuushyaUtils.vertexSize();
 
             ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
             directions.add(null); // 加个null
