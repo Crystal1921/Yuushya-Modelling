@@ -6,12 +6,8 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.renderstate.TextBlockEntityRenderState;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.TypedEntityData;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import org.joml.Vector3fc;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -33,8 +29,8 @@ public class TextModelSpecialRenderer implements SpecialModelRenderer<TextBlockE
 
     @Override
     public @Nullable TextBlockEntityRenderState extractArgument(ItemStack itemStack) {
-        TypedEntityData<BlockEntityType<?>> blockEntityTypeTypedEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
-        CompoundTag compoundTag = blockEntityTypeTypedEntityData.copyTagWithoutId();
+//        TypedEntityData<BlockEntityType<?>> blockEntityTypeTypedEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
+//        CompoundTag compoundTag = blockEntityTypeTypedEntityData.copyTagWithoutId();
         return null;
     }
 

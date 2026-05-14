@@ -21,13 +21,13 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
 public class DeprecatedMethod {
     private static final Gson GSON = (new GsonBuilder()).disableHtmlEscaping().create();
+
     public static Optional<ItemStack> parse(HolderLookup.Provider lookupProvider, Tag tag) {
         return ItemStack.CODEC.parse(lookupProvider.createSerializationContext(NbtOps.INSTANCE), tag).resultOrPartial((p_330102_) -> Yuushya.LOG_LOGGER.error("Tried to load invalid item: '{}'", p_330102_));
     }
@@ -109,7 +109,11 @@ public class DeprecatedMethod {
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, uOffset, vOffset, uWidth, vHeight, 256, 256);
     }
 
-    public static void blitSprite(GuiGraphicsExtractor guiGraphics, Identifier resourceLocation,int x, int y, int width, int height) {
+    public static void blit(GuiGraphicsExtractor guiGraphics, Identifier resourceLocation, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
+    }
+
+    public static void blitSprite(GuiGraphicsExtractor guiGraphics, Identifier resourceLocation, int x, int y, int width, int height) {
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, width, height);
     }
 
@@ -118,7 +122,7 @@ public class DeprecatedMethod {
     }
 
     static JsonElement serialize(Component component, HolderLookup.Provider provider) {
-        return (JsonElement)ComponentSerialization.CODEC.encodeStart(provider.createSerializationContext(JsonOps.INSTANCE), component).getOrThrow(JsonParseException::new);
+        return ComponentSerialization.CODEC.encodeStart(provider.createSerializationContext(JsonOps.INSTANCE), component).getOrThrow(JsonParseException::new);
     }
 
     public static String toJson(Component component, HolderLookup.Provider registries) {

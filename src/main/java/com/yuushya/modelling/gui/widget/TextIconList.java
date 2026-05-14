@@ -19,8 +19,8 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
     protected final List<TransformTextData> transformDataList;
     protected final List<Entry> chosen = new ArrayList<>();
     protected final TextBlockScreen screen;
-    private int itemHeight;
-    private int itemWidth;
+    private final int itemHeight;
+    private final int itemWidth;
 
     public TextIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                         List<TransformTextData> transformDataList, TextBlockScreen textBlockScreen) {
@@ -29,7 +29,6 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
         this.transformDataList = transformDataList;
         this.screen = textBlockScreen;
         this.centerListVertically = false;
-        //TODO  this.setRenderHeader(false, 0);
         this.itemWidth = itemWidth;
         this.itemHeight = itemHeight;
         this.updateRenderList();
@@ -88,12 +87,10 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
 
         private final TextIconList parent;
         private final int slot;
-        private final Minecraft minecraft;
         private boolean chosen = false;
 
         public Entry(TextIconList parent, int slot) {
             this.parent = parent;
-            this.minecraft = parent.minecraft;
             this.slot = slot;
         }
 

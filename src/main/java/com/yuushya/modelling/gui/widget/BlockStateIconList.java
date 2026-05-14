@@ -33,8 +33,8 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
     private final Map<Integer, List<String>> rememberBlockStateProperties = new HashMap<>();
     private final Map<Integer, ItemStack> rememberItemStack = new HashMap<>();
     private final Map<Integer, Collection<Property<?>>> rememberProperties = new HashMap<>();
-    private int itemHeight;
-    private int itemWidth;
+    private final int itemHeight;
+    private final int itemWidth;
 
     public BlockStateIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                               List<TransformBlockData> transformDataList, ShowBlockScreen showBlockScreen
@@ -205,7 +205,6 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
             if (chosen)
                 guiGraphics.fill(getX(),getY() + 1, getX() + 39, getY() + fontHeight + 35, 0x5FD85C2F);
 
-            // TODO: Extract pose-based rendering
             if (Minecraft.getInstance().level != null) {
                 guiGraphics.item(blockState.getBlock().asItem().getDefaultInstance(), getX() + 8, getY() + 24);
             }

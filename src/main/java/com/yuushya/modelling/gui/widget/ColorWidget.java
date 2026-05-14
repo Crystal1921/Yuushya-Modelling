@@ -1,23 +1,23 @@
 package com.yuushya.modelling.gui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
-import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
+import com.yuushya.modelling.Yuushya;
+import com.yuushya.modelling.utils.DeprecatedMethod;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 
 import java.awt.*;
 
 public class ColorWidget extends AbstractWidget {
     private final AbstractColorScreen colorScreen;
+    private final Identifier HUE_TEXTURE = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "textures/gui/hue_texture.png");
+    private final Identifier WHITE_TEXTURE = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "textures/gui/white_texture.png");
+    private final Identifier BLACK_TEXTURE = Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "textures/gui/black_texture.png");
     private final int WIDTH = 75;
     private final int xPadding = 5;
     private final int yPadding = 5;
@@ -34,22 +34,18 @@ public class ColorWidget extends AbstractWidget {
     @Override
     protected void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float tick) {
         String hsv = String.format("H: %.2f S: %.2f V: %.2f", hsbVals[0], hsbVals[1], hsbVals[2]);
-        guiGraphics.fill(getX() - 1, getY() - 1, getX() + getWidth() + 1, getY()+ getHeight()+26,ARGB.color(72, 0, 0, 0));
+        guiGraphics.fill(getX() - 1, getY() - 1, getX() + getWidth() + 1, getY() + getHeight() + 26, ARGB.color(72, 0, 0, 0));
         guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight() + 25, ARGB.color(72, 0, 0, 0));
 
         guiGraphics.text(colorScreen.getColorFont(), hsv, getX() + yPadding, getY() + 145, ARGB.color(255, 255, 255, 255), false);
 
-        guiGraphics.blit(ColorTexture.getHueTextureLocation(), getX() + yPadding, getY() + 35, 0, 0, WIDTH, 10, WIDTH, 10);
+        DeprecatedMethod.blit(guiGraphics, HUE_TEXTURE, getX() + yPadding, getY() + 35, 0, 0, WIDTH, 10, WIDTH, 10);
 
-        //TODO 带透明通道的blit
-//        this.renderSolidColor(pose, getX() + xPadding -1, getX() + xPadding + WIDTH + 1 , getY()+ yHeight -1, getY() + yHeight + WIDTH + 1, ARGB.color(72, 255, 255, 255));
-//        this.renderSolidColor(pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
-//
-//        this.innerBlit(ColorTexture.getWhiteTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
-//        this.innerBlit(ColorTexture.getBlackTextureLocation(), pose, getX() + xPadding, getX() + xPadding + WIDTH, getY() + yHeight, getY() + yHeight + WIDTH);
+        guiGraphics.fill(getX() + xPadding - 1, getY() + yHeight - 1, getX() + xPadding + WIDTH + 1, getY() + yHeight + WIDTH + 1, ARGB.color(72, 255, 255, 255));
+        guiGraphics.fill(getX() + xPadding, getY() + yHeight, getX() + xPadding + WIDTH, getY() + yHeight + WIDTH, Color.HSBtoRGB(hsbVals[0], 1f, 1f));
 
-        guiGraphics.fill(getX() + xPadding - 1, getY() + yPadding - 1, getX() + 25 + 1, getY() + 25 + 1, ARGB.color(72, 255, 255, 255));
-        guiGraphics.fill(getX() + xPadding, getY() + yPadding, getX() + 25, getY() + 25, Color.HSBtoRGB(hsbVals[0], hsbVals[1], hsbVals[2]));
+        DeprecatedMethod.blit(guiGraphics, WHITE_TEXTURE, getX() + xPadding, getY() + yHeight, 0, 0, WIDTH, WIDTH, WIDTH, WIDTH);
+        DeprecatedMethod.blit(guiGraphics, BLACK_TEXTURE, getX() + xPadding, getY() + yHeight, 0, 0, WIDTH, WIDTH, WIDTH, WIDTH);
 
         int hueX = (int) (getX() + xPadding + (hsbVals[0] * WIDTH));
         int hueY = getY() + 35;
@@ -61,11 +57,11 @@ public class ColorWidget extends AbstractWidget {
     }
 
     private void drawCross(GuiGraphicsExtractor guiGraphics, int x, int y) {
-        guiGraphics.horizontalLine(x - 2, x + 2 , y, ARGB.color(255, 0, 0, 0));
+        guiGraphics.horizontalLine(x - 2, x + 2, y, ARGB.color(255, 0, 0, 0));
         guiGraphics.verticalLine(x, y - 3, y + 3, ARGB.color(255, 0, 0, 0));
     }
 
-    private void drawArrow(GuiGraphicsExtractor guiGraphics, int x, int y){
+    private void drawArrow(GuiGraphicsExtractor guiGraphics, int x, int y) {
         guiGraphics.verticalLine(x, y - 4, y + 4, ARGB.color(255, 0, 0, 0));
         guiGraphics.verticalLine(x - 1, y - 4, y + 3, ARGB.color(255, 0, 0, 0));
         guiGraphics.verticalLine(x + 1, y - 4, y + 3, ARGB.color(255, 0, 0, 0));
@@ -104,7 +100,7 @@ public class ColorWidget extends AbstractWidget {
 
         if (mouseY >= 35 && mouseY <= 45 && mouseX >= xPadding - MARGIN &&
                 mouseX <= xPadding + WIDTH + MARGIN) {
-            double clampedX = Math.max(xPadding, Math.min(mouseX, xPadding + WIDTH));
+            double clampedX = Math.clamp(mouseX, xPadding, xPadding + WIDTH);
             float hue = (float) ((clampedX - xPadding) / WIDTH);
             hsbVals[0] = hue;
             updateData();
@@ -114,8 +110,8 @@ public class ColorWidget extends AbstractWidget {
         if (mouseY >= yHeight - MARGIN && mouseY <= yHeight + WIDTH + MARGIN &&
                 mouseX >= xPadding - MARGIN && mouseX <= xPadding + WIDTH + MARGIN) {
 
-            double clampedX = Math.max(xPadding, Math.min(mouseX, xPadding + WIDTH));
-            double clampedY = Math.max(yHeight, Math.min(mouseY, yHeight + WIDTH));
+            double clampedX = Math.clamp(mouseX, xPadding, xPadding + WIDTH);
+            double clampedY = Math.clamp(mouseY, yHeight, yHeight + WIDTH);
 
             float brightness = 1.0f - (float) ((clampedY - yHeight) / WIDTH);
             float saturation = (float) ((clampedX - xPadding) / WIDTH);

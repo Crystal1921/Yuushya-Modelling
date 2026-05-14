@@ -21,8 +21,8 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
     protected final List<TransformItemData> transformDataList;
     protected final List<Entry> chosen = new ArrayList<>();
     protected final ItemBlockScreen screen;
-    private int itemHeight;
-    private int itemWidth;
+    private final int itemHeight;
+    private final int itemWidth;
 
     public ItemStackIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                              List<TransformItemData> transformDataList, ItemBlockScreen itemBlockScreen) {
@@ -90,7 +90,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
         private final ItemStackIconList parent;
         private final int slot;
-        private final Minecraft minecraft;
         private boolean chosen = false;
 
         // Animation state for the popup effect
@@ -104,7 +103,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
 
         public Entry(ItemStackIconList parent, int slot) {
             this.parent = parent;
-            this.minecraft = parent.minecraft;
             this.slot = slot;
         }
 
@@ -201,20 +199,6 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
             // Render item icon
             if (!itemStack.isEmpty()) {
                 guiGraphics.item(itemStack, (int) (getX() + itemWidth / 2.0f) - 8, (int) (getY() + itemHeight / 2.0f) - 8);
-                //TODO 不知道这样渲染对不对
-//                BakedModel bakedModel = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, 0);
-//                PoseStack pose = guiGraphics.pose();
-//                pose.pushPose();
-//                pose.translate(x + itemWidth / 2.0f, y + itemHeight / 2.0f, 100.0f);
-//                pose.scale(24.0f, -24.0f, 24.0f);
-//
-//                boolean flatItem = !bakedModel.usesBlockLight();
-//                if (flatItem) {
-//                    pose.mulPose(Axis.YP.rotationDegrees(180.0f));
-//                }
-//                Minecraft.getInstance().getItemRenderer().render(itemStack, ItemDisplayContext.GUI, false,
-//                        pose, guiGraphics.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
-//                pose.popPose();
             }
 
             // Render index number
