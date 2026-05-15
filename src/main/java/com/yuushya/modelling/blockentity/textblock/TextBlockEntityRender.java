@@ -103,6 +103,11 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@N
             ITransformDataProvider transformTextData = transformData.get(state.slot);
             renderAxes(state, poseStack, cameraRenderState, transformTextData.getPosition(), transformTextData.getRotation(), transformTextData.getScale(), true);
         }
+
+        if (state.isShowText) {
+            TransformTextData transformDataNow = state.transformData.get(state.slot);
+            renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformDataNow);
+        }
     }
 
     @Override

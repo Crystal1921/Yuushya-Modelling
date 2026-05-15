@@ -58,7 +58,7 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
         int backgroundColor = (int) (g * 255.0f) << 24;
         submitNodeCollector.submitText(poseStack, 0, 0, component.getVisualOrderText(), false, Font.DisplayMode.SEE_THROUGH, LightCoordsUtil.FULL_BRIGHT, backgroundColor, 0xF000F0, 0);
 
-        poseStack.pushPose();
+        poseStack.popPose();
     }
 
     @Override

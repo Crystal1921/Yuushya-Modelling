@@ -106,6 +106,11 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
             ITransformDataProvider transformItemData = transformData.get(state.slot);
             renderAxes(state, poseStack, cameraRenderState, transformItemData.getPosition(), transformItemData.getRotation(), transformItemData.getScale(), true);
         }
+
+        if (state.isShowText) {
+            TransformItemData transformDataNow = state.transformData.get(state.slot);
+            renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformDataNow);
+        }
     }
 
     private void renderTextInfo(@NotNull ItemBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, TransformItemData transformData) {

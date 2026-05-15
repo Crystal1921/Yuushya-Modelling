@@ -33,8 +33,13 @@ public class ShowBlockEntityRender extends AbstractTransformBlockEntityRender<@N
     protected void renderSpecific(@NotNull ShowBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         List<TransformBlockData> transformData = state.transformData;
         if (state.slot >= 0 && state.slot < transformData.size()) {
-            ITransformDataProvider transformTextData = transformData.get(state.slot);
-            renderAxes(state, poseStack, cameraRenderState, transformTextData.getPosition(), transformTextData.getRotation(), transformTextData.getScale(), true);
+            ITransformDataProvider transformBlockData = transformData.get(state.slot);
+            renderAxes(state, poseStack, cameraRenderState, transformBlockData.getPosition(), transformBlockData.getRotation(), transformBlockData.getScale(), true);
+        }
+
+        if (state.isShowText) {
+            TransformBlockData transformDataNow = state.transformData.get(state.slot);
+            renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformDataNow);
         }
     }
 
