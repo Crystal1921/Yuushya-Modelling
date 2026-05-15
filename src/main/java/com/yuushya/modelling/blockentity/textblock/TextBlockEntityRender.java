@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@NotNull TextBlockEntity, TextBlockEntityRenderState> {
-    private final java.util.LinkedHashMap<String, MutableComponent> componentCacheMap =
+    public static final java.util.LinkedHashMap<String, MutableComponent> componentCacheMap =
             new java.util.LinkedHashMap<>(100, 0.75f, true) {
                 @Override
                 protected boolean removeEldestEntry(Map.Entry<String, MutableComponent> eldest) {

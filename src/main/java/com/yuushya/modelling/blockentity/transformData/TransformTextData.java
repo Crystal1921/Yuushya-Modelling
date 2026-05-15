@@ -79,19 +79,20 @@ public class TransformTextData implements ITransformDataProvider {
 
     //readNbt from compoundTag
     public void load(CompoundTag compoundTag) {
-        ListTag listTagPos = compoundTag.getList("ShowPos").orElse(new ListTag());
-        ListTag listTagRot = compoundTag.getList("ShowRotation").orElse(new ListTag());
-        ListTag listTagScales = compoundTag.getList("ShowScales").orElse(new ListTag());
-        this.pos.set(listTagPos.getDouble(0).orElse(0D), listTagPos.getDouble(1).orElse(0D), listTagPos.getDouble(2).orElse(0D));
-        this.rot.set(listTagRot.getDouble(0).orElse(0D), listTagRot.getDouble(1).orElse(0D), listTagRot.getDouble(2).orElse(0D));
-        this.scales.set(listTagScales.getDouble(0).orElse(0D), listTagScales.getDouble(1).orElse(0D), listTagScales.getDouble(2).orElse(0D));
-        this.isCulled = compoundTag.getBoolean("Culled").orElse(false);
-        this.isMirror = compoundTag.getBoolean("Mirrored").orElse(false);
+        CompoundTag pos = compoundTag.getCompoundOrEmpty("pos");
+        CompoundTag rot = compoundTag.getCompoundOrEmpty("rot");
+        CompoundTag scales = compoundTag.getCompoundOrEmpty("scales");
+        this.pos.set(pos.getDoubleOr("x",0), pos.getDoubleOr("y",0), pos.getDoubleOr("z",0));
+        this.rot.set(rot.getFloatOr("x",0), rot.getFloatOr("y",0), rot.getFloatOr("z",0));
+        this.scales.set(scales.getFloatOr("x",1), scales.getFloatOr("y",1), scales.getFloatOr("z",1));
+
+        this.isCulled = compoundTag.getBoolean("isCulled").orElse(false);
+        this.isMirror = compoundTag.getBoolean("isMirror").orElse(false);
         this.isShown = compoundTag.getBoolean("isShown").orElse(false);
 
         // Load text lines
         this.textLines.clear();
-        ListTag textListTag = compoundTag.getList("TextLines").orElse(new ListTag());
+        ListTag textListTag = compoundTag.getList("textLines").orElse(new ListTag());
         for (int i = 0; i < textListTag.size(); i++) {
             this.textLines.add(textListTag.getString(i).orElse(""));
         }
