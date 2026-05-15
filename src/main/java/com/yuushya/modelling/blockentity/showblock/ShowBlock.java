@@ -1,6 +1,5 @@
 package com.yuushya.modelling.blockentity.showblock;
 
-import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaNeoForge;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
@@ -10,7 +9,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.*;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -19,10 +21,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
 public class ShowBlock extends AbstractTransformBlock {
@@ -41,15 +41,15 @@ public class ShowBlock extends AbstractTransformBlock {
         if (level.getBlockState(pos).is(state.getBlock()) && level.getBlockEntity(pos) instanceof ShowBlockEntity showBlockEntity) {
 
             if (context.isHoldingItem(ItemRegistry.GUI_ITEM.get())) {
-                showBlockEntity.setShowFrame();
+                showBlockEntity.triggerShowFrame();
             } else if (context.isHoldingItem(ItemRegistry.ROT_TRANS_ITEM.get())) {
-                showBlockEntity.setShowRotAxis();
-                showBlockEntity.setShowText();
+                showBlockEntity.triggerShowAxis();
+                showBlockEntity.triggerShowText();
             } else if (context.isHoldingItem(ItemRegistry.POS_TRANS_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.MICRO_POS_TRANS_ITEM.get())
             ) {
-                showBlockEntity.setShowPosAxis();
-                showBlockEntity.setShowText();
+                showBlockEntity.triggerShowAxis();
+                showBlockEntity.triggerShowText();
             } else if (context.isHoldingItem(ItemRegistry.SLOT_TRANS_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.GET_SHOWBLOCK_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.MOVE_TRANSFORMDATA_ITEM.get())
@@ -58,7 +58,7 @@ public class ShowBlock extends AbstractTransformBlock {
                     || context.isHoldingItem(ItemRegistry.DEBUG_STICK_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.DESTROY_ITEM.get())
             ) {
-                showBlockEntity.setShowText();
+                showBlockEntity.triggerShowText();
             }
         }
         return super.getShape(state, level, pos, context);

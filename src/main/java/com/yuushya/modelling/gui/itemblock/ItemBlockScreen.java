@@ -450,8 +450,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(ItemTransformType.POS_X).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.X);
-                            blockEntity.setShowPosAxis();
+                            blockEntity.highlightAxis(Direction.Axis.X);
                         })
                         .initial(ItemTransformType.POS_X.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(0, 0), leftColumnWidth(), PER_HEIGHT).build();
@@ -466,8 +465,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(ItemTransformType.POS_Y).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Y);
-                            blockEntity.setShowPosAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Y);
                         })
                         .initial(ItemTransformType.POS_Y.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT).build();
@@ -482,8 +480,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(ItemTransformType.POS_Z).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Z);
-                            blockEntity.setShowPosAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Z);
                         })
                         .initial(ItemTransformType.POS_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(2, 0), leftColumnWidth(), PER_HEIGHT).build();
@@ -494,8 +491,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(ItemTransformType.ROT_X).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.X);
-                            blockEntity.setShowRotAxis();
+                            blockEntity.highlightAxis(Direction.Axis.X);
                         })
                         .initial(ItemTransformType.ROT_X.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(3, 10), leftColumnWidth(), PER_HEIGHT).build();
@@ -506,8 +502,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(ItemTransformType.ROT_Y).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Y);
-                            blockEntity.setShowRotAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Y);
                         })
                         .initial(ItemTransformType.ROT_Y.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(4, 10), leftColumnWidth(), PER_HEIGHT).build();
@@ -518,8 +513,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.itemblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(ItemTransformType.ROT_Z).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Z);
-                            blockEntity.setShowRotAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Z);
                         })
                         .initial(ItemTransformType.ROT_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(5, 10), leftColumnWidth(), PER_HEIGHT).build();

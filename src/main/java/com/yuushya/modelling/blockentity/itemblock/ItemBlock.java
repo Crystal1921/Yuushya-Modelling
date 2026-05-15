@@ -32,15 +32,15 @@ public class ItemBlock extends AbstractTransformBlock {
         if (level.getBlockState(pos).is(state.getBlock()) && level.getBlockEntity(pos) instanceof ItemBlockEntity itemBlockEntity) {
 
             if (context.isHoldingItem(ItemRegistry.GUI_ITEM.get())) {
-                itemBlockEntity.setShowFrame();
+                itemBlockEntity.triggerShowFrame();
             } else if (context.isHoldingItem(ItemRegistry.ROT_TRANS_ITEM.get())) {
-                itemBlockEntity.setShowRotAxis();
-                itemBlockEntity.setShowText();
+                itemBlockEntity.triggerShowAxis();
+                itemBlockEntity.triggerShowText();
             } else if (context.isHoldingItem(ItemRegistry.POS_TRANS_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.MICRO_POS_TRANS_ITEM.get())
             ) {
-                itemBlockEntity.setShowPosAxis();
-                itemBlockEntity.setShowText();
+                itemBlockEntity.triggerShowAxis();
+                itemBlockEntity.triggerShowText();
             } else if (context.isHoldingItem(ItemRegistry.SLOT_TRANS_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.GET_SHOWBLOCK_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.MOVE_TRANSFORMDATA_ITEM.get())
@@ -49,7 +49,7 @@ public class ItemBlock extends AbstractTransformBlock {
                     || context.isHoldingItem(ItemRegistry.DEBUG_STICK_ITEM.get())
                     || context.isHoldingItem(ItemRegistry.DESTROY_ITEM.get())
             ) {
-                itemBlockEntity.setShowText();
+                itemBlockEntity.triggerShowText();
             }
         }
         return super.getShape(state, level, pos, context);

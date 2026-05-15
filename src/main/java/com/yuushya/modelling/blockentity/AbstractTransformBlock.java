@@ -1,14 +1,11 @@
 package com.yuushya.modelling.blockentity;
 
-import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.block.AbstractYuushyaBlock;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
@@ -27,7 +24,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
@@ -66,6 +62,13 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
                 .setValue(ENABLE_SPECIAL_RENDER, DEFAULT_ENABLE_SPECIAL_RENDER));
     }
 
+    @Nullable
+    protected static <T extends BlockEntity> BlockEntityTicker<T> createCookTicker(
+            Level pLevel, BlockEntityType<T> pServerType, BlockEntityType<? extends AbstractTransformBlockEntity> pClientType
+    ) {
+        return pLevel.isClientSide() ? createTickerHelper(pServerType, pClientType, AbstractTransformBlockEntity::serverTick) : null;
+    }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
         stateBuilder.add(LIT).add(POWERED).add(HORIZONTAL_FACING).add(SHAPES).add(ENABLE_AO).add(FULL_BLOCK).add(ENABLE_SPECIAL_RENDER);
@@ -73,8 +76,8 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
-        if (blockPlaceContext.getPlayer() != null && 
-            blockPlaceContext.getPlayer().isHolding(ItemRegistry.ROT_TRANS_ITEM.get())) {
+        if (blockPlaceContext.getPlayer() != null &&
+                blockPlaceContext.getPlayer().isHolding(ItemRegistry.ROT_TRANS_ITEM.get())) {
             BlockState blockState = this.defaultBlockState();
             blockState.setValue(ENABLE_AO, DEFAULT_ENABLE_AO);
             blockState.setValue(FULL_BLOCK, DEFAULT_FULL_BLOCK);
@@ -122,13 +125,5 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
         BlockItemStateProperties stateProperties = new BlockItemStateProperties(properties);
         itemStack.set(DataComponents.BLOCK_STATE, stateProperties);
         return itemStack;
-    }
-
-
-    @Nullable
-    protected static <T extends BlockEntity> BlockEntityTicker<T> createCookTicker(
-            Level pLevel, BlockEntityType<T> pServerType, BlockEntityType<? extends AbstractTransformBlockEntity> pClientType
-    ) {
-        return pLevel.isClientSide() ? null : createTickerHelper(pServerType, pClientType, AbstractTransformBlockEntity::serverTick);
     }
 }

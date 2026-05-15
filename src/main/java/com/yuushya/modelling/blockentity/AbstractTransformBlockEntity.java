@@ -29,15 +29,23 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
 
     protected Integer slot = 0;
 
-    // Display control fields
-    protected Integer showFrame = 0;
-    protected Integer showRotAxis = 0;
-    protected Integer showPosAxis = 0;
-    protected Integer showText = 0;
+    // Display control methods
+    // Display control fields with timers
+    @Getter
+    protected boolean showFrame = false;
+    protected int frameDisplayTimer = 0;
 
     @Setter
     @Getter
-    protected Direction.Axis showAxis = null;
+    protected boolean showText = false;
+    protected int textDisplayTimer = 0;
+
+    // Axis highlight control
+    @Getter
+    protected boolean showAxis = false;
+    @Getter
+    protected Direction.Axis highlightedAxis = null;
+    protected int axisDisplayTimer = 0;
     @Getter
     @Setter
     protected VoxelShape customShape = Shapes.empty();
@@ -55,53 +63,36 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
 
     public abstract void writeBlockState(ItemStack itemStack, BlockState blockState);
 
-    // Display control methods
-    public boolean showFrame() {
-        return showFrame > 0;
+    public void setShowFrame(boolean show) {
+        this.showFrame = show;
     }
 
-    public void setShowFrame() {
-        showFrame = 5;
+    public void triggerShowFrame() {
+        this.showFrame = true;
+        this.frameDisplayTimer = 5; // Display for 5 ticks
     }
 
-    public void consumeShowFrame() {
-        showFrame = showFrame < 0 ? 0 : showFrame - 1;
+    public void triggerShowText() {
+        this.showText = true;
+        this.textDisplayTimer = 5; // Display for 5 ticks
     }
 
-    public boolean showRotAxis() {
-        return showRotAxis > 0;
+    /**
+     * Highlight a specific axis for display
+     * @param axis The axis to highlight (X, Y, or Z)
+     */
+    public void highlightAxis(Direction.Axis axis) {
+        this.highlightedAxis = axis;
+        this.showAxis = true;
+        this.axisDisplayTimer = 5; // Display for 5 ticks
     }
 
-    public void setShowRotAxis() {
-        showRotAxis = 5;
-    }
-
-    public boolean showPosAxis() {
-        return showPosAxis > 0;
-    }
-
-    public void setShowPosAxis() {
-        showPosAxis = 5;
-    }
-
-    public boolean showText() {
-        return showText > 0;
-    }
-
-    public void setShowText() {
-        showText = 5;
-    }
-
-    public void consumeShowAxis() {
-        if (showRotAxis <= 0 && showPosAxis <= 0) {
-            showAxis = null;
-        }
-    }
-
-    public void consumeShow() {
-        showRotAxis = showRotAxis < 0 ? 0 : showRotAxis - 1;
-        showPosAxis = showPosAxis < 0 ? 0 : showPosAxis - 1;
-        showText = showText < 0 ? 0 : showText - 1;
+    /**
+     * Enable axis display without highlighting a specific axis
+     */
+    public void triggerShowAxis() {
+        this.showAxis = true;
+        this.axisDisplayTimer = 5;
     }
 
     // Block entity synchronization
@@ -146,8 +137,29 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
     }
 
     public static void serverTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractTransformBlockEntity blockEntity) {
-        blockEntity.consumeShowFrame();
-        blockEntity.consumeShow();
-        blockEntity.consumeShowAxis();
+        // Handle frame display timer
+        if (blockEntity.frameDisplayTimer > 0) {
+            blockEntity.frameDisplayTimer--;
+            if (blockEntity.frameDisplayTimer <= 0) {
+                blockEntity.showFrame = false;
+            }
+        }
+
+        // Handle text display timer
+        if (blockEntity.textDisplayTimer > 0) {
+            blockEntity.textDisplayTimer--;
+            if (blockEntity.textDisplayTimer <= 0) {
+                blockEntity.showText = false;
+            }
+        }
+
+        // Handle axis display timer
+        if (blockEntity.axisDisplayTimer > 0) {
+            blockEntity.axisDisplayTimer--;
+            if (blockEntity.axisDisplayTimer <= 0) {
+                blockEntity.showAxis = false;
+                blockEntity.highlightedAxis = null;
+            }
+        }
     }
 }

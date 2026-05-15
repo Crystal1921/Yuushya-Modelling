@@ -65,11 +65,11 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
     public void extractRenderState(T blockEntity, @NotNull V state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
 
-        state.isShowFrame = blockEntity.showFrame();
-        state.isShowText = blockEntity.showText();
-        state.isShowAxis = blockEntity.showRotAxis() || blockEntity.showPosAxis() || blockEntity.showText();
+        state.isShowFrame = blockEntity.isShowFrame();
+        state.isShowText = blockEntity.isShowText();
+        state.isShowAxis = blockEntity.isShowAxis();
         state.slot = blockEntity.slot;
-        state.showAxis = blockEntity.getShowAxis();
+        state.highlightedAxis = blockEntity.getHighlightedAxis();
         state.facing = blockEntity.getBlockState().getValue(HORIZONTAL_FACING);
     }
 
@@ -107,11 +107,11 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
         translateAfterScale(poseStack, pos, scales);
         translate(poseStack, MIDDLE);
 
-        // Calculate axis colors based on showAxis
+        // Calculate axis colors based on highlightedAxis
         int redX = 0x64E65A46, greenY = 0x64A0DC5A, blueZ = 0x645AB4DC;
 
-        if (state.showAxis != null) {
-            switch (state.showAxis) {
+        if (state.highlightedAxis != null) {
+            switch (state.highlightedAxis) {
                 case X:
                     redX = 0xFFE65A46;
                     break;

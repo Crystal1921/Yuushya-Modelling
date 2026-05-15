@@ -356,8 +356,7 @@ public class ShowBlockScreen extends Screen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(POS_X).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.X);
-                            blockEntity.setShowPosAxis();
+                            blockEntity.highlightAxis(Direction.Axis.X);
                         })
                         .initial(POS_X.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(0, 0), leftColumnWidth(), PER_HEIGHT).build();
@@ -372,8 +371,7 @@ public class ShowBlockScreen extends Screen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(POS_Y).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Y);
-                            blockEntity.setShowPosAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Y);
                         })
                         .initial(POS_Y.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT).build();
@@ -388,8 +386,7 @@ public class ShowBlockScreen extends Screen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(POS_Z).setStandardStep(0.0))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Z);
-                            blockEntity.setShowPosAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Z);
                         })
                         .initial(POS_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(2, 0), leftColumnWidth(), PER_HEIGHT).build();
@@ -400,8 +397,7 @@ public class ShowBlockScreen extends Screen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(ROT_X).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.X);
-                            blockEntity.setShowRotAxis();
+                            blockEntity.highlightAxis(Direction.Axis.X);
                         })
                         .initial(ROT_X.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(3, 10), leftColumnWidth(), PER_HEIGHT).build();
@@ -412,8 +408,7 @@ public class ShowBlockScreen extends Screen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(ROT_Y).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Y);
-                            blockEntity.setShowRotAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Y);
                         })
                         .initial(ROT_Y.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(4, 10), leftColumnWidth(), PER_HEIGHT).build();
@@ -424,8 +419,7 @@ public class ShowBlockScreen extends Screen {
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(ROT_Z).setStandardStep(22.5))
                         .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Z);
-                            blockEntity.setShowRotAxis();
+                            blockEntity.highlightAxis(Direction.Axis.Z);
                         })
                         .initial(ROT_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(5, 10), leftColumnWidth(), PER_HEIGHT).build();
