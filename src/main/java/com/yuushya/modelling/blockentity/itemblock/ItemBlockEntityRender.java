@@ -108,13 +108,6 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
         if (state.slot >= 0 && state.slot < transformData.size()) {
             ITransformDataProvider transformItemData = transformData.get(state.slot);
 
-            if (state.isShowAxis) {
-                renderAxes(state, poseStack, submitNodeCollector, cameraRenderState, transformItemData);
-            }
-
-            if (state.isShowText) {
-                renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformData.get(state.slot));
-            }
         }
     }
 

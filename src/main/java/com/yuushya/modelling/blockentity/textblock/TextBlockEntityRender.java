@@ -102,13 +102,6 @@ public class TextBlockEntityRender extends AbstractTransformBlockEntityRender<@N
         if (state.slot >= 0 && state.slot < transformData.size()) {
             ITransformDataProvider transformTextData = transformData.get(state.slot);
 
-            if (state.isShowAxis) {
-                renderAxes(state, poseStack, submitNodeCollector, cameraRenderState, transformTextData);
-            }
-
-            if (state.isShowText) {
-                renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformData.get(state.slot));
-            }
         }
     }
 

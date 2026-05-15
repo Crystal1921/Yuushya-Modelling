@@ -3,7 +3,9 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
 import com.yuushya.modelling.blockentity.renderstate.AbstractTransformBlockEntityRenderState;
 import com.yuushya.modelling.blockentity.renderstate.ShowBlockEntityRenderState;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.TransformTextData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
@@ -36,14 +38,9 @@ public class ShowBlockEntityRender extends AbstractTransformBlockEntityRender<@N
     @Override
     protected void renderSpecific(@NotNull ShowBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         List<TransformBlockData> transformData = state.transformData;
-        TransformBlockData transformBlockData = transformData.get(state.slot);
+        if (state.slot >= 0 && state.slot < transformData.size()) {
+            ITransformDataProvider transformTextData = transformData.get(state.slot);
 
-        if (state.isShowAxis) {
-            renderAxes(state, poseStack, submitNodeCollector, cameraRenderState, transformData);
-        }
-
-        if (state.isShowText) {
-            renderTextInfo(state, poseStack, submitNodeCollector, cameraRenderState, transformBlockData);
         }
     }
 
