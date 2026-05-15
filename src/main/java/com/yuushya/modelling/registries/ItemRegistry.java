@@ -2,9 +2,9 @@ package com.yuushya.modelling.registries;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.item.AbstractYuushyaItem;
+import com.yuushya.modelling.item.TooltipBlockItem;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.item.showblocktool.*;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
@@ -85,9 +85,9 @@ public class ItemRegistry {
     public static final DeferredItem<Item> CIRCLE_HOLLOW_1 = ITEMS.registerItem("circle_hollow_1", (properties) -> new AbstractYuushyaItem(properties.stacksTo(16).rarity(Rarity.RARE), 0));
 
     // BlockItems
-    public static final DeferredItem<Item> SHOW_BLOCK = ITEMS.registerItem("showblock", (properties) -> new BlockItem(BlockRegistry.SHOW_BLOCK.get(), properties));
-    public static final DeferredItem<Item> ITEM_BLOCK = ITEMS.registerItem("itemblock", (properties) -> new BlockItem(BlockRegistry.ITEM_BLOCK.get(), properties));
-    public static final DeferredItem<Item> TEXT_BLOCK = ITEMS.registerItem("textblock", (properties) -> new BlockItem(BlockRegistry.TEXT_BLOCK.get(), properties));
+    public static final DeferredItem<Item> SHOW_BLOCK = ITEMS.registerItem("showblock", (properties) -> new TooltipBlockItem(BlockRegistry.SHOW_BLOCK.get(), properties, 1));
+    public static final DeferredItem<Item> ITEM_BLOCK = ITEMS.registerItem("itemblock", (properties) -> new TooltipBlockItem(BlockRegistry.ITEM_BLOCK.get(), properties, 1));
+    public static final DeferredItem<Item> TEXT_BLOCK = ITEMS.registerItem("textblock", (properties) -> new TooltipBlockItem(BlockRegistry.TEXT_BLOCK.get(), properties, 1));
 
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

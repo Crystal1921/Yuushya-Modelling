@@ -150,10 +150,14 @@
   "block.yuushya.itemblock.slot_text": "[%s]: ",
 
   "block.yuushya.modelframe.line1": "\u00A78不可用",
-  "block.yuushya.showblock.line1": "\u00A79副手持[实体方块旋转工具]可根据玩家朝向旋转放置此实体方块",
-  "block.yuushya.itemblock.line1": "\u00A79[实体方块]的进阶版本，但有所区别",
-  "block.yuushya.textblock.line1": "\u00A79[实体方块]的进阶版本，但有所区别",
+  "item.yuushya.showblock.line1": "\u00A79副手持[实体方块旋转工具]可根据玩家朝向旋转放置此实体方块",
+  "item.yuushya.itemblock.line1": "\u00A79[实体方块]的进阶版本，但有所区别",
+  "item.yuushya.textblock.line1": "\u00A79[实体方块]的进阶版本，但有所区别",
   "block.yuushya.mixedblock.line1": "\u00A78不可用",
+
+  "item.yuushya.showblock": "实体方块",
+  "item.yuushya.itemblock": "物品方块",
+  "item.yuushya.textblock": "文本方块",
 
   "item.yuushya.destroy_item": "采集锤",
   "item.yuushya.destroy_item.line1": "\u00A79主手左键一[实体方块/物品方块]掉落为物品并保留其内部内容",
