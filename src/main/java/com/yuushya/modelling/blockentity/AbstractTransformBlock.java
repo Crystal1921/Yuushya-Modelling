@@ -14,12 +14,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -28,12 +31,14 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.LIT;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
+import static net.minecraft.world.level.block.BaseEntityBlock.createTickerHelper;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.POWERED;
 
@@ -117,5 +122,13 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
         BlockItemStateProperties stateProperties = new BlockItemStateProperties(properties);
         itemStack.set(DataComponents.BLOCK_STATE, stateProperties);
         return itemStack;
+    }
+
+
+    @Nullable
+    protected static <T extends BlockEntity> BlockEntityTicker<T> createCookTicker(
+            Level pLevel, BlockEntityType<T> pServerType, BlockEntityType<? extends AbstractTransformBlockEntity> pClientType
+    ) {
+        return pLevel.isClientSide() ? null : createTickerHelper(pServerType, pClientType, AbstractTransformBlockEntity::serverTick);
     }
 }

@@ -2,12 +2,16 @@ package com.yuushya.modelling.blockentity.itemblock;
 
 import com.yuushya.modelling.YuushyaNeoForge;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
+import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -16,6 +20,11 @@ import org.jetbrains.annotations.Nullable;
 public class ItemBlock extends AbstractTransformBlock {
     public ItemBlock(Properties properties, Integer tipLines) {
         super(properties.setId(ResourceKey.create(Registries.BLOCK, YuushyaNeoForge.id("item_block"))), tipLines);
+    }
+
+    @Override
+    public @org.jspecify.annotations.Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> type) {
+        return createCookTicker(level, type, BlockEntityRegistry.ITEM_BLOCK_ENTITY.get());
     }
 
     @Override

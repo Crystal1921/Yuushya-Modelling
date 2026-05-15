@@ -64,13 +64,7 @@ public abstract class AbstractTransformBlockEntityRender<T extends AbstractTrans
     @Override
     public void extractRenderState(T blockEntity, @NotNull V state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress);
-        if (blockEntity.showFrame()) {
-            blockEntity.consumeShowFrame();
-        }
-        if (state.isShowAxis) {
-            blockEntity.consumeShow();
-            blockEntity.consumeShowAxis();
-        }
+
         state.isShowFrame = blockEntity.showFrame();
         state.isShowText = blockEntity.showText();
         state.isShowAxis = blockEntity.showRotAxis() || blockEntity.showPosAxis() || blockEntity.showText();

@@ -3,19 +3,19 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.YuushyaNeoForge;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
+import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -29,6 +29,11 @@ public class ShowBlock extends AbstractTransformBlock {
     public ShowBlock(Properties properties, Integer tipLines) {
         super(properties.setId(ResourceKey.create(Registries.BLOCK, YuushyaNeoForge.id("show_block")))
                 , tipLines);
+    }
+
+    @Override
+    public @org.jspecify.annotations.Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> type) {
+        return createCookTicker(level, type, BlockEntityRegistry.SHOW_BLOCK_ENTITY.get());
     }
 
     @Override

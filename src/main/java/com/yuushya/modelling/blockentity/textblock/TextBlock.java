@@ -3,6 +3,7 @@ package com.yuushya.modelling.blockentity.textblock;
 import com.yuushya.modelling.YuushyaNeoForge;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.BlockShape;
+import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -12,8 +13,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -22,18 +26,13 @@ import org.jetbrains.annotations.Nullable;
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 public class TextBlock extends AbstractTransformBlock {
-//    public static final IClientItemExtensions ITEM_EXTENSIONS = FMLEnvironment.getDist() == Dist.CLIENT ? new IClientItemExtensions() {
-//        @Override
-//        public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
-//            Minecraft minecraft = Minecraft.getInstance();
-//            return new TextBlockSpecialRender(minecraft.getBlockEntityRenderDispatcher(), minecraft.getEntityModels());
-//        }
-//    } : null;
-
-    //TODO : 这里要新model，getCustomRenderer已被移除
-
     public TextBlock(Properties properties, Integer tipLines) {
         super(properties.setId(ResourceKey.create(Registries.BLOCK, YuushyaNeoForge.id("text_block"))), tipLines);
+    }
+
+    @Override
+    public @org.jspecify.annotations.Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> type) {
+        return createCookTicker(level, type, BlockEntityRegistry.TEXT_BLOCK_ENTITY.get());
     }
 
     @Override
