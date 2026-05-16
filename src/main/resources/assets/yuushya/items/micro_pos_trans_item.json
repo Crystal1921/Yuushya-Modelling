@@ -1,6 +1,40 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "yuushya:item/micro_pos_trans_item"
+    "type": "minecraft:select",
+    "property": "yuushya_modelling:pos_trans",
+    "cases": [
+      {
+        "when": "0",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/fine_tune_x"
+        }
+      },
+      {
+        "when": "1",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/fine_tune_y"
+        }
+      },
+      {
+        "when": "2",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/fine_tune_z"
+        }
+      },
+      {
+        "when": "3",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/fine_tune_reset"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "yuushya:item/fine_tune_reset"
+    }
   }
 }

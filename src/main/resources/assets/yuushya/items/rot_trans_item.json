@@ -1,6 +1,33 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "yuushya:item/rot_trans_item"
+    "type": "minecraft:select",
+    "property": "yuushya_modelling:pos_trans",
+    "cases": [
+      {
+        "when": "0",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/rotate_x"
+        }
+      },
+      {
+        "when": "1",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/rotate_y"
+        }
+      },
+      {
+        "when": "2",
+        "model": {
+          "type": "minecraft:model",
+          "model": "yuushya:item/rotate_z"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "yuushya:item/rotate_x"
+    }
   }
 }
