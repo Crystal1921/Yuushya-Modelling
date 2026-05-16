@@ -17,32 +17,11 @@ import java.util.Map;
 @EventBusSubscriber(value = Dist.CLIENT)
 public class ModelEvent {
     @SubscribeEvent
-    public static void onInitializeClient(FMLClientSetupEvent event) {
-        //TODO 这里要改
-//        event.enqueueWork(() -> {
-//            ColorTexture colorTexture = new ColorTexture();
-//        });
-    }
-
-    @SubscribeEvent
     public static void onModelBaked(net.neoforged.neoforge.client.event.ModelEvent.ModifyBakingResult event) {
         Map<BlockState, BlockStateModel> blockStateBlockStateModelMap = event.getBakingResult().blockStateModels();
         for (BlockState possibleState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
             blockStateBlockStateModelMap.put(possibleState, new ShowBlockModel());
         }
-//        ModelIdentifier inventory = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "showblock"), "inventory");
-//        event.getModels().put(inventory, new NeoShowBlockModel(Direction.SOUTH, event.getModels().get(inventory)));
-//        for (BlockState blockState : BlockRegistry.SHOW_BLOCK.get().getStateDefinition().getPossibleStates()) {
-//            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
-//            event.getModels().put(stateIdentifier, new NeoShowBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
-//        }
-//
-//        ModelIdentifier inventory2 = new ModelIdentifier(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, "itemblock"), "inventory");
-//        event.getModels().put(inventory2, new NeoItemBlockModel(Direction.SOUTH, event.getModels().get(inventory2)));
-//        for (BlockState blockState : BlockRegistry.ITEM_BLOCK.get().getStateDefinition().getPossibleStates()) {
-//            ModelIdentifier stateIdentifier = BlockModelShaper.stateToModelLocation(blockState);
-//            event.getModels().put(stateIdentifier, new NeoItemBlockModel(blockState.getValue(HORIZONTAL_FACING), event.getModels().get(stateIdentifier)));
-//        }
     }
 
     @SubscribeEvent

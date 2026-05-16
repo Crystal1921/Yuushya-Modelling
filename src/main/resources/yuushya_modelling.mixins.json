@@ -9,7 +9,6 @@
   "refmap": "yuushya.refmap.json",
   "client": [
     "BlockBehaviourMixin",
-    "GlyphRenderTypesMixin",
     "LevelRendererMixin",
     "MinecraftMixin"
   ]
