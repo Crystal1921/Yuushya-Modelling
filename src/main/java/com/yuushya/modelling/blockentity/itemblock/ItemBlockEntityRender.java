@@ -134,7 +134,7 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
             ItemStack itemStack = everyTransformData.itemStack;
             MutableComponent displayName = itemStack.isEmpty() ?
                     Component.literal("Air") :
-                    (MutableComponent) itemStack.getDisplayName();
+                    (MutableComponent) itemStack.getDisplayName().copy();
             Component component = Component.translatable("block.yuushya.itemblock.slot_text", String.format("%2d", slot)).append(displayName.withStyle(style));
             renderTextInfo(component, high -= 0.25f, poseStack, submitNodeCollector, cameraRenderState);
         }

@@ -74,7 +74,7 @@ public class ShowBlockEntityRender extends AbstractTransformBlockEntityRender<@N
                       : Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(true);
             Block block = everyTransformData.blockState.getBlock();
             Item item = block.asItem();
-            MutableComponent displayName = (item == Items.AIR) ? block.getName() : (MutableComponent) item.getName(item.getDefaultInstance());
+            MutableComponent displayName = (item == Items.AIR) ? block.getName() : item.getName(item.getDefaultInstance()).copy();
             Component component = Component.translatable("block.yuushya.showblock.slot_text", String.format("%2d", slot)).append(displayName.append(Component.literal(YuushyaUtils.getBlockStateProperties(everyTransformData.blockState))).withStyle(style));
             renderTextInfo(component, high -= 0.25f, poseStack, submitNodeCollector, cameraRenderState);
         }
