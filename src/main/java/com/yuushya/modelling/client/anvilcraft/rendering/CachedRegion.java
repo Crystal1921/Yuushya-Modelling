@@ -26,7 +26,6 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -304,6 +303,8 @@ public class CachedRegion {
                         TransformItemData transformDatum = transformData.get(j);
                         ItemStackRenderState renderDatum = renderData.get(j);
                         int color = transformDatum.color;
+                        //TODO 这里注意要准备方块模型
+                        boolean enableBlock = transformDatum.enableBlock;
                         for (ItemStackRenderState.LayerRenderState layer : renderDatum.layers) {
                             List<BakedQuad> bakedQuads = layer.prepareQuadList();
                             List<BakedQuad> newQuads = new ArrayList<>();
@@ -391,7 +392,7 @@ public class CachedRegion {
         }
 
         @Override
-        public VertexConsumer getBuffer(RenderType renderType) {
+        public @NonNull VertexConsumer getBuffer(RenderType renderType) {
             return EmptyVC.INSTANCE;
         }
 
@@ -416,42 +417,42 @@ public class CachedRegion {
         public static final EmptyVC INSTANCE = new EmptyVC();
 
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
+        public @NonNull VertexConsumer addVertex(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public VertexConsumer setColor(int r, int g, int b, int a) {
+        public @NonNull VertexConsumer setColor(int r, int g, int b, int a) {
             return this;
         }
 
         @Override
-        public VertexConsumer setColor(int color) {
+        public @NonNull VertexConsumer setColor(int color) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv(float u, float v) {
+        public @NonNull VertexConsumer setUv(float u, float v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv1(int u, int v) {
+        public @NonNull VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv2(int u, int v) {
+        public @NonNull VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setNormal(float x, float y, float z) {
+        public @NonNull VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public VertexConsumer setLineWidth(float width) {
+        public @NonNull VertexConsumer setLineWidth(float width) {
             return this;
         }
     }

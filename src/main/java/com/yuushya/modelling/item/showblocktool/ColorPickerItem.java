@@ -7,15 +7,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.util.List;
+import java.util.function.Consumer;
 
 import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 
@@ -53,18 +52,16 @@ public class ColorPickerItem extends AbstractToolItem {
         return InteractionResult.PASS;
     }
 
-    //TODO 写在BlockItem里面
+    @Override
+    public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+        Integer i = itemStack.get(DataComponentRegistry.COLOR_DATA);
+        if (i != null) {
+            String hex = String.format("#%08X", i);
+            builder.accept(Component.literal(hex).withColor(i));
+        } else {
+            builder.accept(Component.translatable("item.yuushya.color_picker.none").withColor(Color.LIGHT_GRAY.getRGB()));
+        }
 
-//    @Override
-//    public void appendHoverText(@NotNull ItemStack itemStack, Item.TooltipContext context, @NotNull List<Component> tooltips, @NotNull TooltipFlag tooltipFlag) {
-//        Integer i = itemStack.get(DataComponentRegistry.COLOR_DATA);
-//        if (i != null) {
-//            String hex = String.format("#%08X", i);
-//            tooltips.add(Component.literal(hex).withColor(i));
-//        } else {
-//            tooltips.add(Component.translatable("item.yuushya.color_picker.none").withColor(Color.LIGHT_GRAY.getRGB()));
-//        }
-//
-//        super.appendHoverText(itemStack, context, tooltips, tooltipFlag);
-//    }
+        super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
+    }
 }

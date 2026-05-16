@@ -29,28 +29,4 @@ public class ClientEvent {
         event.registerBlockEntityRenderer(BlockEntityRegistry.ITEM_BLOCK_ENTITY.get(), ItemBlockEntityRender::new);
         event.registerBlockEntityRenderer(BlockEntityRegistry.TEXT_BLOCK_ENTITY.get(), TextBlockEntityRender::new);
     }
-
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        //TODO 这里是干啥的
-//        event.enqueueWork(() -> {
-//            for (String s : List.of("rot_trans_item", "pos_trans_item", "micro_pos_trans_item", "get_showblock_item")) {
-//                ItemProperties.register(
-//                        BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(Yuushya.MOD_ID, s)),
-//                        Identifier.parse("direction"),
-//                        (itemStack, clientWorld, livingEntity, i) -> itemStack.getOrDefault(DataComponentRegistry.TRANS_DIRECTION.get(), 0) * 0.1F
-//                );
-//            }
-//
-//            ItemProperties.register(
-//                    ItemRegistry.GET_BLOCKSTATE_ITEM.get(),
-//                    Identifier.parse("direction"),
-//                    (itemStack, clientWorld, livingEntity, i) -> {
-//                        BlockState blockState = itemStack.getOrDefault(DataComponentRegistry.BLOCKSTATE, Blocks.AIR.defaultBlockState());
-//                        if (!blockState.equals(Blocks.AIR.defaultBlockState())) return 1;
-//                        return 0;
-//                    }
-//            );
-//        });
-    }
 }
