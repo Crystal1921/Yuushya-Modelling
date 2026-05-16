@@ -31,6 +31,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.model.quad.BakedColors;
 import org.joml.Matrix4fStack;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
@@ -302,6 +303,7 @@ public class CachedRegion {
                     for (int j = 0, renderDataSize = renderData.size(); j < renderDataSize; j++) {
                         TransformItemData transformDatum = transformData.get(j);
                         ItemStackRenderState renderDatum = renderData.get(j);
+                        int color = transformDatum.color;
                         for (ItemStackRenderState.LayerRenderState layer : renderDatum.layers) {
                             List<BakedQuad> bakedQuads = layer.prepareQuadList();
                             List<BakedQuad> newQuads = new ArrayList<>();
@@ -319,10 +321,11 @@ public class CachedRegion {
                                 }
                                 stack.popPose();
 
+                                BakedColors.PerQuad bakedColors = new BakedColors.PerQuad(color);
                                 newQuads.add(new BakedQuad(
                                         vector4fs[0], vector4fs[1], vector4fs[2], vector4fs[3],
                                         bakedQuad.packedUV0(), bakedQuad.packedUV1(), bakedQuad.packedUV2(), bakedQuad.packedUV3(),
-                                        bakedQuad.direction(), bakedQuad.materialInfo(), bakedQuad.bakedNormals(), bakedQuad.bakedColors()
+                                        bakedQuad.direction(), bakedQuad.materialInfo(), bakedQuad.bakedNormals(), bakedColors
                                 ));
                             }
 
