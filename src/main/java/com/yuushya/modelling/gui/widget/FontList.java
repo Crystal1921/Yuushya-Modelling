@@ -3,14 +3,13 @@ package com.yuushya.modelling.gui.widget;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GlyphSource;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.gui.font.FontSet;
-import net.minecraft.client.gui.font.glyphs.EffectGlyph;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,25 +99,15 @@ public class FontList extends ObjectSelectionList<FontList.Entry> {
         @Override
         public void extractContent(GuiGraphicsExtractor guiGraphics, int x, int y, boolean hovered, float v) {
             Identifier fontLoc = getFont();
-            FontSet fontSet = Minecraft.getInstance().fontManager.fontSets.get(fontLoc);
-            Font font = new Font(new Font.Provider() {
-                @Override
-                public GlyphSource glyphs(FontDescription fontDescription) {
-                    return fontSet.source(false);
-                }
-
-                @Override
-                public EffectGlyph effect() {
-                    return fontSet.whiteGlyph();
-                }
-            });
-            String fontName = fontLoc.toString();
-            int textY = y + (itemHeight - font.lineHeight) / 2;
-            guiGraphics.text(font, fontName, x, textY, 0xFFFFFF, true);
+            Font font = Minecraft.getInstance().font;
+            FontDescription.Resource resource = new FontDescription.Resource(fontLoc);
+            MutableComponent mutableComponent = Component.literal(fontLoc.toString()).withStyle(Style.EMPTY.withFont(resource));
+            int textY = getY() + (itemHeight - font.lineHeight) / 2;
+            guiGraphics.text(font, mutableComponent, getX(), textY, 0xFFFFFFFF, true);
 
             // Render selection indicator
             if (hovered || this == FontList.this.getSelected()) {
-                guiGraphics.fill(x - 1, y - 1, x + parent.itemWidth + 1, y + parent.itemHeight + 1, 0x80FFFFFF);
+//                guiGraphics.fill(getX() - 1, getY() - 1, getX() + parent.itemWidth + 1, getY() + parent.itemHeight + 1, 0x80FFFFFF);
             }
         }
 
