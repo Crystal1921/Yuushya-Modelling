@@ -54,7 +54,7 @@ public class ShowBlockModel implements BlockStateModel {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
         if (blockEntity instanceof ShowBlockEntity showBlockEntity) {
-            List<TransformBlockData> transformDatas = showBlockEntity.getTransformData();
+            List<TransformBlockData> transformDatum = showBlockEntity.getTransformData();
             BlockStateModelSet blockModelSet = Minecraft.getInstance().getModelManager().getBlockStateModelSet();
 
             ArrayList<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
@@ -65,7 +65,7 @@ public class ShowBlockModel implements BlockStateModel {
             stack.translate(0.5f, 0.5f, 0.5f);
             stack.mulPose(Axis.YP.rotationDegrees(-f));
             stack.translate(-0.5f, -0.5f, -0.5f);
-            for (TransformBlockData transformData : transformDatas)
+            for (TransformBlockData transformData : transformDatum)
                 if (transformData.isShown) {
                     BlockState blockState = transformData.blockState;
                     BlockStateModel blockStateModel = blockModelSet.get(blockState);

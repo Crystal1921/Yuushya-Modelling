@@ -1,18 +1,13 @@
 package com.yuushya.modelling.item.showblocktool;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.blockentity.showblock.ShowBlock;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.item.AbstractToolItem;
 import com.yuushya.modelling.registries.DataComponentRegistry;
-import com.yuushya.modelling.registries.ItemRegistry;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AirBlock;
@@ -26,15 +21,6 @@ public class GetBlockStateItem extends AbstractToolItem {
         super(properties, tipLines);
         blockState = Blocks.AIR.defaultBlockState();
     }
-
-    //TODO 先注释掉
-//    public static void renderByItem(ItemStack stack, ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource vertexConsumers, int light, int overlay) {
-//        if (stack.is(ItemRegistry.GET_BLOCKSTATE_ITEM)) return ;
-//        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-//        BlockState blockState = stack.getOrDefault(DataComponentRegistry.BLOCKSTATE.get(), Blocks.AIR.defaultBlockState());
-//        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
-//        itemRenderer.render(stack, displayContext, false, poseStack, vertexConsumers, light, overlay, blockRenderDispatcher.getBlockModel(blockState));
-//    }
 
     @Override
     public InteractionResult inMainHandRightClickOnBlock(Player player, BlockState blockStateTarget, Level level, BlockPos blockPos, ItemStack handItemStack) {

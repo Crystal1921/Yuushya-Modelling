@@ -212,7 +212,7 @@ public class TextModelSpecialRenderer implements SpecialModelRenderer<TextBlockE
         return null;
     }
 
-    public static record Unbaked() implements SpecialModelRenderer.Unbaked<TextBlockEntityRenderState> {
+    public record Unbaked() implements SpecialModelRenderer.Unbaked<TextBlockEntityRenderState> {
         public static final MapCodec<TextModelSpecialRenderer.Unbaked> MAP_CODEC = MapCodec.unit(new TextModelSpecialRenderer.Unbaked());
 
         @Override

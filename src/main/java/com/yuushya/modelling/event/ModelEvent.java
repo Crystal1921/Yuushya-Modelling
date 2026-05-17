@@ -2,13 +2,13 @@ package com.yuushya.modelling.event;
 
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.textblock.TextModelSpecialRenderer;
+import com.yuushya.modelling.client.renderer.GetBlockStateItemSpecialRenderer;
 import com.yuushya.modelling.registries.BlockRegistry;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterSpecialModelRendererEvent;
 
@@ -27,6 +27,7 @@ public class ModelEvent {
     @SubscribeEvent
     public static void registerSpecialModelRenderers(RegisterSpecialModelRendererEvent event) {
         event.register(TextModelSpecialRenderer.TEXT_MODEL_RENDERER, TextModelSpecialRenderer.Unbaked.MAP_CODEC);
+        event.register(GetBlockStateItemSpecialRenderer.GET_BLOCK_STATEITEM_MODEL_RENDERER, GetBlockStateItemSpecialRenderer.Unbaked.MAP_CODEC);
     }
 
     /**
