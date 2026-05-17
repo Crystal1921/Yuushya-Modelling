@@ -1,10 +1,18 @@
 {
-  "oversized_in_gui": true,
   "model": {
+  "type": "minecraft:condition",
+  "property": "minecraft:has_component",
+  "component": "yuushya:blockstate",
+  "on_false": {
+    "type": "minecraft:model",
+    "model": "yuushya:item/get_blockstate_item"
+  },
+  "on_true": {
     "type": "minecraft:special",
     "base": "yuushya:item/get_blockstate_item",
     "model": {
       "type": "yuushya:get_blockstate_item"
     }
   }
+}
 }

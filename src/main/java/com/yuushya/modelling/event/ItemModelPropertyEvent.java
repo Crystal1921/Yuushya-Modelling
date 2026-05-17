@@ -7,7 +7,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterSelectItemModelPropertyEvent;
 
 @EventBusSubscriber
-public class ConditionalItemModelPropertyEvent {
+public class ItemModelPropertyEvent {
     @SubscribeEvent
     public static void register(RegisterSelectItemModelPropertyEvent event) {
         event.register(YuushyaNeoForge.id("pos_trans"), PosTransConditional.TYPE);
