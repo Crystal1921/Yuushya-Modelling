@@ -4,11 +4,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
 import com.yuushya.modelling.blockentity.renderstate.ItemBlockEntityRenderState;
+import com.yuushya.modelling.blockentity.renderstate.SlotRenderState;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.block.BlockModelRenderState;
+import net.minecraft.client.renderer.block.BlockModelResolver;
+import net.minecraft.client.renderer.block.model.BlockDisplayContext;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemModelResolver;
@@ -21,6 +26,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,11 +43,15 @@ import static com.yuushya.modelling.blockentity.textblock.TextBlockEntityRender.
  * Based on ShowBlockEntityRender but adapted for item data.
  */
 public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@NotNull ItemBlockEntity, ItemBlockEntityRenderState> {
+    public static final BlockDisplayContext BLOCK_DISPLAY_CONTEXT = BlockDisplayContext.create();
     private final ItemModelResolver itemModelResolver;
+    private final BlockModelResolver blockModelResolver;
+
 
     public ItemBlockEntityRender(BlockEntityRendererProvider.Context context) {
         super(context);
         this.itemModelResolver = context.itemModelResolver();
+        this.blockModelResolver = context.blockModelResolver();
     }
 
     @Override
@@ -55,11 +65,18 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
         state.transformData = blockEntity.getTransformData();
         state.enableSpecialRender = blockEntity.getBlockState().getValue(AbstractTransformBlock.ENABLE_SPECIAL_RENDER);
         Level level = blockEntity.getLevel();
-        ArrayList<ItemStackRenderState> renderStates = new ArrayList<>();
+        ArrayList<SlotRenderState> renderStates = new ArrayList<>();
         for (TransformItemData transformDatum : state.transformData) {
-            ItemStackRenderState itemStackRenderState = new ItemStackRenderState();
-            this.itemModelResolver.updateForTopItem(itemStackRenderState, transformDatum.itemStack, ItemDisplayContext.NONE, level, null, (int) (blockEntity.getBlockPos().asLong()));
-            renderStates.add(itemStackRenderState);
+            BlockState blockState = transformDatum.itemStack.get(DataComponentRegistry.BLOCKSTATE);
+            if (transformDatum.enableBlock && blockState != null) {
+                BlockModelRenderState blockModelRenderState = new BlockModelRenderState();
+                blockModelResolver.update(blockModelRenderState, blockState, BLOCK_DISPLAY_CONTEXT);
+                renderStates.add(SlotRenderState.ofBlock(blockModelRenderState));
+            } else {
+                ItemStackRenderState itemStackRenderState = new ItemStackRenderState();
+                this.itemModelResolver.updateForTopItem(itemStackRenderState, transformDatum.itemStack, ItemDisplayContext.NONE, level, null, (int) (blockEntity.getBlockPos().asLong()));
+                renderStates.add(SlotRenderState.ofItem(itemStackRenderState));
+            }
         }
         state.renderData = List.copyOf(renderStates);
     }
@@ -74,7 +91,7 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
 
     private void renderItemBlock(@NonNull ItemBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         List<TransformItemData> transformData = state.transformData;
-        List<ItemStackRenderState> renderData = state.renderData;
+        List<SlotRenderState> renderData = state.renderData;
         if (transformData.isEmpty() || renderData.isEmpty() || renderData.size() != transformData.size()) {
             return;
         }
@@ -90,8 +107,8 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
                         scale(poseStack, transformDatum.scales);
                         YuushyaUtils.translate(poseStack, transformDatum.pos);
                         rotate(poseStack, transformDatum.rot);
-                        ItemStackRenderState itemStackRenderState = renderData.get(i);
-                        itemStackRenderState.submit(poseStack, submitNodeCollector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                        SlotRenderState slotRenderState = renderData.get(i);
+                        slotRenderState.submit(poseStack, submitNodeCollector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
                     }
                     poseStack.popPose();
                 }

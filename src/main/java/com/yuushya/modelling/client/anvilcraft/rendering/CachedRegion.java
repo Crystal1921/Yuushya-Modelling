@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.ScissorState;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.blockentity.renderstate.ItemBlockEntityRenderState;
+import com.yuushya.modelling.blockentity.renderstate.SlotRenderState;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
@@ -18,6 +19,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.block.BlockModelRenderState;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -293,44 +295,63 @@ public class CachedRegion {
                 BlockEntityRenderState renderState = Minecraft.getInstance().levelRenderer.blockEntityRenderDispatcher.tryExtractRenderState(be, 0, null, null);
 
                 if (renderState instanceof ItemBlockEntityRenderState itemBlockEntityRenderState) {
-                    List<ItemStackRenderState> renderData = itemBlockEntityRenderState.renderData;
+                    List<SlotRenderState> renderData = itemBlockEntityRenderState.renderData;
                     List<TransformItemData> transformData = itemBlockEntityRenderState.transformData;
-                    PoseStack stack = new PoseStack();
                     if (renderData.size() != transformData.size()) {
                         break;
                     }
                     for (int j = 0, renderDataSize = renderData.size(); j < renderDataSize; j++) {
                         TransformItemData transformDatum = transformData.get(j);
-                        ItemStackRenderState renderDatum = renderData.get(j);
-                        int color = transformDatum.color;
-                        //TODO 这里注意要准备方块模型
-                        boolean enableBlock = transformDatum.enableBlock;
-                        for (ItemStackRenderState.LayerRenderState layer : renderDatum.layers) {
-                            List<BakedQuad> bakedQuads = layer.prepareQuadList();
-                            List<BakedQuad> newQuads = new ArrayList<>();
-                            for (BakedQuad bakedQuad : bakedQuads) {
-                                stack.pushPose();
-                                YuushyaUtils.scale(stack, transformDatum.scales);
-                                YuushyaUtils.translate(stack, transformDatum.pos);
-                                YuushyaUtils.rotate(stack, transformDatum.rot);
-                                Vector3fc[] vector4fs = new Vector3fc[4];
-                                for (int i = 0; i < 4; i++) {
-                                    Vector3fc position = bakedQuad.position(i);
-                                    Vector4f vector4f = new Vector4f(position.x(), position.y(), position.z(), 1);
-                                    stack.last().pose().transform(vector4f);
-                                    vector4fs[i] = new Vector3f(vector4f.x(), vector4f.y(), vector4f.z());
-                                }
-                                stack.popPose();
-
-                                BakedColors.PerQuad bakedColors = new BakedColors.PerQuad(color);
-                                newQuads.add(new BakedQuad(
-                                        vector4fs[0], vector4fs[1], vector4fs[2], vector4fs[3],
-                                        bakedQuad.packedUV0(), bakedQuad.packedUV1(), bakedQuad.packedUV2(), bakedQuad.packedUV3(),
-                                        bakedQuad.direction(), bakedQuad.materialInfo(), bakedQuad.bakedNormals(), bakedColors
-                                ));
+                        SlotRenderState slotRenderState = renderData.get(j);
+                        if (slotRenderState.isBlock) {
+                            BlockModelRenderState blockState = slotRenderState.blockState;
+                            if (blockState == null) {
+                                continue;
                             }
+                            blockState.submit(poseStack, submitNodeStorage, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                        } else {
+                            ItemStackRenderState itemRenderState = slotRenderState.itemState;
+                            if (itemRenderState == null) {
+                                continue;
+                            }
+                            int color = transformDatum.color;
+                            for (ItemStackRenderState.LayerRenderState layer : itemRenderState.layers) {
+                                if (layer.specialRenderer != null) {
+                                    poseStack.pushPose();
+                                    YuushyaUtils.scale(poseStack, transformDatum.scales);
+                                    YuushyaUtils.translate(poseStack, transformDatum.pos);
+                                    YuushyaUtils.rotate(poseStack, transformDatum.rot);
+                                    layer.submit(poseStack, submitNodeStorage, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+                                    poseStack.popPose();
+                                } else {
+                                    PoseStack poseStack2 = new PoseStack();
+                                    List<BakedQuad> bakedQuads = layer.prepareQuadList();
+                                    List<BakedQuad> newQuads = new ArrayList<>();
+                                    for (BakedQuad bakedQuad : bakedQuads) {
+                                        poseStack2.pushPose();
+                                        YuushyaUtils.scale(poseStack2, transformDatum.scales);
+                                        YuushyaUtils.translate(poseStack2, transformDatum.pos);
+                                        YuushyaUtils.rotate(poseStack2, transformDatum.rot);
+                                        Vector3fc[] vector4fs = new Vector3fc[4];
+                                        for (int i = 0; i < 4; i++) {
+                                            Vector3fc position = bakedQuad.position(i);
+                                            Vector4f vector4f = new Vector4f(position.x(), position.y(), position.z(), 1);
+                                            poseStack2.last().pose().transform(vector4f);
+                                            vector4fs[i] = new Vector3f(vector4f.x(), vector4f.y(), vector4f.z());
+                                        }
+                                        poseStack2.popPose();
 
-                            submitNodeStorage.submitItem(poseStack, ItemDisplayContext.NONE, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0, EMPTY_TINTS, newQuads, ItemStackRenderState.FoilType.NONE);
+                                        BakedColors.PerQuad bakedColors = new BakedColors.PerQuad(color);
+                                        newQuads.add(new BakedQuad(
+                                                vector4fs[0], vector4fs[1], vector4fs[2], vector4fs[3],
+                                                bakedQuad.packedUV0(), bakedQuad.packedUV1(), bakedQuad.packedUV2(), bakedQuad.packedUV3(),
+                                                bakedQuad.direction(), bakedQuad.materialInfo(), bakedQuad.bakedNormals(), bakedColors
+                                        ));
+                                    }
+
+                                    submitNodeStorage.submitItem(poseStack, ItemDisplayContext.NONE, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0, EMPTY_TINTS, newQuads, ItemStackRenderState.FoilType.NONE);
+                                }
+                            }
                         }
                     }
                 }
