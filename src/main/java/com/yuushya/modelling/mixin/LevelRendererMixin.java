@@ -82,6 +82,7 @@ public abstract class LevelRendererMixin {
             safeSet.forEach((chunkPos) -> {
                 CacheableBERenderingPipeline.getInstance().getRenderRegion(chunkPos).submitCompileTask();
             });
+            safeSet.clear();
         }
     }
 }
