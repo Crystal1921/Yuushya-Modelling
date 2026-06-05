@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.Util;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -181,34 +182,45 @@ public class StyledMultiLineEditBox extends AbstractTextAreaWidget {
             int innerLeft = this.getInnerLeft();
             boolean hasDrawnCursor = false;
 
-            // 渲染带样式的文本
+            // 渲染带样式的文本（完整版，按 Component 的 Style 分割渲染）
             for (StyledMultilineTextField.StringView lineView : this.textField.iterateLines()) {
                 boolean lineWithinVisibleBounds = this.withinContentAreaTopBottom(drawTop, drawTop + 9);
 
                 if (!hasDrawnCursor && (needsValidCursorPos || showCursor) && insertCursor && cursor >= lineView.beginIndex() && cursor <= lineView.endIndex()) {
                     if (lineWithinVisibleBounds) {
-                        String textBeforeCursor = value.substring(lineView.beginIndex(), cursor);
-                        int textBeforeCursorPosRight = innerLeft + this.font.width(textBeforeCursor);
-                        String textAfterCursor = value.substring(cursor, lineView.endIndex());
+                        // 渲染光标前的样式文本
+                        int xPos = innerLeft;
+                        for (StyledSegment seg : getStyledSegments(lineView.beginIndex(), cursor)) {
+                            Component styledComp = Component.literal(seg.text).setStyle(seg.style);
+                            graphics.text(this.font, styledComp, xPos, drawTop, this.textColor, this.textShadow);
+                            xPos += this.font.width(styledComp);
+                        }
 
-                        // 渲染带样式的文本（简化版，完整实现需要按 Component 分割渲染）
-                        graphics.text(this.font, textBeforeCursor, innerLeft, drawTop, this.textColor, this.textShadow);
-                        graphics.text(this.font, textAfterCursor, textBeforeCursorPosRight, drawTop, this.textColor, this.textShadow);
-
-                        cursorX = textBeforeCursorPosRight;
+                        cursorX = xPos;
                         cursorY = drawTop;
 
                         if (showCursor) {
-                            TextCursorUtils.extractInsertCursor(graphics, textBeforeCursorPosRight, drawTop, this.cursorColor, 10);
+                            TextCursorUtils.extractInsertCursor(graphics, xPos, drawTop, this.cursorColor, 10);
+                        }
+
+                        // 渲染光标后的样式文本
+                        for (StyledSegment seg : getStyledSegments(cursor, lineView.endIndex())) {
+                            Component styledComp = Component.literal(seg.text).setStyle(seg.style);
+                            graphics.text(this.font, styledComp, xPos, drawTop, this.textColor, this.textShadow);
+                            xPos += this.font.width(styledComp);
                         }
 
                         hasDrawnCursor = true;
                     }
                 } else if (lineWithinVisibleBounds) {
-                    String substring = value.substring(lineView.beginIndex(), lineView.endIndex());
-                    graphics.text(this.font, substring, innerLeft, drawTop, this.textColor, this.textShadow);
+                    int xPos = innerLeft;
+                    for (StyledSegment seg : getStyledSegments(lineView.beginIndex(), lineView.endIndex())) {
+                        Component styledComp = Component.literal(seg.text).setStyle(seg.style);
+                        graphics.text(this.font, styledComp, xPos, drawTop, this.textColor, this.textShadow);
+                        xPos += this.font.width(styledComp);
+                    }
                     if ((needsValidCursorPos || showCursor) && !insertCursor) {
-                        cursorX = innerLeft + this.font.width(substring);
+                        cursorX = xPos;
                         cursorY = drawTop;
                     }
                 }
@@ -235,12 +247,12 @@ public class StyledMultiLineEditBox extends AbstractTextAreaWidget {
                         }
 
                         if (this.withinContentAreaTopBottom(drawTop, drawTop + 9)) {
-                            int drawBegin = this.font.width(value.substring(lineView.beginIndex(), Math.max(selection.beginIndex(), lineView.beginIndex())));
+                            int drawBegin = this.getStyledWidth(lineView.beginIndex(), Math.max(selection.beginIndex(), lineView.beginIndex()));
                             int drawEnd;
                             if (selection.endIndex() > lineView.endIndex()) {
                                 drawEnd = this.width - this.innerPadding();
                             } else {
-                                drawEnd = this.font.width(value.substring(lineView.beginIndex(), selection.endIndex()));
+                                drawEnd = this.getStyledWidth(lineView.beginIndex(), selection.endIndex());
                             }
 
                             graphics.textHighlight(drawX + drawBegin, drawTop, drawX + drawEnd, drawTop + 9, true);
@@ -424,6 +436,62 @@ public class StyledMultiLineEditBox extends AbstractTextAreaWidget {
         this.syncSelectionStyle();
         this.textBlockScreen.updateComponentLines(this.textField.getComponents());
     }
+
+    // ==================== 样式渲染辅助方法 ====================
+
+    /**
+     * 将纯文本索引范围映射到带样式的 Component 片段。
+     * 遍历 components 列表，找出与 [beginIndex, endIndex) 重叠的每个 Component 片段，
+     * 保留其原始 Style（粗体、斜体、颜色、字体等）。
+     */
+    private List<StyledSegment> getStyledSegments(int beginIndex, int endIndex) {
+        List<StyledSegment> segments = new ArrayList<>();
+        List<Component> components = this.textField.getComponents();
+        int currentIndex = 0;
+
+        for (Component comp : components) {
+            String text = comp.getString();
+            int compEnd = currentIndex + text.length();
+
+            if (compEnd <= beginIndex) {
+                currentIndex = compEnd;
+                continue;
+            }
+            if (currentIndex >= endIndex) {
+                break;
+            }
+
+            int segStart = Math.max(currentIndex, beginIndex);
+            int segEnd = Math.min(compEnd, endIndex);
+
+            if (segEnd > segStart) {
+                String segText = text.substring(segStart - currentIndex, segEnd - currentIndex);
+                segments.add(new StyledSegment(segText, comp.getStyle()));
+            }
+
+            currentIndex = compEnd;
+        }
+
+        return segments;
+    }
+
+    /**
+     * 计算带样式的文本在 [beginIndex, endIndex) 范围内的渲染宽度。
+     * 使用 {@link Font#width(String)} 逐段累加，自动处理不同样式（粗体、字体等）
+     * 对字符宽度的影响。
+     */
+    private int getStyledWidth(int beginIndex, int endIndex) {
+        int width = 0;
+        for (StyledSegment seg : getStyledSegments(beginIndex, endIndex)) {
+            width += this.font.width(Component.literal(seg.text).setStyle(seg.style));
+        }
+        return width;
+    }
+
+    /**
+     * 带样式的文本片段，包含纯文本内容和对应的 Style。
+     */
+    private record StyledSegment(String text, Style style) {}
 
     // ==================== Builder 模式支持 ====================
 
