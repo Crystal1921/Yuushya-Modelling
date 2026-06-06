@@ -4,10 +4,12 @@ import com.google.gson.*;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -314,8 +316,12 @@ public class ShareUtils {
             ) {
                 public static ShareItemStack from(ItemStack stack) {
                     Identifier itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                    DynamicOps<Tag> instance = NbtOps.INSTANCE;
+                    if (Minecraft.getInstance().level != null) {
+                        instance = Minecraft.getInstance().level.registryAccess().createSerializationContext(NbtOps.INSTANCE);
+                    }
                     Tag tag = ItemStack.OPTIONAL_CODEC
-                            .encodeStart(NbtOps.INSTANCE, stack)
+                            .encodeStart(instance, stack)
                             .result()
                             .orElse(new CompoundTag());
 
