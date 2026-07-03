@@ -4,6 +4,8 @@ import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.network.TransformDataListPacket;
 import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +17,7 @@ import java.util.Map;
 public class EngraveItemResultLoader {
     public static final Map<String, EngraveItemResult> ITEMBLOCK_ITEM_MAP = new HashMap<>();
 
+    @OnlyIn(Dist.CLIENT)
     public static void load() {
         if (Files.exists(ClientMethod.ITEM_PATH)) {
             try {
@@ -29,6 +32,7 @@ public class EngraveItemResultLoader {
         return basePath.toString().endsWith(".zip");
     }
 
+    @OnlyIn(Dist.CLIENT)
     private static void loadZip(Path path) {
         try (FileSystem fileSystem = FileSystems.newFileSystem(path)) {
             load(fileSystem.getPath("."));
@@ -37,6 +41,7 @@ public class EngraveItemResultLoader {
         }
     }
 
+    @OnlyIn(Dist.CLIENT)
     private static void load(Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
@@ -58,6 +63,7 @@ public class EngraveItemResultLoader {
         });
     }
 
+    @OnlyIn(Dist.CLIENT)
     public static void saveItem(String string, String name) throws IOException {
         ShareUtils.ShareItemInformation information = ShareUtils.fromItems(string);
         ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
