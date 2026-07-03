@@ -6,6 +6,7 @@ import com.yuushya.modelling.utils.ClientMethod;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +46,7 @@ public class EngraveItemResultLoader {
     private static void load(Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
                 if (isZip(file)) {
                     loadZip(file);
                 } else if (file.getFileName().toString().endsWith(".json")) {
@@ -55,7 +56,7 @@ public class EngraveItemResultLoader {
                         ShareUtils.ShareItemInformation information = ShareUtils.fromItems(fileString);
                         ITEMBLOCK_ITEM_MAP.put(name, new EngraveItemResult(name, information));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Yuushya.LOGGER.error("Error when load engrave items", e);
                     }
                 }
                 return FileVisitResult.CONTINUE;

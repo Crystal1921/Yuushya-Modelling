@@ -82,6 +82,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
     }
 
     @Override
+    @SuppressWarnings("ConstantValue")
     public @NotNull List<BakedModel> getRenderPasses(@NotNull ItemStack itemStack, boolean fabulous) {
         CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
         ClientLevel level = Minecraft.getInstance().level;
@@ -120,7 +121,6 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
         int vertexSize = YuushyaUtils.vertexSize();
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
-        ClientLevel level = mc.level;
         if (player == null) return Collections.emptyList();
         ItemRenderer itemRenderer = mc.getItemRenderer();
         List<BakedQuad> finalQuads = new ArrayList<>();
@@ -146,7 +146,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
                         return Collections.emptyList();
                     }
                     for (Direction value : directions) {
-                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
+                        @SuppressWarnings("deprecation") List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
                         for (BakedQuad bakedQuad : blockModelQuads) {
                             int[] vertex = bakedQuad.getVertices().clone();
                             // 执行核心方块的位移和旋转

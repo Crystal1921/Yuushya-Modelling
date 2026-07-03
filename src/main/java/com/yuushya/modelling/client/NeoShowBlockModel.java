@@ -69,6 +69,7 @@ public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedMode
     }
 
     @Override
+    @SuppressWarnings("ConstantValue")
     public @NotNull List<BakedModel> getRenderPasses(@NotNull ItemStack itemStack, boolean fabulous) {
         CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
         if (transformDataTag == null || transformDataTag.isEmpty()) {
