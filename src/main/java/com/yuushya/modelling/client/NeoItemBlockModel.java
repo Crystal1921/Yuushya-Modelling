@@ -1,7 +1,10 @@
 package com.yuushya.modelling.client;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
@@ -18,7 +21,6 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
@@ -37,13 +39,17 @@ import org.joml.Vector4f;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import static net.minecraftforge.client.model.QuadTransformers.applyingColor;
 import static net.minecraftforge.client.model.QuadTransformers.toABGR;
 
 public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedModel, BakedModel {
-    private static final Map<ItemStack, NeoItemBlockModel> itemModelCache = new ConcurrentHashMap<>();
+    private static final Cache<ItemStack, NeoItemBlockModel> itemModelCache = CacheBuilder.newBuilder()
+            .weakKeys()
+            .weakValues()
+            .maximumSize(1024)
+            .build();
     public static ModelProperty<ItemBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
     public NeoItemBlockModel(Direction facing) {
@@ -76,29 +82,34 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
     }
 
     @Override
-    public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
+    @SuppressWarnings("ConstantValue")
+    public @NotNull List<BakedModel> getRenderPasses(@NotNull ItemStack itemStack, boolean fabulous) {
         CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) {
             return Collections.emptyList();
         }
-        RegistryAccess registryAccess = level.registryAccess();
         if (transformDataTag == null || transformDataTag.isEmpty()) {
             return List.of(backup);
         }
-        return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoItemBlockModel(Direction.SOUTH) {
-            private final List<TransformItemData> transformDatas;
+        try {
+            return List.of(itemModelCache.get(itemStack, () -> new NeoItemBlockModel(Direction.SOUTH) {
+                private final List<TransformItemData> transformData;
 
-            {
-                this.transformDatas = new ArrayList<>();
-                ITransformItemDataInventory.load(transformDataTag, transformDatas);
-            }
+                {
+                    this.transformData = new ArrayList<>();
+                    ITransformItemDataInventory.load(transformDataTag, transformData);
+                }
 
-            @Override
-            public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return this.getQuads(side, rand, transformDatas, null);
-            }
-        }));
+                @Override
+                public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+                    return this.getQuads(side, rand, transformData, null);
+                }
+            }));
+        } catch (ExecutionException e) {
+            Yuushya.LOGGER.error(e.getCause());
+            return List.of();
+        }
     }
 
     /**
@@ -110,7 +121,6 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
         int vertexSize = YuushyaUtils.vertexSize();
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
-        ClientLevel level = mc.level;
         if (player == null) return Collections.emptyList();
         ItemRenderer itemRenderer = mc.getItemRenderer();
         List<BakedQuad> finalQuads = new ArrayList<>();
@@ -136,7 +146,7 @@ public class NeoItemBlockModel extends ItemBlockModel implements IForgeBakedMode
                         return Collections.emptyList();
                     }
                     for (Direction value : directions) {
-                        List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
+                        @SuppressWarnings("deprecation") List<BakedQuad> blockModelQuads = model.getQuads(null, value, rand);
                         for (BakedQuad bakedQuad : blockModelQuads) {
                             int[] vertex = bakedQuad.getVertices().clone();
                             // 执行核心方块的位移和旋转

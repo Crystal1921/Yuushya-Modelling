@@ -1,6 +1,9 @@
 package com.yuushya.modelling.client;
 
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataInventory;
@@ -25,9 +28,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedModel {
-    private static final Map<ItemStack, NeoShowBlockModel> itemModelCache = new HashMap<>();
+    private static final Cache<ItemStack, NeoShowBlockModel> itemModelCache = CacheBuilder.newBuilder()
+            .weakKeys()
+            .weakValues()
+            .maximumSize(1024)
+            .build();
     private static final ChunkRenderTypeSet CUTOUT_MIPPED = ChunkRenderTypeSet.of(RenderType.cutoutMipped());
     public static ModelProperty<ShowBlockEntity> BASE_BLOCK_ENTITY = new ModelProperty<>();
 
@@ -61,33 +69,39 @@ public class NeoShowBlockModel extends ShowBlockModel implements IForgeBakedMode
     }
 
     @Override
-    public @NotNull List<BakedModel> getRenderPasses(ItemStack itemStack, boolean fabulous) {
+    @SuppressWarnings("ConstantValue")
+    public @NotNull List<BakedModel> getRenderPasses(@NotNull ItemStack itemStack, boolean fabulous) {
         CompoundTag transformDataTag = YuushyaDataTags.getTransformData(itemStack);
         if (transformDataTag == null || transformDataTag.isEmpty()) {
             return List.of(backup);
         }
-        return List.of(itemModelCache.computeIfAbsent(itemStack, (_stack) -> new NeoShowBlockModel(Direction.SOUTH) {
-            private final List<TransformBlockData> transformDatas;
+        try {
+            return List.of(itemModelCache.get(itemStack, () -> new NeoShowBlockModel(Direction.SOUTH) {
+                private final List<TransformBlockData> transformData;
 
-            {
-                this.transformDatas = new ArrayList<>();
-                ITransformDataInventory.load(transformDataTag, transformDatas);
-            }
+                {
+                    this.transformData = new ArrayList<>();
+                    ITransformDataInventory.load(transformDataTag, transformData);
+                }
 
-            @Override
-            public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
-                return super.getQuads(blockState, side, rand, transformDatas);
-            }
-        }));
+                @Override
+                public @NotNull List<BakedQuad> getQuads(@Nullable BlockState blockState, @Nullable Direction side, RandomSource rand) {
+                    return super.getQuads(blockState, side, rand, transformData);
+                }
+            }));
+        } catch (ExecutionException e) {
+            Yuushya.LOGGER.error(e.getCause());
+            return List.of();
+        }
     }
 
     @Override
-    public ChunkRenderTypeSet getRenderTypes(BlockState state, RandomSource rand, ModelData data) {
+    public @NotNull ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
         return CUTOUT_MIPPED;
     }
 
     @Override
-    public List<RenderType> getRenderTypes(ItemStack itemStack, boolean fabulous) {
+    public @NotNull List<RenderType> getRenderTypes(@NotNull ItemStack itemStack, boolean fabulous) {
         return List.of(RenderType.cutoutMipped());
     }
 }
