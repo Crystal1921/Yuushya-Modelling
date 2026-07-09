@@ -11,5 +11,8 @@
     "BlockBehaviourMixin",
     "LevelRendererMixin",
     "MinecraftMixin"
+  ],
+  "mixins": [
+    "compat.SodiumMixin"
   ]
 }
