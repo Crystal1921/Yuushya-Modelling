@@ -187,6 +187,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
     public boolean updateStateButton() {
         BlockState blockState = getBlockState();
+        property = null;
         if (blockState == null) {
             return false;
         }
@@ -210,8 +211,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
     @Override
     protected void init() {
-        if (minecraft == null) return;
-
         Button addItemButton = Button.builder(Component.literal("+"),
                         (btn) -> {
                             if (this.newItemStack != null) {
