@@ -897,6 +897,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
     private void updateItemStack(ItemStack itemStack) {
         this.itemStack = itemStack.copy();
+        CachedModeClient.INSTANCE.safeSet.add(ChunkPos.containing(blockEntity.getBlockPos()));
         ItemTransformType.ITEM_STACK.modify(blockEntity, slot, itemStack);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
     }
