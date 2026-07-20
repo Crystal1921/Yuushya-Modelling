@@ -52,7 +52,10 @@ public class ShowBlockModel implements BlockStateModel {
     @Override
     public void collectParts(BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random, List<BlockStateModelPart> parts) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
-        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+
+        Direction facing = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
+                ? state.getValue(BlockStateProperties.HORIZONTAL_FACING)
+                : Direction.NORTH;
         if (blockEntity instanceof ShowBlockEntity showBlockEntity) {
             List<TransformBlockData> transformDatum = showBlockEntity.getTransformData();
             BlockStateModelSet blockModelSet = Minecraft.getInstance().getModelManager().getBlockStateModelSet();
