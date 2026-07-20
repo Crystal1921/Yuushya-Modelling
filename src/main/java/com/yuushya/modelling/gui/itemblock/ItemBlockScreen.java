@@ -185,6 +185,7 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
     public boolean updateStateButton() {
         BlockState blockState = getBlockState();
+        property = null;
         if (blockState == null) {
             return false;
         }
