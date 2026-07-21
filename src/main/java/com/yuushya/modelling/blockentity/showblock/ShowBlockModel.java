@@ -3,6 +3,7 @@ package com.yuushya.modelling.blockentity.showblock;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.registries.BlockRegistry;
 import com.yuushya.modelling.utils.BakedQuadModel;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import lombok.NonNull;
@@ -71,6 +72,9 @@ public class ShowBlockModel implements BlockStateModel {
             for (TransformBlockData transformData : transformDatum)
                 if (transformData.isShown) {
                     BlockState blockState = transformData.blockState;
+                    if (blockState.is(BlockRegistry.SHOW_BLOCK.get())) {
+                        break;
+                    }
                     BlockStateModel blockStateModel = blockModelSet.get(blockState);
                     List<BlockStateModelPart> newParts = new ArrayList<>();
                     blockStateModel.collectParts(level, pos, blockState, random, newParts);
