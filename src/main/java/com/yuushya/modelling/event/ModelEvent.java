@@ -1,5 +1,6 @@
 package com.yuushya.modelling.event;
 
+import com.yuushya.modelling.blockentity.itemblock.ItemBlockModelSpecialRenderer;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModel;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockModelSpecialRenderer;
 import com.yuushya.modelling.blockentity.textblock.TextModelSpecialRenderer;
@@ -29,6 +30,7 @@ public class ModelEvent {
     public static void registerSpecialModelRenderers(RegisterSpecialModelRendererEvent event) {
         event.register(TextModelSpecialRenderer.TEXT_MODEL_RENDERER, TextModelSpecialRenderer.Unbaked.MAP_CODEC);
         event.register(ShowBlockModelSpecialRenderer.SHOW_BLOCK_MODEL_RENDERER, ShowBlockModelSpecialRenderer.Unbaked.MAP_CODEC);
+        event.register(ItemBlockModelSpecialRenderer.ITEM_BLOCK_MODEL_RENDERER, ItemBlockModelSpecialRenderer.Unbaked.MAP_CODEC);
         event.register(GetBlockStateItemSpecialRenderer.GET_BLOCK_STATEITEM_MODEL_RENDERER, GetBlockStateItemSpecialRenderer.Unbaked.MAP_CODEC);
     }
 

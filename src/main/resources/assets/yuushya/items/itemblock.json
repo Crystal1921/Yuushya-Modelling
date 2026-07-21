@@ -1,6 +1,10 @@
 {
+  "oversized_in_gui": true,
   "model": {
-    "type": "minecraft:model",
-    "model": "yuushya:item/itemblock"
+    "type": "minecraft:special",
+    "base": "yuushya:item/itemblock",
+    "model": {
+      "type": "yuushya:itemblock"
+    }
   }
 }
