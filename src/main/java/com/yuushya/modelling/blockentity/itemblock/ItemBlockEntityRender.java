@@ -104,9 +104,9 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<@N
                     poseStack.pushPose();
                     {
                         poseStack.translate(0.5, 0.5, 0.5);
-                        scale(poseStack, transformDatum.scales);
                         YuushyaUtils.translate(poseStack, transformDatum.pos);
                         rotate(poseStack, transformDatum.rot);
+                        scale(poseStack, transformDatum.scales);
                         SlotRenderState slotRenderState = renderData.get(i);
                         slotRenderState.submit(poseStack, submitNodeCollector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
                     }

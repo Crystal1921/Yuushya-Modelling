@@ -6,11 +6,14 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.ScissorState;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import com.yuushya.modelling.blockentity.renderstate.ItemBlockEntityRenderState;
 import com.yuushya.modelling.blockentity.renderstate.SlotRenderState;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.mixin.ItemStackRenderStateInvoker;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
@@ -318,9 +321,9 @@ public class CachedRegion {
                             for (ItemStackRenderState.LayerRenderState layer : itemRenderState.layers) {
                                 if (layer.specialRenderer != null) {
                                     poseStack.pushPose();
-                                    YuushyaUtils.scale(poseStack, transformDatum.scales);
                                     YuushyaUtils.translate(poseStack, transformDatum.pos);
                                     YuushyaUtils.rotate(poseStack, transformDatum.rot);
+                                    YuushyaUtils.scale(poseStack, transformDatum.scales);
                                     layer.submit(poseStack, submitNodeStorage, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0);
                                     poseStack.popPose();
                                 } else {
@@ -329,14 +332,17 @@ public class CachedRegion {
                                     List<BakedQuad> newQuads = new ArrayList<>();
                                     for (BakedQuad bakedQuad : bakedQuads) {
                                         poseStack2.pushPose();
-                                        YuushyaUtils.scale(poseStack2, transformDatum.scales);
                                         YuushyaUtils.translate(poseStack2, transformDatum.pos);
                                         YuushyaUtils.rotate(poseStack2, transformDatum.rot);
+                                        YuushyaUtils.scale(poseStack2, transformDatum.scales);
+                                        PoseStack.Pose finalPose = poseStack2.last();
+                                        ((ItemStackRenderStateInvoker)layer).yuushya$applyTransform(finalPose);
+
                                         Vector3fc[] vector4fs = new Vector3fc[4];
                                         for (int i = 0; i < 4; i++) {
                                             Vector3fc position = bakedQuad.position(i);
                                             Vector4f vector4f = new Vector4f(position.x(), position.y(), position.z(), 1);
-                                            poseStack2.last().pose().transform(vector4f);
+                                            finalPose.pose().transform(vector4f);
                                             vector4fs[i] = new Vector3f(vector4f.x(), vector4f.y(), vector4f.z());
                                         }
                                         poseStack2.popPose();

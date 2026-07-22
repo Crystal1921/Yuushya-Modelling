@@ -9,6 +9,7 @@
   "refmap": "yuushya.refmap.json",
   "client": [
     "BlockBehaviourMixin",
+    "ItemStackRenderStateInvoker",
     "LevelRendererMixin",
     "MinecraftMixin"
   ],

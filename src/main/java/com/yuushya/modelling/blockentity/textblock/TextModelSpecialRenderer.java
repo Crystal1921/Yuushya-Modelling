@@ -126,9 +126,9 @@ public class TextModelSpecialRenderer implements SpecialModelRenderer<TextBlockE
 
                 poseStack.translate(0.0D, 1.0D, 0.0D);
 
-                scale(poseStack, transformDatum.scales);
                 YuushyaUtils.translate(poseStack, transformDatum.pos);
                 rotate(poseStack, transformDatum.rot);
+                scale(poseStack, transformDatum.scales);
 
                 poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
                 poseStack.scale(0.1F, 0.1F, 0.1F);

@@ -81,9 +81,9 @@ public class ShowBlockModel implements BlockStateModel {
 
                     for (BakedQuad bakedQuad : blockModelQuads) {
                         stack.pushPose();
-                        YuushyaUtils.scale(stack, transformData.scales);
                         YuushyaUtils.translate(stack, transformData.pos);
                         YuushyaUtils.rotate(stack, transformData.rot);
+                        YuushyaUtils.scale(stack, transformData.scales);
                         Vector3fc[] vector4fs = new Vector3fc[4];
                         for (int i = 0; i < 4; i++) {
                             Vector3fc position = bakedQuad.position(i);
