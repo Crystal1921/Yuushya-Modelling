@@ -428,13 +428,28 @@ public class ShowBlockScreen extends Screen {
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
                                 (number) -> {
                                     if (number == 0.0) number = 1.0;
+                                    TransformBlockData transformData = blockEntity.getTransformData(slot);
+                                    double oldScale = transformData.scales.x;
                                     updateTransformData(SCALE_X, number);
                                     updateTransformData(SCALE_Y, number);
                                     updateTransformData(SCALE_Z, number);
                                     choose(SCALE_X).sliderButton.setValidatedValue(number);
-                                    choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
-                                    choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
-                                    choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
+                                    if (oldScale != 0.0 && oldScale != number) {
+                                        double ratio = oldScale / number;
+                                        double newPosX = transformData.pos.x * ratio;
+                                        double newPosY = transformData.pos.y * ratio;
+                                        double newPosZ = transformData.pos.z * ratio;
+                                        updateTransformData(POS_X, newPosX);
+                                        updateTransformData(POS_Y, newPosY);
+                                        updateTransformData(POS_Z, newPosZ);
+                                        choose(POS_X).sliderButton.setInitialValidatedValue(newPosX);
+                                        choose(POS_Y).sliderButton.setInitialValidatedValue(newPosY);
+                                        choose(POS_Z).sliderButton.setInitialValidatedValue(newPosZ);
+                                    } else {
+                                        choose(POS_X).sliderButton.setInitialValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
+                                        choose(POS_Y).sliderButton.setInitialValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
+                                        choose(POS_Z).sliderButton.setInitialValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
+                                    }
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.showBlockScreen.scale_text", String.format("%05.1f", number)))
                         .step(choose(SCALE_X).setStandardStep(0.1))
