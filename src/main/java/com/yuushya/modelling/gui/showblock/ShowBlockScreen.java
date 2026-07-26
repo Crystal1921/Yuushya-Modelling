@@ -346,12 +346,12 @@ public class ShowBlockScreen extends Screen {
                 );
 
         choose(SCALE_X); // 首先放置scala_x, 因为pos_x依赖于它
-        double posX = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.x), Math.abs(blockEntity.getTransformData(slot).pos.x));
+        double[] posX = new double[]{Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.x), Math.abs(blockEntity.getTransformData(slot).pos.x))};
         choose(POS_X).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                () -> -posX,
-                                () -> posX,
-                                () -> getStep(posX),
+                                () -> -posX[0],
+                                () -> posX[0],
+                                () -> getStep(posX[0]),
                                 (number) -> updateTransformData(POS_X, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
                         .step(choose(POS_X).setStandardStep(0.0))
@@ -361,12 +361,12 @@ public class ShowBlockScreen extends Screen {
                         .initial(POS_X.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(0, 0), leftColumnWidth(), PER_HEIGHT).build();
 
-        double posY = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.y), Math.abs(blockEntity.getTransformData(slot).pos.y));
+        double[] posY = new double[]{Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.y), Math.abs(blockEntity.getTransformData(slot).pos.y))};
         choose(POS_Y).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                () -> -posY,
-                                () -> posY,
-                                () -> getStep(posY),
+                                () -> -posY[0],
+                                () -> posY[0],
+                                () -> getStep(posY[0]),
                                 (number) -> updateTransformData(POS_Y, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
                         .step(choose(POS_Y).setStandardStep(0.0))
@@ -376,12 +376,12 @@ public class ShowBlockScreen extends Screen {
                         .initial(POS_Y.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT).build();
 
-        double posZ = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.z), Math.abs(blockEntity.getTransformData(slot).pos.z));
+        double[] posZ = new double[]{Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.z), Math.abs(blockEntity.getTransformData(slot).pos.z))};
         choose(POS_Z).sliderButton =
                 LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                () -> -posZ,
-                                () -> posZ,
-                                () -> getStep(posZ),
+                                () -> -posZ[0],
+                                () -> posZ[0],
+                                () -> getStep(posZ[0]),
                                 (number) -> updateTransformData(POS_Z, number))
                         .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
                         .step(choose(POS_Z).setStandardStep(0.0))
@@ -442,6 +442,9 @@ public class ShowBlockScreen extends Screen {
                                         updateTransformData(POS_X, newPosX);
                                         updateTransformData(POS_Y, newPosY);
                                         updateTransformData(POS_Z, newPosZ);
+                                        posX[0] = Math.max(posX[0], Math.abs(newPosX));
+                                        posY[0] = Math.max(posY[0], Math.abs(newPosY));
+                                        posZ[0] = Math.max(posZ[0], Math.abs(newPosZ));
                                         choose(POS_X).sliderButton.setInitialValidatedValue(newPosX);
                                         choose(POS_Y).sliderButton.setInitialValidatedValue(newPosY);
                                         choose(POS_Z).sliderButton.setInitialValidatedValue(newPosZ);
