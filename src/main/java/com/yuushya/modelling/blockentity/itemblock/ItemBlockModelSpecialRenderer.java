@@ -187,7 +187,7 @@ public class ItemBlockModelSpecialRenderer implements SpecialModelRenderer<ItemB
                     renderData.add(SlotRenderState.ofItem(itemStackRenderState));
                 }
             }
-            state.renderData = List.copyOf(renderData);
+            state.renderData = new ArrayList<>(renderData);
 
             return state;
         }
