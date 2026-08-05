@@ -111,7 +111,7 @@ public class ShareUtils {
         }
 
         public static String from(CompoundTag tag) {
-            return tag.asString().orElse("");
+            return tag.toString();
         }
     }
 
@@ -325,7 +325,7 @@ public class ShareUtils {
                             .result()
                             .orElse(new CompoundTag());
 
-                    String asString = tag.asString().orElse("");
+                    String asString = tag.toString();
                     JsonPrimitive jsonPrimitive = new JsonPrimitive(asString);
 
                     return new ShareItemStack(itemId.toString(), jsonPrimitive);
