@@ -20,6 +20,8 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.block.BlockModelRenderState;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -50,7 +52,7 @@ import static net.minecraft.client.renderer.item.ItemStackRenderState.LayerRende
  */
 public class CachedRegion {
     private final ChunkPos chunkPos;
-    private Map<net.minecraft.client.renderer.rendertype.RenderType, GpuBuffer> buffers = new HashMap<>();
+    private final Map<net.minecraft.client.renderer.rendertype.RenderType, GpuBuffer> buffers = new HashMap<>();
     private final Map<net.minecraft.client.renderer.rendertype.RenderType, ByteBufferBuilder> sortBuffers = new HashMap<>();
     private Map<net.minecraft.client.renderer.rendertype.RenderType, MeshData.SortState> meshSortings = new HashMap<>();
     private Reference2IntMap<net.minecraft.client.renderer.rendertype.RenderType> indexCountMap = new Reference2IntOpenHashMap<>();
@@ -260,6 +262,10 @@ public class CachedRegion {
         if (!blockEntities.contains(blockEntity)) {
             blockEntities.add(blockEntity);
             pipeline.submitCompileTask(new RebuildTask());
+        } else if (isEmpty && !blockEntity.isRemoved()) {
+            // 已在集合中但区域当前为空：可能之前远处重建被距离剔除导致几何为空，
+            // 需要重新编译以恢复渲染。由于构建已不再做距离剔除，这里会收敛（一次重建后 isEmpty=false）。
+            pipeline.submitCompileTask(new RebuildTask());
         }
     }
 
@@ -277,10 +283,22 @@ public class CachedRegion {
             CachedRegion.this.isEmpty = true;
             FullyBufferedBufferSource bufferSource = new FullyBufferedBufferSource();
 
+            // 缓存几何是静态烘焙的，不应依赖构建时的相机位置：
+            // tryExtractRenderState 内部的 shouldRender 会按 getViewDistance()（默认 64 格）做距离剔除，
+            // 若区块在远处加载/重建（例如玩家在渲染距离外走动导致区块卸载重载），会得到 null，
+            // 区域几何变空，且之后 addIfPossible 因 BE 已在集合中而不再触发重建，导致回来也不渲染。
+            // 因此这里直接调用渲染器提取渲染状态，跳过距离剔除；
+            // 距离剔除交给 renderInternal 在每帧绘制时按 renderDistance 判断。
+            BlockEntityRenderDispatcher blockEntityDispatcher = Minecraft.getInstance().levelRenderer.blockEntityRenderDispatcher;
+            Vec3 cameraPosition = minecraft.gameRenderer.getMainCamera().position();
+
             for (BlockEntity be : new ArrayList<>(blockEntities)) {
                 if (cancelled) {
                     bufferSource.close();
                     return;
+                }
+                if (be.isRemoved()) {
+                    continue;
                 }
 
                 poseStack.pushPose();
@@ -292,7 +310,12 @@ public class CachedRegion {
                 );
 
                 SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();
-                BlockEntityRenderState renderState = Minecraft.getInstance().levelRenderer.blockEntityRenderDispatcher.tryExtractRenderState(be, 0, null, null);
+                BlockEntityRenderer<BlockEntity, BlockEntityRenderState> renderer = blockEntityDispatcher.getRenderer(be);
+                BlockEntityRenderState renderState = null;
+                if (renderer != null && be.hasLevel() && be.getType().isValid(be.getBlockState())) {
+                    renderState = renderer.createRenderState();
+                    renderer.extractRenderState(be, renderState, 0, cameraPosition, null);
+                }
 
                 if (renderState instanceof ItemBlockEntityRenderState itemBlockEntityRenderState) {
                     List<SlotRenderState> renderData = itemBlockEntityRenderState.renderData;

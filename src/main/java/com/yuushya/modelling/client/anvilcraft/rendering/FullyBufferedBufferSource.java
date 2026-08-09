@@ -51,7 +51,7 @@ public class FullyBufferedBufferSource extends MultiBufferSource.BufferSource im
     }
 
     public boolean isEmpty() {
-        return !bufferBuilders.isEmpty() && bufferBuilders.values().stream().noneMatch(it -> it.vertices > 0);
+        return bufferBuilders.isEmpty() || bufferBuilders.values().stream().noneMatch(it -> it.vertices > 0);
     }
 
     @Override
