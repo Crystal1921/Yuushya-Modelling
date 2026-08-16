@@ -8,7 +8,6 @@ import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.showblock.EditScreen;
-import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.AbstractColorScreen;
@@ -528,10 +527,14 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .initial(ROT_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(5, 10), leftColumnWidth(), PER_HEIGHT).build();
 
+        double scaleBound = 10.0;
         choose(SCALE_X).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -scaleBound,
+                                () -> scaleBound,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    // 防止输入 0 或浮点误差内的近似 0，回退为 1.0
+                                    if (Math.abs(number) <= 0.001) number = 1.0;
                                     updateTransformDataClient(SCALE_X, number);
                                     updateTransformDataClient(SCALE_Y, number);
                                     updateTransformDataClient(SCALE_Z, number);
@@ -554,9 +557,12 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
         chooseSize(SCALE_X).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -scaleBound,
+                                () -> scaleBound,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    // 防止输入 0 或浮点误差内的近似 0，回退为 1.0
+                                    if (Math.abs(number) <= 0.001) number = 1.0;
                                     updateTransformDataClient(SCALE_X, number);
                                     chooseSize(SCALE_X).editBox.setValue(String.valueOf(number));
                                     chooseSize(SCALE_X).sliderButton.setValidatedValue(number);
@@ -568,9 +574,12 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .bounds(leftColumnX(), top(0, 20), leftColumnWidth(), PER_HEIGHT).build();
 
         chooseSize(SCALE_Y).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -scaleBound,
+                                () -> scaleBound,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    // 防止输入 0 或浮点误差内的近似 0，回退为 1.0
+                                    if (Math.abs(number) <= 0.001) number = 1.0;
                                     updateTransformDataClient(SCALE_Y, number);
                                     chooseSize(SCALE_Y).editBox.setValue(String.valueOf(number));
                                     chooseSize(SCALE_Y).sliderButton.setValidatedValue(number);
@@ -582,9 +591,12 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .bounds(leftColumnX(), top(2, 20), leftColumnWidth(), PER_HEIGHT).build();
 
         chooseSize(SCALE_Z).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -scaleBound,
+                                () -> scaleBound,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    // 防止输入 0 或浮点误差内的近似 0，回退为 1.0
+                                    if (Math.abs(number) <= 0.001) number = 1.0;
                                     updateTransformDataClient(SCALE_Z, number);
                                     chooseSize(SCALE_Z).editBox.setValue(String.valueOf(number));
                                     chooseSize(SCALE_Z).sliderButton.setValidatedValue(number);
