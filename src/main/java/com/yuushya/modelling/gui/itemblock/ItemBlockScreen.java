@@ -9,7 +9,6 @@ import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.showblock.EditScreen;
-import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.AbstractColorScreen;
@@ -517,14 +516,19 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .initial(ItemTransformType.ROT_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(5, 10), leftColumnWidth(), PER_HEIGHT).build();
 
+        double[] scaleRange = new double[]{Math.max(10.0, Math.max(Math.abs(blockEntity.getTransformData(slot).scales.x()), Math.max(Math.abs(blockEntity.getTransformData(slot).scales.y()), Math.abs(blockEntity.getTransformData(slot).scales.z()))))};
         choose(ItemTransformType.SCALE_X).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -scaleRange[0],
+                                () -> scaleRange[0],
+                                () -> 0.1,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    if (Math.abs(number) < 1.0E-6) number = 1.0; // 非0，浮点精度误差内归零
                                     updateTransformDataClient(ItemTransformType.SCALE_X, number);
                                     updateTransformDataClient(ItemTransformType.SCALE_Y, number);
                                     updateTransformDataClient(ItemTransformType.SCALE_Z, number);
                                     choose(ItemTransformType.SCALE_X).sliderButton.setValidatedValue(number);
+                                    scaleRange[0] = Math.max(scaleRange[0], Math.abs(number));
                                     choose(ItemTransformType.POS_X).sliderButton.setValidatedValue(choose(ItemTransformType.POS_X).sliderButton.getValidatedValue());
                                     choose(ItemTransformType.POS_Y).sliderButton.setValidatedValue(choose(ItemTransformType.POS_Y).sliderButton.getValidatedValue());
                                     choose(ItemTransformType.POS_Z).sliderButton.setValidatedValue(choose(ItemTransformType.POS_Z).sliderButton.getValidatedValue());
@@ -542,13 +546,18 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .initial(ItemTransformType.LIT.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
 
+        double[] sizeScaleRangeX = new double[]{Math.max(10.0, Math.abs(blockEntity.getTransformData(slot).scales.x()))};
         chooseSize(ItemTransformType.SCALE_X).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -sizeScaleRangeX[0],
+                                () -> sizeScaleRangeX[0],
+                                () -> 0.1,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    if (Math.abs(number) < 1.0E-6) number = 1.0; // 非0，浮点精度误差内归零
                                     updateTransformDataClient(ItemTransformType.SCALE_X, number);
                                     chooseSize(ItemTransformType.SCALE_X).editBox.setValue(String.valueOf(number));
                                     chooseSize(ItemTransformType.SCALE_X).sliderButton.setValidatedValue(number);
+                                    sizeScaleRangeX[0] = Math.max(sizeScaleRangeX[0], Math.abs(number));
                                     choose(ItemTransformType.POS_X).sliderButton.setValidatedValue(choose(ItemTransformType.POS_X).sliderButton.getValidatedValue());
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
@@ -556,13 +565,18 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .initial(ItemTransformType.SCALE_X.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(0, 20), leftColumnWidth(), PER_HEIGHT).build();
 
+        double[] sizeScaleRangeY = new double[]{Math.max(10.0, Math.abs(blockEntity.getTransformData(slot).scales.y()))};
         chooseSize(ItemTransformType.SCALE_Y).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -sizeScaleRangeY[0],
+                                () -> sizeScaleRangeY[0],
+                                () -> 0.1,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    if (Math.abs(number) < 1.0E-6) number = 1.0; // 非0，浮点精度误差内归零
                                     updateTransformDataClient(ItemTransformType.SCALE_Y, number);
                                     chooseSize(ItemTransformType.SCALE_Y).editBox.setValue(String.valueOf(number));
                                     chooseSize(ItemTransformType.SCALE_Y).sliderButton.setValidatedValue(number);
+                                    sizeScaleRangeY[0] = Math.max(sizeScaleRangeY[0], Math.abs(number));
                                     choose(ItemTransformType.POS_Y).sliderButton.setValidatedValue(choose(ItemTransformType.POS_Y).sliderButton.getValidatedValue());
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))
@@ -570,13 +584,18 @@ public class ItemBlockScreen extends AbstractColorScreen {
                         .initial(ItemTransformType.SCALE_Y.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(2, 20), leftColumnWidth(), PER_HEIGHT).build();
 
+        double[] sizeScaleRangeZ = new double[]{Math.max(10.0, Math.abs(blockEntity.getTransformData(slot).scales.z()))};
         chooseSize(ItemTransformType.SCALE_Z).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -sizeScaleRangeZ[0],
+                                () -> sizeScaleRangeZ[0],
+                                () -> 0.1,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    if (Math.abs(number) < 1.0E-6) number = 1.0; // 非0，浮点精度误差内归零
                                     updateTransformDataClient(ItemTransformType.SCALE_Z, number);
                                     chooseSize(ItemTransformType.SCALE_Z).editBox.setValue(String.valueOf(number));
                                     chooseSize(ItemTransformType.SCALE_Z).sliderButton.setValidatedValue(number);
+                                    sizeScaleRangeZ[0] = Math.max(sizeScaleRangeZ[0], Math.abs(number));
                                     choose(ItemTransformType.POS_Z).sliderButton.setValidatedValue(choose(ItemTransformType.POS_Z).sliderButton.getValidatedValue());
                                 })
                         .text((caption, number) -> Component.translatable("gui.yuushya.itemBlockScreen.scale_text", String.format("%05.1f", number)))

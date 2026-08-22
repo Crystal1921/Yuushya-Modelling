@@ -101,7 +101,9 @@ public final class ItemTransformComponent {
                 doubleValidateRange.setMaxInclusiveSupplier(() -> finalNumber);
             }
         }
-        sliderButton.setValidatedValue(number);
+        // 更新滑条位置并直接触发回调，保证点√后立即生效（不依赖滑条位置是否变化）
+        sliderButton.setInitialValidatedValue(number);
+        sliderButton.applyValidatedValue(number);
         setEditBoxInitial();
     }
 

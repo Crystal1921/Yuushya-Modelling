@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 public class PosTransItem extends AbstractMultiPurposeToolItem {
     public static double getMaxPos(double scale){
         if (scale == 0.0) scale = 1.0;
+        scale = Math.abs(scale); // 负 scale 与正 scale 同等处理，避免产生负范围/除零
         return (scale < 1) ? Math.ceil((8 + 16)/scale) - 8 : Math.ceil(16/scale);
     }
     public static double getStep(double max){
