@@ -6,7 +6,6 @@ import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
-import com.yuushya.modelling.gui.validate.DividedDoubleRange;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.BlockStateIconList;
@@ -424,16 +423,21 @@ public class ShowBlockScreen extends Screen {
                         .initial(ROT_Z.extract(blockEntity, slot))
                         .bounds(leftColumnX(), top(5, 10), leftColumnWidth(), PER_HEIGHT).build();
 
+        double[] scaleRange = new double[]{Math.max(10.0, Math.abs(blockEntity.getTransformData(slot).scales.x))};
         choose(SCALE_X).sliderButton =
-                DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,
+                LazyDoubleRange.buttonBuilder(Component.empty(),
+                                () -> -scaleRange[0],
+                                () -> scaleRange[0],
+                                () -> 0.1,
                                 (number) -> {
-                                    if (number == 0.0) number = 1.0;
+                                    if (Math.abs(number) < 1.0E-6) number = 1.0; // 非0，浮点精度误差内归零
                                     TransformBlockData transformData = blockEntity.getTransformData(slot);
                                     double oldScale = transformData.scales.x;
                                     updateTransformData(SCALE_X, number);
                                     updateTransformData(SCALE_Y, number);
                                     updateTransformData(SCALE_Z, number);
                                     choose(SCALE_X).sliderButton.setValidatedValue(number);
+                                    scaleRange[0] = Math.max(scaleRange[0], Math.abs(number));
                                     if (oldScale != 0.0 && oldScale != number) {
                                         double ratio = oldScale / number;
                                         double newPosX = transformData.pos.x * ratio;

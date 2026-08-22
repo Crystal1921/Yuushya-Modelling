@@ -83,6 +83,11 @@ public class SliderButton<T extends Comparable<T>> extends AbstractSliderButton 
         this.updateMessage();
     }
 
+    public void applyValidatedValue(T value){
+        T object = this.validateRange.validateValue(value).orElseGet(() -> this.initialValue);
+        this.onValueChanged.accept(object);
+    }
+
     public T getValidatedValue(){
         return this.validateRange.fromSliderValue(this.value);
     }
