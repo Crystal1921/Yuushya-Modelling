@@ -7,11 +7,13 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.AddSectionGeometryEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.extensions.IBlockEntityRendererExtension;
@@ -21,10 +23,14 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL46;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 /**
  * @author ZhuRuoLing
@@ -33,9 +39,10 @@ import java.util.Queue;
 public class CachedBlockEntityRenderingPipeline {
     @Nullable
     private static CachedBlockEntityRenderingPipeline instance;
-    private final ClientLevel level;
+    final ClientLevel level;
     private final Queue<Runnable> pendingCompiles = new ArrayDeque<>();
     private final Queue<Runnable> pendingUploads = new ArrayDeque<>();
+    private final Set<ChunkPos> dirtyChunks = new HashSet<>();
     private final Map<ChunkPos, CachedRenderingChunk> regions = new HashMap<>();
     private boolean valid = true;
     private static Vec3 cameraOldPosition = null;
@@ -64,6 +71,17 @@ public class CachedBlockEntityRenderingPipeline {
     }
 
     public void runTasks() {
+        if (dirtyChunks.isEmpty()) return;
+        var chunksToRebuild = List.copyOf(dirtyChunks);
+        dirtyChunks.clear();
+
+        for (ChunkPos chunkPos : chunksToRebuild) {
+            CachedRenderingChunk chunk = regions.get(chunkPos);
+            if (chunk != null) {
+                chunk.submitCompileTask();
+            }
+        }
+
         while (!pendingCompiles.isEmpty() && valid) {
             pendingCompiles.poll().run();
         }
@@ -92,8 +110,8 @@ public class CachedBlockEntityRenderingPipeline {
      */
     public void blockRemoved(BlockEntity be) {
         IBlockEntityRendererExtension<?> renderer = Minecraft.getInstance()
-                .getBlockEntityRenderDispatcher()
-                .getRenderer(be);
+            .getBlockEntityRenderDispatcher()
+            .getRenderer(be);
         if (renderer == null) return;
         ChunkPos chunkPos = ChunkPos.containing(be.getBlockPos());
         getRenderRegion(chunkPos).blockRemoved(be);
@@ -110,8 +128,8 @@ public class CachedBlockEntityRenderingPipeline {
      */
     public void update(BlockEntity be) {
         BlockEntityRenderer<?, ?> renderer = Minecraft.getInstance()
-                .getBlockEntityRenderDispatcher()
-                .getRenderer(be);
+            .getBlockEntityRenderDispatcher()
+            .getRenderer(be);
         if (renderer == null) return;
         ChunkPos chunkPos = ChunkPos.containing(be.getBlockPos());
         getRenderRegion(chunkPos).update(be);
@@ -147,7 +165,7 @@ public class CachedBlockEntityRenderingPipeline {
      * Retrieves the current instance of the CacheableBERenderingPipeline.
      *
      * @return The current instance of the CacheableBERenderingPipeline,
-     *         or null if there has no {@link ClientLevel} in current {@link Minecraft} client.
+     * or null if there has no {@link ClientLevel} in current {@link Minecraft} client.
      */
     @Nullable
     public static CachedBlockEntityRenderingPipeline getInstance() {
@@ -156,6 +174,12 @@ public class CachedBlockEntityRenderingPipeline {
 
     public void forcedUpdate(BlockPos pos) {
         getRenderRegion(ChunkPos.containing(pos)).forcedUpdate();
+    }
+
+    public void forcedUpdate() {
+        for (CachedRenderingChunk value : this.regions.values()) {
+            value.forcedUpdate();
+        }
     }
 
     @ApiStatus.Internal
@@ -175,6 +199,20 @@ public class CachedBlockEntityRenderingPipeline {
     public static void on(RenderFrameEvent.Pre event) {
         if (instance != null) {
             instance.handleIntegration();
+        }
+    }
+
+    @SubscribeEvent
+    public static void onSectionGeometry(AddSectionGeometryEvent event) {
+        if (instance == null) return;
+        instance.sectionRebuilt(event.getLevel(), event.getSectionOrigin());
+    }
+
+    private void sectionRebuilt(Level eventLevel, BlockPos sectionOrigin) {
+        if (eventLevel != level) return;
+        var chunk = level.getChunkAt(sectionOrigin);
+        synchronized (dirtyChunks) {
+            dirtyChunks.add(chunk.getPos());
         }
     }
 

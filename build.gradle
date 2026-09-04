@@ -67,6 +67,7 @@ neoForge {
             gameDirectory = project.file('run/client')
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'neoforge.disableGlValidation', 'true'
         }
 
         testClient {
@@ -75,6 +76,7 @@ neoForge {
             jvmArgument("-Dmixin.debug.export=true")
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'neoforge.disableGlValidation', 'true'
         }
 
         server {

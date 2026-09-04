@@ -17,9 +17,6 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * @author ZhuRuoLing

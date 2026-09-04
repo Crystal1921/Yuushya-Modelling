@@ -30,13 +30,13 @@ public abstract class LevelRendererMixin {
     @Nullable
     private ClientLevel level;
 
-    @Inject(
-            method = "compileSections",
-            at = @At("TAIL")
-    )
-    void recompileBlockEntities(Camera camera, CallbackInfo ci) {
-        CachedBlockEntityRenderingPipeline.getInstance().runTasks();
-    }
+//    @Inject(
+//            method = "compileSections",
+//            at = @At("TAIL")
+//    )
+//    void recompileBlockEntities(Camera camera, CallbackInfo ci) {
+//        CachedBlockEntityRenderingPipeline.getInstance().runTasks();
+//    }
 
 //    @Inject(
 //            method = "lambda$addMainPass$0",

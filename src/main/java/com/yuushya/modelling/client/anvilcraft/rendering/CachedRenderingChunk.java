@@ -3,6 +3,7 @@ package com.yuushya.modelling.client.anvilcraft.rendering;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.ScissorState;
@@ -224,6 +225,9 @@ public class CachedRenderingChunk implements VertexBufferHost {
         GpuTextureView colorTexture = RenderSystem.outputColorTextureOverride != null ? RenderSystem.outputColorTextureOverride : renderTarget.getColorTextureView();
         GpuTextureView depthTexture = renderTarget.useDepth ? (RenderSystem.outputDepthTextureOverride != null ? RenderSystem.outputDepthTextureOverride : renderTarget.getDepthTextureView()) : null;
 
+        Lighting lighting = this.minecraft.gameRenderer.getLighting();
+        lighting.setupFor(Lighting.Entry.LEVEL);
+        lighting.updateLevel(pipeline.level.dimensionType().cardinalLightType());
         //noinspection DataFlowIssue
         try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
             () -> "Immediate draw for " + renderType,
