@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_21",
+  "package": "com.yuushya.modelling.compat.mixins",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "yuushya.refmap.json",
+  "client": [
+    "CachedBlockEntityRenderingPipelineMixin",
+    "RebuildTaskMixin"
+  ],
+  "plugin": "com.yuushya.modelling.compat.mixins.ALRIntegrationCompatMixinPlugin"
+}

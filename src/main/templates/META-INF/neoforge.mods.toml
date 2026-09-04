@@ -18,6 +18,9 @@ description = '''
 [[mixins]]
 config="yuushya_modelling.mixins.json"
 
+[[mixins]]
+config="yuushya_modelling.compat.mixins.json"
+
 [[accessTransformers]]
 file="META-INF/accesstransformer.cfg"
 
