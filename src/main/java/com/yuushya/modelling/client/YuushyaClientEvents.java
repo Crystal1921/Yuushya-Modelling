@@ -1,6 +1,6 @@
 package com.yuushya.modelling.client;
 
-import com.yuushya.modelling.client.anvilcraft.rendering.CachedBlockEntityRenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -11,15 +11,15 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 public class YuushyaClientEvents {
     @SubscribeEvent
     public static void on(RenderFrameEvent.Pre event) {
-        if (CachedBlockEntityRenderingPipeline.getInstance() != null) {
-            CachedBlockEntityRenderingPipeline.getInstance().runTasks();
+        if (CachedBERenderingPipeline.getInstance() != null) {
+            CachedBERenderingPipeline.getInstance().runTasks();
         }
     }
 
     @SubscribeEvent
     public static void on(RenderLevelStageEvent.AfterOpaqueBlocks event) {
-        if (CachedBlockEntityRenderingPipeline.getInstance() != null) {
-            CachedBlockEntityRenderingPipeline.getInstance().render(
+        if (CachedBERenderingPipeline.getInstance() != null) {
+            CachedBERenderingPipeline.getInstance().render(
 //                event.getLevelRenderState().cameraRenderState.cullFrustum,
                 false
             );
@@ -28,8 +28,8 @@ public class YuushyaClientEvents {
 
     @SubscribeEvent
     public static void on(RenderLevelStageEvent.AfterTranslucentFeatures event) {
-        if (CachedBlockEntityRenderingPipeline.getInstance() != null) {
-            CachedBlockEntityRenderingPipeline.getInstance().render(
+        if (CachedBERenderingPipeline.getInstance() != null) {
+            CachedBERenderingPipeline.getInstance().render(
 //                event.getLevelRenderState().cameraRenderState.cullFrustum,
                 true
             );

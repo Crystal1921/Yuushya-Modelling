@@ -2,7 +2,7 @@ package com.yuushya.modelling.mixin.compat;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.yuushya.modelling.client.anvilcraft.rendering.CachedBlockEntityRenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
@@ -45,7 +45,7 @@ public class SodiumMixin {
             ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress,
             Operation<S> original) {
         if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
-            CachedBlockEntityRenderingPipeline.getInstance()
+            CachedBERenderingPipeline.getInstance()
                     .getRenderRegion(ChunkPos.containing(blockEntity.getBlockPos()))
                     .addIfPossible(blockEntity);
             return null;
@@ -61,7 +61,7 @@ public class SodiumMixin {
         Set<ChunkPos> safeSet = CachedModeClient.INSTANCE.safeSet;
         if (!safeSet.isEmpty()) {
             safeSet.forEach((chunkPos) -> {
-                CachedBlockEntityRenderingPipeline.getInstance().getRenderRegion(chunkPos).submitCompileTask();
+                CachedBERenderingPipeline.getInstance().getRenderRegion(chunkPos).submitCompileTask();
             });
             safeSet.clear();
         }

@@ -2,7 +2,7 @@ package com.yuushya.modelling.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.yuushya.modelling.client.anvilcraft.rendering.CachedBlockEntityRenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import com.yuushya.modelling.client.anvilcraft.rendering.CachedModeClient;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -59,7 +59,7 @@ public abstract class LevelRendererMixin {
     )
     <E extends BlockEntity, S extends BlockEntityRenderState> S wrapRenderBlockEntity(BlockEntityRenderDispatcher instance, E blockEntity, float partialTicks, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress, @Nullable Frustum frustum, Operation<S> original) {
         if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
-            CachedBlockEntityRenderingPipeline.getInstance().getRenderRegion(ChunkPos.containing(blockEntity.getBlockPos()))
+            CachedBERenderingPipeline.getInstance().getRenderRegion(ChunkPos.containing(blockEntity.getBlockPos()))
                     .addIfPossible(blockEntity);
             return null;
         }
@@ -75,7 +75,7 @@ public abstract class LevelRendererMixin {
         Set<ChunkPos> safeSet = CachedModeClient.INSTANCE.safeSet;
         if (!safeSet.isEmpty()) {
             safeSet.forEach((chunkPos) -> {
-                CachedBlockEntityRenderingPipeline.getInstance().getRenderRegion(chunkPos).submitCompileTask();
+                CachedBERenderingPipeline.getInstance().getRenderRegion(chunkPos).submitCompileTask();
             });
             safeSet.clear();
         }

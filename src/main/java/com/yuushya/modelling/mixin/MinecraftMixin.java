@@ -1,6 +1,6 @@
 package com.yuushya.modelling.mixin;
 
-import com.yuushya.modelling.client.anvilcraft.rendering.CachedBlockEntityRenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -16,7 +16,7 @@ public class MinecraftMixin {
             at = @At("HEAD")
     )
     void updateLevel(ClientLevel level, CallbackInfo ci) {
-        CachedBlockEntityRenderingPipeline.updateLevel(level);
+        CachedBERenderingPipeline.updateLevel(level);
     }
 
     @Inject(
@@ -24,6 +24,6 @@ public class MinecraftMixin {
         at = @At("RETURN")
     )
     private void onCreateInstance(GameConfig gameConfig, CallbackInfo ci) {
-        CachedBlockEntityRenderingPipeline.create();
+        CachedBERenderingPipeline.create();
     }
 }

@@ -9,7 +9,11 @@
   "refmap": "yuushya.refmap.json",
   "client": [
     "CachedBlockEntityRenderingPipelineMixin",
+    "OuterWrappedRenderTypeAccess",
     "RebuildTaskMixin"
   ],
-  "plugin": "com.yuushya.modelling.compat.mixins.ALRIntegrationCompatMixinPlugin"
+  "plugin": "com.yuushya.modelling.compat.mixins.ALRIntegrationCompatMixinPlugin",
+  "mixins": [
+    "CachedChunkMixin"
+  ]
 }

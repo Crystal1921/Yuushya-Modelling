@@ -1,6 +1,6 @@
 package com.yuushya.modelling.compat.mixins;
 
-import com.yuushya.modelling.client.anvilcraft.rendering.CachedBlockEntityRenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import com.yuushya.modelling.compat.IrisSupport;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(CachedBlockEntityRenderingPipeline.class)
+@Mixin(CachedBERenderingPipeline.class)
 public abstract class CachedBlockEntityRenderingPipelineMixin {
 
     @Shadow

@@ -23,7 +23,6 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL46;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,14 +35,14 @@ import java.util.Set;
  * @author ZhuRuoLing
  */
 @EventBusSubscriber(Dist.CLIENT)
-public class CachedBlockEntityRenderingPipeline {
+public class CachedBERenderingPipeline {
     @Nullable
-    private static CachedBlockEntityRenderingPipeline instance;
+    private static CachedBERenderingPipeline instance;
     final ClientLevel level;
     private final Queue<Runnable> pendingCompiles = new ArrayDeque<>();
     private final Queue<Runnable> pendingUploads = new ArrayDeque<>();
     private final Set<ChunkPos> dirtyChunks = new HashSet<>();
-    private final Map<ChunkPos, CachedRenderingChunk> regions = new HashMap<>();
+    private final Map<ChunkPos, CachedRegion> regions = new HashMap<>();
     private boolean valid = true;
     private static Vec3 cameraOldPosition = null;
     @Getter
@@ -57,16 +56,16 @@ public class CachedBlockEntityRenderingPipeline {
         }
     }
 
-    public CachedRenderingChunk getRenderRegion(ChunkPos chunkPos) {
+    public CachedRegion getRenderRegion(ChunkPos chunkPos) {
         if (regions.containsKey(chunkPos)) {
             return regions.get(chunkPos);
         }
-        CachedRenderingChunk region = new CachedRenderingChunk(chunkPos, this);
+        CachedRegion region = new CachedRegion(chunkPos, this);
         regions.put(chunkPos, region);
         return region;
     }
 
-    public CachedBlockEntityRenderingPipeline(ClientLevel level) {
+    public CachedBERenderingPipeline(ClientLevel level) {
         this.level = level;
     }
 
@@ -76,7 +75,7 @@ public class CachedBlockEntityRenderingPipeline {
         dirtyChunks.clear();
 
         for (ChunkPos chunkPos : chunksToRebuild) {
-            CachedRenderingChunk chunk = regions.get(chunkPos);
+            CachedRegion chunk = regions.get(chunkPos);
             if (chunk != null) {
                 chunk.submitCompileTask();
             }
@@ -99,7 +98,7 @@ public class CachedBlockEntityRenderingPipeline {
         if (instance != null) {
             instance.releaseBuffers();
         }
-        instance = new CachedBlockEntityRenderingPipeline(level);
+        instance = new CachedBERenderingPipeline(level);
     }
 
     /**
@@ -147,12 +146,12 @@ public class CachedBlockEntityRenderingPipeline {
      * Releases all buffers in use and mark current pipeline instance as invalid.
      */
     public void releaseBuffers() {
-        regions.values().forEach(CachedRenderingChunk::releaseBuffers);
+        regions.values().forEach(CachedRegion::releaseBuffers);
         valid = false;
     }
 
     public void render(boolean translucent) {
-        for (CachedRenderingChunk value : regions.values()) {
+        for (CachedRegion value : regions.values()) {
             value.render(translucent);
         }
     }
@@ -168,7 +167,7 @@ public class CachedBlockEntityRenderingPipeline {
      * or null if there has no {@link ClientLevel} in current {@link Minecraft} client.
      */
     @Nullable
-    public static CachedBlockEntityRenderingPipeline getInstance() {
+    public static CachedBERenderingPipeline getInstance() {
         return instance;
     }
 
@@ -177,7 +176,7 @@ public class CachedBlockEntityRenderingPipeline {
     }
 
     public void forcedUpdate() {
-        for (CachedRenderingChunk value : this.regions.values()) {
+        for (CachedRegion value : this.regions.values()) {
             value.forcedUpdate();
         }
     }

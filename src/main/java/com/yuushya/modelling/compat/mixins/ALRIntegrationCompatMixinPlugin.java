@@ -24,6 +24,10 @@ public class ALRIntegrationCompatMixinPlugin implements IMixinConfigPlugin {
                 "com.yuushya.modelling.compat.mixins.RebuildTaskMixin",
                 isPresent("iris")
             )
+            .put(
+                "com.yuushya.modelling.compat.mixins.CachedChunkMixin",
+                isPresent("iris")
+            )
             .build();
     }
 
