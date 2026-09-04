@@ -1,7 +1,8 @@
 package com.yuushya.modelling.mixin;
 
-import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,6 +16,14 @@ public class MinecraftMixin {
             at = @At("HEAD")
     )
     void updateLevel(ClientLevel level, CallbackInfo ci) {
-        CacheableBERenderingPipeline.updateLevel(level);
+        CachedBERenderingPipeline.updateLevel(level);
+    }
+
+    @Inject(
+        method = "<init>",
+        at = @At("RETURN")
+    )
+    private void onCreateInstance(GameConfig gameConfig, CallbackInfo ci) {
+        CachedBERenderingPipeline.create();
     }
 }

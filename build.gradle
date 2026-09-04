@@ -67,6 +67,7 @@ neoForge {
             gameDirectory = project.file('run/client')
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'neoforge.disableGlValidation', 'true'
         }
 
         testClient {
@@ -75,6 +76,7 @@ neoForge {
             jvmArgument("-Dmixin.debug.export=true")
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'neoforge.disableGlValidation', 'true'
         }
 
         server {
@@ -137,6 +139,9 @@ dependencies {
 
     compileOnly "net.caffeinemc:sodium-neoforge-mod:0.8.12+mc26.1.2"
 //    implementation "maven.modrinth:iris:1.10.9+26.1-neoforge"
+
+    compileOnly("maven.modrinth:AANobbMI:775xoFNg") // sodium mc26.1.2-0.8.12-neoforge
+    compileOnly("maven.modrinth:YL57xq9U:YEGDGnJM") // iris 1.10.9+26.1-neoforge
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

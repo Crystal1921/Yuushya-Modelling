@@ -3,7 +3,7 @@ package com.yuushya.modelling.blockentity.itemblock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
-import com.yuushya.modelling.client.anvilcraft.rendering.CacheableBERenderingPipeline;
+import com.yuushya.modelling.client.anvilcraft.rendering.CachedBERenderingPipeline;
 import com.yuushya.modelling.gui.engrave.EngraveItemResult;
 import com.yuushya.modelling.registries.BlockEntityRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
@@ -97,7 +97,7 @@ public class ItemBlockEntity extends AbstractTransformBlockEntity implements ITr
 
     public void setRemoved() {
         if (this.level != null && this.level.isClientSide()) {
-            CacheableBERenderingPipeline.getInstance().blockRemoved(this);
+            CachedBERenderingPipeline.getInstance().blockRemoved(this);
             if (!this.isEmpty()) {
                 String res = ShareUtils.transferItems(this.getTransformData());
                 ShareUtils.ShareItemInformation information = ShareUtils.fromItems(res);

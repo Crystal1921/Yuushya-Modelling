@@ -27,7 +27,7 @@ public class ChunkEventListener {
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!event.getLevel().isClientSide()) return;
         LevelChunk chunk = event.getChunk();
-        CacheableBERenderingPipeline pipeline = CacheableBERenderingPipeline.getInstance();
+        CachedBERenderingPipeline pipeline = CachedBERenderingPipeline.getInstance();
         if (pipeline == null) return;
         for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
             if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
@@ -41,7 +41,7 @@ public class ChunkEventListener {
     public static void onChunkUnload(ChunkEvent.Unload event) {
         if (!event.getLevel().isClientSide()) return;
         LevelChunk chunk = event.getChunk();
-        CacheableBERenderingPipeline pipeline = CacheableBERenderingPipeline.getInstance();
+        CachedBERenderingPipeline pipeline = CachedBERenderingPipeline.getInstance();
         if (pipeline == null) return;
         for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
             if (CachedModeClient.INSTANCE.isCachedModeEnabledOn(blockEntity)) {
