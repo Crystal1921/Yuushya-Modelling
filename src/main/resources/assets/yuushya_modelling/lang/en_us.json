@@ -256,5 +256,7 @@
   "item.yuushya.circle_hollow_0": "Hollow Circle",
   "item.yuushya.circle_hollow_1": "Small Hollow Circle",
 
-  "command.yuushya_modelling.reload_succeed": "Modellings reloaded successfully"
+  "command.yuushya_modelling.reload_succeed": "Modellings reloaded successfully",
+
+  "gui.yuushya.transformDrag.hint": "Drag %s  ·  LMB = move  RMB = rotate  ·  Shift = fine  Esc = cancel"
 }

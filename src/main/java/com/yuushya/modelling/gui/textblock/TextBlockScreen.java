@@ -260,6 +260,7 @@ public class TextBlockScreen extends AbstractTransformScreen<TextTransformType, 
         double posZ = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.z()), Math.abs(blockEntity.getTransformData(slot).pos.z()));
         addTransformRows(List.of(POS_X, POS_Y, POS_Z), List.of(ROT_X, ROT_Y, ROT_Z),
                 "gui.yuushya.showBlockScreen.", "block.yuushya.showblock.", posX, posY, posZ);
+        setScaleTypes(List.of(SCALE_X, SCALE_Y, SCALE_Z));
 
         choose(SCALE_X).sliderButton =
                 DividedDoubleRange.buttonBuilder(Component.empty(), 0.0, 1.0, 10.0,

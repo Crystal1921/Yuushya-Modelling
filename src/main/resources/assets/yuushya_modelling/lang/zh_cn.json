@@ -282,5 +282,7 @@
   "item.yuushya.circle_hollow_0": "圆环",
   "item.yuushya.circle_hollow_1": "圆环（小）",
 
-  "command.yuushya_modelling.reload_succeed": "建模作品重载成功"
+  "command.yuushya_modelling.reload_succeed": "建模作品重载成功",
+
+  "gui.yuushya.transformDrag.hint": "拖动轴 %s  ·  左键 = 平移  右键 = 旋转  ·  Shift = 微调  Esc = 取消"
 }
