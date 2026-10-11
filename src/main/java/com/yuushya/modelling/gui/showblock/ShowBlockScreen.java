@@ -7,8 +7,6 @@ import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.gui.AbstractTransformScreen;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
-import com.yuushya.modelling.gui.validate.DoubleRange;
-import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.widget.BlockStateIconList;
 import com.yuushya.modelling.gui.widget.TransformComponent;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
@@ -23,7 +21,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -32,7 +29,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.RandomSource;
-import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -44,7 +40,6 @@ import java.util.*;
 
 import static com.yuushya.modelling.blockentity.transformData.TransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
-import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 
 public class ShowBlockScreen extends AbstractTransformScreen<TransformType, ShowBlockEntity> {
     private static final RandomSource random = RandomSource.create();
@@ -104,6 +99,34 @@ public class ShowBlockScreen extends AbstractTransformScreen<TransformType, Show
     protected void sendSuccess(BlockPos pos) {
         TransformDataOncePacket.sendToServerSideSuccess(pos);
     }
+
+    @Override
+    protected ShareController shareController() {
+        return this.share;
+    }
+
+    private final ShareController share = new ShareController() {
+        @Override
+        public String serialize() {
+            return ShareUtils.transfer(blockEntity.getTransformData());
+        }
+
+        @Override
+        public void load(String clipboard) {
+            ShareUtils.ShareBlockInformation shareBlockInformation = ShareUtils.from(clipboard);
+            if (shareBlockInformation.blocks().isEmpty()) {
+                throw new IllegalArgumentException("No block data found");
+            }
+            checkModLack(shareBlockInformation);
+            updateAllTransformData(shareBlockInformation);
+            updateStateButtonVisible(true);
+        }
+
+        @Override
+        public void save(String name) throws IOException {
+            EngraveBlockResultLoader.saveBlock(ShareUtils.transfer(blockEntity.getTransformData()), name);
+        }
+    };
 
     @Override
     protected void onSlotChanged() {
@@ -171,84 +194,12 @@ public class ShowBlockScreen extends AbstractTransformScreen<TransformType, Show
                 .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.display.replace")))
                 .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
 
-        shownStateButton = CycleButton.booleanBuilder(
-                        Component.literal("🕶"),//Component.translatable("gui.showBlockScreen.display.on"),
-                        Component.literal("👀"))//Component.translatable("gui.showBlockScreen.display.off"))
-                .displayOnlyValue()
-                .withInitialValue(true)
-                .withTooltip((on) -> Tooltip.create(on ? Component.translatable("gui.showBlockScreen.display.on") : Component.translatable("gui.showBlockScreen.display.off")))
-                .create(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH + RIGHT_BAR_WIDTH, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT, Component.empty(),
-                        (btn, bl) -> updateTransformDataClient(SHOWN, bl ? 1.0 : 0.0)
-                );
+        shownStateButton = createShownButton(SHOWN, RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3);
 
 
-        //Component.translatable("gui.showBlockScreen.workshop.copy"),
-        Button copyButton = Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.copy"),
-                        (btn) -> {
-                            String res = ShareUtils.transfer(blockEntity.getTransformData());
-                            setClipboard(res);
-                            this.minecraft.getToasts().addToast(
-                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.copy_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
-                            );
-                        }
-                )
-                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.copy")))
-                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3 + 40, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
-
-        //Component.translatable("gui.showBlockScreen.workshop.paste"),
-        Button parseButton = Button.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),//Component.translatable("gui.showBlockScreen.workshop.paste"),
-                        (btn) -> {
-                            String string = getClipboard();
-                            try {
-                                ShareUtils.ShareBlockInformation shareBlockInformation = ShareUtils.from(string);
-                                if (shareBlockInformation.blocks().isEmpty()) {
-                                    this.minecraft.getToasts().addToast(
-                                            SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal("No block data found")));
-                                    return;
-                                }
-                                checkModLack(shareBlockInformation);
-                                updateAllTransformData(shareBlockInformation);
-                                updateStateButtonVisible(true);
-                                this.minecraft.getToasts().addToast(
-                                        new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.paste_pass"), null)
-                                );
-                            } catch (Exception e) {
-                                this.minecraft.getToasts().addToast(
-                                        SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.error"), Component.literal(e.getMessage()))
-                                );
-                            }
-                        }
-                )
-                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.paste")))
-                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3 + 60, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
-
-        Button saveButton = Button.builder(Component.literal("\uD83D\uDCBE").withStyle(ChatFormatting.BOLD),
-                        (btn) -> this.minecraft.setScreen(new EditScreen(this,
-                                Component.translatable("gui.showBlockScreen.workshop.save"),
-                                Component.translatable("gui.showBlockScreen.workshop.save.tip"),
-                                (string) -> {
-                                    if (string != null) {
-                                        String res = ShareUtils.transfer(blockEntity.getTransformData());
-                                        try {
-                                            EngraveBlockResultLoader.saveBlock(res, string);
-                                            this.minecraft.getToasts().addToast(
-                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.translatable("gui.showBlockScreen.workshop.save_pass"), Component.translatable("gui.showBlockScreen.workshop.share_hint"))
-                                            );
-                                        } catch (IOException e) {
-                                            this.minecraft.getToasts().addToast(
-                                                    SystemToast.multiline(this.minecraft, SystemToast.SystemToastId.PACK_LOAD_FAILURE, Component.translatable("gui.showBlockScreen.workshop.save_error"), Component.literal(e.getMessage()))
-                                            );
-                                        }
-                                        this.minecraft.setScreen(this);
-                                    } else {
-                                        this.minecraft.setScreen(this);
-                                    }
-                                },
-                                (string) -> true
-                        ))
-                )
-                .tooltip(Tooltip.create(Component.translatable("gui.showBlockScreen.workshop.save")))
-                .bounds(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4 + 60, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
+        Button copyButton = createCopyButton(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3 + 40);
+        Button parseButton = createPasteButton(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 3 + 60);
+        Button saveButton = createSaveButton(RIGHT_COLUMN_X + RIGHT_BAR_WIDTH * 4 + 60);
 
         blockStateList = new BlockStateIconList(this.minecraft, RIGHT_LIST_WIDTH, RIGHT_LIST_HEIGHT, RIGHT_COLUMN_X, RIGHT_LIST_TOP, RIGHT_LIST_WIDTH, RIGHT_LIST_PER_HEIGHT, this.blockEntity.getTransformData(), this);
 
@@ -281,158 +232,25 @@ public class ShowBlockScreen extends AbstractTransformScreen<TransformType, Show
                 .bounds(RIGHT_COLUMN_X + RIGHT_LIST_WIDTH / 2 * 3, RIGHT_STATE_PANEL_Y + PER_HEIGHT, SMALL_BUTTON_WIDTH, PER_HEIGHT)
                 .build();
 
-        CycleButton<BlockShape> shapeButton = CycleButton.builder(BlockShape::getSymbol)
-                .displayOnlyValue()
-                .withValues(BlockShape.values())
-                .withInitialValue(SHAPE.extractShape(blockEntity))
-                .create(leftColumnX() - 50, TOP, 40, PER_HEIGHT, Component.literal("shape"),
-                        (button, shape) -> updateTransformDataClient(SHAPE, (double) shape.ordinal()));
+        CycleButton<BlockShape> shapeButton = createShapeButton(SHAPE, SHAPE.extractShape(blockEntity));
 
-        modeButton = CycleButton.builder(Mode::getSymbol)
-                .displayOnlyValue()
-                .withValues(Mode.values())
-                .withInitialValue(Mode.SLIDER)
-                .withTooltip((mode) -> Tooltip.create(
-                        switch (mode) {
-                            case SLIDER -> Component.translatable("gui.showBlockScreen.mode.slider.tooltip");
-                            case FINE_TUNE -> Component.translatable("gui.showBlockScreen.mode.fine_tune.tooltip");
-                            case EDIT -> Component.translatable("gui.showBlockScreen.mode.edit.tooltip");
-                        }
-                ))
-                .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
-                        (btn, mode) -> {
-                            switch (mode) {
-                                case SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
-                                case EDIT, FINE_TUNE -> panel.values().forEach(TransformComponent::setSliderFineTune);
-                            }
-                            switch (mode) {
-                                case SLIDER, FINE_TUNE -> panel.values().forEach((it) -> it.triggerVisible(true));
-                                case EDIT -> panel.values().forEach((it) -> it.triggerVisible(false));
-                            }
-                        }
-                );
+        modeButton = createModeButton(Mode.values(), Mode.SLIDER, (btn, mode) -> {
+            switch (mode) {
+                case SLIDER -> applySliderMode(false, true);
+                case FINE_TUNE -> applySliderMode(true, true);
+                case EDIT -> applySliderMode(true, false);
+            }
+        });
 
         choose(SCALE_X); // 首先放置scala_x, 因为pos_x依赖于它
         double posX = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.x), Math.abs(blockEntity.getTransformData(slot).pos.x));
-        choose(POS_X).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                () -> -posX,
-                                () -> posX,
-                                () -> getStep(posX),
-                                (number) -> updateTransformDataClient(POS_X, number))
-                        .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
-                        .step(choose(POS_X).setStandardStep(0.0))
-                        .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.X);
-                            blockEntity.setShowPosAxis();
-                        })
-                        .initial(POS_X.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(0, 0), leftColumnWidth(), PER_HEIGHT).build();
-
         double posY = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.y), Math.abs(blockEntity.getTransformData(slot).pos.y));
-        choose(POS_Y).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                () -> -posY,
-                                () -> posY,
-                                () -> getStep(posY),
-                                (number) -> updateTransformDataClient(POS_Y, number))
-                        .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
-                        .step(choose(POS_Y).setStandardStep(0.0))
-                        .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Y);
-                            blockEntity.setShowPosAxis();
-                        })
-                        .initial(POS_Y.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(1, 0), leftColumnWidth(), PER_HEIGHT).build();
-
         double posZ = Math.max(getMaxPos(blockEntity.getTransformData(slot).scales.z), Math.abs(blockEntity.getTransformData(slot).pos.z));
-        choose(POS_Z).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.pos_text"),
-                                () -> -posZ,
-                                () -> posZ,
-                                () -> getStep(posZ),
-                                (number) -> updateTransformDataClient(POS_Z, number))
-                        .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
-                        .step(choose(POS_Z).setStandardStep(0.0))
-                        .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Z);
-                            blockEntity.setShowPosAxis();
-                        })
-                        .initial(POS_Z.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(2, 0), leftColumnWidth(), PER_HEIGHT).build();
-
-        choose(ROT_X).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"), 0.0, 360.0,
-                                (number) -> updateTransformDataClient(ROT_X, number))
-                        .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.x", String.format("%05.1f", number)).withStyle(ChatFormatting.DARK_RED)))
-                        .step(choose(ROT_X).setStandardStep(22.5))
-                        .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.X);
-                            blockEntity.setShowRotAxis();
-                        })
-                        .initial(ROT_X.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(3, 10), leftColumnWidth(), PER_HEIGHT).build();
-
-        choose(ROT_Y).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"), 0.0, 360.0,
-                                (number) -> updateTransformDataClient(ROT_Y, number))
-                        .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.y", String.format("%05.1f", number)).withStyle(ChatFormatting.GREEN)))
-                        .step(choose(ROT_Y).setStandardStep(22.5))
-                        .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Y);
-                            blockEntity.setShowRotAxis();
-                        })
-                        .initial(ROT_Y.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(4, 10), leftColumnWidth(), PER_HEIGHT).build();
-
-        choose(ROT_Z).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.rot_text"), 0.0, 360.0,
-                                (number) -> updateTransformDataClient(ROT_Z, number))
-                        .text((caption, number) -> Component.empty().append(caption).append(Component.translatable("block.yuushya.showblock.z", String.format("%05.1f", number)).withStyle(ChatFormatting.BLUE)))
-                        .step(choose(ROT_Z).setStandardStep(22.5))
-                        .onMouseOver((btn) -> {
-                            blockEntity.setShowAxis(Direction.Axis.Z);
-                            blockEntity.setShowRotAxis();
-                        })
-                        .initial(ROT_Z.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(5, 10), leftColumnWidth(), PER_HEIGHT).build();
-
-        double scaleBound = 10.0;
-        choose(SCALE_X).sliderButton =
-                LazyDoubleRange.buttonBuilder(Component.empty(),
-                                () -> -scaleBound,
-                                () -> scaleBound,
-                                (number) -> {
-                                    // 防止输入 0 或浮点误差内的近似 0，回退为 1.0
-                                    if (Math.abs(number) <= 0.001) number = 1.0;
-                                    updateTransformDataClient(SCALE_X, number);
-                                    updateTransformDataClient(SCALE_Y, number);
-                                    updateTransformDataClient(SCALE_Z, number);
-                                    choose(SCALE_X).sliderButton.setValidatedValue(number);
-                                    choose(POS_X).sliderButton.setValidatedValue(choose(POS_X).sliderButton.getValidatedValue());
-                                    choose(POS_Y).sliderButton.setValidatedValue(choose(POS_Y).sliderButton.getValidatedValue());
-                                    choose(POS_Z).sliderButton.setValidatedValue(choose(POS_Z).sliderButton.getValidatedValue());
-                                })
-                        .text((caption, number) -> Component.translatable("gui.yuushya.showBlockScreen.scale_text", String.format("%05.1f", number)))
-                        .step(choose(SCALE_X).setStandardStep(0.1))
-                        .initial(SCALE_X.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(6, 20), leftColumnWidth(), PER_HEIGHT).build();
-
-        choose(LIT).sliderButton =
-                DoubleRange.buttonBuilder(Component.translatable("gui.yuushya.showBlockScreen.brightness_text"), 0.0, 15.0,
-                                (number) -> updateTransformDataClient(LIT, number))
-                        .text(LazyDoubleRange::captionToString)
-                        .step(choose(LIT).setStandardStep(1))
-                        .initial(LIT.extract(blockEntity, slot))
-                        .bounds(leftColumnX(), top(7, 30), leftColumnWidth(), PER_HEIGHT).build();
-
-        choose(POS_X).decoration(Component.translatable("block.yuushya.showblock.x", "").withStyle(ChatFormatting.DARK_RED));
-        choose(POS_Y).decoration(Component.translatable("block.yuushya.showblock.y", "").withStyle(ChatFormatting.GREEN));
-        choose(POS_Z).decoration(Component.translatable("block.yuushya.showblock.z", "").withStyle(ChatFormatting.BLUE));
-        choose(ROT_X).decoration(Component.translatable("block.yuushya.showblock.x", "").withStyle(ChatFormatting.DARK_RED));
-        choose(ROT_Y).decoration(Component.translatable("block.yuushya.showblock.y", "").withStyle(ChatFormatting.GREEN));
-        choose(ROT_Z).decoration(Component.translatable("block.yuushya.showblock.z", "").withStyle(ChatFormatting.BLUE));
-        choose(SCALE_X).decoration(Component.translatable("gui.yuushya.showBlockScreen.scale_text", ""));
+        addTransformRows(List.of(POS_X, POS_Y, POS_Z), List.of(ROT_X, ROT_Y, ROT_Z),
+                "gui.yuushya.showBlockScreen.", "block.yuushya.showblock.", posX, posY, posZ);
+        addUniformScaleRow(List.of(SCALE_X, SCALE_Y, SCALE_Z), List.of(POS_X, POS_Y, POS_Z),
+                Component.empty(), "gui.yuushya.showBlockScreen.scale_text", 6, 10.0);
+        addBrightnessRow(LIT, Component.translatable("gui.yuushya.showBlockScreen.brightness_text"), 7);
 
         registerPanelWidgets();
         this.addRenderableWidget(modeButton);
@@ -537,17 +355,7 @@ public class ShowBlockScreen extends AbstractTransformScreen<TransformType, Show
         TransformDataOncePacket.sendToServerSide(pos, slot, SHOWN, data.isShown ? 1 : 0);
     }
 
-    private String getClipboard() {
-        return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
-    }
-
-    private void setClipboard(String clipboardValue) {
-        if (this.minecraft != null) {
-            TextFieldHelper.setClipboardContents(this.minecraft, clipboardValue);
-        }
-    }
-
-    public enum Mode implements StringRepresentable {
+    public enum Mode implements ScreenMode {
         SLIDER("slider"), FINE_TUNE("fine_tune"), EDIT("edit");
 
         private final String name;
@@ -557,6 +365,11 @@ public class ShowBlockScreen extends AbstractTransformScreen<TransformType, Show
         Mode(String name) {
             this.name = name;
             this.symbol = Component.translatable("gui.showBlockScreen.mode." + name);
+        }
+
+        @Override
+        public Component getTooltip() {
+            return Component.translatable("gui.showBlockScreen.mode." + name + ".tooltip");
         }
 
         @Override

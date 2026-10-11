@@ -5,106 +5,49 @@ import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
+public class TextIconList extends AbstractTransformIconList<TransformTextData, TextIconList.Entry> {
 
-    protected final List<TransformTextData> transformDataList;
-    protected final List<Entry> chosen = new ArrayList<>();
     protected final TextBlockScreen screen;
-    private int itemHeight;
-    private int itemWidth;
 
     public TextIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                         List<TransformTextData> transformDataList, TextBlockScreen textBlockScreen) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
-        this.transformDataList = transformDataList;
+        super(minecraft, width, height, x, y0, itemWidth, itemHeight, transformDataList);
         this.screen = textBlockScreen;
-        this.centerListVertically = false;
-        this.setRenderHeader(false, 0);
-        this.itemWidth = itemWidth;
-        this.itemHeight = itemHeight;
-        this.updateRenderList();
-    }
-
-    public void updateRenderList() {
-        this.clearEntries();
-        for (int i = 0; i < transformDataList.size(); i++) {
-            Entry entry = new Entry(this, i);
-            this.addEntry(entry);
-        }
-    }
-
-    public void addSlot() {
-        if (this.getSelected() != null && transformDataList.get(this.getSelected().slot).textLines.isEmpty()) {
-            return;
-        }
-        if (children().size() == transformDataList.size()) {
-            TextIconList.Entry entry = new TextIconList.Entry(this, transformDataList.size());
-            this.addEntry(entry);
-            this.setSelected(entry);
-        }
-    }
-
-    // getChosenOne returns the index of the last selected Entry
-    public int getChosenOne() {
-        if (!this.chosen.isEmpty()) {
-            return this.chosen.getLast().slot;
-        }
-        return -1;
     }
 
     @Override
-    public void setSelected(@Nullable TextIconList.Entry selected) {
-        super.setSelected(selected);
-        if (selected != null) {
-            this.screen.setSlot(selected.slot);
-        }
-    }
-
-    public void setSelectedSlot(int slot) {
-        this.setSelected(this.children().get(slot));
+    protected Entry createEntry(int slot) {
+        return new Entry(this, slot);
     }
 
     @Override
-    public int getRowWidth() {
-        return itemWidth;
+    protected TransformTextData defaultData() {
+        return new TransformTextData();
     }
 
     @Override
-    protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
+    protected boolean isSlotEmpty(int slot) {
+        return transformDataList.get(slot).textLines.isEmpty();
     }
 
-    public class Entry extends ObjectSelectionList.Entry<Entry> {
+    @Override
+    protected void selectSlot(int slot) {
+        this.screen.setSlot(slot);
+    }
 
-        private final TextIconList parent;
-        private final int slot;
-        private final Minecraft minecraft;
-        private boolean chosen = false;
+    public class Entry extends AbstractTransformIconList.Entry<TransformTextData, Entry> {
 
         public Entry(TextIconList parent, int slot) {
-            this.parent = parent;
-            this.minecraft = parent.minecraft;
-            this.slot = slot;
-        }
-
-        public TransformTextData getTransformData() {
-            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot) : new TransformTextData();
+            super(parent, slot);
         }
 
         public List<String> updateRenderTextLines() {
             return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot).textLines : new ArrayList<>();
-        }
-
-        public boolean updateRenderShown() {
-            return parent.transformDataList.size() <= slot || parent.transformDataList.get(slot).isShown;
         }
 
         @Override
@@ -159,24 +102,6 @@ public class TextIconList extends ObjectSelectionList<TextIconList.Entry> {
             if (updateRenderShown()) {
                 guiGraphics.fill(x, y, x + 3, y + itemHeight, 0x8000FF00);
             }
-        }
-
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            TextIconList.Entry previousSelected = this.parent.getSelected();
-            this.parent.setSelected(this);
-
-            if (previousSelected == this) {
-                if (this.chosen) {
-                    this.chosen = false;
-                    this.parent.chosen.remove(this);
-                } else {
-                    this.chosen = true;
-                    this.parent.chosen.add(this);
-                }
-            }
-
-            return true;
         }
 
         @Override

@@ -9,7 +9,6 @@ import com.yuushya.modelling.registries.ItemRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
@@ -24,37 +23,45 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 import static com.yuushya.modelling.utils.YuushyaUtils.PROPERTY_ENTRY_TO_STRING_FUNCTION;
 
-public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.Entry> {
+public class BlockStateIconList extends AbstractTransformIconList<TransformBlockData, BlockStateIconList.Entry> {
 
     //private static final Logger LOGGER = LogUtils.getLogger();
-    protected final List<TransformBlockData> transformDataList;
-    protected final List<Entry> chosen = new ArrayList<>();
     protected final ShowBlockScreen screen;
     private final Map<Integer, MutableComponent> rememberDisplayName = new HashMap<>();
     private final Map<Integer, List<String>> rememberBlockStateProperties = new HashMap<>();
     private final Map<Integer, ItemStack> rememberItemStack = new HashMap<>();
     private final Map<Integer, Collection<Property<?>>> rememberProperties = new HashMap<>();
-    private int itemHeight;
-    private int itemWidth;
 
     public BlockStateIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                               List<TransformBlockData> transformDataList, ShowBlockScreen showBlockScreen
     ) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
-        this.transformDataList = transformDataList;
+        super(minecraft, width, height, x, y0, itemWidth, itemHeight, transformDataList);
         this.screen = showBlockScreen;
-        this.centerListVertically = false;
-        this.setRenderHeader(false, 0);
-        this.itemWidth = itemWidth;
-        this.itemHeight = itemHeight;
-        this.updateRenderList();
+    }
+
+    @Override
+    protected Entry createEntry(int slot) {
+        return new Entry(this, slot);
+    }
+
+    @Override
+    protected TransformBlockData defaultData() {
+        return new TransformBlockData();
+    }
+
+    @Override
+    protected boolean isSlotEmpty(int slot) {
+        return transformDataList.get(slot).blockState.getBlock() == Blocks.AIR;
+    }
+
+    @Override
+    protected void selectSlot(int slot) {
+        this.screen.setSlot(slot);
     }
 
     public MutableComponent updateRenderDisplayName(BlockState blockState) {
@@ -84,58 +91,6 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
                 Block.stateById(id).getBlock().getStateDefinition().getProperties());
     }
 
-    @Override
-    public int getRowWidth() {
-        return itemWidth;
-    }
-
-    @Override
-    protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
-    }
-
-    public void updateRenderList() {
-        this.clearEntries();
-        for (int i = 0; i < transformDataList.size(); i++) {
-            this.addEntry(new Entry(this, i));
-        }
-        this.notifyListUpdated();
-    }
-
-    public void addSlot() {
-        if (this.getSelected() != null && transformDataList.get(this.getSelected().slot).blockState.getBlock() == Blocks.AIR) {
-            return;
-        }
-        if (children().size() == transformDataList.size()) {
-            Entry entry = new Entry(this, transformDataList.size());
-            this.addEntry(entry);
-            this.setSelected(entry);
-        }
-    }
-
-    private void notifyListUpdated() {
-    }
-
-    public void setSelectedSlot(int slot) {
-        this.setSelected(this.children().get(slot));
-    }
-
-    @Override
-    public void setSelected(@Nullable BlockStateIconList.Entry selected) {
-        super.setSelected(selected);
-        if (selected != null) {
-            this.screen.setSlot(selected.slot);
-        }
-    }
-
-
-    public int getChosenOne() {
-        if (!this.chosen.isEmpty()) {
-            return chosen.getLast().slot;
-        }
-        return -1;
-    }
-
     public void setChosenCurrent() {
         Entry selected = this.getSelected();
         if (selected != null) {
@@ -151,29 +106,14 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         this.chosen.clear();
     }
 
-    public static final class Entry extends ObjectSelectionList.Entry<Entry> {
-
-        private final BlockStateIconList parent;
-        private final int slot;
-        private final Minecraft minecraft;
-        private boolean chosen = false;
+    public final class Entry extends AbstractTransformIconList.Entry<TransformBlockData, Entry> {
 
         public Entry(BlockStateIconList parent, int slot) {
-            this.parent = parent;
-            this.minecraft = parent.minecraft;
-            this.slot = slot;
-        }
-
-        public TransformBlockData getTransformData() {
-            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot) : new TransformBlockData();
+            super(parent, slot);
         }
 
         public BlockState updateRenderState() {
             return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot).blockState : Blocks.AIR.defaultBlockState();
-        }
-
-        public boolean updateRenderShown() {
-            return parent.transformDataList.size() <= slot || parent.transformDataList.get(slot).isShown;
         }
 
         @Override
@@ -184,26 +124,9 @@ public class BlockStateIconList extends ObjectSelectionList<BlockStateIconList.E
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            Entry preSelected = this.parent.getSelected();
-            this.parent.setSelected(this);
-            if (preSelected == this) {
-                if (this.chosen) {
-                    this.chosen = false;
-                    this.parent.chosen.remove(this);
-                } else {
-                    this.chosen = true;
-                    this.parent.chosen.add(this);
-                }
-            }
-            //LOGGER.info("select "+this.slot);
-            return true;
-        }
-
-        @Override
         public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
             BlockState blockState = updateRenderState();
-            MutableComponent displayName = this.parent.updateRenderDisplayName(blockState);
+            MutableComponent displayName = BlockStateIconList.this.updateRenderDisplayName(blockState);
             Font font = this.minecraft.font;
             int fontHeight = font.lineHeight;
             guiGraphics.drawString(font, displayName, left + 3, top + 32, 0xFFFFFF, false);

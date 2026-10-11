@@ -8,94 +8,46 @@ import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Entry> {
+public class ItemStackIconList extends AbstractTransformIconList<TransformItemData, ItemStackIconList.Entry> {
 
-    protected final List<TransformItemData> transformDataList;
-    protected final List<Entry> chosen = new ArrayList<>();
     protected final ItemBlockScreen screen;
-    private int itemHeight;
-    private int itemWidth;
 
     public ItemStackIconList(Minecraft minecraft, int width, int height, int x, int y0, int itemWidth, int itemHeight,
                              List<TransformItemData> transformDataList, ItemBlockScreen itemBlockScreen) {
-        super(minecraft, width, height, y0, itemHeight);
-        this.setX(x);
-        this.transformDataList = transformDataList;
+        super(minecraft, width, height, x, y0, itemWidth, itemHeight, transformDataList);
         this.screen = itemBlockScreen;
-        this.centerListVertically = false;
-        this.setRenderHeader(false, 0);
-        this.itemWidth = itemWidth;
-        this.itemHeight = itemHeight;
-        this.updateRenderList();
-    }
-
-    public void updateRenderList() {
-        this.clearEntries();
-        for (int i = 0; i < transformDataList.size(); i++) {
-            Entry entry = new Entry(this, i);
-            this.addEntry(entry);
-        }
-    }
-
-    public void addSlot() {
-        if (this.getSelected() != null && transformDataList.get(this.getSelected().slot).itemStack.isEmpty()) {
-            return;
-        }
-        if (children().size() == transformDataList.size()) {
-            ItemStackIconList.Entry entry = new ItemStackIconList.Entry(this, transformDataList.size());
-            this.addEntry(entry);
-            this.setSelected(entry);
-        }
-    }
-
-    // getChosenOne 返回最后选中的 Entry 的 index
-    public int getChosenOne() {
-        if (!this.chosen.isEmpty()) {
-            return this.chosen.getLast().slot;
-        }
-        return -1;
     }
 
     @Override
-    public void setSelected(@Nullable ItemStackIconList.Entry selected) {
-        super.setSelected(selected);
-        if (selected != null) {
-            this.screen.setSlot(selected.slot);
-        }
-    }
-
-    public void setSelectedSlot(int slot) {
-        this.setSelected(this.children().get(slot));
+    protected Entry createEntry(int slot) {
+        return new Entry(this, slot);
     }
 
     @Override
-    public int getRowWidth() {
-        return itemWidth;
+    protected TransformItemData defaultData() {
+        return new TransformItemData();
     }
 
     @Override
-    protected int getScrollbarPosition() {
-        return this.getX() + this.getWidth() - 4;
+    protected boolean isSlotEmpty(int slot) {
+        return transformDataList.get(slot).itemStack.isEmpty();
     }
 
-    public class Entry extends ObjectSelectionList.Entry<Entry> {
+    @Override
+    protected void selectSlot(int slot) {
+        this.screen.setSlot(slot);
+    }
 
-        private final ItemStackIconList parent;
-        private final int slot;
-        private final Minecraft minecraft;
-        private boolean chosen = false;
+    public class Entry extends AbstractTransformIconList.Entry<TransformItemData, Entry> {
 
         // Animation state for the popup effect
         private boolean animating = false;
@@ -107,21 +59,11 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         private float cachedScaleZ = 1f;
 
         public Entry(ItemStackIconList parent, int slot) {
-            this.parent = parent;
-            this.minecraft = parent.minecraft;
-            this.slot = slot;
-        }
-
-        public TransformItemData getTransformData() {
-            return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot) : new TransformItemData();
+            super(parent, slot);
         }
 
         public ItemStack updateRenderState() {
             return (parent.transformDataList.size() > slot) ? parent.transformDataList.get(slot).itemStack : Items.AIR.getDefaultInstance();
-        }
-
-        public boolean updateRenderShown() {
-            return parent.transformDataList.size() <= slot || parent.transformDataList.get(slot).isShown;
         }
 
         private void startPopupAnimation() {
@@ -209,28 +151,10 @@ public class ItemStackIconList extends ObjectSelectionList<ItemStackIconList.Ent
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            ItemStackIconList.Entry previousSelected = this.parent.getSelected();
-            if(previousSelected != this){
-                // Start popup animation when clicked (indicate selection)
-                // setSelected above will call screen.setSlot(selected.slot) so the screen's current slot will be this.slot
-                startPopupAnimation();
-            }
-
-            this.parent.setSelected(this);
-
-            if (previousSelected == this) {
-                if (this.chosen) {
-                    this.chosen = false;
-                    this.parent.chosen.remove(this);
-                } else {
-                    this.chosen = true;
-                    this.parent.chosen.add(this);
-                }
-            }
-
-            //LOGGER.info("select "+this.slot);
-            return true;
+        protected void onFirstSelected() {
+            // Start popup animation when clicked (indicate selection);
+            // the base class then calls screen.setSlot(this.slot)
+            startPopupAnimation();
         }
 
         @Override
