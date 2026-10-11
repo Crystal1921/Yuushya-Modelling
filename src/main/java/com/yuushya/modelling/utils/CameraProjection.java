@@ -38,11 +38,6 @@ public final class CameraProjection {
         return System.nanoTime() - projectionStamp < MAX_AGE_NANOS;
     }
 
-    /** 投影矩阵距上次刷新的毫秒数（调试用）。 */
-    public static long projectionAgeMillis() {
-        return (System.nanoTime() - projectionStamp) / 1_000_000L;
-    }
-
     /**
      * 世界坐标 → NDC。世界坐标中 1 单位 = 1 个方块。
      *

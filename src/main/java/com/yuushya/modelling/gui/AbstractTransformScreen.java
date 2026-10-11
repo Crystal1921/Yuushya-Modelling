@@ -10,12 +10,9 @@ import com.yuushya.modelling.gui.validate.ValidateRange;
 import com.yuushya.modelling.gui.widget.AbstractColorScreen;
 import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.TransformComponent;
-import com.yuushya.modelling.utils.CameraProjection;
 import com.yuushya.modelling.utils.ClientMethod;
 import com.mojang.math.Axis;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -29,7 +26,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -421,9 +417,6 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
     /** 操作提示的持续时长。 */
     private static final long HINT_MILLIS = 4000L;
 
-    /** 调试覆盖层开关（F9）。默认关闭：仅在排查拖拽几何时开启。 */
-    private boolean debugOverlay = false;
-
     /** 手柄原点（方块局部坐标，1 单位 = 1 方块），与渲染器的 translateAfterScale + MIDDLE 一致。 */
     private float[] gizmoOrigin() {
         if (this.posTypes == null) {
@@ -535,10 +528,6 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
             dragController.cancel();
             return true;
         }
-        if (keyCode == GLFW.GLFW_KEY_F9) {
-            this.debugOverlay = !this.debugOverlay;
-            return true;
-        }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -590,111 +579,6 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         dragController.end();
         super.mouseReleased(mouseX, mouseY, button);
         return dragging;
-    }
-
-    /**
-     * 调试用（F9 开关）：把换算出的三条轴线段画在 GUI 上——它们应当与世界渲染器画出的三色轴线完全重合；
-     * 同时输出原点、端点像素坐标与鼠标到各线的距离。
-     */
-    private void renderDebugOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        if (!this.debugOverlay || !canDrag()) {
-            return;
-        }
-        AxisDragController.DebugSnapshot snapshot = dragController.debugSnapshot(mouseX, mouseY, this.width, this.height);
-        int left = 4;
-        if (!snapshot.projectionUsable()) {
-            guiGraphics.drawString(this.font, "gizmo: projection stale", left, left, 0xFFFF5555, true);
-            return;
-        }
-        float[] originLocal = gizmoOrigin();
-        float[] originWorld = toWorld(originLocal);
-        if (originLocal != null && originWorld != null) {
-            guiGraphics.drawString(this.font, String.format("local %.3f %.3f %.3f", originLocal[0], originLocal[1], originLocal[2]), left, left, 0xFFFFFFFF, true);
-            guiGraphics.drawString(this.font, String.format("world %.3f %.3f %.3f", originWorld[0], originWorld[1], originWorld[2]), left, left + 12 * 5, 0xFFFFFFFF, true);
-        }
-        guiGraphics.drawString(this.font, String.format("proj %dms  overWidget %b", CameraProjection.projectionAgeMillis(), isOverWidget(mouseX, mouseY)),
-                left, left + 12 * 6, 0xFFBBBBBB, true);
-        guiGraphics.drawString(this.font, cameraCheck(), left, left + 12 * 7, 0xFFBBBBBB, true);
-        // 独立验证：本方块的世界包围盒应当与世界里的方块严丝合缝
-        drawDebugBox(guiGraphics, this.blockEntity.getBlockPos(), 0xFF33E0E0);
-        if (snapshot.originPixels() != null) {
-            int x = Math.round(snapshot.originPixels()[0]);
-            int y = Math.round(snapshot.originPixels()[1]);
-            guiGraphics.fill(x - 4, y, x + 5, y + 1, 0xFFFFFFFF);
-            guiGraphics.fill(x, y - 4, x + 1, y + 5, 0xFFFFFFFF);
-        }
-        float[][] segments = snapshot.segments();
-        if (segments == null) {
-            guiGraphics.drawString(this.font, "gizmo: segments unavailable", left, left + 12, 0xFFFF5555, true);
-            return;
-        }
-        int[] colors = {0xFFFF5555, 0xFF55FF55, 0xFF5599FF};
-        for (int i = 0; i < 3; i++) {
-            float[] s = segments[i];
-            drawDebugLine(guiGraphics, s[0], s[1], s[2], s[3], colors[i]);
-            double distance = snapshot.distances() == null ? -1.0 : snapshot.distances()[i];
-            double length = Math.hypot(s[2] - s[0], s[3] - s[1]);
-            guiGraphics.drawString(this.font,
-                    String.format("%c (%.0f,%.0f)-(%.0f,%.0f) len=%.0f d=%.1f", "XYZ".charAt(i), s[0], s[1], s[2], s[3], length, distance),
-                    left, left + 12 * (i + 1), colors[i], true);
-        }
-        int picked = dragController.nearestAxis(mouseX, mouseY, this.width, this.height);
-        guiGraphics.drawString(this.font,
-                "picked " + (picked < 0 ? "-" : String.valueOf("XYZ".charAt(picked))),
-                left, left + 12 * 4, 0xFFFFFF55, true);
-    }
-
-    /** 世界坐标 → GUI 像素；投影不可用或点在相机后方时返回 {@code null}。 */
-    private float[] worldToScreen(double x, double y, double z) {
-        Vector3f ndc = CameraProjection.toNdc(x, y, z);
-        if (ndc == null) {
-            return null;
-        }
-        return new float[]{(ndc.x * 0.5F + 0.5F) * this.width, (1.0F - (ndc.y * 0.5F + 0.5F)) * this.height};
-    }
-
-    /** 调试用：把指定方块的世界包围盒画成线框。 */
-    private void drawDebugBox(GuiGraphics guiGraphics, BlockPos pos, int color) {
-        float[][] corners = new float[8][];
-        int[] xs = {0, 1, 1, 0, 0, 1, 1, 0};
-        int[] ys = {0, 0, 0, 0, 1, 1, 1, 1};
-        int[] zs = {0, 0, 1, 1, 0, 0, 1, 1};
-        for (int i = 0; i < corners.length; i++) {
-            corners[i] = worldToScreen(pos.getX() + xs[i], pos.getY() + ys[i], pos.getZ() + zs[i]);
-            if (corners[i] == null) {
-                return;
-            }
-        }
-        int[][] edges = {{0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}};
-        for (int[] edge : edges) {
-            drawDebugLine(guiGraphics, corners[edge[0]][0], corners[edge[0]][1], corners[edge[1]][0], corners[edge[1]][1], color);
-        }
-    }
-
-    /** 自检：相机正前方 3 方块处的点必然落在屏幕正中，用来验证 MVP 链（调试用）。 */
-    private String cameraCheck() {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 camPos = camera.getPosition();
-        Vector3f forward = camera.rotation().transform(new Vector3f(0.0F, 0.0F, -1.0F));
-        Vector3f ndc = CameraProjection.toNdc(camPos.x + forward.x * 3.0, camPos.y + forward.y * 3.0, camPos.z + forward.z * 3.0);
-        String eye = String.format("eye(%.2f,%.2f,%.2f) yaw %.0f pitch %.0f", camPos.x, camPos.y, camPos.z, camera.getYRot(), camera.getXRot());
-        if (ndc == null) {
-            return eye + " ahead=null";
-        }
-        return String.format("%s ahead((%.0f,%.0f) want (%.0f,%.0f))", eye,
-                (ndc.x * 0.5F + 0.5F) * this.width, (1.0F - (ndc.y * 0.5F + 0.5F)) * this.height,
-                this.width / 2.0, this.height / 2.0);
-    }
-
-    /** GUI 空间没有直接的线段绘制接口，用一串小方块近似。 */
-    private static void drawDebugLine(GuiGraphics guiGraphics, float x0, float y0, float x1, float y1, int color) {
-        int steps = (int) Math.min(600.0, Math.max(1.0, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)))));
-        for (int i = 0; i <= steps; i++) {
-            float t = (float) i / steps;
-            int x = Math.round(x0 + (x1 - x0) * t);
-            int y = Math.round(y0 + (y1 - y0) * t);
-            guiGraphics.fill(x - 1, y - 1, x + 2, y + 2, color);
-        }
     }
 
     /** 绘制世界区域拖拽的操作提示。 */
@@ -792,7 +676,6 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
             this.blockEntity.setShowPosAxis();
         }
         renderDragHint(guiGraphics);
-        renderDebugOverlay(guiGraphics, mouseX, mouseY);
     }
 
     @Override

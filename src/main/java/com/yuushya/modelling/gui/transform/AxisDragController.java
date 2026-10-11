@@ -182,35 +182,6 @@ public final class AxisDragController {
         return nearest;
     }
 
-    /**
-     * 调试快照：把当前换算出的几何原样导出，便于在 GUI 上直接绘制、与世界里的轴线比对。
-     *
-     * @param projectionUsable 投影缓存是否可用
-     * @param originPixels     手柄原点的屏幕坐标，不可得时为 {@code null}
-     * @param segments         三条轴线段 {@code {x0, y0, x1, y1}}，不可得时为 {@code null}
-     * @param distances        鼠标到三条线段的像素距离，不可得时为 {@code null}
-     */
-    public record DebugSnapshot(boolean projectionUsable, float[] originPixels, float[][] segments, double[] distances) {
-    }
-
-    /** 调试用：导出三条轴线段、手柄原点与鼠标距离。 */
-    public DebugSnapshot debugSnapshot(double mouseX, double mouseY, int screenWidth, int screenHeight) {
-        if (!CameraProjection.isUsable()) {
-            return new DebugSnapshot(false, null, null, null);
-        }
-        float[] worldOrigin = host.axisOriginWorld();
-        float[] originPixels = worldOrigin == null ? null : toScreen(worldOrigin, null, 0.0F, screenWidth, screenHeight);
-        float[][] segments = gizmoSegments(screenWidth, screenHeight);
-        if (segments == null) {
-            return new DebugSnapshot(true, originPixels, null, null);
-        }
-        double[] distances = new double[3];
-        for (int i = 0; i < 3; i++) {
-            distances[i] = distanceToSegment(mouseX, mouseY, segments[i][0], segments[i][1], segments[i][2], segments[i][3]);
-        }
-        return new DebugSnapshot(true, originPixels, segments, distances);
-    }
-
     /** 投影可用时返回三条轴线段的端点，否则返回 {@code null}。 */
     private float[][] usableSegments(int screenWidth, int screenHeight) {
         return CameraProjection.isUsable() ? gizmoSegments(screenWidth, screenHeight) : null;
