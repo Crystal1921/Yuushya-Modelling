@@ -13,7 +13,6 @@ import com.yuushya.modelling.network.TextLinesPacket;
 import com.yuushya.modelling.network.TextTransformDataOncePacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

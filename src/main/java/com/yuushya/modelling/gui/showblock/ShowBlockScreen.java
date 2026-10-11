@@ -8,12 +8,10 @@ import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.gui.AbstractTransformScreen;
 import com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader;
 import com.yuushya.modelling.gui.widget.BlockStateIconList;
-import com.yuushya.modelling.gui.widget.TransformComponent;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.network.TransformDataOncePacket;
 import com.yuushya.modelling.utils.ShareUtils;
 import lombok.Getter;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,7 +34,10 @@ import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import static com.yuushya.modelling.blockentity.transformData.TransformType.*;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;

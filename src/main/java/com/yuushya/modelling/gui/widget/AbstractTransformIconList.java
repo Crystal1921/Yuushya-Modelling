@@ -1,6 +1,7 @@
 package com.yuushya.modelling.gui.widget;
 
 import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
+import lombok.Getter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import org.jetbrains.annotations.Nullable;
@@ -103,6 +104,7 @@ public abstract class AbstractTransformIconList<D extends ITransformDataProvider
 
         protected final AbstractTransformIconList<D, E> parent;
         protected final Minecraft minecraft;
+        @Getter
         protected final int slot;
         protected boolean chosen = false;
 
@@ -110,10 +112,6 @@ public abstract class AbstractTransformIconList<D extends ITransformDataProvider
             this.parent = parent;
             this.minecraft = parent.minecraft;
             this.slot = slot;
-        }
-
-        public int getSlot() {
-            return slot;
         }
 
         public D getTransformData() {

@@ -63,14 +63,14 @@ public class TextIconList extends AbstractTransformIconList<TransformTextData, T
                 try {
                     var level = Minecraft.getInstance().level;
                     if (level != null) {
-                        Component component = Component.Serializer.fromJson(textLines.get(0), level.registryAccess());
+                        Component component = Component.Serializer.fromJson(textLines.getFirst(), level.registryAccess());
                         if (component != null) {
                             previewText = component.getString();
                         }
                     }
                 } catch (Exception e) {
                     // If deserialization fails, use raw string as fallback
-                    previewText = textLines.get(0);
+                    previewText = textLines.getFirst();
                 }
             }
             if (previewText.length() > 6) {

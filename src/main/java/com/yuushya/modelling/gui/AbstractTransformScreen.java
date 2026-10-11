@@ -57,9 +57,13 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
     protected static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
 
     protected final E blockEntity;
-    /** 尚未下发到服务端的变换改动，切换槽位或关闭界面时统一冲刷。 */
+    /**
+     * 尚未下发到服务端的变换改动，切换槽位或关闭界面时统一冲刷。
+     */
     protected final Map<T, Double> storage = new HashMap<>();
-    /** 左侧滑块面板，按创建顺序保存。 */
+    /**
+     * 左侧滑块面板，按创建顺序保存。
+     */
     protected final Map<T, TransformComponent<T>> panel = new LinkedHashMap<>();
     public EditBox colorEditBox;
     public ColorWidget colorWidget;
@@ -83,33 +87,51 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         return this.width / 4 - 20;
     }
 
-    /** 读取指定槽位上该变换分量的当前值。 */
+    /**
+     * 读取指定槽位上该变换分量的当前值。
+     */
     protected abstract double extract(T type, int slot);
 
-    /** 修改本地数据（不涉及网络）。 */
+    /**
+     * 修改本地数据（不涉及网络）。
+     */
     protected abstract void modify(T type, int slot, double number);
 
-    /** 将单个变换分量发送到服务端。 */
+    /**
+     * 将单个变换分量发送到服务端。
+     */
     protected abstract void sendTransform(BlockPos pos, int slot, T type, double number);
 
-    /** 通知服务端本批次改动结束。 */
+    /**
+     * 通知服务端本批次改动结束。
+     */
     protected abstract void sendSuccess(BlockPos pos);
 
-    /** 该界面是否处于“编辑输入框”模式。 */
+    /**
+     * 该界面是否处于“编辑输入框”模式。
+     */
     protected abstract boolean isEditMode();
 
-    /** 绘制左侧的槽位列表。 */
+    /**
+     * 绘制左侧的槽位列表。
+     */
     protected abstract void renderList(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick);
 
-    /** 绘制列表以外、滑块编辑框之前的补充信息（列表名称、属性等）。 */
+    /**
+     * 绘制列表以外、滑块编辑框之前的补充信息（列表名称、属性等）。
+     */
     protected void renderHeader(GuiGraphics guiGraphics) {
     }
 
-    /** 绘制滑块编辑框之后、{@code super.render} 之前的补充信息。 */
+    /**
+     * 绘制滑块编辑框之后、{@code super.render} 之前的补充信息。
+     */
     protected void renderFooter(GuiGraphics guiGraphics) {
     }
 
-    /** 获取（必要时创建）某个变换分量对应的滑块行。 */
+    /**
+     * 获取（必要时创建）某个变换分量对应的滑块行。
+     */
     protected TransformComponent<T> choose(T type) {
         return choose(type, TransformComponent.Style.SLIDER_ROW);
     }
@@ -118,14 +140,18 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         return panel.computeIfAbsent(type, key -> new TransformComponent<>(key, style));
     }
 
-    /** 应用变化：暂存到 storage、修改本地数据并触发方块更新。 */
+    /**
+     * 应用变化：暂存到 storage、修改本地数据并触发方块更新。
+     */
     public void updateTransformDataClient(T type, Double number) {
         this.storage.put(type, number);
         modify(type, slot, number);
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
     }
 
-    /** 把 storage 中暂存的改动全部下发到服务端。 */
+    /**
+     * 把 storage 中暂存的改动全部下发到服务端。
+     */
     protected void flushPending() {
         for (Map.Entry<T, Double> entry : this.storage.entrySet()) {
             sendTransform(blockEntity.getBlockPos(), this.slot, entry.getKey(), entry.getValue());
@@ -139,7 +165,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
     private static final String[] AXIS_NAMES = {"x", "y", "z"};
     private static final ChatFormatting[] AXIS_COLORS = {ChatFormatting.DARK_RED, ChatFormatting.GREEN, ChatFormatting.BLUE};
 
-    /** 滑块悬停时高亮对应轴。 */
+    /**
+     * 滑块悬停时高亮对应轴。
+     */
     private void highlightAxis(int axis, boolean rotation) {
         this.blockEntity.setShowAxis(AXES[axis]);
         if (rotation) {
@@ -149,12 +177,16 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         }
     }
 
-    /** 轴向上的“分量”文本，用于滑块与编辑框。 */
+    /**
+     * 轴向上的“分量”文本，用于滑块与编辑框。
+     */
     private static Component axisDecoration(String axisKeyPrefix, int axis) {
         return Component.translatable(axisKeyPrefix + AXIS_NAMES[axis], "").withStyle(AXIS_COLORS[axis]);
     }
 
-    /** 构建 X/Y/Z 共 6 行平移与旋转滑块。 */
+    /**
+     * 构建 X/Y/Z 共 6 行平移与旋转滑块。
+     */
     protected final void addTransformRows(List<T> posTypes, List<T> rotTypes, String captionKeyPrefix, String axisKeyPrefix,
                                           double boundX, double boundY, double boundZ) {
         double[] bounds = {boundX, boundY, boundZ};
@@ -166,7 +198,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         }
     }
 
-    /** 平移滑块：范围 ±bound，步长随范围自适应。 */
+    /**
+     * 平移滑块：范围 ±bound，步长随范围自适应。
+     */
     private void addPositionRow(T type, int axis, Component caption, String axisKeyPrefix, int row, double bound) {
         choose(type).sliderButton =
                 LazyDoubleRange.buttonBuilder(caption,
@@ -182,7 +216,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         choose(type).decoration(axisDecoration(axisKeyPrefix, axis));
     }
 
-    /** 旋转滑块：范围 0~360，步长 22.5。 */
+    /**
+     * 旋转滑块：范围 0~360，步长 22.5。
+     */
     private void addRotationRow(T type, int axis, Component caption, String axisKeyPrefix, int row) {
         choose(type).sliderButton =
                 DoubleRange.buttonBuilder(caption, 0.0, 360.0, (number) -> updateTransformDataClient(type, number))
@@ -194,7 +230,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         choose(type).decoration(axisDecoration(axisKeyPrefix, axis));
     }
 
-    /** 亮度滑块：范围 0~15，步长 1。 */
+    /**
+     * 亮度滑块：范围 0~15，步长 1。
+     */
     protected final void addBrightnessRow(T type, Component caption, int row) {
         choose(type).sliderButton =
                 DoubleRange.buttonBuilder(caption, 0.0, 15.0, (number) -> updateTransformDataClient(type, number))
@@ -204,7 +242,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                         .bounds(leftColumnX(), top(row, 30), leftColumnWidth(), PER_HEIGHT).build();
     }
 
-    /** 三轴等比缩放滑块：拖动时会同步三轴并刷新对应轴的平移滑块。 */
+    /**
+     * 三轴等比缩放滑块：拖动时会同步三轴并刷新对应轴的平移滑块。
+     */
     protected final void addUniformScaleRow(List<T> scaleTypes, List<T> posTypes, Component caption, String scaleTextKey, int row, double bound) {
         T scaleX = scaleTypes.get(0);
         choose(scaleX).sliderButton =
@@ -229,7 +269,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         choose(scaleX).decoration(Component.translatable(scaleTextKey, ""));
     }
 
-    /** 单独一轴的尺寸滑块（自定义尺寸面板使用）。 */
+    /**
+     * 单独一轴的尺寸滑块（自定义尺寸面板使用）。
+     */
     protected final void addSizeRow(Map<T, TransformComponent<T>> sizePanel, T scaleType, T posType, int row, Component caption, String scaleTextKey, double bound) {
         TransformComponent<T> component = sizePanel.computeIfAbsent(scaleType, key -> new TransformComponent<>(key, TransformComponent.Style.SIZE_ROW));
         component.sliderButton =
@@ -250,7 +292,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                         .bounds(leftColumnX(), top(row, 20), leftColumnWidth(), PER_HEIGHT).build();
     }
 
-    /** 形状按钮，三个界面完全一致。 */
+    /**
+     * 形状按钮，三个界面完全一致。
+     */
     protected final CycleButton<BlockShape> createShapeButton(T shapeType, BlockShape shape) {
         return CycleButton.builder(BlockShape::getSymbol)
                 .displayOnlyValue()
@@ -260,7 +304,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                         (button, selected) -> updateTransformDataClient(shapeType, (double) selected.ordinal()));
     }
 
-    /** 显示/隐藏切换按钮。 */
+    /**
+     * 显示/隐藏切换按钮。
+     */
     protected final CycleButton<Boolean> createShownButton(T shownType, int x) {
         return CycleButton.booleanBuilder(Component.literal("🕶"), Component.literal("👀"))
                 .displayOnlyValue()
@@ -270,14 +316,18 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                         (btn, bl) -> updateTransformDataClient(shownType, bl ? 1.0 : 0.0));
     }
 
-    /** 界面模式：滑块 / 微调 / 编辑，以及各界面特有的模式。 */
+    /**
+     * 界面模式：滑块 / 微调 / 编辑，以及各界面特有的模式。
+     */
     public interface ScreenMode extends StringRepresentable {
         Component getSymbol();
 
         Component getTooltip();
     }
 
-    /** 模式切换按钮，三个界面完全一致。 */
+    /**
+     * 模式切换按钮，三个界面完全一致。
+     */
     protected final <M extends Enum<M> & ScreenMode> CycleButton<M> createModeButton(M[] values, M initial, BiConsumer<CycleButton<M>, M> onChange) {
         return CycleButton.<M>builder(mode -> mode.getSymbol())
                 .displayOnlyValue()
@@ -288,7 +338,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                         (button, mode) -> onChange.accept(button, mode));
     }
 
-    /** SLIDER / FINE_TUNE / EDIT 三种模式对滑块面板的统一处理。 */
+    /**
+     * SLIDER / FINE_TUNE / EDIT 三种模式对滑块面板的统一处理。
+     */
     protected final void applySliderMode(boolean fineTune, boolean sliderVisible) {
         for (TransformComponent<T> component : this.panel.values()) {
             if (fineTune) {
@@ -300,7 +352,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         }
     }
 
-    /** 统一注册面板中的滑块及其附属按钮。 */
+    /**
+     * 统一注册面板中的滑块及其附属按钮。
+     */
     protected final void registerPanelWidgets() {
         for (TransformComponent<T> component : this.panel.values()) {
             component.initWidget(this.font);
@@ -318,7 +372,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         return this.colorEditBox;
     }
 
-    /** 切换槽位：冲刷暂存数据、切换槽位并刷新滑块初值。 */
+    /**
+     * 切换槽位：冲刷暂存数据、切换槽位并刷新滑块初值。
+     */
     public void setSlot(int slot) {
         flushPending();
         flushSlotExtra();
@@ -330,11 +386,15 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         onSlotChanged();
     }
 
-    /** 切换槽位时额外需要下发到服务端的数据（物品、文本行等），默认无。 */
+    /**
+     * 切换槽位时额外需要下发到服务端的数据（物品、文本行等），默认无。
+     */
     protected void flushSlotExtra() {
     }
 
-    /** 切换槽位后刷新与具体界面相关的控件状态。 */
+    /**
+     * 切换槽位后刷新与具体界面相关的控件状态。
+     */
     protected abstract void onSlotChanged();
 
     @Override
@@ -345,7 +405,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
         sendSuccess(blockEntity.getBlockPos());
     }
 
-    /** 关闭界面时额外需要下发到服务端的数据，默认无。 */
+    /**
+     * 关闭界面时额外需要下发到服务端的数据，默认无。
+     */
     protected void flushOnRemoved() {
     }
 
@@ -374,21 +436,31 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
 
     // ---- 分享 / 导入导出 ----
 
-    /** 分享与导入导出的差异点，由各界面实现。 */
+    /**
+     * 分享与导入导出的差异点，由各界面实现。
+     */
     public interface ShareController {
-        /** 序列化当前方块的全部数据。 */
+        /**
+         * 序列化当前方块的全部数据。
+         */
         String serialize();
 
-        /** 解析剪贴板文本并应用到当前方块，内容非法时抛出异常。 */
+        /**
+         * 解析剪贴板文本并应用到当前方块，内容非法时抛出异常。
+         */
         void load(String clipboard) throws Exception;
 
-        /** 把当前数据保存为指定名称的文件。 */
+        /**
+         * 把当前数据保存为指定名称的文件。
+         */
         void save(String name) throws IOException;
     }
 
     protected abstract ShareController shareController();
 
-    /** 复制按钮：把当前数据序列化到剪贴板。 */
+    /**
+     * 复制按钮：把当前数据序列化到剪贴板。
+     */
     protected final Button createCopyButton(int x) {
         return Button.builder(Component.literal("\uD83D\uDCE4").withStyle(ChatFormatting.BOLD),
                         (btn) -> {
@@ -399,7 +471,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                 .bounds(x, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
     }
 
-    /** 粘贴按钮：读取剪贴板并应用到当前方块。 */
+    /**
+     * 粘贴按钮：读取剪贴板并应用到当前方块。
+     */
     protected final Button createPasteButton(int x) {
         return Button.builder(Component.literal("\uD83D\uDCE5").withStyle(ChatFormatting.BOLD),
                         (btn) -> {
@@ -415,7 +489,9 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
                 .bounds(x, TOP, RIGHT_BAR_WIDTH, PER_HEIGHT).build();
     }
 
-    /** 保存按钮：把当前数据写入 modellings 目录下的文件。 */
+    /**
+     * 保存按钮：把当前数据写入 modellings 目录下的文件。
+     */
     protected final Button createSaveButton(int x) {
         return Button.builder(Component.literal("\uD83D\uDCBE").withStyle(ChatFormatting.BOLD),
                         (btn) -> this.minecraft.setScreen(new EditScreen(this,
