@@ -22,28 +22,37 @@ public abstract class AbstractColorScreen extends Screen {
     /**
      * 获取字体实例，用于颜色编辑器绘制文本
      */
-    public abstract Font getColorFont();
+    public Font getColorFont() {
+        return this.font;
+    }
 
     /**
      * 获取颜色编辑框，用于显示和编辑十六进制颜色值
      */
-    public abstract EditBox getColorEditBox();
+    public EditBox getColorEditBox() {
+        return null;
+    }
 
     /**
      * 更新颜色数据到实体
      * @param colorValue 颜色值 (RGB整数)
      */
-    public abstract void updateColorData(int colorValue);
+    public void updateColorData(int colorValue) {
+    }
 
     /**
      * 设置焦点到指定组件
      * @param widget 要设置焦点的组件
      */
-    public abstract void setColorFocused(AbstractWidget widget);
+    public void setColorFocused(AbstractWidget widget) {
+        this.setFocused(widget);
+    }
 
     /**
      * 设置拖拽状态
      * @param dragging 是否正在拖拽
      */
-    public abstract void setColorDragging(boolean dragging);
+    public void setColorDragging(boolean dragging) {
+        this.setDragging(dragging);
+    }
 }

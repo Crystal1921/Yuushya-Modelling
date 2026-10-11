@@ -3,9 +3,8 @@ package com.yuushya.modelling.gui.textblock;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.textblock.TextBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TextTransformType;
-import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.blockentity.transformData.TransformTextData;
-import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
+import com.yuushya.modelling.gui.AbstractTransformScreen;
 import com.yuushya.modelling.gui.engrave.EngraveTextResultLoader;
 import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DividedDoubleRange;
@@ -20,10 +19,11 @@ import lombok.Getter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.font.FontSet;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -38,31 +38,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.yuushya.modelling.blockentity.transformData.ItemTransformType.REMOVE;
 import static com.yuushya.modelling.blockentity.transformData.TextTransformType.*;
-import static com.yuushya.modelling.utils.ClientMethod.getClipboard;
-import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
+import static com.yuushya.modelling.utils.ClientMethod.getClipboard;
+import static com.yuushya.modelling.utils.ClientMethod.setClipboard;
 
-public class TextBlockScreen extends AbstractColorScreen {
-    public static final int PER_HEIGHT = 20;
-    public static final int SMALL_BUTTON_WIDTH = 10;
+public class TextBlockScreen extends AbstractTransformScreen<TextTransformType, TextBlockEntity> {
     protected static final Button.CreateNarration DEFAULT_NARRATION = Supplier::get;
-    private static final int TOP = 10;
-    private static final int RIGHT_COLUMN_X = 2;
-    private static final int RIGHT_BAR_WIDTH = PER_HEIGHT;
-    private static final int RIGHT_LIST_WIDTH = 40;
-    private static final int RIGHT_LIST_PER_HEIGHT = 45;
-    private static final int RIGHT_LIST_TOP = TOP + PER_HEIGHT + 5;
-    private static final int RIGHT_LIST_HEIGHT = 3 * RIGHT_LIST_PER_HEIGHT + 2;
-    private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
-    private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
-    private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
     private static final int[] rainbowColors = {
             Color.WHITE.getRGB(),
             Color.BLACK.getRGB(),
@@ -75,10 +64,7 @@ public class TextBlockScreen extends AbstractColorScreen {
             Color.MAGENTA.getRGB()
     };
     private static final int RAINBOW_COUNT = rainbowColors.length;
-    private final TextBlockEntity blockEntity;
     private final List<String> newTextLines;
-    private final Map<TextTransformType, Double> storage = new HashMap<>();
-    private final Map<TextTransformType, TextTransformComponent> panel = new LinkedHashMap<>();
     private final ColorButton[] rainbowColorButtons = new ColorButton[RAINBOW_COUNT];
     public CycleButton<Boolean> boldButton;
     public CycleButton<Boolean> italicButton;
@@ -90,47 +76,60 @@ public class TextBlockScreen extends AbstractColorScreen {
     public Button clearButton;
     public CycleButton<Boolean> cullButton;
     public CycleButton<Boolean> mirrorButton;
-    public EditBox colorEditBox;
-    public ColorWidget colorWidget;
     public StyledMultiLineEditBox textEditBox;
     public FontList fontList;
-    private int slot;
     private List<String> textLines = new ArrayList<>();
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private TextIconList textIconList;
 
     public TextBlockScreen(TextBlockEntity blockEntity, List<String> newTextLines) {
-        super(GameNarrator.NO_TITLE);
-        this.blockEntity = blockEntity;
+        super(GameNarrator.NO_TITLE, blockEntity);
         this.newTextLines = newTextLines != null ? new ArrayList<>(newTextLines) : new ArrayList<>();
         if (blockEntity.getSlot() < blockEntity.getTransformData().size()) {
             this.slot = blockEntity.getSlot();
         }
     }
 
-    // i \in [1,...]
-    private static int top(int i, int offset) {
-        return TOP + PER_HEIGHT + 10 + PER_HEIGHT * i + offset;
+    @Override
+    protected double extract(TextTransformType type, int slot) {
+        return type.extract(this.blockEntity, slot);
     }
 
-    public void setSlot(int slot) {
-        for (TextTransformType key : this.storage.keySet()) {
-            TextTransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, key, this.storage.get(key));
-        }
+    @Override
+    protected void modify(TextTransformType type, int slot, double number) {
+        type.modify(this.blockEntity, slot, number);
+    }
 
+    @Override
+    protected void sendTransform(BlockPos pos, int slot, TextTransformType type, double number) {
+        TextTransformDataOncePacket.sendToServerSide(pos, slot, type, number);
+    }
+
+    @Override
+    protected void sendSuccess(BlockPos pos) {
+        TextTransformDataOncePacket.sendToServerSideSuccess(pos);
+    }
+
+    @Override
+    protected void flushSlotExtra() {
+        flushTextLines();
+    }
+
+    @Override
+    protected void flushOnRemoved() {
+        flushTextLines();
+    }
+
+    private void flushTextLines() {
         if (!textLines.isEmpty()) {
             TextLinesPacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, textLines);
         }
-
         this.textLines = new ArrayList<>();
-        this.storage.clear();
-        this.slot = slot;
-        this.blockEntity.setSlot(slot);
-        for (TextTransformComponent component : this.panel.values()) {
-            component.setSliderInitial(this.blockEntity, this.slot);
-        }
+    }
 
+    @Override
+    protected void onSlotChanged() {
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
         cullButton.setValue(this.blockEntity.getTransformData(slot).isCulled);
         mirrorButton.setValue(this.blockEntity.getTransformData(slot).isMirror);
@@ -149,20 +148,8 @@ public class TextBlockScreen extends AbstractColorScreen {
         }
     }
 
-    private TextTransformComponent choose(TextTransformType type) {
-        return panel.computeIfAbsent(type, TextTransformComponent::new);
-    }
-
     public List<String> getTextLines() {
         return blockEntity.getTransformData(slot).textLines;
-    }
-
-    private int leftColumnX() {
-        return this.width / 4 * 3 + 10;
-    }
-
-    private int leftColumnWidth() {
-        return this.width / 4 - 20;
     }
 
     @Override
@@ -593,15 +580,15 @@ public class TextBlockScreen extends AbstractColorScreen {
             }
         }
 
-        for (TextTransformComponent component : this.panel.values()) {
-            component.initWidget(this.font);
-            this.addRenderableWidget(component.sliderButton);
-            this.addRenderableWidget(component.minusButton);
-            this.addRenderableWidget(component.addButton);
-            this.addRenderableWidget(component.editBox);
-            this.addRenderableWidget(component.cancelButton);
-            this.addRenderableWidget(component.finishButton);
-        }
+        choose(POS_X).decoration(Component.translatable("block.yuushya.showblock.x", "").withStyle(ChatFormatting.DARK_RED));
+        choose(POS_Y).decoration(Component.translatable("block.yuushya.showblock.y", "").withStyle(ChatFormatting.GREEN));
+        choose(POS_Z).decoration(Component.translatable("block.yuushya.showblock.z", "").withStyle(ChatFormatting.BLUE));
+        choose(ROT_X).decoration(Component.translatable("block.yuushya.showblock.x", "").withStyle(ChatFormatting.DARK_RED));
+        choose(ROT_Y).decoration(Component.translatable("block.yuushya.showblock.y", "").withStyle(ChatFormatting.GREEN));
+        choose(ROT_Z).decoration(Component.translatable("block.yuushya.showblock.z", "").withStyle(ChatFormatting.BLUE));
+        choose(SCALE_X).decoration(Component.translatable("gui.yuushya.showBlockScreen.scale_text", ""));
+
+        registerPanelWidgets();
 
         this.addRenderableWidget(copyButton);
         this.addRenderableWidget(parseButton);
@@ -635,39 +622,13 @@ public class TextBlockScreen extends AbstractColorScreen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected boolean isEditMode() {
+        return modeButton.getValue() == Mode.EDIT;
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderList(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.textIconList.render(guiGraphics, mouseX, mouseY, partialTick);
-
-        if (modeButton.getValue() == Mode.EDIT) {
-            for (TextTransformComponent component : this.panel.values()) {
-                guiGraphics.drawString(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
-                component.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
-            }
-        }
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
-
-    @Override
-    public void removed() {
-        for (TextTransformType key : storage.keySet()) {
-            TextTransformDataOncePacket.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
-        }
-        if (!textLines.isEmpty()) {
-            TextLinesPacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, textLines);
-        }
-
-        this.textLines = new ArrayList<>();
-        this.storage.clear();
-        TextTransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
     private void updateTransformDataClient(TransformTextData data) {
@@ -739,12 +700,6 @@ public class TextBlockScreen extends AbstractColorScreen {
         TextLinesPacket.sendToServerSide(pos, slot, data.textLines);
     }
 
-    public void updateTransformDataClient(TextTransformType type, Double number) {
-        this.storage.put(type, number);
-        type.modify(blockEntity, slot, number);
-        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
-    }
-
     private void updateTextLines(List<String> textLines) {
         this.textLines = new ArrayList<>(textLines);
         TEXT_LINES.modify(blockEntity, slot, textLines);
@@ -780,29 +735,9 @@ public class TextBlockScreen extends AbstractColorScreen {
     }
 
     @Override
-    public Font getColorFont() {
-        return this.font;
-    }
-
-    @Override
-    public EditBox getColorEditBox() {
-        return colorEditBox;
-    }
-
-    @Override
     public void updateColorData(int colorValue) {
         this.colorButton.color = colorValue;
         this.textEditBox.setColorTextStyle();
-    }
-
-    @Override
-    public void setColorFocused(AbstractWidget widget) {
-        this.setFocused(widget);
-    }
-
-    @Override
-    public void setColorDragging(boolean dragging) {
-        this.setDragging(dragging);
     }
 
     public enum Mode implements StringRepresentable {

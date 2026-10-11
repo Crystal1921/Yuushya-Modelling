@@ -6,15 +6,14 @@ import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.gui.AbstractTransformScreen;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.gui.showblock.EditScreen;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
-import com.yuushya.modelling.gui.widget.AbstractColorScreen;
 import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.ItemStackIconList;
-import com.yuushya.modelling.gui.widget.ItemTransformComponent;
-import com.yuushya.modelling.gui.widget.SizeTransformComponent;
+import com.yuushya.modelling.gui.widget.TransformComponent;
 import com.yuushya.modelling.item.YuushyaDebugStickItem;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
@@ -60,34 +59,15 @@ import static com.yuushya.modelling.item.showblocktool.PosTransItem.getMaxPos;
 import static com.yuushya.modelling.item.showblocktool.PosTransItem.getStep;
 import static com.yuushya.modelling.utils.YuushyaUtils.normalizeAngle;
 
-public class ItemBlockScreen extends AbstractColorScreen {
-    public static final int PER_HEIGHT = 20;
-    public static final int SMALL_BUTTON_WIDTH = 10;
-    private static final int TOP = 10;
-    private static final int RIGHT_COLUMN_X = 2;
-    private static final int RIGHT_BAR_WIDTH = PER_HEIGHT;
-    private static final int RIGHT_LIST_WIDTH = 40;
-    private static final int RIGHT_LIST_PER_HEIGHT = 45;
-    private static final int RIGHT_LIST_TOP = TOP + PER_HEIGHT + 5;
-    private static final int RIGHT_LIST_HEIGHT = 3 * RIGHT_LIST_PER_HEIGHT + 2;
-    private static final int RIGHT_LIST_BOTTOM = RIGHT_LIST_TOP + RIGHT_LIST_HEIGHT;
-    private static final int RIGHT_STATE_PANEL_Y = RIGHT_LIST_BOTTOM + 5;
-    private static final int RIGHT_STATE_INFORM_X = RIGHT_COLUMN_X + RIGHT_LIST_WIDTH + 3;
-
-    private final ItemBlockEntity blockEntity;
+public class ItemBlockScreen extends AbstractTransformScreen<ItemTransformType, ItemBlockEntity> {
     private final ItemStack newItemStack;
-    private final Map<ItemTransformType, Double> storage = new HashMap<>();
-    private final Map<ItemTransformType, ItemTransformComponent> panel = new LinkedHashMap<>();
-    private final Map<ItemTransformType, SizeTransformComponent> panelSize = new LinkedHashMap<>();
-    public EditBox colorEditBox;
+    private final Map<ItemTransformType, TransformComponent<ItemTransformType>> panelSize = new LinkedHashMap<>();
     public Button colorFinishButton;
     public CycleButton<ApplyColor> colorApplyButton;
-    private int slot;
     private ItemStack itemStack = ItemStack.EMPTY;
     private CycleButton<Mode> modeButton;
     private CycleButton<Boolean> shownStateButton;
     private ItemStackIconList itemStackList;
-    private ColorWidget colorWidget;
     private Property<?> property;
     private Button leftPropertyButton;
     private Button rightPropertyButton;
@@ -96,56 +76,73 @@ public class ItemBlockScreen extends AbstractColorScreen {
     private CycleButton<Boolean> enableBlockButton;
 
     public ItemBlockScreen(ItemBlockEntity blockEntity, ItemStack newItemStack) {
-        super(GameNarrator.NO_TITLE);
-        this.blockEntity = blockEntity;
+        super(GameNarrator.NO_TITLE, blockEntity);
         this.newItemStack = newItemStack;
         if (blockEntity.getSlot() < blockEntity.getTransformData().size()) {
             this.slot = blockEntity.getSlot();
         }
     }
 
-    // i \in [1,...]
-    private static int top(int i, int offset) {
-        return TOP + PER_HEIGHT + 10 + PER_HEIGHT * i + offset;
+    @Override
+    protected TransformComponent<ItemTransformType> choose(ItemTransformType type) {
+        return choose(type, TransformComponent.Style.ITEM_ROW);
     }
 
-    public void setSlot(int slot) {
-        for (ItemTransformType key : this.storage.keySet()) {
-            ItemTransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, key, this.storage.get(key));
-        }
+    private TransformComponent<ItemTransformType> chooseSize(ItemTransformType type) {
+        return panelSize.computeIfAbsent(type, key -> new TransformComponent<>(key, TransformComponent.Style.SIZE_ROW));
+    }
 
+    @Override
+    protected double extract(ItemTransformType type, int slot) {
+        return type.extract(this.blockEntity, slot);
+    }
+
+    @Override
+    protected void modify(ItemTransformType type, int slot, double number) {
+        type.modify(this.blockEntity, slot, number);
+    }
+
+    @Override
+    protected void sendTransform(BlockPos pos, int slot, ItemTransformType type, double number) {
+        ItemTransformDataOncePacket.sendToServerSide(pos, slot, type, number);
+    }
+
+    @Override
+    protected void sendSuccess(BlockPos pos) {
+        ItemTransformDataOncePacket.sendToServerSideSuccess(pos);
+    }
+
+    @Override
+    protected void flushSlotExtra() {
+        flushItemStack();
+    }
+
+    @Override
+    protected void flushOnRemoved() {
+        flushItemStack();
+    }
+
+    private void flushItemStack() {
         if (!itemStack.isEmpty()) {
             PacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
         }
-
         this.itemStack = ItemStack.EMPTY;
-        this.storage.clear();
-        this.slot = slot;
-        this.blockEntity.setSlot(slot);
-        for (ItemTransformComponent component : this.panel.values()) {
-            component.setSliderInitial(this.blockEntity, this.slot);
+    }
+
+    @Override
+    protected void onSlotChanged() {
+        for (TransformComponent<ItemTransformType> size : this.panelSize.values()) {
+            size.setSliderInitial(extract(size.type, slot));
         }
 
-        for (SizeTransformComponent size : this.panelSize.values()) {
-            size.setSliderInitial(this.blockEntity, this.slot);
-        }
-
-        double extract = COLOR.extract(blockEntity, slot);
-        this.colorWidget.setColor((int) extract);
-        this.colorEditBox.setValue(String.format("#%06X", (0xFFFFFF & (int) extract)));
+        double color = COLOR.extract(blockEntity, slot);
+        this.colorWidget.setColor((int) color);
+        this.colorEditBox.setValue(String.format("#%06X", (0xFFFFFF & (int) color)));
 
         shownStateButton.setValue(this.blockEntity.getTransformData(slot).isShown);
         boolean enableBlock = ENABLE_BLOCK.extract(blockEntity, slot) == 1;
         updateBlockStateButtonVisible(updateStateButton() && enableBlock);
         enableBlockButton.setValue(enableBlock);
-    }
-
-    private ItemTransformComponent choose(ItemTransformType type) {
-        return panel.computeIfAbsent(type, ItemTransformComponent::new);
-    }
-
-    private SizeTransformComponent chooseSize(ItemTransformType type) {
-        return panelSize.computeIfAbsent(type, SizeTransformComponent::new);
     }
 
     private void updateColorVisible(boolean visible) {
@@ -196,14 +193,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
 
     public ItemStack getItemStack() {
         return blockEntity.getTransformData(slot).itemStack;
-    }
-
-    private int leftColumnX() {
-        return this.width / 4 * 3 + 10;
-    }
-
-    private int leftColumnWidth() {
-        return this.width / 4 - 20;
     }
 
     @Override
@@ -412,9 +401,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 .create(leftColumnX(), TOP, leftColumnWidth(), PER_HEIGHT, Component.literal("MODE"),
                         (btn, mode) -> {
                             switch (mode) {
-                                case SLIDER -> panel.values().forEach(ItemTransformComponent::setSliderStep);
+                                case SLIDER -> panel.values().forEach(TransformComponent::setSliderStep);
                                 case EDIT, FINE_TUNE ->
-                                        panel.values().forEach(ItemTransformComponent::setSliderFineTune);
+                                        panel.values().forEach(TransformComponent::setSliderFineTune);
                             }
                             switch (mode) {
                                 case SLIDER, FINE_TUNE -> {
@@ -428,12 +417,12 @@ public class ItemBlockScreen extends AbstractColorScreen {
                                     updateColorVisible(false);
                                 }
                                 case COLOR -> {
-                                    panel.values().forEach(ItemTransformComponent::setInvisible);
+                                    panel.values().forEach(TransformComponent::setInvisible);
                                     panelSize.values().forEach((it) -> it.triggerVisible(false));
                                     updateColorVisible(true);
                                 }
                                 case CUSTOM_SIZE -> {
-                                    panel.values().forEach(ItemTransformComponent::setInvisible);
+                                    panel.values().forEach(TransformComponent::setInvisible);
                                     panelSize.values().forEach((it) -> it.triggerVisible(true));
                                     updateColorVisible(false);
                                 }
@@ -701,17 +690,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.colorFinishButton.visible = false;
         this.colorApplyButton.visible = false;
 
-        for (ItemTransformComponent component : this.panel.values()) {
-            component.initWidget(this.font);
-            this.addRenderableWidget(component.sliderButton);
-            this.addRenderableWidget(component.minusButton);
-            this.addRenderableWidget(component.addButton);
-            this.addRenderableWidget(component.editBox);
-            this.addRenderableWidget(component.cancelButton);
-            this.addRenderableWidget(component.finishButton);
-        }
+        registerPanelWidgets();
 
-        for (SizeTransformComponent size : this.panelSize.values()) {
+        for (TransformComponent<ItemTransformType> size : this.panelSize.values()) {
             size.initWidget(this.font);
             this.addRenderableWidget(size.sliderButton);
             this.addRenderableWidget(size.minusButton);
@@ -778,22 +759,22 @@ public class ItemBlockScreen extends AbstractColorScreen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected boolean isEditMode() {
+        return modeButton.getValue() == Mode.EDIT;
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderList(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.itemStackList.render(guiGraphics, mouseX, mouseY, partialTick);
-        ItemStack itemStack = getItemStack();
-        guiGraphics.drawString(this.font, itemStack.getDisplayName(), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
+    }
 
-        if (modeButton.getValue() == Mode.EDIT) {
-            for (ItemTransformComponent component : this.panel.values()) {
-                guiGraphics.drawString(this.font, component.editBox.getMessage(), component.editBox.getX() + component.editBox.getWidth() / 2, component.editBox.getY() + component.editBox.getHeight() / 3, 0x707070);
-                component.editBox.render(guiGraphics, mouseX, mouseY, partialTick);
-            }
-        }
+    @Override
+    protected void renderHeader(GuiGraphics guiGraphics) {
+        guiGraphics.drawString(this.font, getItemStack().getDisplayName(), RIGHT_STATE_INFORM_X, TOP + 6 + PER_HEIGHT, 0xFFFFFFFF, false);
+    }
 
+    @Override
+    protected void renderFooter(GuiGraphics guiGraphics) {
         if (ENABLE_BLOCK.extract(blockEntity, slot) == 1) {
             BlockState blockState = getBlockState();
             if (blockState != null && property != null) {
@@ -803,27 +784,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
                 guiGraphics.drawString(this.font, propertyValue, RIGHT_COLUMN_X + RIGHT_LIST_WIDTH * 2 - font.width(propertyValue) / 2 , TOP + PER_HEIGHT + PER_HEIGHT * 3 + 5, 0xFFFFFFFF, false);
             }
         }
-
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
-
-    @Override
-    public void removed() {
-        for (ItemTransformType key : storage.keySet()) {
-            ItemTransformDataOncePacket.sendToServerSide(blockEntity.getBlockPos(), slot, key, storage.get(key));
-        }
-        if (!itemStack.isEmpty()) {
-            PacketDistributor.sendToServer(new ItemStackPacket(this.blockEntity.getBlockPos(), this.slot, itemStack));
-        }
-
-        this.itemStack = ItemStack.EMPTY;
-        this.storage.clear();
-        ItemTransformDataOncePacket.sendToServerSideSuccess(blockEntity.getBlockPos());
     }
 
     public void checkModLack(ShareUtils.ShareItemInformation shareInformation) {
@@ -908,12 +868,6 @@ public class ItemBlockScreen extends AbstractColorScreen {
         updateItemStack(data.itemStack);
     }
 
-    public void updateTransformDataClient(ItemTransformType type, Double number) {
-        this.storage.put(type, number);
-        type.modify(blockEntity, slot, number);
-        this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
-    }
-
     public void updateTransformDataSever(ItemTransformType type, Double number, int slot) {
         type.modify(blockEntity, slot, number);
         ItemTransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), slot, type, number);
@@ -925,30 +879,9 @@ public class ItemBlockScreen extends AbstractColorScreen {
         this.blockEntity.getLevel().sendBlockUpdated(blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity.getBlockState(), net.minecraft.world.level.block.Block.UPDATE_ALL_IMMEDIATE);
     }
 
-    // AbstractColorScreen 接口实现
-    @Override
-    public Font getColorFont() {
-        return this.font;
-    }
-
-    @Override
-    public EditBox getColorEditBox() {
-        return this.colorEditBox;
-    }
-
     @Override
     public void updateColorData(int colorValue) {
         updateTransformDataClient(ItemTransformType.COLOR, (double) colorValue);
-    }
-
-    @Override
-    public void setColorFocused(AbstractWidget widget) {
-        this.setFocused(widget);
-    }
-
-    @Override
-    public void setColorDragging(boolean dragging) {
-        this.setDragging(dragging);
     }
 
     public Font getFont() {
