@@ -17,6 +17,22 @@ import org.joml.Vector3f;
  */
 public final class AxisDragController {
 
+    /**
+     * 坐标投影：把某个空间的 (x, y, z) 变成 NDC。
+     * <p>
+     * 拖拽换算是空间无关的，谁提供投影、谁是"原点/方向"由 {@link Host} 决定。
+     * 世界界面把投影接到相机，建模界面把投影接到自己的离屏视口矩阵。
+     */
+    public interface Projector {
+        /** @return NDC 坐标；点不可见时返回 {@code null} */
+        org.joml.Vector3f toNdc(float x, float y, float z);
+
+        /** 投影数据是否可用（世界界面用它判断缓存是否过期）。 */
+        default boolean usable() {
+            return true;
+        }
+    }
+
     /** 由界面提供的读写与高亮回调。 */
     public interface Host {
         /** 指定轴、通道（true = 旋转，false = 平移）的当前值。 */
@@ -36,6 +52,11 @@ public final class AxisDragController {
 
         /** 该轴在世界坐标中的单位方向。 */
         float[] axisDirection(int axis);
+
+        /** 手柄半长（当前空间单位）。默认 {@code 1.5}，与旧的世界渲染器一致。 */
+        default float handleHalfLength() {
+            return 1.5F;
+        }
     }
 
     /** 拖拽整体灵敏度倍率。 */
@@ -44,8 +65,6 @@ public final class AxisDragController {
     public static final double FINE_FACTOR = 0.1;
 
     private static final double EPSILON = 1.0E-6;
-    /** 轴手柄的半长（方块），与渲染器画出的线段一致。 */
-    private static final float HANDLE_HALF_LENGTH = 1.5F;
     /**
      * 开始拖拽所需的最小投影长度（像素/方块）。
      * <p>
@@ -54,6 +73,7 @@ public final class AxisDragController {
     private static final double MIN_PIXELS_PER_BLOCK = 12.0;
 
     private final Host host;
+    private final Projector projector;
     private boolean active;
     private int axis;
     private boolean rotation;
@@ -66,7 +86,22 @@ public final class AxisDragController {
     private double screenAxisLengthSq;
 
     public AxisDragController(Host host) {
+        this(host, new Projector() {
+            @Override
+            public org.joml.Vector3f toNdc(float x, float y, float z) {
+                return CameraProjection.toNdc(x, y, z);
+            }
+
+            @Override
+            public boolean usable() {
+                return CameraProjection.isUsable();
+            }
+        });
+    }
+
+    public AxisDragController(Host host, Projector projector) {
         this.host = host;
+        this.projector = projector;
     }
 
     public boolean isActive() {
@@ -95,7 +130,7 @@ public final class AxisDragController {
             return false;
         }
         // 绕 axis 旋转时，屏幕上跟手的是与之垂直的切线轴（右手系循环）
-        double[] screenAxis = axisScreenScale(segments[rotation ? (axis + 2) % 3 : axis]);
+        double[] screenAxis = axisScreenScale(segments[rotation ? (axis + 2) % 3 : axis], host.handleHalfLength());
         double lengthSq = scalarLengthSq(screenAxis);
         if (lengthSq < MIN_PIXELS_PER_BLOCK * MIN_PIXELS_PER_BLOCK) {
             return false;
@@ -166,12 +201,21 @@ public final class AxisDragController {
      * @return 轴编号；投影不可用或无法判定时返回 -1
      */
     public int nearestAxis(double mouseX, double mouseY, int screenWidth, int screenHeight) {
+        return nearestAxis(mouseX, mouseY, screenWidth, screenHeight, Double.MAX_VALUE);
+    }
+
+    /**
+     * 同 {@link #nearestAxis}，但超过 {@code maxDistance} 像素时返回 -1。
+     * <p>
+     * 视口里"点空白处"不应该开始拖拽，因此需要带上拾取半径。
+     */
+    public int nearestAxis(double mouseX, double mouseY, int screenWidth, int screenHeight, double maxDistance) {
         float[][] segments = usableSegments(screenWidth, screenHeight);
         if (segments == null) {
             return -1;
         }
         int nearest = -1;
-        double nearestDistance = Double.MAX_VALUE;
+        double nearestDistance = maxDistance;
         for (int i = 0; i < 3; i++) {
             double distance = distanceToSegment(mouseX, mouseY, segments[i][0], segments[i][1], segments[i][2], segments[i][3]);
             if (distance < nearestDistance) {
@@ -184,7 +228,7 @@ public final class AxisDragController {
 
     /** 投影可用时返回三条轴线段的端点，否则返回 {@code null}。 */
     private float[][] usableSegments(int screenWidth, int screenHeight) {
-        return CameraProjection.isUsable() ? gizmoSegments(screenWidth, screenHeight) : null;
+        return this.projector.usable() ? gizmoSegments(screenWidth, screenHeight) : null;
     }
 
     /**
@@ -201,13 +245,14 @@ public final class AxisDragController {
             return null;
         }
         float[][] segments = new float[3][4];
+        float halfLength = host.handleHalfLength();
         for (int i = 0; i < 3; i++) {
             float[] direction = host.axisDirection(i);
             if (direction == null) {
                 return null;
             }
-            float[] from = toScreen(origin, direction, -HANDLE_HALF_LENGTH, screenWidth, screenHeight);
-            float[] to = toScreen(origin, direction, HANDLE_HALF_LENGTH, screenWidth, screenHeight);
+            float[] from = toScreen(origin, direction, -halfLength, screenWidth, screenHeight);
+            float[] to = toScreen(origin, direction, halfLength, screenWidth, screenHeight);
             if (from == null || to == null) {
                 return null;
             }
@@ -219,14 +264,14 @@ public final class AxisDragController {
         return segments;
     }
 
-    /** 轴线上“1 个方块”对应的屏幕位移（像素），由线段端点求得（含透视）。 */
-    private static double[] axisScreenScale(float[] segment) {
-        double length = 2.0 * HANDLE_HALF_LENGTH;
+    /** 轴线上“1 个方块”对应的屏幕位移（像素），由线段端点求得。 */
+    private static double[] axisScreenScale(float[] segment, float halfLength) {
+        double length = 2.0 * halfLength;
         return new double[]{(segment[2] - segment[0]) / length, (segment[3] - segment[1]) / length};
     }
 
-    /** 世界坐标沿 {@code direction} 偏移 {@code offset} 个方块后的屏幕坐标；{@code direction} 为 null 时取原点本身。 */
-    private static float[] toScreen(float[] origin, float[] direction, float offset, int screenWidth, int screenHeight) {
+    /** 投影：世界坐标沿 {@code direction} 偏移 {@code offset} 个方块后的屏幕坐标；{@code direction} 为 null 时取原点本身。 */
+    private float[] toScreen(float[] origin, float[] direction, float offset, int screenWidth, int screenHeight) {
         float x = origin[0];
         float y = origin[1];
         float z = origin[2];
@@ -235,7 +280,7 @@ public final class AxisDragController {
             y += direction[1] * offset;
             z += direction[2] * offset;
         }
-        Vector3f ndc = CameraProjection.toNdc(x, y, z);
+        Vector3f ndc = this.projector.toNdc(x, y, z);
         if (ndc == null) {
             return null;
         }

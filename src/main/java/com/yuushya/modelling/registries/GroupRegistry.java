@@ -28,6 +28,7 @@ public class GroupRegistry {
                 output.accept(ItemRegistry.GET_LIT_ITEM.get());
                 output.accept(ItemRegistry.DESTROY_ITEM.get());
                 output.accept(ItemRegistry.GUI_ITEM.get());
+                output.accept(ItemRegistry.MODELING_WAND_ITEM.get());
                 output.accept(ItemRegistry.ENGRAVE_ITEM.get());
                 output.accept(ItemRegistry.COLOR_PICKER_ITEM.get());
                 output.accept(ItemRegistry.HISTORY_ITEM.get());

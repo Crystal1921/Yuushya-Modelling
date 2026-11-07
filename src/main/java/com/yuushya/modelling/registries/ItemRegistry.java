@@ -27,6 +27,7 @@ public class ItemRegistry {
     public static final DeferredItem<Item> GET_LIT_ITEM = ITEMS.register("get_lit_item", () -> new GetLitItem(new Item.Properties().stacksTo(1), 2));
     public static final DeferredItem<Item> DESTROY_ITEM = ITEMS.register("destroy_item", () -> new DestroyItem(new Item.Properties().stacksTo(1).durability(384), 2));
     public static final DeferredItem<Item> GUI_ITEM = ITEMS.register("gui_item", () -> new GuiItem(new Item.Properties().stacksTo(1), 2));
+    public static final DeferredItem<Item> MODELING_WAND_ITEM = ITEMS.register("modeling_wand", () -> new ModelingWandItem(new Item.Properties().stacksTo(1), 2));
     public static final DeferredItem<Item> ENGRAVE_ITEM = ITEMS.register("engrave_item", () -> new EngraveItem(new Item.Properties().stacksTo(1), 3));
     public static final DeferredItem<Item> COLOR_PICKER_ITEM = ITEMS.register("color_picker_item", () -> new ColorPickerItem(new Item.Properties().stacksTo(1), 2));
     public static final DeferredItem<Item> HISTORY_ITEM = ITEMS.register("history_item", () -> new HistoryItem(new Item.Properties().stacksTo(1), 2));
