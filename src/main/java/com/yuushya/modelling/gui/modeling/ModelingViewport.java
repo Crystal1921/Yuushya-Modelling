@@ -27,7 +27,7 @@ import java.util.List;
  */
 public final class ModelingViewport {
 
-    private static final int BACKGROUND = 0xFF151515;
+    public static final int BACKGROUND = 0xFF151515;
 
     private final ModelingCamera camera;
 

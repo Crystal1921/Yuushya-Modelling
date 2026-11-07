@@ -36,6 +36,14 @@ public final class ModelingCamera {
         return this.revision;
     }
 
+    public float yaw() {
+        return this.yaw;
+    }
+
+    public float pitch() {
+        return this.pitch;
+    }
+
     public void orbit(double deltaX, double deltaY) {
         this.yaw += (float) deltaX * 0.6F;
         this.pitch = (float) Mth.clamp(this.pitch + deltaY * 0.6F, -89.0F, 89.0F);
@@ -51,6 +59,30 @@ public final class ModelingCamera {
         this.yaw = 35.0F;
         this.pitch = 25.0F;
         this.distance = 3.5F;
+        this.revision++;
+    }
+
+    /**
+     * 把相机摆到"沿某根轴看过去"的视角（导航轴用）。
+     * <p>
+     * 推导：视图把模型旋转 {@code Rx(pitch)·Ry(yaw)}，所以想让模型的 {@code +axis} 朝向观察者时，
+     * 该轴旋转后应指向 {@code +Z}。
+     */
+    public void lookFrom(int axis, boolean positive) {
+        switch (axis) {
+            case 0 -> {
+                this.yaw = positive ? -90.0F : 90.0F;
+                this.pitch = 0.0F;
+            }
+            case 1 -> {
+                this.yaw = 0.0F;
+                this.pitch = positive ? 90.0F : -90.0F;
+            }
+            default -> {
+                this.yaw = positive ? 0.0F : 180.0F;
+                this.pitch = 0.0F;
+            }
+        }
         this.revision++;
     }
 

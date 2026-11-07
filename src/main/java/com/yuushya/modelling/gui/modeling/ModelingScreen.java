@@ -40,6 +40,7 @@ public class ModelingScreen extends Screen {
     private ModelingElementList elementList;
     private ModelingProperties properties;
     private ModelingGizmo gizmo;
+    private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
     private int slot;
     private Property<?> property;
     private Button prevProperty;
@@ -133,6 +134,7 @@ public class ModelingScreen extends Screen {
 
     // ---- 数据同步 ----
 
+    /** 写值：暂存 + 立即改本地数据 + 触发重渲染。 */
     private void applyValue(TransformType type, double value) {
         this.storage.put(type, value);
         type.modify(this.blockEntity, this.slot, value);
@@ -194,7 +196,9 @@ public class ModelingScreen extends Screen {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         this.viewport.render(guiGraphics, this.layout.viewport, this.blockEntity, this.blockEntity.getTransformData());
         this.gizmo.setRect(this.layout.viewport);
+        this.gizmo.renderGrid(guiGraphics, this.width, this.height);
         this.gizmo.render(guiGraphics, this.width, this.height);
+        this.axisIndicator.render(guiGraphics, this.layout.viewport, mouseX, mouseY);
         ModelingChrome.render(guiGraphics, this.font, this.layout, currentElementName(), null);
         this.elementList.render(guiGraphics, mouseX, mouseY);
         renderTransformLabels(guiGraphics);
@@ -263,10 +267,18 @@ public class ModelingScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 任何点击都先提交正在输入的数字，避免切换焦点后丢掉编辑内容
+        if (this.properties != null) {
+            this.properties.commitAll();
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.elementList.mouseClicked(mouseX, mouseY)) {
             return true;
         }
         if (isOverViewport(mouseX, mouseY)) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                    && this.axisIndicator.mouseClicked(this.layout.viewport, mouseX, mouseY)) {
+                return true;
+            }
             if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
                 this.orbiting = true;
                 return true;
@@ -276,9 +288,6 @@ public class ModelingScreen extends Screen {
             if ((left || right) && this.gizmo.begin(mouseX, mouseY, right, this.width, this.height)) {
                 return true;
             }
-        }
-        if (this.properties != null) {
-            this.properties.commitAll();
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }

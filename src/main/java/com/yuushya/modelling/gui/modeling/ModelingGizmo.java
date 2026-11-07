@@ -38,6 +38,13 @@ public final class ModelingGizmo {
     /** 拾取半径（像素）。太宽会误触，太窄难命中。 */
     private static final double PICK_RADIUS = 10.0;
 
+    /** 参考网格：1 个方块宽，每边 8 等分。 */
+    private static final int GRID_DIVISIONS = 8;
+    /** 网格所在的底面高度（方块局部坐标的 y）。0 = 方块底面。 */
+    private static final float GRID_PLANE_Y = 0.0F;
+    private static final int GRID_LINE = 0x30FFFFFF;
+    private static final int GRID_BORDER = 0x66FFFFFF;
+
     private static final TransformType[] POS_TYPES = {TransformType.POS_X, TransformType.POS_Y, TransformType.POS_Z};
     private static final TransformType[] ROT_TYPES = {TransformType.ROT_X, TransformType.ROT_Y, TransformType.ROT_Z};
 
@@ -130,6 +137,74 @@ public final class ModelingGizmo {
 
     // ---- 渲染 ----
 
+    /**
+     * 参考网格：在<b>底面</b>（XZ 平面，y = {@link #GRID_PLANE_Y}）画一个 1 方块见方的网格，
+     * 每边 {@link #GRID_DIVISIONS} 等分（每格 = 1/8 方块 = 方块纹理的 2 像素）。
+     * <p>
+     * 与模型共用同一份投影矩阵，因此无论怎么转视角都严格贴合方块；用 GL 线段绘制，
+     * 半透明叠加，不会盖住模型细节。
+     */
+    public void renderGrid(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
+        if (!hasData() || this.rect.width() <= 0) {
+            return;
+        }
+        guiGraphics.flush();
+        guiGraphics.enableScissor(this.rect.x(), this.rect.y(), this.rect.right(), this.rect.bottom());
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        Matrix4f identity = new Matrix4f();
+        Tesselator tesselator = Tesselator.getInstance();
+        try {
+            RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+            RenderSystem.lineWidth(1.0F);
+            BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+            float y = GRID_PLANE_Y;
+            for (int i = 0; i <= GRID_DIVISIONS; i++) {
+                float t = (float) i / GRID_DIVISIONS;
+                int color = (i == 0 || i == GRID_DIVISIONS) ? GRID_BORDER : GRID_LINE;
+                // 沿 Z 方向的线（固定 x = t）
+                addGridSegment(builder, identity, t, y, 0.0F, t, y, 1.0F, color, screenWidth, screenHeight);
+                // 沿 X 方向的线（固定 z = t）
+                addGridSegment(builder, identity, 0.0F, y, t, 1.0F, y, t, color, screenWidth, screenHeight);
+            }
+            BufferUploader.drawWithShader(builder.buildOrThrow());
+        } finally {
+            RenderSystem.lineWidth(1.0F);
+            RenderSystem.depthMask(true);
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableCull();
+            RenderSystem.disableBlend();
+            guiGraphics.disableScissor();
+        }
+    }
+
+    /** 网格线段：两端都在底面上，投影到屏幕后提交。 */
+    private void addGridSegment(BufferBuilder builder, Matrix4f identity,
+                                float x0, float y0, float z0, float x1, float y1, float z1, int color,
+                                int screenWidth, int screenHeight) {
+        float[] from = toScreen(new float[]{x0, y0, z0}, null, 0.0F, screenWidth, screenHeight);
+        float[] to = toScreen(new float[]{x1, y1, z1}, null, 0.0F, screenWidth, screenHeight);
+        if (from == null || to == null) {
+            return;
+        }
+        addSegment(builder, identity, from[0], from[1], to[0], to[1], color);
+    }
+
+    /** 提交一条线段（顶点已是 GUI 像素坐标）。 */
+    private static void addSegment(BufferBuilder builder, Matrix4f matrix,
+                                   float x0, float y0, float x1, float y1, int color) {
+        float dx = x1 - x0;
+        float dy = y1 - y0;
+        float length = Math.max(1.0E-4F, (float) Math.hypot(dx, dy));
+        float nx = dx / length;
+        float ny = dy / length;
+        builder.addVertex(matrix, x0, y0, 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
+        builder.addVertex(matrix, x1, y1, 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
+    }
+
     public void render(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
         float[] origin = hostOrigin();
         if (origin == null) {
@@ -187,14 +262,7 @@ public final class ModelingGizmo {
                 boolean lit = axis == active;
                 RenderSystem.lineWidth(lit ? 4.0F : 2.0F);
                 BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                float dx = s[2] - s[0];
-                float dy = s[3] - s[1];
-                float length = Math.max(1.0E-4F, (float) Math.hypot(dx, dy));
-                float nx = dx / length;
-                float ny = dy / length;
-                int color = lit ? COLORS_HIGHLIGHT[axis] : COLORS[axis];
-                builder.addVertex(identity, s[0], s[1], 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
-                builder.addVertex(identity, s[2], s[3], 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
+                addSegment(builder, identity, s[0], s[1], s[2], s[3], lit ? COLORS_HIGHLIGHT[axis] : COLORS[axis]);
                 BufferUploader.drawWithShader(builder.buildOrThrow());
             }
         } finally {

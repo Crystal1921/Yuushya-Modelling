@@ -182,6 +182,12 @@
       5. 环绕视角后，轴线与拖拽方向是否仍一致
 
 ### P3 · 工具栏与模式
+- [x] P3.0 视口右下角**导航轴**（`ModelingAxisIndicator`）
+      - 三个正方向大圆点带 X/Y/Z 字母，三个负方向小空心圆
+      - 图形只跟随相机旋转，始终是当前视角的缩略示意
+      - 点击端点 → `ModelingCamera.lookFrom(axis, positive)` 转到该轴视角
+        （`yaw/pitch` 由 `Rx(pitch)·Ry(yaw)` 反解：+X→-90°、+Z→0°、±Y→±90°）
+      - 悬停高亮 + 半径放大
 - [ ] P3.1 `ModeTabBar` 顶栏平铺
 - [ ] P3.2 `ToolButton` 放新增/删除/替换/显隐/复制/粘贴/保存/统计
 - [ ] P3.3 快捷键：`1/2/3` 切模式、`Esc` 关闭

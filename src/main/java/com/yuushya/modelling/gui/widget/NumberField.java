@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -34,13 +33,9 @@ public class NumberField extends AbstractWidget {
     private static final int DRAG_THRESHOLD = 2;
 
     private final Font font;
-    private final double min;
-    private final double max;
     /** 每像素位移 / 每格滚轮对应的数值增量。 */
     private final double step;
     private final int decimals;
-    /** 旋转角这类循环量：越界时绕回而不是夹住。 */
-    private final boolean wrap;
     private final DoubleConsumer onChange;
 
     private double value;
@@ -54,17 +49,13 @@ public class NumberField extends AbstractWidget {
     private int holdTicks;
 
     public NumberField(Font font, int x, int y, int width, int height,
-                       double min, double max, double step, int decimals, boolean wrap,
-                       double initial, DoubleConsumer onChange) {
+                       double step, int decimals, double initial, DoubleConsumer onChange) {
         super(x, y, width, height, Component.empty());
         this.font = font;
-        this.min = min;
-        this.max = max;
         this.step = step;
         this.decimals = decimals;
-        this.wrap = wrap;
         this.onChange = onChange;
-        this.value = normalize(initial);
+        this.value = sanitize(initial);
     }
 
     public double getValue() {
@@ -73,7 +64,7 @@ public class NumberField extends AbstractWidget {
 
     /** 外部同步（切换元素等），不触发回调。 */
     public void setValue(double value) {
-        this.value = normalize(value);
+        this.value = sanitize(value);
         if (this.editing) {
             this.buffer = format(this.value);
         }
@@ -100,26 +91,16 @@ public class NumberField extends AbstractWidget {
         this.buffer = format(this.value);
     }
 
-    private double normalize(double raw) {
-        double result = Double.isNaN(raw) ? 0.0 : raw;
-        if (this.wrap) {
-            double span = this.max - this.min;
-            if (span > 0.0) {
-                result = (result - this.min) % span;
-                if (result < 0.0) {
-                    result += span;
-                }
-                return this.min + result;
-            }
-        }
-        return Mth.clamp(result, this.min, this.max);
+    /** 数值不做任何上下限夹取，只把 NaN 归零。 */
+    private static double sanitize(double raw) {
+        return Double.isNaN(raw) || Double.isInfinite(raw) ? 0.0 : raw;
     }
 
     private void setAndNotify(double raw) {
-        double normalized = normalize(raw);
-        this.value = normalized;
-        this.buffer = format(normalized);
-        this.onChange.accept(normalized);
+        double value = sanitize(raw);
+        this.value = value;
+        this.buffer = format(value);
+        this.onChange.accept(value);
     }
 
     private String format(double number) {
@@ -134,7 +115,9 @@ public class NumberField extends AbstractWidget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.active || !this.visible || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        // 必须自己判定命中：Screen 会按顺序遍历子控件，第一个返回 true 的会吞掉整屏点击
+        if (!this.active || !this.visible || button != GLFW.GLFW_MOUSE_BUTTON_LEFT
+                || !this.isMouseOver(mouseX, mouseY)) {
             return false;
         }
         this.dragging = true;
@@ -178,7 +161,7 @@ public class NumberField extends AbstractWidget {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (!this.active || !this.visible || scrollY == 0.0) {
+        if (!this.active || !this.visible || scrollY == 0.0 || !this.isMouseOver(mouseX, mouseY)) {
             return false;
         }
         double scale = hasShiftDown() ? 0.1 : 1.0;
