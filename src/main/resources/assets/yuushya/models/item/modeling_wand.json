@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "yuushya:item/blueprint"
+    "layer0": "yuushya:item/modeling_wand"
   }
 }
