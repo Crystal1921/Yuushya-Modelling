@@ -48,10 +48,6 @@ public class ModelingScreen extends Screen {
     private final ModelingAddPanel addPanel = new ModelingAddPanel(this::onAddPicked);
     private int slot;
     private Property<?> property;
-    private Button prevProperty;
-    private Button nextProperty;
-    private Button prevValue;
-    private Button nextValue;
 
     /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
     private static final int CAMERA_NONE = 0;
@@ -104,21 +100,21 @@ public class ModelingScreen extends Screen {
         int left = rect.x() + 4;
         int right = rect.right() - 14;
 
-        this.prevProperty = Button.builder(Component.literal("<"),
+        Button prevProperty = Button.builder(Component.literal("<"),
                         btn -> this.property = YuushyaBlockStates.getRelative(properties(), this.property, true))
                 .bounds(left, propertyRow, 10, ROW).build();
-        this.nextProperty = Button.builder(Component.literal(">"),
+        Button nextProperty = Button.builder(Component.literal(">"),
                         btn -> this.property = YuushyaBlockStates.getRelative(properties(), this.property, false))
                 .bounds(right, propertyRow, 10, ROW).build();
-        this.prevValue = Button.builder(Component.literal("<"), btn -> cycleValue(true))
+        Button prevValue = Button.builder(Component.literal("<"), btn -> cycleValue(true))
                 .bounds(left, valueRow, 10, ROW).build();
-        this.nextValue = Button.builder(Component.literal(">"), btn -> cycleValue(false))
+        Button nextValue = Button.builder(Component.literal(">"), btn -> cycleValue(false))
                 .bounds(right, valueRow, 10, ROW).build();
 
-        this.addRenderableWidget(this.prevProperty);
-        this.addRenderableWidget(this.nextProperty);
-        this.addRenderableWidget(this.prevValue);
-        this.addRenderableWidget(this.nextValue);
+        this.addRenderableWidget(prevProperty);
+        this.addRenderableWidget(nextProperty);
+        this.addRenderableWidget(prevValue);
+        this.addRenderableWidget(nextValue);
     }
 
     private void cycleValue(boolean previous) {
@@ -294,7 +290,12 @@ public class ModelingScreen extends Screen {
         this.addPanel.openAt(this.lastMouseX, this.lastMouseY, this.width, this.height);
     }
 
-    /** 从弹出面板拿到物品：若是方块则新建一个与之重叠的元素。 */
+    /**
+     * 从弹出面板拿到物品：写入元素。
+     * <p>
+     * 若当前选中的是空槽位（例如刚删过或本来就空着），直接<b>复用该槽位</b>而不是在后面追加，
+     * 避免空行堆积；否则新增到末尾。
+     */
     private void onAddPicked(ItemStack stack) {
         if (stack.isEmpty()) {
             return;
@@ -306,18 +307,30 @@ public class ModelingScreen extends Screen {
         this.properties.commitAll();
         flushPending();
 
-        TransformBlockData data = new TransformBlockData();
-        data.blockState = state;
-        data.isShown = true;
-        this.blockEntity.addTransformData(data);
-        int newSlot = this.blockEntity.size() - 1;
+        int target;
+        TransformBlockData data;
+        boolean reuse = this.slot >= 0 && this.slot < this.blockEntity.size()
+                && ModelingElementList.isEmpty(this.blockEntity.getTransformData(this.slot));
+        if (reuse) {
+            target = this.slot;
+            data = this.blockEntity.getTransformData(target);
+            data.set(new org.joml.Vector3d(0, 0, 0), new org.joml.Vector3f(0, 0, 0),
+                    new org.joml.Vector3f(1, 1, 1), state, true);
+        } else {
+            data = new TransformBlockData();
+            data.blockState = state;
+            data.isShown = true;
+            this.blockEntity.addTransformData(data);
+            target = this.blockEntity.size() - 1;
+        }
 
-        pushElement(newSlot, data);
-        this.slot = newSlot;
-        this.blockEntity.setSlot(newSlot);
+        pushElement(target, data);
+        this.slot = target;
+        this.blockEntity.setSlot(target);
         this.property = null;
-        this.properties.refresh(newSlot);
-        this.elementList.setSelected(newSlot);
+        this.properties.refresh(target);
+        this.elementList.setSelected(target);
+        this.elementList.markDirty();
         this.viewport.invalidate();
     }
 
@@ -356,23 +369,45 @@ public class ModelingScreen extends Screen {
         this.viewport.invalidate();
     }
 
-    /** 删除当前元素：设为空槽位，索引不变。 */
+    /**
+     * 删除当前元素：真正从列表移除，后续元素整体前移，并重新下发受影响的槽位。
+     * <p>
+     * 服务端只有「把某槽位设为空」的语义（{@code REMOVE}），没有收缩数组的操作，
+     * 因此这里在客户端收缩后，必须把从被删位置起的每个槽位整体重发一遍。
+     */
     private void removeElement() {
-        if (this.blockEntity.size() <= 0) {
+        int size = this.blockEntity.size();
+        if (size <= 0) {
             return;
         }
         this.properties.commitAll();
         flushPending();
-        this.storage.put(TransformType.REMOVE, 0.0);
-        TransformType.REMOVE.modify(this.blockEntity, this.slot, 0.0);
-        TransformType.BLOCK_STATE.modify(this.blockEntity, this.slot,
-                Block.getId(net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));
-        this.storage.put(TransformType.BLOCK_STATE,
-                (double) Block.getId(net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));
-        flushPending();
+
+        int removedAt = this.slot;
+        this.blockEntity.removeTransformDataAt(removedAt);
+        if (this.blockEntity.size() <= 0) {
+            // 至少保留一个空槽位，否则界面无从显示
+            this.blockEntity.addTransformData(new TransformBlockData());
+        }
+
+        // 从被删位置起，把后续元素整体重发到前移后的槽位
+        for (int i = removedAt; i < this.blockEntity.size(); i++) {
+            pushElement(i, this.blockEntity.getTransformData(i));
+        }
+        // 原末尾多出来的槽位清空
+        for (int i = this.blockEntity.size(); i < size; i++) {
+            TransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), i, TransformType.REMOVE, 0.0);
+        }
+
+        int newSlot = Math.min(removedAt, this.blockEntity.size() - 1);
+        this.slot = newSlot;
+        this.blockEntity.setSlot(newSlot);
+        this.property = null;
+        this.properties.refresh(newSlot);
+        this.elementList.setSelected(newSlot);
+        this.elementList.markDirty();
         this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
                 this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        this.properties.refresh(this.slot);
         this.viewport.invalidate();
     }
 

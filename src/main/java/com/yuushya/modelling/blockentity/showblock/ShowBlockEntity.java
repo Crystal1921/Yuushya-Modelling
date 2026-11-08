@@ -62,6 +62,21 @@ public class ShowBlockEntity extends AbstractTransformBlockEntity implements ITr
         this.slot = slot;
     }
 
+    /**
+     * 真正从列表中移除指定槽位（与 {@link #removeTransformData(int)} 的"设为空"不同）。
+     * <p>
+     * 后续元素会整体前移，调用方需要负责把受影响的槽位重新下发给服务端。
+     */
+    public void removeTransformDataAt(int slot) {
+        if (slot < 0 || slot >= transformData.size()) {
+            return;
+        }
+        transformData.remove(slot);
+        if (this.slot >= transformData.size()) {
+            this.slot = Math.max(0, transformData.size() - 1);
+        }
+    }
+
     @Override
     //readNbt
     public void loadAdditional(CompoundTag compoundTag, HolderLookup.Provider registries) {

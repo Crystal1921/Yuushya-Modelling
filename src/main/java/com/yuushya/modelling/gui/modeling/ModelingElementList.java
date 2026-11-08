@@ -3,6 +3,7 @@ package com.yuushya.modelling.gui.modeling;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -34,7 +35,11 @@ public final class ModelingElementList {
     private static final int ROW_SELECTED = 0xFF2B5C8A;
     private static final int TEXT = 0xFFDDDDDD;
     private static final int TEXT_SELECTED = 0xFFFFFFFF;
-    private static final int TEXT_MUTED = 0xFF8A8A8A;
+    private static final int TEXT_MUTED = 0xFF7A7A7A;
+    /** 隐藏元素的名称：明显更淡，但仍可辨认。 */
+    private static final int TEXT_HIDDEN = 0xFF5A5A5A;
+    /** 隐藏元素被选中时：比 TEXT_HIDDEN 稍亮，保证选中状态仍可辨。 */
+    private static final int TEXT_HIDDEN_SELECTED = 0xFF7E7E7E;
 
     /** 底部工具条高度。 */
     public static final int TOOLBAR_HEIGHT = 22;
@@ -71,13 +76,10 @@ public final class ModelingElementList {
     private int menuRow = -1;
     private int menuX;
     private int menuY;
+    @Setter
     private ToolListener toolListener = tool -> {
     };
     private Tool hoveredTool;
-
-    public void setToolListener(ToolListener listener) {
-        this.toolListener = listener;
-    }
 
     private final Minecraft minecraft;
     private final Font font;
@@ -86,6 +88,7 @@ public final class ModelingElementList {
 
     @Setter
     private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
+    @Getter
     private int selected;
     private int scroll;
 
@@ -295,7 +298,7 @@ public final class ModelingElementList {
 
             String slot = String.valueOf(index);
             guiGraphics.drawString(this.font, slot, this.rect.x() + 4, top + 6,
-                    isSelected ? TEXT_SELECTED : TEXT_MUTED, false);
+                    slotColor(isSelected, empty || !entry.isShown), false);
 
             int nameX = this.rect.x() + 20 + this.font.width(slot) + 8;
             int nameWidth = Math.max(8, this.rect.right() - SCROLLBAR_WIDTH - 3 - nameX);
@@ -303,7 +306,7 @@ public final class ModelingElementList {
                     ? "（空）"
                     : this.font.plainSubstrByWidth(displayName(entry.blockState), nameWidth);
             guiGraphics.drawString(this.font, name, nameX, top + 6,
-                    isSelected ? TEXT_SELECTED : (entry.isShown && !empty ? TEXT : TEXT_MUTED), false);
+                    nameColor(isSelected, empty, entry.isShown), false);
         }
 
         renderScrollbar(guiGraphics);
@@ -314,6 +317,22 @@ public final class ModelingElementList {
     /** 判定空槽位：AIR 且未显示。 */
     public static boolean isEmpty(TransformBlockData data) {
         return data.blockState.isAir();
+    }
+
+    /** 元素名颜色：隐藏元素一律淡灰（选中时稍亮），正常元素选中时纯白。 */
+    private static int nameColor(boolean selected, boolean empty, boolean shown) {
+        if (empty || !shown) {
+            return selected ? TEXT_HIDDEN_SELECTED : TEXT_HIDDEN;
+        }
+        return selected ? TEXT_SELECTED : TEXT;
+    }
+
+    /** 序号颜色：层级低于名称，隐藏/空槽位统一用次级灰。 */
+    private static int slotColor(boolean selected, boolean dim) {
+        if (dim) {
+            return selected ? TEXT_HIDDEN_SELECTED : TEXT_MUTED;
+        }
+        return selected ? TEXT_SELECTED : TEXT_MUTED;
     }
 
     private void renderToolbar(GuiGraphics guiGraphics) {
@@ -350,10 +369,9 @@ public final class ModelingElementList {
         }
     }
 
-    /** 工具条按钮的 tooltip（由界面在悬停时显示）。 */
-    public String hoveredToolTooltip() {
-        return this.hoveredTool == null ? null
-                : Component.translatable(this.hoveredTool.tooltipKey).getString();
+    /** 数据变化后刷新列表（元素数量变了）。 */
+    public void markDirty() {
+        this.scroll = Math.clamp(this.scroll, 0, maxScroll());
     }
 
     /**
