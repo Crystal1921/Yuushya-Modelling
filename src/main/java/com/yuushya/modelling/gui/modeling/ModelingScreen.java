@@ -47,7 +47,12 @@ public class ModelingScreen extends Screen {
     private Button nextProperty;
     private Button prevValue;
     private Button nextValue;
-    private boolean orbiting;
+
+    /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
+    private static final int CAMERA_NONE = 0;
+    private static final int CAMERA_ORBIT = 1;
+    private static final int CAMERA_PAN = 2;
+    private int cameraDrag = CAMERA_NONE;
 
     public ModelingScreen(ShowBlockEntity blockEntity) {
         super(Component.translatable("gui.yuushya.modeling.title"));
@@ -275,17 +280,23 @@ public class ModelingScreen extends Screen {
             return true;
         }
         if (isOverViewport(mouseX, mouseY)) {
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT
-                    && this.axisIndicator.mouseClicked(this.layout.viewport, mouseX, mouseY)) {
-                return true;
-            }
-            if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-                this.orbiting = true;
-                return true;
-            }
             boolean left = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
             boolean right = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+
+            if (left && this.axisIndicator.mouseClicked(this.layout.viewport, mouseX, mouseY)) {
+                return true;
+            }
+            // 1) 命中轴线 → 左键平移、右键绕轴旋转
             if ((left || right) && this.gizmo.begin(mouseX, mouseY, right, this.width, this.height)) {
+                return true;
+            }
+            // 2) 未命中轴线 → 左键环绕视角、右键平移视角（中键同样环绕）
+            if (left || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+                this.cameraDrag = CAMERA_ORBIT;
+                return true;
+            }
+            if (right) {
+                this.cameraDrag = CAMERA_PAN;
                 return true;
             }
         }
@@ -304,8 +315,12 @@ public class ModelingScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (this.orbiting) {
+        if (this.cameraDrag == CAMERA_ORBIT) {
             this.camera.orbit(dragX, dragY);
+            return true;
+        }
+        if (this.cameraDrag == CAMERA_PAN) {
+            this.camera.pan(dragX, dragY);
             return true;
         }
         if (this.gizmo.isActive()) {
@@ -317,8 +332,8 @@ public class ModelingScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.orbiting) {
-            this.orbiting = false;
+        if (this.cameraDrag != CAMERA_NONE) {
+            this.cameraDrag = CAMERA_NONE;
             return true;
         }
         if (this.gizmo.isActive()) {

@@ -177,7 +177,7 @@
   "gui.yuushya.modeling.scale": "缩放",
   "gui.yuushya.modeling.lit": "亮度",
   "gui.yuushya.modeling.status": "元素 %s 个 · 当前 #%s",
-  "gui.yuushya.modeling.cameraHint": "中键拖动 = 旋转视角  滚轮 = 缩放",
+  "gui.yuushya.modeling.cameraHint": "点轴拖动 = 移动/旋转  左键拖动空白 = 旋转视角  右键拖动空白 = 平移  滚轮 = 缩放",
 
   "gui.showBlockScreen.mode.slider": "当前:一般模式",
   "gui.showBlockScreen.mode.fine_tune": "当前:微调模式",

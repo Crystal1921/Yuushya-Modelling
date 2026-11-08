@@ -21,7 +21,7 @@ import org.joml.Matrix4f;
 public final class ModelingCamera {
 
     /** 相机距离范围（以模型尺寸的倍数表示）。 */
-    private static final float MIN_DISTANCE = 1.2F;
+    private static final float MIN_DISTANCE = 0.5F;
     private static final float MAX_DISTANCE = 24.0F;
     /** 模型占视口短边的比例上限。 */
     private static final float FIT_RATIO = 0.72F;
@@ -29,6 +29,9 @@ public final class ModelingCamera {
     private float yaw = 35.0F;
     private float pitch = 25.0F;
     private float distance = 3.5F;
+    /** 视口内的平移偏移（GUI 像素），由 Shift + 拖动产生。 */
+    private float panX;
+    private float panY;
     /** 每次相机变化 +1，供外部缓存（gizmo 的投影矩阵）判断是否需要重算。 */
     private int revision;
 
@@ -55,10 +58,28 @@ public final class ModelingCamera {
         this.revision++;
     }
 
+    /**
+     * 平移视图（Shift + 拖动）。
+     * <p>
+     * 偏移量直接加在最外层平移上，因此是纯屏幕空间的移动：1 像素鼠标位移 = 1 像素画面位移，
+     * 与当前缩放的远近无关（与 Blender 的 Shift + 中键一致）。
+     */
+    public void pan(double deltaX, double deltaY) {
+        this.panX += (float) deltaX;
+        this.panY += (float) deltaY;
+        this.revision++;
+    }
+
+    public boolean isPanned() {
+        return this.panX != 0.0F || this.panY != 0.0F;
+    }
+
     public void reset() {
         this.yaw = 35.0F;
         this.pitch = 25.0F;
         this.distance = 3.5F;
+        this.panX = 0.0F;
+        this.panY = 0.0F;
         this.revision++;
     }
 
@@ -86,11 +107,12 @@ public final class ModelingCamera {
         this.revision++;
     }
 
-    /** 我们自己的 pose：视口中心 + 适配缩放 + 俯仰 / 环绕。输出坐标即 GUI 像素。 */
+    /** 我们自己的 pose：视口中心 + 平移偏移 + 适配缩放 + 俯仰 / 环绕。输出坐标即 GUI 像素。 */
     public Matrix4f baseMatrix(ModelingLayout.Rect rect) {
         float fit = Math.min(rect.width(), rect.height()) * FIT_RATIO / this.distance;
         return new Matrix4f()
-                .translation(rect.x() + rect.width() / 2.0F, rect.y() + rect.height() / 2.0F, 150.0F)
+                .translation(rect.x() + rect.width() / 2.0F + this.panX,
+                        rect.y() + rect.height() / 2.0F + this.panY, 150.0F)
                 .scale(fit, -fit, fit)
                 .rotateX((float) Math.toRadians(this.pitch))
                 .rotateY((float) Math.toRadians(this.yaw));

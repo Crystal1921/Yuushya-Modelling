@@ -153,7 +153,7 @@
   "gui.yuushya.modeling.scale": "Scale",
   "gui.yuushya.modeling.lit": "Light",
   "gui.yuushya.modeling.status": "%s element(s) · current #%s",
-  "gui.yuushya.modeling.cameraHint": "MMB drag = orbit   Wheel = zoom",
+  "gui.yuushya.modeling.cameraHint": "Drag an axis = move/rotate  LMB empty = orbit  RMB empty = pan  Wheel = zoom",
   "gui.showBlockScreen.mode.slider": "Mode:Incremental",
   "gui.showBlockScreen.mode.fine_tune": "Mode:Fine Tune",
   "gui.showBlockScreen.mode.edit": "Mode:Input",
