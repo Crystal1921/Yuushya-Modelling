@@ -2,6 +2,7 @@ package com.yuushya.modelling.gui.modeling;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
+import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
 import com.yuushya.modelling.network.TransformDataOncePacket;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,6 +11,9 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -41,6 +45,7 @@ public class ModelingScreen extends Screen {
     private ModelingProperties properties;
     private ModelingGizmo gizmo;
     private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
+    private final ModelingAddPanel addPanel = new ModelingAddPanel(this::onAddPicked);
     private int slot;
     private Property<?> property;
     private Button prevProperty;
@@ -53,6 +58,10 @@ public class ModelingScreen extends Screen {
     private static final int CAMERA_ORBIT = 1;
     private static final int CAMERA_PAN = 2;
     private int cameraDrag = CAMERA_NONE;
+
+    /** 最近一次鼠标位置，供弹出面板定位。 */
+    private double lastMouseX;
+    private double lastMouseY;
 
     public ModelingScreen(ShowBlockEntity blockEntity) {
         super(Component.translatable("gui.yuushya.modeling.title"));
@@ -72,6 +81,7 @@ public class ModelingScreen extends Screen {
                 this.blockEntity.getTransformData(), this.slot, this::setSlot);
         this.elementList.setRect(new ModelingLayout.Rect(elements.x() + 1, elements.y() + TITLE_HEIGHT,
                 elements.width() - 2, elements.height() - TITLE_HEIGHT - 2));
+        this.elementList.setToolListener(this::onTool);
 
         this.properties = new ModelingProperties(this.blockEntity, this::applyValue);
         this.properties.layout(this.layout.transform, this.slot, this.font);
@@ -212,6 +222,8 @@ public class ModelingScreen extends Screen {
         for (Renderable renderable : this.renderables) {
             renderable.render(guiGraphics, mouseX, mouseY, partialTick);
         }
+        // 弹出面板最后画，压在一切之上
+        this.addPanel.render(guiGraphics, this.font, mouseX, mouseY, this.width, this.height);
     }
 
     /** 右下每行的左侧标签。 */
@@ -259,6 +271,136 @@ public class ModelingScreen extends Screen {
                 footer.y() + 4, ModelingChrome.PANEL_TITLE, false);
     }
 
+    // ---- 元素增删改 ----
+
+    /**
+     * 工具条 / 右键菜单的动作分发。
+     */
+    private void onTool(ModelingElementList.Tool tool) {
+        switch (tool) {
+            case ADD -> addElement();
+            case DUPLICATE -> duplicateElement();
+            case REMOVE -> removeElement();
+            case TOGGLE_SHOWN -> toggleShown();
+        }
+    }
+
+    /**
+     * 新增元素：弹出选择面板（副手 / 背包）。
+     * <p>
+     * 面板在鼠标位置弹出，选中物品后由 {@link #onAddPicked} 转成方块状态写入新槽位。
+     */
+    private void addElement() {
+        this.addPanel.openAt(this.lastMouseX, this.lastMouseY, this.width, this.height);
+    }
+
+    /** 从弹出面板拿到物品：若是方块则新建一个与之重叠的元素。 */
+    private void onAddPicked(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return;
+        }
+        BlockState state = stateOf(stack);
+        if (state == null || state.isAir()) {
+            return;
+        }
+        this.properties.commitAll();
+        flushPending();
+
+        TransformBlockData data = new TransformBlockData();
+        data.blockState = state;
+        data.isShown = true;
+        this.blockEntity.addTransformData(data);
+        int newSlot = this.blockEntity.size() - 1;
+
+        pushElement(newSlot, data);
+        this.slot = newSlot;
+        this.blockEntity.setSlot(newSlot);
+        this.property = null;
+        this.properties.refresh(newSlot);
+        this.elementList.setSelected(newSlot);
+        this.viewport.invalidate();
+    }
+
+    /** 物品 → 方块状态：方块物品取其状态（含 BLOCK_STATE 组件），否则看模组自带的 BLOCKSTATE 组件。 */
+    private static BlockState stateOf(ItemStack stack) {
+        if (stack.getItem() instanceof BlockItem blockItem) {
+            BlockState state = blockItem.getBlock().defaultBlockState();
+            net.minecraft.world.item.component.BlockItemStateProperties props =
+                    stack.get(net.minecraft.core.component.DataComponents.BLOCK_STATE);
+            return props == null ? state : props.apply(state);
+        }
+        var holder = com.yuushya.modelling.registries.DataComponentRegistry.BLOCKSTATE;
+        return holder.isBound() ? stack.get(holder.get()) : null;
+    }
+
+    /** 复制当前元素，原样重叠并选中副本。 */
+    private void duplicateElement() {
+        if (this.blockEntity.size() <= 0) {
+            return;
+        }
+        this.properties.commitAll();
+        flushPending();
+
+        TransformBlockData source = this.blockEntity.getTransformData(this.slot);
+        TransformBlockData copy = new TransformBlockData(source.pos, source.rot, source.scales,
+                source.blockState, source.isShown);
+        this.blockEntity.addTransformData(copy);
+        int newSlot = this.blockEntity.size() - 1;
+
+        pushElement(newSlot, copy);
+        this.slot = newSlot;
+        this.blockEntity.setSlot(newSlot);
+        this.property = null;
+        this.properties.refresh(newSlot);
+        this.elementList.setSelected(newSlot);
+        this.viewport.invalidate();
+    }
+
+    /** 删除当前元素：设为空槽位，索引不变。 */
+    private void removeElement() {
+        if (this.blockEntity.size() <= 0) {
+            return;
+        }
+        this.properties.commitAll();
+        flushPending();
+        this.storage.put(TransformType.REMOVE, 0.0);
+        TransformType.REMOVE.modify(this.blockEntity, this.slot, 0.0);
+        TransformType.BLOCK_STATE.modify(this.blockEntity, this.slot,
+                Block.getId(net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));
+        this.storage.put(TransformType.BLOCK_STATE,
+                (double) Block.getId(net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));
+        flushPending();
+        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
+                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        this.properties.refresh(this.slot);
+        this.viewport.invalidate();
+    }
+
+    /** 切换当前元素的显示状态。 */
+    private void toggleShown() {
+        if (this.blockEntity.size() <= 0) {
+            return;
+        }
+        double shown = TransformType.SHOWN.extract(this.blockEntity, this.slot) != 0.0 ? 0.0 : 1.0;
+        applyValue(TransformType.SHOWN, shown);
+    }
+
+    /** 把新元素的全部字段下发给服务端。 */
+    private void pushElement(int slot, TransformBlockData data) {
+        BlockPos pos = this.blockEntity.getBlockPos();
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.POS_X, data.pos.x);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.POS_Y, data.pos.y);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.POS_Z, data.pos.z);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.ROT_X, data.rot.x);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.ROT_Y, data.rot.y);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.ROT_Z, data.rot.z);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SCALE_X, data.scales.x);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SCALE_Y, data.scales.y);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SCALE_Z, data.scales.z);
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.BLOCK_STATE, Block.getId(data.blockState));
+        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SHOWN, data.isShown ? 1 : 0);
+    }
+
     @Override
     public boolean isPauseScreen() {
         return false;
@@ -272,12 +414,25 @@ public class ModelingScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+        // 弹出面板优先：打开时吞掉所有点击
+        if (this.addPanel.isOpen()) {
+            this.addPanel.mouseClicked(mouseX, mouseY, this.width, this.height);
+            return true;
+        }
         // 任何点击都先提交正在输入的数字，避免切换焦点后丢掉编辑内容
         if (this.properties != null) {
             this.properties.commitAll();
         }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.elementList.mouseClicked(mouseX, mouseY)) {
             return true;
+        }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && this.elementList.mouseRightClicked(mouseX, mouseY)) {
+            return true;
+        }
+        if (this.elementList.isMenuOpen()) {
+            this.elementList.closeMenu();
         }
         if (isOverViewport(mouseX, mouseY)) {
             boolean left = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
@@ -305,6 +460,9 @@ public class ModelingScreen extends Screen {
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+        this.elementList.updateHover((int) mouseX, (int) mouseY);
         if (isOverViewport(mouseX, mouseY)) {
             this.gizmo.hover(mouseX, mouseY, this.width, this.height);
         } else {
@@ -353,6 +511,32 @@ public class ModelingScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE && this.addPanel.isOpen()) {
+            this.addPanel.close();
+            return true;
+        }
+        boolean ctrl = hasControlDown();
+        if (keyCode == GLFW.GLFW_KEY_DELETE) {
+            removeElement();
+            return true;
+        }
+        if (ctrl && keyCode == GLFW.GLFW_KEY_D) {
+            duplicateElement();
+            return true;
+        }
+        if (ctrl && keyCode == GLFW.GLFW_KEY_N) {
+            addElement();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE && this.elementList.isMenuOpen()) {
+            this.elementList.closeMenu();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private Component currentElementName() {

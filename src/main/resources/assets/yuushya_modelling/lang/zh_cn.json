@@ -176,6 +176,12 @@
   "gui.yuushya.modeling.rot": "旋转",
   "gui.yuushya.modeling.scale": "缩放",
   "gui.yuushya.modeling.lit": "亮度",
+  "gui.yuushya.modeling.tool.add": "新增元素",
+  "gui.yuushya.modeling.tool.duplicate": "复制",
+  "gui.yuushya.modeling.tool.remove": "删除",
+  "gui.yuushya.modeling.tool.shown": "显示/隐藏",
+  "gui.yuushya.modeling.add.offhand": "使用副手物品",
+  "gui.yuushya.modeling.add.inventory": "从背包选择",
   "gui.yuushya.modeling.status": "元素 %s 个 · 当前 #%s",
   "gui.yuushya.modeling.cameraHint": "点轴拖动 = 移动/旋转  左键拖动空白 = 旋转视角  右键拖动空白 = 平移  滚轮 = 缩放",
 
