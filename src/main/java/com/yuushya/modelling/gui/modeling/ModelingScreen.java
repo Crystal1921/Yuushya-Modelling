@@ -4,11 +4,15 @@ import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
+import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.network.TransformDataOncePacket;
+import com.yuushya.modelling.utils.ClientMethod;
+import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
@@ -21,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,6 +51,7 @@ public class ModelingScreen extends Screen {
     private ModelingGizmo gizmo;
     private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
     private final ModelingAddPanel addPanel = new ModelingAddPanel(this::onAddPicked);
+    private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
     private int slot;
     private Property<?> property;
 
@@ -71,6 +77,7 @@ public class ModelingScreen extends Screen {
         // 窗口尺寸变化会重进 init，先把上一轮的待发送改动冲刷掉
         flushPending();
         this.property = null;
+        this.toolbar.setRect(this.layout.header);
 
         ModelingLayout.Rect elements = this.layout.elements;
         this.elementList = new ModelingElementList(this.minecraft, this.font,
@@ -211,6 +218,7 @@ public class ModelingScreen extends Screen {
         this.gizmo.render(guiGraphics, this.width, this.height);
         this.axisIndicator.render(guiGraphics, this.layout.viewport, mouseX, mouseY);
         ModelingChrome.render(guiGraphics, this.font, this.layout, currentElementName(), null);
+        this.toolbar.render(guiGraphics, this.font, mouseX, mouseY);
         this.elementList.render(guiGraphics, mouseX, mouseY);
         renderTransformLabels(guiGraphics);
         renderElementProperties(guiGraphics);
@@ -268,6 +276,104 @@ public class ModelingScreen extends Screen {
     }
 
     // ---- 元素增删改 ----
+
+    /** 顶栏动作分发。 */
+    private void onToolbarAction(ModelingToolbar.Action action) {
+        switch (action) {
+            case COPY -> copyAll();
+            case PASTE -> pasteAll();
+            case SAVE -> saveToFile();
+            case STATS -> this.toolbar.setFaceCount(ShowBlockScreen.calculateFaces(this.blockEntity));
+        }
+    }
+
+    /** 复制：把整个模型序列化到剪贴板。 */
+    private void copyAll() {
+        this.properties.commitAll();
+        flushPending();
+        ClientMethod.setClipboard(ShareUtils.transfer(this.blockEntity.getTransformData()));
+        toast(Component.translatable("gui.yuushya.modeling.action.copy.done"));
+    }
+
+    /**
+     * 粘贴：<b>完全替换</b>当前模型的全部元素。
+     * <p>
+     * {@code ShareBlockInformation.transfer(list)} 会清空并重填列表，因此这里先收缩到新元素数量、
+     * 把每个槽位下发一遍，再把多余的旧槽位清掉 —— 与「删除」采用的真删除语义保持一致。
+     */
+    private void pasteAll() {
+        String clipboard = ClientMethod.getClipboard();
+        ShareUtils.ShareBlockInformation info;
+        try {
+            info = ShareUtils.from(clipboard);
+        } catch (Exception e) {
+            toast(Component.translatable("gui.yuushya.modeling.action.paste.fail"));
+            return;
+        }
+        if (info == null || info.blocks().isEmpty()) {
+            toast(Component.translatable("gui.yuushya.modeling.action.paste.fail"));
+            return;
+        }
+        this.properties.commitAll();
+        flushPending();
+
+        int oldSize = this.blockEntity.size();
+        List<TransformBlockData> data = this.blockEntity.getTransformData();
+        info.transfer(data);
+        if (data.isEmpty()) {
+            data.add(new TransformBlockData());
+        }
+
+        // 新元素逐个下发
+        for (int i = 0; i < data.size(); i++) {
+            pushElement(i, data.get(i));
+        }
+        // 旧模型多出来的槽位清空
+        for (int i = data.size(); i < oldSize; i++) {
+            TransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), i, TransformType.REMOVE, 0.0);
+        }
+
+        int newSlot = Math.min(this.slot, this.blockEntity.size() - 1);
+        this.slot = Math.max(0, newSlot);
+        this.blockEntity.setSlot(this.slot);
+        this.property = null;
+        this.properties.refresh(this.slot);
+        this.elementList.setSelected(this.slot);
+        this.elementList.markDirty();
+        this.toolbar.invalidateStats();
+        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
+                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        this.viewport.invalidate();
+        toast(Component.translatable("gui.yuushya.modeling.action.paste.done"));
+    }
+
+    /** 保存：弹命名对话框后写入 modellings 目录。 */
+    private void saveToFile() {
+        this.properties.commitAll();
+        flushPending();
+        String json = ShareUtils.transfer(this.blockEntity.getTransformData());
+        this.minecraft.setScreen(new com.yuushya.modelling.gui.showblock.EditScreen(this,
+                Component.translatable("gui.showBlockScreen.workshop.save"),
+                Component.translatable("gui.showBlockScreen.workshop.save.tip"),
+                name -> {
+                    if (name != null && !name.isBlank()) {
+                        try {
+                            com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader.saveBlock(json, name);
+                            toast(Component.translatable("gui.yuushya.modeling.action.save.done"));
+                        } catch (Exception e) {
+                            toast(Component.literal(String.valueOf(e.getMessage())));
+                        }
+                    }
+                    this.minecraft.setScreen(this);
+                },
+                name -> true));
+    }
+
+    private void toast(Component message) {
+        this.minecraft.getToasts().addToast(new SystemToast(
+                SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                Component.translatable("gui.yuushya.modeling.title"), message));
+    }
 
     /**
      * 工具条 / 右键菜单的动作分发。
@@ -460,6 +566,9 @@ public class ModelingScreen extends Screen {
         if (this.properties != null) {
             this.properties.commitAll();
         }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.toolbar.mouseClicked(mouseX, mouseY)) {
+            return true;
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.elementList.mouseClicked(mouseX, mouseY)) {
             return true;
         }
@@ -497,6 +606,7 @@ public class ModelingScreen extends Screen {
     public void mouseMoved(double mouseX, double mouseY) {
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
+        this.toolbar.updateHover(mouseX, mouseY);
         this.elementList.updateHover((int) mouseX, (int) mouseY);
         if (isOverViewport(mouseX, mouseY)) {
             this.gizmo.hover(mouseX, mouseY, this.width, this.height);
@@ -565,6 +675,18 @@ public class ModelingScreen extends Screen {
         }
         if (ctrl && keyCode == GLFW.GLFW_KEY_N) {
             addElement();
+            return true;
+        }
+        if (ctrl && keyCode == GLFW.GLFW_KEY_C) {
+            copyAll();
+            return true;
+        }
+        if (ctrl && keyCode == GLFW.GLFW_KEY_V) {
+            pasteAll();
+            return true;
+        }
+        if (ctrl && keyCode == GLFW.GLFW_KEY_S) {
+            saveToFile();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE && this.elementList.isMenuOpen()) {
