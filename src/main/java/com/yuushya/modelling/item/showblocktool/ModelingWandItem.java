@@ -3,6 +3,7 @@ package com.yuushya.modelling.item.showblocktool;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.gui.modeling.ModelingScreen;
 import com.yuushya.modelling.item.AbstractToolItem;
+import com.yuushya.modelling.utils.ClientMethod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
@@ -32,7 +33,7 @@ public class ModelingWandItem extends AbstractToolItem {
             return InteractionResult.PASS;
         }
         if (level.isClientSide) {
-            Minecraft.getInstance().setScreen(new ModelingScreen(showBlockEntity));
+            ClientMethod.openModelingScreen(showBlockEntity);
         }
         return InteractionResult.SUCCESS;
     }

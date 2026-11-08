@@ -100,4 +100,8 @@ public class ClientMethod {
 
         setClipboard(String.format("#%06X", color));
     }
+
+    public static void openModelingScreen(ShowBlockEntity showBlockEntity) {
+        Minecraft.getInstance().setScreen(new com.yuushya.modelling.gui.modeling.ModelingScreen(showBlockEntity));
+    }
 }
