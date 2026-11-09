@@ -18,7 +18,8 @@ public final class ModelingToolbar {
         COPY("📤", "gui.yuushya.modeling.action.copy"),
         PASTE("📥", "gui.yuushya.modeling.action.paste"),
         SAVE("💾", "gui.yuushya.modeling.action.save"),
-        STATS("📊", "gui.yuushya.modeling.action.stats");
+        STATS("📊", "gui.yuushya.modeling.action.stats"),
+        HELP("?", "gui.yuushya.modeling.action.help");
 
         final String symbol;
         final String tooltipKey;
@@ -67,7 +68,16 @@ public final class ModelingToolbar {
     }
 
     private int buttonX(int index) {
+        // HELP 固定在顶栏最右端，其余按钮从左往右排
+        if (Action.values()[index] == Action.HELP) {
+            return this.rect.right() - 4 - BUTTON;
+        }
         return this.rect.x() + 4 + index * (BUTTON + GAP);
+    }
+
+    /** 参与左对齐排列的按钮数量（不含 HELP）。 */
+    private static int leftAlignedCount() {
+        return Action.values().length - 1;
     }
 
     private int buttonY() {
@@ -129,10 +139,10 @@ public final class ModelingToolbar {
                     hover ? TEXT_HOVER : TEXT, false);
         }
 
-        renderFaceCount(guiGraphics, font, actions.length, y);
+        renderFaceCount(guiGraphics, font, leftAlignedCount(), y);
     }
 
-    /** 面数紧跟最后一个按钮之后，左对齐到它的右侧间距处。 */
+    /** 面数紧跟最后一个左侧按钮之后（📊 是最后一个左对齐按钮）。 */
     private void renderFaceCount(GuiGraphics guiGraphics, Font font, int buttonCount, int y) {
         if (this.faceCount < 0) {
             return;

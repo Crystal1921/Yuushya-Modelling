@@ -54,6 +54,7 @@ public class ModelingScreen extends Screen {
     private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
     private final ModelingAddPanel addPanel = new ModelingAddPanel(this::onAddPicked);
     private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
+    private final ModelingOrderButtons orderButtons = new ModelingOrderButtons(this::onMove);
     private int slot;
     private Property<?> property;
     private Button shapeButton;
@@ -82,6 +83,10 @@ public class ModelingScreen extends Screen {
         flushPending();
         this.property = null;
         this.toolbar.setRect(this.layout.header);
+        // 上下移按钮贴在"元素"面板标题行右端
+        ModelingLayout.Rect elementsRect = this.layout.elements;
+        this.orderButtons.setRect(new ModelingLayout.Rect(elementsRect.x(), elementsRect.y(),
+                elementsRect.width(), TITLE_HEIGHT));
 
         ModelingLayout.Rect elements = this.layout.elements;
         this.elementList = new ModelingElementList(this.minecraft, this.font,
@@ -255,6 +260,8 @@ public class ModelingScreen extends Screen {
         this.axisIndicator.render(guiGraphics, this.layout.viewport, mouseX, mouseY);
         ModelingChrome.render(guiGraphics, this.font, this.layout, currentElementName(), null);
         this.toolbar.render(guiGraphics, this.font, mouseX, mouseY);
+        this.orderButtons.setBounds(this.slot > 0, this.slot < this.blockEntity.size() - 1);
+        this.orderButtons.render(guiGraphics, this.font, mouseX, mouseY);
         this.elementList.render(guiGraphics, mouseX, mouseY);
         renderTransformLabels(guiGraphics);
         renderElementProperties(guiGraphics);
@@ -313,6 +320,47 @@ public class ModelingScreen extends Screen {
 
     // ---- 元素增删改 ----
 
+    /** 上移 / 下移当前元素（与相邻元素交换）。 */
+    private void onMove(ModelingOrderButtons.Direction direction) {
+        moveElement(direction == ModelingOrderButtons.Direction.UP ? -1 : 1);
+    }
+
+    /**
+     * 把当前元素与相邻元素交换位置。
+     * <p>
+     * 服务端没有"交换"语义，所以交换后要把这两个槽位重新下发一遍。
+     *
+     * @param delta -1 上移，+1 下移
+     */
+    private void moveElement(int delta) {
+        int size = this.blockEntity.size();
+        int from = this.slot;
+        int to = from + delta;
+        if (size <= 1 || to < 0 || to >= size) {
+            return;
+        }
+        this.properties.commitAll();
+        flushPending();
+
+        List<TransformBlockData> data = this.blockEntity.getTransformData();
+        TransformBlockData moving = data.get(from);
+        TransformBlockData other = data.get(to);
+        data.set(from, other);
+        data.set(to, moving);
+
+        pushElement(from, data.get(from));
+        pushElement(to, data.get(to));
+
+        this.slot = to;
+        this.blockEntity.setSlot(to);
+        this.elementList.setSelected(to);
+        this.elementList.markDirty();
+        this.toolbar.invalidateStats();
+        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
+                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        this.viewport.invalidate();
+    }
+
     /** 顶栏动作分发。 */
     private void onToolbarAction(ModelingToolbar.Action action) {
         switch (action) {
@@ -320,6 +368,7 @@ public class ModelingScreen extends Screen {
             case PASTE -> pasteAll();
             case SAVE -> saveToFile();
             case STATS -> this.toolbar.setFaceCount(ShowBlockScreen.calculateFaces(this.blockEntity));
+            case HELP -> this.minecraft.setScreen(new ModelingHelpScreen(this));
         }
     }
 
@@ -605,6 +654,9 @@ public class ModelingScreen extends Screen {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.toolbar.mouseClicked(mouseX, mouseY)) {
             return true;
         }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.orderButtons.mouseClicked(mouseX, mouseY)) {
+            return true;
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.elementList.mouseClicked(mouseX, mouseY)) {
             return true;
         }
@@ -643,6 +695,7 @@ public class ModelingScreen extends Screen {
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
         this.toolbar.updateHover(mouseX, mouseY);
+        this.orderButtons.updateHover(mouseX, mouseY);
         this.elementList.updateHover((int) mouseX, (int) mouseY);
         if (isOverViewport(mouseX, mouseY)) {
             this.gizmo.hover(mouseX, mouseY, this.width, this.height);
@@ -711,6 +764,14 @@ public class ModelingScreen extends Screen {
         }
         if (ctrl && keyCode == GLFW.GLFW_KEY_N) {
             addElement();
+            return true;
+        }
+        if (hasShiftDown() && keyCode == GLFW.GLFW_KEY_UP) {
+            moveElement(-1);
+            return true;
+        }
+        if (hasShiftDown() && keyCode == GLFW.GLFW_KEY_DOWN) {
+            moveElement(1);
             return true;
         }
         if (ctrl && keyCode == GLFW.GLFW_KEY_C) {
