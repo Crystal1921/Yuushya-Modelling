@@ -176,6 +176,7 @@
   "gui.yuushya.modeling.rot": "旋转",
   "gui.yuushya.modeling.scale": "缩放",
   "gui.yuushya.modeling.lit": "亮度",
+  "gui.yuushya.modeling.shape.tip": "方块形状（碰撞与渲染范围）",
   "gui.yuushya.modeling.tool.add": "新增元素",
   "gui.yuushya.modeling.tool.duplicate": "复制",
   "gui.yuushya.modeling.tool.remove": "删除",

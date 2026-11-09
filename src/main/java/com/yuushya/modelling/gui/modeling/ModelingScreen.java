@@ -1,6 +1,7 @@
 package com.yuushya.modelling.gui.modeling;
 
 import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
+import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
 import com.yuushya.modelling.blockentity.transformData.TransformType;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -54,6 +56,8 @@ public class ModelingScreen extends Screen {
     private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
     private int slot;
     private Property<?> property;
+    private Button shapeButton;
+    private final List<BlockShape> SHAPES = List.of(BlockShape.values());
 
     /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
     private static final int CAMERA_NONE = 0;
@@ -104,6 +108,7 @@ public class ModelingScreen extends Screen {
         ModelingLayout.Rect rect = this.layout.elementProperties;
         int propertyRow = rect.y() + TITLE_HEIGHT + ROW;
         int valueRow = rect.y() + TITLE_HEIGHT + ROW * 2;
+        int shapeRow = rect.y() + TITLE_HEIGHT + ROW * 3;
         int left = rect.x() + 4;
         int right = rect.right() - 14;
 
@@ -118,10 +123,41 @@ public class ModelingScreen extends Screen {
         Button nextValue = Button.builder(Component.literal(">"), btn -> cycleValue(false))
                 .bounds(right, valueRow, 10, ROW).build();
 
+        // 形状：独立于方块状态属性，写的是方块本身的 SHAPES 属性
+        this.shapeButton = Button.builder(shapeSymbol(), btn -> cycleShape())
+                .bounds(left, shapeRow, right + 10 - left, ROW)
+                .tooltip(Tooltip.create(Component.translatable("gui.yuushya.modeling.shape.tip")))
+                .build();
+
         this.addRenderableWidget(prevProperty);
         this.addRenderableWidget(nextProperty);
         this.addRenderableWidget(prevValue);
         this.addRenderableWidget(nextValue);
+        this.addRenderableWidget(this.shapeButton);
+    }
+
+    /** 当前方块形状的显示文本。 */
+    private Component shapeSymbol() {
+        return this.blockEntity.getBlockState().getValue(YuushyaBlockStates.SHAPES).getSymbol();
+    }
+
+    /** 循环切换形状（点一下下一档），并下发到服务端。 */
+    private void cycleShape() {
+        BlockShape current = this.blockEntity.getBlockState().getValue(YuushyaBlockStates.SHAPES);
+        BlockShape next = YuushyaBlockStates.getRelative(SHAPES, current, true);
+        if (next == null) {
+            return;
+        }
+        this.storage.put(TransformType.SHAPE, (double) next.ordinal());
+        TransformType.SHAPE.modify(this.blockEntity, this.slot, next.ordinal());
+        flushPending();
+        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
+                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        if (this.shapeButton != null) {
+            this.shapeButton.setMessage(shapeSymbol());
+        }
+        this.viewport.invalidate();
+        this.toolbar.invalidateStats();
     }
 
     private void cycleValue(boolean previous) {

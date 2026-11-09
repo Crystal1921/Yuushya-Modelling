@@ -36,6 +36,9 @@ public class NumberField extends AbstractWidget {
     /** 每像素位移 / 每格滚轮对应的数值增量。 */
     private final double step;
     private final int decimals;
+    /** 有效区间；{@code min >= max} 表示不夹取。 */
+    private final double min;
+    private final double max;
     private final DoubleConsumer onChange;
 
     private double value;
@@ -50,12 +53,31 @@ public class NumberField extends AbstractWidget {
 
     public NumberField(Font font, int x, int y, int width, int height,
                        double step, int decimals, double initial, DoubleConsumer onChange) {
+        this(font, x, y, width, height, step, decimals, Double.NaN, Double.NaN, initial, onChange);
+    }
+
+    /**
+     * @param min 下界；与 {@code max} 一起传 {@code NaN} 表示不夹取（建模用的位移/旋转/缩放）
+     */
+    public NumberField(Font font, int x, int y, int width, int height,
+                       double step, int decimals, double min, double max,
+                       double initial, DoubleConsumer onChange) {
         super(x, y, width, height, Component.empty());
         this.font = font;
         this.step = step;
         this.decimals = decimals;
+        this.min = min;
+        this.max = max;
         this.onChange = onChange;
-        this.value = sanitize(initial);
+        this.value = clamp(sanitize(initial));
+    }
+
+    private boolean bounded() {
+        return this.max > this.min;
+    }
+
+    private double clamp(double value) {
+        return bounded() ? net.minecraft.util.Mth.clamp(value, this.min, this.max) : value;
     }
 
     public double getValue() {
@@ -64,7 +86,7 @@ public class NumberField extends AbstractWidget {
 
     /** 外部同步（切换元素等），不触发回调。 */
     public void setValue(double value) {
-        this.value = sanitize(value);
+        this.value = clamp(sanitize(value));
         if (this.editing) {
             this.buffer = format(this.value);
         }
@@ -97,7 +119,7 @@ public class NumberField extends AbstractWidget {
     }
 
     private void setAndNotify(double raw) {
-        double value = sanitize(raw);
+        double value = clamp(sanitize(raw));
         this.value = value;
         this.buffer = format(value);
         this.onChange.accept(value);

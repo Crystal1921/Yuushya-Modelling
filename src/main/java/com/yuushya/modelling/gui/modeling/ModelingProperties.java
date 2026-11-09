@@ -30,6 +30,13 @@ public final class ModelingProperties {
     private static final TransformType[] ROT_TYPES = {TransformType.ROT_X, TransformType.ROT_Y, TransformType.ROT_Z};
     private static final TransformType[] SCALE_TYPES = {TransformType.SCALE_X, TransformType.SCALE_Y, TransformType.SCALE_Z};
 
+    /**
+     * 光源等级的取值范围，必须与 {@code YuushyaBlockStates.LIT} 的定义一致
+     * （{@code IntegerProperty.create("lit", 0, 15)}）。越界会让 {@code setValue} 抛异常。
+     */
+    public static final double LIT_MIN = 0.0;
+    public static final double LIT_MAX = 15.0;
+
     private final ShowBlockEntity blockEntity;
     private final BiConsumer<TransformType, Double> onChange;
     private final List<NumberField> fields = new ArrayList<>();
@@ -93,7 +100,7 @@ public final class ModelingProperties {
     private void addBrightnessRow(ModelingLayout.Rect rect, int row, Font font) {
         int y = rowY(rect, row);
         NumberField field = new NumberField(font, rect.x() + LABEL_WIDTH, y, 46, ROW_HEIGHT - 2,
-                1.0, 0,
+                1.0, 0, LIT_MIN, LIT_MAX,
                 TransformType.LIT.extract(this.blockEntity, this.slot),
                 value -> this.onChange.accept(TransformType.LIT, value));
         this.fields.add(field);

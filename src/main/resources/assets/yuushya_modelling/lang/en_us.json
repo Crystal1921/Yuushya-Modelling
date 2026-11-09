@@ -152,6 +152,7 @@
   "gui.yuushya.modeling.rot": "Rotation",
   "gui.yuushya.modeling.scale": "Scale",
   "gui.yuushya.modeling.lit": "Light",
+  "gui.yuushya.modeling.shape.tip": "Block shape (collision and render extent)",
   "gui.yuushya.modeling.tool.add": "Add element",
   "gui.yuushya.modeling.tool.duplicate": "Duplicate",
   "gui.yuushya.modeling.tool.remove": "Delete",
