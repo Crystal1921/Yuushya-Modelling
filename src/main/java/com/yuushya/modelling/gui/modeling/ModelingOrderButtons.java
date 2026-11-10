@@ -2,6 +2,7 @@ package com.yuushya.modelling.gui.modeling;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 
 /**
  * 元素列表上的上下移按钮。
@@ -124,5 +125,22 @@ public final class ModelingOrderButtons {
                     x + (SIZE - font.width(symbol)) / 2, y + (SIZE - 8) / 2,
                     !on ? TEXT_DISABLED : (hover ? TEXT_HOVER : TEXT), false);
         }
+    }
+
+    /** 悬停按钮的提示文本，未悬停返回 {@code null}。 */
+    public String hoveredTooltip() {
+        return this.hovered == null ? null
+                : Component.translatable(this.hovered.tooltipKey).getString();
+    }
+
+    public int hoveredX() {
+        if (this.hovered == null) {
+            return 0;
+        }
+        return buttonX(this.hovered.ordinal()) + SIZE;
+    }
+
+    public int hoveredY() {
+        return buttonY();
     }
 }

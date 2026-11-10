@@ -51,9 +51,10 @@ public final class ModelingElementList {
     private static final int TOOL_TEXT = 0xFFCCCCCC;
     private static final int TOOL_TEXT_ACTIVE = 0xFFFFFFFF;
 
-    /** 工具条上的四个动作。 */
+    /** 工具条上的动作。 */
     public enum Tool {
-        ADD("+", "gui.yuushya.modeling.tool.add"),
+        ADD_OFFHAND("✋", "gui.yuushya.modeling.tool.addOffhand"),
+        ADD_INVENTORY("＋", "gui.yuushya.modeling.tool.addInventory"),
         DUPLICATE("⧉", "gui.yuushya.modeling.tool.duplicate"),
         REMOVE("🗑", "gui.yuushya.modeling.tool.remove"),
         TOGGLE_SHOWN("👁", "gui.yuushya.modeling.tool.shown");
@@ -244,6 +245,25 @@ public final class ModelingElementList {
     /** 悬停刷新（工具条按钮需要）。 */
     public void updateHover(int mouseX, int mouseY) {
         this.hoveredTool = toolAt(mouseX, mouseY);
+    }
+
+    /** 悬停工具的提示文本（tooltip 用），未悬停返回 {@code null}。 */
+    public String hoveredToolTooltip() {
+        return this.hoveredTool == null ? null
+                : Component.translatable(this.hoveredTool.tooltipKey).getString();
+    }
+
+    /** 悬停工具的屏幕位置。 */
+    public int hoveredToolX() {
+        if (this.hoveredTool == null) {
+            return 0;
+        }
+        int index = this.hoveredTool.ordinal();
+        return toolX(index) + TOOL_SIZE;
+    }
+
+    public int hoveredToolY() {
+        return toolY();
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {

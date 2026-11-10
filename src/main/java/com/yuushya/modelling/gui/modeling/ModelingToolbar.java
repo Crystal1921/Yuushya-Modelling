@@ -118,6 +118,18 @@ public final class ModelingToolbar {
         return this.hovered == null ? null : this.hovered.tooltip().getString();
     }
 
+    /** 悬停按钮的屏幕位置（tooltip 用）。 */
+    public int hoveredX() {
+        if (this.hovered == null) {
+            return 0;
+        }
+        return buttonX(java.util.Arrays.asList(Action.values()).indexOf(this.hovered)) + BUTTON;
+    }
+
+    public int hoveredY() {
+        return buttonY();
+    }
+
     public void render(GuiGraphics guiGraphics, Font font, int mouseX, int mouseY) {
         if (this.rect.width() <= 0 || this.rect.height() <= 0) {
             return;

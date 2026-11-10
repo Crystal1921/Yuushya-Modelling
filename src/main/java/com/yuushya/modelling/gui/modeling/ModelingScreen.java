@@ -52,7 +52,7 @@ public class ModelingScreen extends Screen {
     private ModelingProperties properties;
     private ModelingGizmo gizmo;
     private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
-    private final ModelingAddPanel addPanel = new ModelingAddPanel(this::onAddPicked);
+    private final ModelingAddPanel addPanel = new ModelingAddPanel(this::insertElement);
     private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
     private final ModelingOrderButtons orderButtons = new ModelingOrderButtons(this::onMove);
     private int slot;
@@ -200,6 +200,8 @@ public class ModelingScreen extends Screen {
         this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
                 this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         this.viewport.invalidate();
+        // 几何变了，之前统计的面数不再成立
+        this.toolbar.invalidateStats();
         if (this.properties != null) {
             this.properties.sync(type, value);
         }
@@ -271,6 +273,29 @@ public class ModelingScreen extends Screen {
         }
         // 弹出面板最后画，压在一切之上
         this.addPanel.render(guiGraphics, this.font, mouseX, mouseY, this.width, this.height);
+        renderTooltips(guiGraphics, mouseX, mouseY);
+    }
+
+    /** 统一渲染各处自绘控件的悬停提示（工具栏 / 元素工具条 / 上下移按钮）。 */
+    private void renderTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        // 弹出面板打开时不显示，避免叠在一起
+        if (this.addPanel.isOpen()) {
+            return;
+        }
+        String text = this.toolbar.hoveredTooltip();
+        if (text != null) {
+            guiGraphics.renderTooltip(this.font, Component.literal(text), mouseX, mouseY);
+            return;
+        }
+        text = this.elementList.hoveredToolTooltip();
+        if (text != null) {
+            guiGraphics.renderTooltip(this.font, Component.literal(text), mouseX, mouseY);
+            return;
+        }
+        text = this.orderButtons.hoveredTooltip();
+        if (text != null) {
+            guiGraphics.renderTooltip(this.font, Component.literal(text), mouseX, mouseY);
+        }
     }
 
     /** 右下每行的左侧标签。 */
@@ -465,29 +490,39 @@ public class ModelingScreen extends Screen {
      */
     private void onTool(ModelingElementList.Tool tool) {
         switch (tool) {
-            case ADD -> addElement();
+            case ADD_OFFHAND -> addFromOffhand();
+            case ADD_INVENTORY -> addFromInventory();
             case DUPLICATE -> duplicateElement();
             case REMOVE -> removeElement();
             case TOGGLE_SHOWN -> toggleShown();
         }
     }
 
-    /**
-     * 新增元素：弹出选择面板（副手 / 背包）。
-     * <p>
-     * 面板在鼠标位置弹出，选中物品后由 {@link #onAddPicked} 转成方块状态写入新槽位。
-     */
-    private void addElement() {
-        this.addPanel.openAt(this.lastMouseX, this.lastMouseY, this.width, this.height);
+    /** 用副手物品新增（副手不是方块时给提示）。 */
+    private void addFromOffhand() {
+        if (this.minecraft.player == null) {
+            return;
+        }
+        ItemStack offhand = this.minecraft.player.getOffhandItem();
+        if (offhand.isEmpty() || stateOf(offhand) == null || stateOf(offhand).isAir()) {
+            toast(Component.translatable("gui.yuushya.modeling.add.offhand.empty"));
+            return;
+        }
+        insertElement(offhand);
+    }
+
+    /** 打开背包选择面板新增。 */
+    private void addFromInventory() {
+        this.addPanel.openAt(this.lastMouseX, this.lastMouseY);
     }
 
     /**
-     * 从弹出面板拿到物品：写入元素。
+     * 把一个物品作为新元素写入模型。
      * <p>
      * 若当前选中的是空槽位（例如刚删过或本来就空着），直接<b>复用该槽位</b>而不是在后面追加，
      * 避免空行堆积；否则新增到末尾。
      */
-    private void onAddPicked(ItemStack stack) {
+    private void insertElement(ItemStack stack) {
         if (stack.isEmpty()) {
             return;
         }
@@ -763,7 +798,7 @@ public class ModelingScreen extends Screen {
             return true;
         }
         if (ctrl && keyCode == GLFW.GLFW_KEY_N) {
-            addElement();
+            addFromInventory();
             return true;
         }
         if (hasShiftDown() && keyCode == GLFW.GLFW_KEY_UP) {
