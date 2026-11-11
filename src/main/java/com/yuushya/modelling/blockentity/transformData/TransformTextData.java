@@ -127,4 +127,46 @@ public class TransformTextData implements ITransformDataProvider {
     public void setShown(boolean shown) {
         this.isShown = shown;
     }
-}
+
+        @Override
+        public void setPosition(double x, double y, double z) {
+            this.pos.set(x, y, z);
+        }
+
+        @Override
+        public void setRotation(float x, float y, float z) {
+            this.rot.set(x, y, z);
+        }
+
+        @Override
+        public void setScale(float x, float y, float z) {
+            this.scales.set(x, y, z);
+        }
+
+        @Override
+        public void reset() {
+            set();
+        }
+
+        @Override
+        public void setFrom(ITransformDataProvider other) {
+            if (other instanceof TransformTextData text) {
+                set(text);
+                return;
+            }
+            this.pos.set(other.getPosition());
+            this.rot.set(other.getRotation());
+            this.scales.set(other.getScale());
+            this.isShown = other.isShown();
+        }
+
+        @Override
+        public net.minecraft.world.item.ItemStack iconStack() {
+            return net.minecraft.world.item.ItemStack.EMPTY;
+        }
+
+        @Override
+        public boolean empty() {
+            return this.textLines.isEmpty() || this.textLines.stream().allMatch(String::isBlank);
+        }
+    }

@@ -69,10 +69,12 @@ public interface ITransformItemDataInventory {
 
     default boolean isEmpty() {
         for (TransformItemData transformData : getTransformData()) {
-            return transformData.itemStack.isEmpty();
+                if (!transformData.itemStack.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return true;
-    }
 
     @NotNull
     default TransformItemData getTransformData(int slot) {

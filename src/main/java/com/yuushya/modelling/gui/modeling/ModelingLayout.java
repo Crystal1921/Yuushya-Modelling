@@ -20,8 +20,8 @@ public final class ModelingLayout {
     public static final int MIN_RIGHT_WIDTH = 104;
     /** 元素列表行高。 */
     public static final int OUTLINER_ROW_HEIGHT = 26;
-    /** 右上"元素属性"占内容区高度的比例。 */
-    private static final float ELEMENT_PROPERTIES_RATIO = 0.45F;
+    /** 右上"元素属性"占内容区高度的比例（其余给右下变换面板）。 */
+        private static final float ELEMENT_PROPERTIES_RATIO = 0.5F;
 
     /** 一块矩形区域。 */
     public record Rect(int x, int y, int width, int height) {
@@ -67,9 +67,10 @@ public final class ModelingLayout {
         }
 
         int rightX = width - right;
-        int minElementProperties = PANEL_TITLE_HEIGHT + 2 * 20;
-        int elementPropertiesHeight = Mth.clamp(Math.round(contentHeight * ELEMENT_PROPERTIES_RATIO),
-                minElementProperties, Math.max(minElementProperties, contentHeight / 2));
+                // 标题 + 元素名 + 属性行 + 值行 + 开关行 + 形状行
+                int minElementProperties = PANEL_TITLE_HEIGHT + 5 * 20;
+                int elementPropertiesHeight = Mth.clamp(Math.round(contentHeight * ELEMENT_PROPERTIES_RATIO),
+                        minElementProperties, Math.max(minElementProperties, contentHeight / 2));
 
         this.header = new Rect(0, 0, width, HEADER_HEIGHT);
         this.footer = new Rect(0, height - FOOTER_HEIGHT, width, FOOTER_HEIGHT);

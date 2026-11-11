@@ -6,13 +6,14 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
-import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
-import com.yuushya.modelling.blockentity.transformData.TransformType;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
+import com.yuushya.modelling.gui.modeling.target.ModelingChannel;
+import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
 import com.yuushya.modelling.gui.transform.AxisDragController;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -45,33 +46,35 @@ public final class ModelingGizmo {
     private static final int GRID_LINE = 0x30FFFFFF;
     private static final int GRID_BORDER = 0x66FFFFFF;
 
-    private static final TransformType[] POS_TYPES = {TransformType.POS_X, TransformType.POS_Y, TransformType.POS_Z};
-    private static final TransformType[] ROT_TYPES = {TransformType.ROT_X, TransformType.ROT_Y, TransformType.ROT_Z};
+    private static final ModelingChannel[] POS_CHANNELS = {
+                ModelingChannel.POS_X, ModelingChannel.POS_Y, ModelingChannel.POS_Z};
+        private static final ModelingChannel[] ROT_CHANNELS = {
+                ModelingChannel.ROT_X, ModelingChannel.ROT_Y, ModelingChannel.ROT_Z};
 
-    private final ModelingCamera camera;
-    private final ShowBlockEntity blockEntity;
-    private final IntSupplier slotSupplier;
-    private final BiConsumer<TransformType, Double> apply;
-    private final java.util.function.Supplier<ItemStack> stackSupplier;
-    private final AxisDragController controller;
+        private final ModelingCamera camera;
+        private final ModelingTarget target;
+        private final IntSupplier slotSupplier;
+        private final BiConsumer<ModelingChannel, Double> apply;
+        private final java.util.function.Supplier<ItemStack> stackSupplier;
+        private final AxisDragController controller;
 
-    private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
-    private int highlighted;
-    private Matrix4f matrixCache;
-    private ModelingLayout.Rect matrixRect;
-    private ItemStack matrixStack;
-    private int matrixRevision = -1;
+        private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
+        private int highlighted;
+        private Matrix4f matrixCache;
+        private ModelingLayout.Rect matrixRect;
+        private ItemStack matrixStack;
+        private int matrixRevision = -1;
 
-    public ModelingGizmo(ModelingCamera camera, ShowBlockEntity blockEntity,
-                         IntSupplier slotSupplier, BiConsumer<TransformType, Double> apply,
-                         java.util.function.Supplier<ItemStack> stackSupplier) {
-        this.camera = camera;
-        this.blockEntity = blockEntity;
-        this.slotSupplier = slotSupplier;
-        this.apply = apply;
-        this.stackSupplier = stackSupplier;
-        this.controller = new AxisDragController(new Host(), this::toNdc);
-    }
+        public ModelingGizmo(ModelingCamera camera, ModelingTarget target,
+                             IntSupplier slotSupplier, BiConsumer<ModelingChannel, Double> apply,
+                             java.util.function.Supplier<ItemStack> stackSupplier) {
+            this.camera = camera;
+            this.target = target;
+            this.slotSupplier = slotSupplier;
+            this.apply = apply;
+            this.stackSupplier = stackSupplier;
+            this.controller = new AxisDragController(new Host(), this::toNdc);
+        }
 
     /** 每帧渲染前更新视口区域（相机矩阵依赖它）。 */
     public void setRect(ModelingLayout.Rect rect) {
@@ -84,12 +87,14 @@ public final class ModelingGizmo {
         ItemStack key = stack == null ? ItemStack.EMPTY : stack;
         int revision = this.camera.revision();
         if (this.matrixCache == null || !this.rect.equals(this.matrixRect)
-                || key != this.matrixStack || revision != this.matrixRevision) {
-            this.matrixCache = this.camera.itemMatrix(this.rect, key, current().blockState);
-            this.matrixRect = this.rect;
-            this.matrixStack = key;
-            this.matrixRevision = revision;
-        }
+                        || key != this.matrixStack || revision != this.matrixRevision) {
+                    var state = this.target.contentState(this.slotSupplier.getAsInt());
+                    this.matrixCache = this.camera.itemMatrix(this.rect, key,
+                            state == null ? Blocks.AIR.defaultBlockState() : state);
+                    this.matrixRect = this.rect;
+                    this.matrixStack = key;
+                    this.matrixRevision = revision;
+                }
         return this.matrixCache;
     }
 
@@ -298,12 +303,14 @@ public final class ModelingGizmo {
         if (!hasData()) {
             return null;
         }
-        TransformBlockData data = current();
-        return new float[]{
-                (float) (0.5 + data.pos.x * data.scales.x() / 16.0),
-                (float) (0.5 + data.pos.y * data.scales.y() / 16.0),
-                (float) (0.5 + data.pos.z * data.scales.z() / 16.0)};
-    }
+            ITransformDataProvider data = current();
+            var pos = data.getPosition();
+            var scales = data.getScale();
+            return new float[]{
+                    (float) (0.5 + pos.x * scales.x() / 16.0),
+                    (float) (0.5 + pos.y * scales.y() / 16.0),
+                    (float) (0.5 + pos.z * scales.z() / 16.0)};
+        }
 
     private float[] hostDirection(int axis) {
         return switch (axis) {
@@ -341,12 +348,12 @@ public final class ModelingGizmo {
     }
 
     private boolean hasData() {
-        return this.rect.width() > 0 && this.blockEntity.size() > 0
-                && this.slotSupplier.getAsInt() < this.blockEntity.size();
+            return this.rect.width() > 0 && this.target.size() > 0
+                    && this.slotSupplier.getAsInt() < this.target.size();
     }
 
-    private TransformBlockData current() {
-        return this.blockEntity.getTransformData(this.slotSupplier.getAsInt());
+        private ITransformDataProvider current() {
+            return this.target.element(this.slotSupplier.getAsInt());
     }
 
     /** 供 {@link AxisDragController} 读写数据。 */
@@ -357,33 +364,46 @@ public final class ModelingGizmo {
                 return 0.0;
             }
             // 旋转按"拖动切线轴上的位移"换算，缩放系数取 1（模型空间里 1 单位 = 1 方块）
-            return (rotation ? ROT_TYPES : POS_TYPES)[axis].extract(current());
-        }
-
-        @Override
-        public void apply(int axis, boolean rotation, double value) {
-            ModelingGizmo.this.apply.accept((rotation ? ROT_TYPES : POS_TYPES)[axis], value);
-        }
-
-        @Override
-        public void highlight(int axis) {
-            ModelingGizmo.this.highlighted = axis;
-        }
-
-        @Override
-        public double axisScale(int axis) {
-            // 平移：pos 每 +1 让中心移动 scales/16，因此 1 个数据单位 = scales/16 方块
-            // 旋转：绕该轴转 δ 时，切线上距中心 r 的点位移 r·δ（r 已被 S 缩放）
-            if (!hasData()) {
-                return 1.0;
+                if (rotation) {
+                    var rot = current().getRotation();
+                    return switch (axis) {
+                        case 0 -> rot.x();
+                        case 1 -> rot.y();
+                        default -> rot.z();
+                    };
+                }
+                var pos = current().getPosition();
+                return switch (axis) {
+                    case 0 -> pos.x;
+                    case 1 -> pos.y;
+                    default -> pos.z;
+                };
             }
-            var scales = current().scales;
-            return switch (axis) {
-                case 0 -> scales.x();
-                case 1 -> scales.y();
-                default -> scales.z();
-            };
-        }
+
+            @Override
+            public void apply(int axis, boolean rotation, double value) {
+                ModelingGizmo.this.apply.accept((rotation ? ROT_CHANNELS : POS_CHANNELS)[axis], value);
+            }
+
+            @Override
+            public void highlight(int axis) {
+                ModelingGizmo.this.highlighted = axis;
+            }
+
+            @Override
+            public double axisScale(int axis) {
+                // 平移：pos 每 +1 让中心移动 scales/16，因此 1 个数据单位 = scales/16 方块
+                // 旋转：绕该轴转 δ 时，切线上距中心 r 的点位移 r·δ（r 已被 S 缩放）
+                if (!hasData()) {
+                    return 1.0;
+                }
+                var scales = current().getScale();
+                return switch (axis) {
+                    case 0 -> scales.x();
+                    case 1 -> scales.y();
+                    default -> scales.z();
+                };
+            }
 
         @Override
         public float[] axisOriginWorld() {

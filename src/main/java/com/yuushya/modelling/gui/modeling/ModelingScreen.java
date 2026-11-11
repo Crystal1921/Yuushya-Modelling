@@ -1,14 +1,10 @@
 package com.yuushya.modelling.gui.modeling;
 
-import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
-import com.yuushya.modelling.blockentity.BlockShape;
-import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
-import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
-import com.yuushya.modelling.blockentity.transformData.TransformType;
-import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
-import com.yuushya.modelling.network.TransformDataOncePacket;
+import com.yuushya.modelling.gui.modeling.target.ItemBlockTarget;
+import com.yuushya.modelling.gui.modeling.target.ModelingChannel;
+import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
+import com.yuushya.modelling.gui.modeling.target.ShowBlockTarget;
 import com.yuushya.modelling.utils.ClientMethod;
-import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -17,35 +13,28 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 建模工作台（Blockbench 式）。
  * <p>
- * 布局：顶栏 / 左侧元素列表 / 右上元素属性（方块状态）/ 右下变换属性 / 中间实心 3D 视口。
- * 属性编辑使用紧凑的 {@link com.yuushya.modelling.gui.widget.NumberField}（拖动即改值、单击即输入），
- * 元素列表是自绘的紧凑行，均不使用原版滑块与 {@code ObjectSelectionList}。
+ * 布局：顶栏 / 左侧元素列表 / 右上元素属性 / 右下变换属性 / 中间实心 3D 视口。
+ * 界面本身不认识具体方块实体，所有数据读写都通过 {@link ModelingTarget}；
+ * ShowBlock 与 ItemBlock 各有一个实现，切换只需要换 target。
  */
 public class ModelingScreen extends Screen {
 
     private static final int TITLE_HEIGHT = ModelingLayout.PANEL_TITLE_HEIGHT;
-    private static final int ROW = 20;
+        private static final int ROW = 20;
 
-    private final ShowBlockEntity blockEntity;
+    private final ModelingTarget target;
     private final ModelingCamera camera = new ModelingCamera();
     private final ModelingViewport viewport = new ModelingViewport(this.camera);
-    private final Map<TransformType, Double> storage = new HashMap<>();
 
     private ModelingLayout layout;
     private ModelingElementList elementList;
@@ -55,10 +44,13 @@ public class ModelingScreen extends Screen {
     private final ModelingAddPanel addPanel = new ModelingAddPanel(this::insertElement);
     private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
     private final ModelingOrderButtons orderButtons = new ModelingOrderButtons(this::onMove);
+    private final List<Button> elementPropertyWidgets = new ArrayList<>();
     private int slot;
-    private Property<?> property;
+    /** 当前显示在右上属性区的第几组方块状态属性。 */
+    private int propertyIndex;
     private Button shapeButton;
-    private final List<BlockShape> SHAPES = List.of(BlockShape.values());
+        /** 开关行的纵向位置（无开关时也不影响绘制）。 */
+        private int toggleAreaTop;
 
     /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
     private static final int CAMERA_NONE = 0;
@@ -70,39 +62,49 @@ public class ModelingScreen extends Screen {
     private double lastMouseX;
     private double lastMouseY;
 
-    public ModelingScreen(ShowBlockEntity blockEntity) {
+    private ModelingScreen(ModelingTarget target) {
         super(Component.translatable("gui.yuushya.modeling.title"));
-        this.blockEntity = blockEntity;
-        this.slot = Math.max(0, blockEntity.getSlot());
+        this.target = target;
+        this.slot = Math.max(0, target.slot());
+    }
+
+    /** ShowBlock 的建模界面。 */
+    public static ModelingScreen forShowBlock(com.yuushya.modelling.blockentity.showblock.ShowBlockEntity entity) {
+        return new ModelingScreen(new ShowBlockTarget(entity));
+    }
+
+    /** ItemBlock 的建模界面。 */
+    public static ModelingScreen forItemBlock(com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity entity) {
+        return new ModelingScreen(new ItemBlockTarget(entity));
     }
 
     @Override
     protected void init() {
         this.layout = new ModelingLayout(this.width, this.height);
         // 窗口尺寸变化会重进 init，先把上一轮的待发送改动冲刷掉
-        flushPending();
-        this.property = null;
+        this.target.flush();
+        this.propertyIndex = 0;
         this.toolbar.setRect(this.layout.header);
+
         // 上下移按钮贴在"元素"面板标题行右端
         ModelingLayout.Rect elementsRect = this.layout.elements;
         this.orderButtons.setRect(new ModelingLayout.Rect(elementsRect.x(), elementsRect.y(),
                 elementsRect.width(), TITLE_HEIGHT));
 
-        ModelingLayout.Rect elements = this.layout.elements;
-        this.elementList = new ModelingElementList(this.minecraft, this.font,
-                this.blockEntity.getTransformData(), this.slot, this::setSlot);
-        this.elementList.setRect(new ModelingLayout.Rect(elements.x() + 1, elements.y() + TITLE_HEIGHT,
-                elements.width() - 2, elements.height() - TITLE_HEIGHT - 2));
+        this.elementList = new ModelingElementList(this.font,
+                this.target.elements(), this.slot, this::setSlot);
+        this.elementList.setRect(new ModelingLayout.Rect(elementsRect.x() + 1, elementsRect.y() + TITLE_HEIGHT,
+                elementsRect.width() - 2, elementsRect.height() - TITLE_HEIGHT - 2));
         this.elementList.setToolListener(this::onTool);
 
-        this.properties = new ModelingProperties(this.blockEntity, this::applyValue);
+        this.properties = new ModelingProperties(this.target, this::applyValue);
         this.properties.layout(this.layout.transform, this.slot, this.font);
         for (AbstractWidget widget : this.properties.widgets()) {
             this.addRenderableWidget(widget);
         }
 
-        this.gizmo = new ModelingGizmo(this.camera, this.blockEntity, () -> this.slot, this::applyValue,
-                this.viewport::currentStack);
+        this.gizmo = new ModelingGizmo(this.camera, this.target, () -> this.slot, this::applyValue,
+                this.target::previewStack);
         this.gizmo.setRect(this.layout.viewport);
 
         initElementPropertyWidgets();
@@ -110,136 +112,144 @@ public class ModelingScreen extends Screen {
 
     /** 右上「元素属性」里的方块状态切换按钮。 */
     private void initElementPropertyWidgets() {
+        for (Button button : this.elementPropertyWidgets) {
+            this.removeWidget(button);
+        }
+        this.elementPropertyWidgets.clear();
+
         ModelingLayout.Rect rect = this.layout.elementProperties;
-        int propertyRow = rect.y() + TITLE_HEIGHT + ROW;
-        int valueRow = rect.y() + TITLE_HEIGHT + ROW * 2;
-        int shapeRow = rect.y() + TITLE_HEIGHT + ROW * 3;
-        int left = rect.x() + 4;
-        int right = rect.right() - 14;
+            int propertyRow = rect.y() + TITLE_HEIGHT + ROW;
+            int valueRow = propertyRow + ROW;
+            int toggleRow = valueRow + ROW;
+            int shapeRow = rect.y() + TITLE_HEIGHT + ROW * 4;
+            int left = rect.x() + 4;
+            int right = rect.right() - 14;
 
-        Button prevProperty = Button.builder(Component.literal("<"),
-                        btn -> this.property = YuushyaBlockStates.getRelative(properties(), this.property, true))
-                .bounds(left, propertyRow, 10, ROW).build();
-        Button nextProperty = Button.builder(Component.literal(">"),
-                        btn -> this.property = YuushyaBlockStates.getRelative(properties(), this.property, false))
-                .bounds(right, propertyRow, 10, ROW).build();
-        Button prevValue = Button.builder(Component.literal("<"), btn -> cycleValue(true))
-                .bounds(left, valueRow, 10, ROW).build();
-        Button nextValue = Button.builder(Component.literal(">"), btn -> cycleValue(false))
-                .bounds(right, valueRow, 10, ROW).build();
+            // 上一行切「属性」，下一行切「值」
+            addWidget(Button.builder(Component.literal("<"), btn -> selectProperty(-1))
+                    .bounds(left, propertyRow, 10, ROW).build());
+            addWidget(Button.builder(Component.literal(">"), btn -> selectProperty(1))
+                    .bounds(right, propertyRow, 10, ROW).build());
+            addWidget(Button.builder(Component.literal("<"), btn -> cycleValue(-1))
+                    .bounds(left, valueRow, 10, ROW).build());
+            addWidget(Button.builder(Component.literal(">"), btn -> cycleValue(1))
+                    .bounds(right, valueRow, 10, ROW).build());
 
-        // 形状：独立于方块状态属性，写的是方块本身的 SHAPES 属性
-        this.shapeButton = Button.builder(shapeSymbol(), btn -> cycleShape())
-                .bounds(left, shapeRow, right + 10 - left, ROW)
-                .tooltip(Tooltip.create(Component.translatable("gui.yuushya.modeling.shape.tip")))
-                .build();
+            // 类型特有的开关（ItemBlock 的物品 / 方块），没有就整行隐藏
+            List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
+            this.toggleAreaTop = toggleRow;
+            if (!toggles.isEmpty()) {
+                ModelingTarget.PropertyRow toggle = toggles.get(0);
+                addWidget(Button.builder(Component.literal("<"), btn -> toggle.previous().run())
+                        .bounds(left, toggleRow, 10, ROW).build());
+                addWidget(Button.builder(Component.literal(">"), btn -> toggle.next().run())
+                        .bounds(right, toggleRow, 10, ROW).build());
+            }
 
-        this.addRenderableWidget(prevProperty);
-        this.addRenderableWidget(nextProperty);
-        this.addRenderableWidget(prevValue);
-        this.addRenderableWidget(nextValue);
-        this.addRenderableWidget(this.shapeButton);
-    }
+            // 形状：独立于方块状态属性，写的是方块本身的 SHAPES 属性
+            this.shapeButton = Button.builder(this.target.shapeLabel(), btn -> cycleShape())
+                    .bounds(left, shapeRow, right + 10 - left, ROW)
+                    .tooltip(Tooltip.create(Component.translatable("gui.yuushya.modeling.shape.tip")))
+                    .build();
+            addWidget(this.shapeButton);
+        }
 
-    /** 当前方块形状的显示文本。 */
-    private Component shapeSymbol() {
-        return this.blockEntity.getBlockState().getValue(YuushyaBlockStates.SHAPES).getSymbol();
-    }
+        private void addWidget(Button button) {
+            this.addRenderableWidget(button);
+            this.elementPropertyWidgets.add(button);
+        }
+
+        /** 当前元素可用的属性行。 */
+        private List<ModelingTarget.PropertyRow> allProperties() {
+            return this.target.properties(this.slot);
+        }
+
+        /** 当前显示的那一组属性；无可调属性时返回 {@code null}。 */
+        private ModelingTarget.PropertyRow currentProperty() {
+            List<ModelingTarget.PropertyRow> all = allProperties();
+            if (all.isEmpty()) {
+                return null;
+            }
+            this.propertyIndex = Math.floorMod(this.propertyIndex, all.size());
+            return all.get(this.propertyIndex);
+        }
+
+        private void selectProperty(int delta) {
+            List<ModelingTarget.PropertyRow> all = allProperties();
+            if (all.size() <= 1) {
+                return;
+            }
+            this.propertyIndex = Math.floorMod(this.propertyIndex + delta, all.size());
+            refreshElementProperties();
+        }
+
+        private void cycleValue(int delta) {
+            ModelingTarget.PropertyRow row = currentProperty();
+            if (row == null) {
+                return;
+            }
+            if (delta < 0) {
+                row.previous().run();
+            } else {
+                row.next().run();
+            }
+            this.target.invalidatePreview();
+            this.toolbar.invalidateStats();
+        }
 
     /** 循环切换形状（点一下下一档），并下发到服务端。 */
     private void cycleShape() {
-        BlockShape current = this.blockEntity.getBlockState().getValue(YuushyaBlockStates.SHAPES);
-        BlockShape next = YuushyaBlockStates.getRelative(SHAPES, current, true);
-        if (next == null) {
-            return;
-        }
-        this.storage.put(TransformType.SHAPE, (double) next.ordinal());
-        TransformType.SHAPE.modify(this.blockEntity, this.slot, next.ordinal());
-        flushPending();
-        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
-                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
+        Component label = this.target.cycleShape();
         if (this.shapeButton != null) {
-            this.shapeButton.setMessage(shapeSymbol());
+            this.shapeButton.setMessage(label);
         }
-        this.viewport.invalidate();
+        this.viewportDirty();
+    }
+
+        /** 属性区内容变了（切换属性 / 改值 / 换元素），按钮与文字都要跟随。 */
+            private void refreshElementProperties() {
+                if (this.shapeButton != null) {
+                    this.shapeButton.setMessage(this.target.shapeLabel());
+                }
+                this.target.invalidatePreview();
+            }
+
+    /** 数据变了：刷新视口、失效面数统计。 */
+    private void viewportDirty() {
+        this.target.invalidatePreview();
+        this.target.resync();
         this.toolbar.invalidateStats();
-    }
-
-    private void cycleValue(boolean previous) {
-        Property<?> current = resolveProperty();
-        if (current == null) {
-            return;
-        }
-        applyValue(TransformType.BLOCK_STATE,
-                Block.getId(YuushyaBlockStates.cycleState(getBlockState(), current, previous)));
-    }
-
-    private java.util.Collection<Property<?>> properties() {
-        return getBlockState().getBlock().getStateDefinition().getProperties();
-    }
-
-    private Property<?> resolveProperty() {
-        if (this.property != null) {
-            return this.property;
-        }
-        var all = properties();
-        this.property = all.isEmpty() ? null : all.iterator().next();
-        return this.property;
-    }
-
-    private BlockState getBlockState() {
-        return this.blockEntity.getTransformData(this.slot).blockState;
-    }
-
-    // ---- 数据同步 ----
-
-    /** 写值：暂存 + 立即改本地数据 + 触发重渲染。 */
-    private void applyValue(TransformType type, double value) {
-        this.storage.put(type, value);
-        type.modify(this.blockEntity, this.slot, value);
-        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
-                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        this.viewport.invalidate();
-        // 几何变了，之前统计的面数不再成立
-        this.toolbar.invalidateStats();
-        if (this.properties != null) {
-            this.properties.sync(type, value);
-        }
-    }
-
-    private void flushPending() {
-        for (Map.Entry<TransformType, Double> entry : this.storage.entrySet()) {
-            TransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), this.slot, entry.getKey(), entry.getValue());
-        }
-        this.storage.clear();
     }
 
     /** 切换元素：先提交正在输入的数字，再冲刷、切槽位并刷新字段。 */
     public void setSlot(int slot) {
-        if (slot == this.slot) {
+        if (slot == this.slot || slot < 0 || slot >= this.target.size()) {
             return;
         }
-        if (this.properties != null) {
-            this.properties.commitAll();
-        }
-        flushPending();
+        commitInputs();
         this.slot = slot;
-        this.blockEntity.setSlot(slot);
-        this.property = null;
+        this.target.setSlot(slot);
+        this.propertyIndex = 0;
         if (this.properties != null) {
             this.properties.refresh(slot);
         }
         this.elementList.setSelected(slot);
-        this.viewport.invalidate();
+        initElementPropertyWidgets();
+        this.target.invalidatePreview();
+    }
+
+    /** 提交正在输入的数字框并冲刷待发送的改动。 */
+    private void commitInputs() {
+        if (this.properties != null) {
+            this.properties.commitAll();
+        }
+        this.target.flush();
     }
 
     @Override
     public void removed() {
-        if (this.properties != null) {
-            this.properties.commitAll();
-        }
-        flushPending();
-        TransformDataOncePacket.sendToServerSideSuccess(this.blockEntity.getBlockPos());
+        commitInputs();
+        this.target.commit();
     }
 
     // ---- 渲染 ----
@@ -255,14 +265,14 @@ public class ModelingScreen extends Screen {
             this.layout = new ModelingLayout(this.width, this.height);
         }
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        this.viewport.render(guiGraphics, this.layout.viewport, this.blockEntity, this.blockEntity.getTransformData());
+        this.viewport.render(guiGraphics, this.layout.viewport, this.target.previewStack());
         this.gizmo.setRect(this.layout.viewport);
         this.gizmo.renderGrid(guiGraphics, this.width, this.height);
         this.gizmo.render(guiGraphics, this.width, this.height);
         this.axisIndicator.render(guiGraphics, this.layout.viewport, mouseX, mouseY);
-        ModelingChrome.render(guiGraphics, this.font, this.layout, currentElementName(), null);
+        ModelingChrome.render(guiGraphics, this.font, this.layout, this.target.displayName(), null);
         this.toolbar.render(guiGraphics, this.font, mouseX, mouseY);
-        this.orderButtons.setBounds(this.slot > 0, this.slot < this.blockEntity.size() - 1);
+        this.orderButtons.setBounds(this.slot > 0, this.slot < this.target.size() - 1);
         this.orderButtons.render(guiGraphics, this.font, mouseX, mouseY);
         this.elementList.render(guiGraphics, mouseX, mouseY);
         renderTransformLabels(guiGraphics);
@@ -301,42 +311,48 @@ public class ModelingScreen extends Screen {
     /** 右下每行的左侧标签。 */
     private void renderTransformLabels(GuiGraphics guiGraphics) {
         ModelingLayout.Rect rect = this.layout.transform;
-        for (Map.Entry<Integer, Component> entry : this.properties.labels().entrySet()) {
+        for (var entry : this.properties.labels().entrySet()) {
             int y = rect.y() + TITLE_HEIGHT + entry.getKey() * ROW + 6;
             guiGraphics.drawString(this.font, entry.getValue(), rect.x() + 5, y, ModelingChrome.PANEL_TITLE, false);
         }
     }
 
-    /** 右上：方块名、属性名、属性值。 */
+    /** 右上：元素名、属性名、属性值。 */
     private void renderElementProperties(GuiGraphics guiGraphics) {
         ModelingLayout.Rect rect = this.layout.elementProperties;
         int y = rect.y() + TITLE_HEIGHT;
-        guiGraphics.drawString(this.font, getBlockState().getBlock().getName(), rect.x() + 5, y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, this.target.displayName(), rect.x() + 5, y, 0xFFFFFFFF, false);
 
-        Property<?> current = resolveProperty();
-        if (current == null) {
-            guiGraphics.drawString(this.font, Component.translatable("gui.yuushya.modeling.noProperties"),
-                    rect.x() + 5, y + ROW, ModelingChrome.PANEL_TITLE, false);
-            return;
-        }
-        String propertyName = current.getName();
-        String valueName = valueText(current, getBlockState());
-        guiGraphics.drawString(this.font, propertyName, centered(rect, propertyName), y + ROW + 6, 0xFFB0B0B0, false);
-        guiGraphics.drawString(this.font, valueName, centered(rect, valueName), y + ROW * 2 + 6, 0xFFFFFFFF, false);
-    }
+        ModelingTarget.PropertyRow row = currentProperty();
+                if (row == null) {
+                    guiGraphics.drawString(this.font, Component.translatable("gui.yuushya.modeling.noProperties"),
+                            rect.x() + 5, y + ROW, ModelingChrome.PANEL_TITLE, false);
+                    return;
+                }
+                guiGraphics.drawString(this.font, row.label(), centered(rect, row.label().getString()),
+                        y + ROW + 6, 0xFFB0B0B0, false);
+                guiGraphics.drawString(this.font, row.value(), centered(rect, row.value().getString()),
+                        y + ROW * 2 + 6, 0xFFFFFFFF, false);
+
+                List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
+                if (!toggles.isEmpty()) {
+                    ModelingTarget.PropertyRow toggle = toggles.get(0);
+                    int toggleText = this.toggleAreaTop + 6;
+                    guiGraphics.drawString(this.font, toggle.label(), rect.x() + 16, toggleText, 0xFFB0B0B0, false);
+                    String value = toggle.value().getString();
+                    guiGraphics.drawString(this.font, value,
+                            rect.right() - 16 - this.font.width(value), toggleText, 0xFFFFFFFF, false);
+                }
+            }
 
     private int centered(ModelingLayout.Rect rect, String text) {
         return rect.x() + (rect.width() - this.font.width(text)) / 2;
     }
 
-    private static <T extends Comparable<T>> String valueText(Property<T> property, BlockState state) {
-        return property.getName(state.getValue(property));
-    }
-
     private void renderStatus(GuiGraphics guiGraphics) {
         ModelingLayout.Rect footer = this.layout.footer;
         guiGraphics.drawString(this.font,
-                Component.translatable("gui.yuushya.modeling.status", this.blockEntity.size(), this.slot),
+                Component.translatable("gui.yuushya.modeling.status", this.target.size(), this.slot),
                 footer.x() + 5, footer.y() + 4, ModelingChrome.TEXT, false);
         Component right = Component.translatable("gui.yuushya.modeling.cameraHint");
         guiGraphics.drawString(this.font, right, footer.right() - 5 - this.font.width(right),
@@ -358,33 +374,25 @@ public class ModelingScreen extends Screen {
      * @param delta -1 上移，+1 下移
      */
     private void moveElement(int delta) {
-        int size = this.blockEntity.size();
+        int size = this.target.size();
         int from = this.slot;
         int to = from + delta;
         if (size <= 1 || to < 0 || to >= size) {
             return;
         }
-        this.properties.commitAll();
-        flushPending();
+        commitInputs();
 
-        List<TransformBlockData> data = this.blockEntity.getTransformData();
-        TransformBlockData moving = data.get(from);
-        TransformBlockData other = data.get(to);
-        data.set(from, other);
-        data.set(to, moving);
+                this.target.swap(from, to);
 
-        pushElement(from, data.get(from));
-        pushElement(to, data.get(to));
-
-        this.slot = to;
-        this.blockEntity.setSlot(to);
-        this.elementList.setSelected(to);
-        this.elementList.markDirty();
-        this.toolbar.invalidateStats();
-        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
-                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        this.viewport.invalidate();
-    }
+                this.slot = to;
+                this.target.setSlot(to);
+                this.elementList.setSelected(to);
+                this.elementList.markDirty();
+                this.toolbar.invalidateStats();
+                this.properties.refresh(to);
+                this.propertyIndex = 0;
+                viewportDirty();
+            }
 
     /** 顶栏动作分发。 */
     private void onToolbarAction(ModelingToolbar.Action action) {
@@ -392,83 +400,47 @@ public class ModelingScreen extends Screen {
             case COPY -> copyAll();
             case PASTE -> pasteAll();
             case SAVE -> saveToFile();
-            case STATS -> this.toolbar.setFaceCount(ShowBlockScreen.calculateFaces(this.blockEntity));
+            case STATS -> this.toolbar.setFaceCount(this.target.faceCount());
             case HELP -> this.minecraft.setScreen(new ModelingHelpScreen(this));
         }
     }
 
     /** 复制：把整个模型序列化到剪贴板。 */
     private void copyAll() {
-        this.properties.commitAll();
-        flushPending();
-        ClientMethod.setClipboard(ShareUtils.transfer(this.blockEntity.getTransformData()));
+        commitInputs();
+        ClientMethod.setClipboard(this.target.serialize());
         toast(Component.translatable("gui.yuushya.modeling.action.copy.done"));
     }
 
-    /**
-     * 粘贴：<b>完全替换</b>当前模型的全部元素。
-     * <p>
-     * {@code ShareBlockInformation.transfer(list)} 会清空并重填列表，因此这里先收缩到新元素数量、
-     * 把每个槽位下发一遍，再把多余的旧槽位清掉 —— 与「删除」采用的真删除语义保持一致。
-     */
+    /** 粘贴：完全替换当前模型的全部元素。 */
     private void pasteAll() {
         String clipboard = ClientMethod.getClipboard();
-        ShareUtils.ShareBlockInformation info;
-        try {
-            info = ShareUtils.from(clipboard);
-        } catch (Exception e) {
+        commitInputs();
+        if (!this.target.paste(clipboard)) {
             toast(Component.translatable("gui.yuushya.modeling.action.paste.fail"));
             return;
         }
-        if (info == null || info.blocks().isEmpty()) {
-            toast(Component.translatable("gui.yuushya.modeling.action.paste.fail"));
-            return;
-        }
-        this.properties.commitAll();
-        flushPending();
-
-        int oldSize = this.blockEntity.size();
-        List<TransformBlockData> data = this.blockEntity.getTransformData();
-        info.transfer(data);
-        if (data.isEmpty()) {
-            data.add(new TransformBlockData());
-        }
-
-        // 新元素逐个下发
-        for (int i = 0; i < data.size(); i++) {
-            pushElement(i, data.get(i));
-        }
-        // 旧模型多出来的槽位清空
-        for (int i = data.size(); i < oldSize; i++) {
-            TransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), i, TransformType.REMOVE, 0.0);
-        }
-
-        int newSlot = Math.min(this.slot, this.blockEntity.size() - 1);
-        this.slot = Math.max(0, newSlot);
-        this.blockEntity.setSlot(this.slot);
-        this.property = null;
+        this.slot = Math.min(this.slot, Math.max(0, this.target.size() - 1));
+        this.target.setSlot(this.slot);
+        this.propertyIndex = 0;
         this.properties.refresh(this.slot);
         this.elementList.setSelected(this.slot);
         this.elementList.markDirty();
         this.toolbar.invalidateStats();
-        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
-                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        this.viewport.invalidate();
+        viewportDirty();
         toast(Component.translatable("gui.yuushya.modeling.action.paste.done"));
     }
 
     /** 保存：弹命名对话框后写入 modellings 目录。 */
     private void saveToFile() {
-        this.properties.commitAll();
-        flushPending();
-        String json = ShareUtils.transfer(this.blockEntity.getTransformData());
+        commitInputs();
         this.minecraft.setScreen(new com.yuushya.modelling.gui.showblock.EditScreen(this,
                 Component.translatable("gui.showBlockScreen.workshop.save"),
                 Component.translatable("gui.showBlockScreen.workshop.save.tip"),
                 name -> {
                     if (name != null && !name.isBlank()) {
                         try {
-                            com.yuushya.modelling.gui.engrave.EngraveBlockResultLoader.saveBlock(json, name);
+                            this.target.saveToFile(name);
                             toast(Component.translatable("gui.yuushya.modeling.action.save.done"));
                         } catch (Exception e) {
                             toast(Component.literal(String.valueOf(e.getMessage())));
@@ -498,13 +470,13 @@ public class ModelingScreen extends Screen {
         }
     }
 
-    /** 用副手物品新增（副手不是方块时给提示）。 */
+    /** 用副手物品新增（副手不能用时给提示）。 */
     private void addFromOffhand() {
         if (this.minecraft.player == null) {
             return;
         }
         ItemStack offhand = this.minecraft.player.getOffhandItem();
-        if (offhand.isEmpty() || stateOf(offhand) == null || stateOf(offhand).isAir()) {
+        if (!this.target.accepts(offhand)) {
             toast(Component.translatable("gui.yuushya.modeling.add.offhand.empty"));
             return;
         }
@@ -523,144 +495,125 @@ public class ModelingScreen extends Screen {
      * 避免空行堆积；否则新增到末尾。
      */
     private void insertElement(ItemStack stack) {
-        if (stack.isEmpty()) {
+        if (!this.target.accepts(stack)) {
             return;
         }
-        BlockState state = stateOf(stack);
-        if (state == null || state.isAir()) {
-            return;
-        }
-        this.properties.commitAll();
-        flushPending();
+        commitInputs();
 
-        int target;
-        TransformBlockData data;
-        boolean reuse = this.slot >= 0 && this.slot < this.blockEntity.size()
-                && ModelingElementList.isEmpty(this.blockEntity.getTransformData(this.slot));
+        int targetSlot;
+        boolean reuse = this.slot >= 0 && this.slot < this.target.size()
+                && this.target.isEmptyElement(this.slot);
         if (reuse) {
-            target = this.slot;
-            data = this.blockEntity.getTransformData(target);
-            data.set(new org.joml.Vector3d(0, 0, 0), new org.joml.Vector3f(0, 0, 0),
-                    new org.joml.Vector3f(1, 1, 1), state, true);
+            targetSlot = this.slot;
+            this.target.element(targetSlot).reset();
         } else {
-            data = new TransformBlockData();
-            data.blockState = state;
-            data.isShown = true;
-            this.blockEntity.addTransformData(data);
-            target = this.blockEntity.size() - 1;
+            targetSlot = this.target.appendEmpty();
         }
+        this.target.setContent(targetSlot, stack.copy());
+        this.target.setLocal(targetSlot, ModelingChannel.SHOWN, 1.0);
 
-        pushElement(target, data);
-        this.slot = target;
-        this.blockEntity.setSlot(target);
-        this.property = null;
-        this.properties.refresh(target);
-        this.elementList.setSelected(target);
+        this.target.resend(targetSlot, this.target.element(targetSlot));
+        this.slot = targetSlot;
+        this.target.setSlot(targetSlot);
+        this.propertyIndex = 0;
+        this.properties.refresh(targetSlot);
+        this.elementList.setSelected(targetSlot);
         this.elementList.markDirty();
-        this.viewport.invalidate();
-    }
-
-    /** 物品 → 方块状态：方块物品取其状态（含 BLOCK_STATE 组件），否则看模组自带的 BLOCKSTATE 组件。 */
-    private static BlockState stateOf(ItemStack stack) {
-        if (stack.getItem() instanceof BlockItem blockItem) {
-            BlockState state = blockItem.getBlock().defaultBlockState();
-            net.minecraft.world.item.component.BlockItemStateProperties props =
-                    stack.get(net.minecraft.core.component.DataComponents.BLOCK_STATE);
-            return props == null ? state : props.apply(state);
-        }
-        var holder = com.yuushya.modelling.registries.DataComponentRegistry.BLOCKSTATE;
-        return holder.isBound() ? stack.get(holder.get()) : null;
+        initElementPropertyWidgets();
+        viewportDirty();
     }
 
     /** 复制当前元素，原样重叠并选中副本。 */
     private void duplicateElement() {
-        if (this.blockEntity.size() <= 0) {
+        if (this.target.size() <= 0 || this.target.isEmptyElement(this.slot)) {
             return;
         }
-        this.properties.commitAll();
-        flushPending();
+        commitInputs();
 
-        TransformBlockData source = this.blockEntity.getTransformData(this.slot);
-        TransformBlockData copy = new TransformBlockData(source.pos, source.rot, source.scales,
-                source.blockState, source.isShown);
-        this.blockEntity.addTransformData(copy);
-        int newSlot = this.blockEntity.size() - 1;
+        int newSlot = this.target.appendEmpty();
+        this.target.element(newSlot).setFrom(this.target.element(this.slot));
 
-        pushElement(newSlot, copy);
+        this.target.resend(newSlot, this.target.element(newSlot));
         this.slot = newSlot;
-        this.blockEntity.setSlot(newSlot);
-        this.property = null;
+        this.target.setSlot(newSlot);
+        this.propertyIndex = 0;
         this.properties.refresh(newSlot);
         this.elementList.setSelected(newSlot);
-        this.viewport.invalidate();
+        this.elementList.markDirty();
+        initElementPropertyWidgets();
+        viewportDirty();
     }
 
     /**
      * 删除当前元素：真正从列表移除，后续元素整体前移，并重新下发受影响的槽位。
-     * <p>
-     * 服务端只有「把某槽位设为空」的语义（{@code REMOVE}），没有收缩数组的操作，
-     * 因此这里在客户端收缩后，必须把从被删位置起的每个槽位整体重发一遍。
      */
     private void removeElement() {
-        int size = this.blockEntity.size();
+        int size = this.target.size();
         if (size <= 0) {
             return;
         }
-        this.properties.commitAll();
-        flushPending();
+        commitInputs();
 
         int removedAt = this.slot;
-        this.blockEntity.removeTransformDataAt(removedAt);
-        if (this.blockEntity.size() <= 0) {
+        this.target.removeAt(removedAt);
+        if (this.target.size() <= 0) {
             // 至少保留一个空槽位，否则界面无从显示
-            this.blockEntity.addTransformData(new TransformBlockData());
+            this.target.appendEmpty();
         }
 
-        // 从被删位置起，把后续元素整体重发到前移后的槽位
-        for (int i = removedAt; i < this.blockEntity.size(); i++) {
-            pushElement(i, this.blockEntity.getTransformData(i));
+        for (int i = removedAt; i < this.target.size(); i++) {
+            this.target.resend(i, this.target.element(i));
         }
-        // 原末尾多出来的槽位清空
-        for (int i = this.blockEntity.size(); i < size; i++) {
-            TransformDataOncePacket.sendToServerSide(this.blockEntity.getBlockPos(), i, TransformType.REMOVE, 0.0);
-        }
+        this.target.clearTail(this.target.size(), size);
 
-        int newSlot = Math.min(removedAt, this.blockEntity.size() - 1);
+        int newSlot = Math.min(removedAt, this.target.size() - 1);
         this.slot = newSlot;
-        this.blockEntity.setSlot(newSlot);
-        this.property = null;
+        this.target.setSlot(newSlot);
+        this.propertyIndex = 0;
         this.properties.refresh(newSlot);
         this.elementList.setSelected(newSlot);
         this.elementList.markDirty();
-        this.blockEntity.getLevel().sendBlockUpdated(this.blockEntity.getBlockPos(),
-                this.blockEntity.getBlockState(), this.blockEntity.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        this.viewport.invalidate();
+        initElementPropertyWidgets();
+        viewportDirty();
     }
 
     /** 切换当前元素的显示状态。 */
     private void toggleShown() {
-        if (this.blockEntity.size() <= 0) {
+        if (this.target.size() <= 0) {
             return;
         }
-        double shown = TransformType.SHOWN.extract(this.blockEntity, this.slot) != 0.0 ? 0.0 : 1.0;
-        applyValue(TransformType.SHOWN, shown);
+        double shown = this.target.get(this.slot, ModelingChannel.SHOWN) != 0.0 ? 0.0 : 1.0;
+        applyValue(ModelingChannel.SHOWN, shown);
     }
 
-    /** 把新元素的全部字段下发给服务端。 */
-    private void pushElement(int slot, TransformBlockData data) {
-        BlockPos pos = this.blockEntity.getBlockPos();
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.POS_X, data.pos.x);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.POS_Y, data.pos.y);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.POS_Z, data.pos.z);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.ROT_X, data.rot.x);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.ROT_Y, data.rot.y);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.ROT_Z, data.rot.z);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SCALE_X, data.scales.x);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SCALE_Y, data.scales.y);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SCALE_Z, data.scales.z);
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.BLOCK_STATE, Block.getId(data.blockState));
-        TransformDataOncePacket.sendToServerSide(pos, slot, TransformType.SHOWN, data.isShown ? 1 : 0);
-    }
+    /**
+     * 写值：改本地数据 + 立即重渲染。真正的发包交给 {@link ModelingTarget#flush()}。
+     */
+    private void applyValue(ModelingChannel channel, double value) {
+        if (!this.target.supports(channel)) {
+            return;
+        }
+            if (channel.isScale()) {
+                // 缩放是等比的：拖任意一个都同步三轴（0 会造成退化矩阵，夹到 1）
+                double effective = Math.abs(value) <= 0.001 ? 1.0 : value;
+                for (ModelingChannel axis : new ModelingChannel[]{
+                        ModelingChannel.SCALE_X, ModelingChannel.SCALE_Y, ModelingChannel.SCALE_Z}) {
+                    this.target.set(this.slot, axis, effective);
+                    if (this.properties != null) {
+                        this.properties.sync(axis, effective);
+                    }
+                }
+            } else {
+                this.target.set(this.slot, channel, value);
+                if (this.properties != null) {
+                    this.properties.sync(channel, value);
+                }
+            }
+            this.target.invalidatePreview();
+            this.target.resync();
+            // 几何变了，之前统计的面数不再成立
+            this.toolbar.invalidateStats();
+        }
 
     @Override
     public boolean isPauseScreen() {
@@ -765,6 +718,7 @@ public class ModelingScreen extends Screen {
         }
         if (this.gizmo.isActive()) {
             this.gizmo.end();
+            this.target.flush();
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
@@ -826,12 +780,5 @@ public class ModelingScreen extends Screen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    private Component currentElementName() {
-        if (this.blockEntity.size() <= 0) {
-            return Component.translatable("gui.yuushya.modeling.empty");
-        }
-        return getBlockState().getBlock().getName();
     }
 }

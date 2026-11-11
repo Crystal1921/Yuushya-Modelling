@@ -102,6 +102,12 @@ public class ClientMethod {
     }
 
     public static void openModelingScreen(ShowBlockEntity showBlockEntity) {
-        Minecraft.getInstance().setScreen(new com.yuushya.modelling.gui.modeling.ModelingScreen(showBlockEntity));
-    }
+            Minecraft.getInstance().setScreen(
+                    com.yuushya.modelling.gui.modeling.ModelingScreen.forShowBlock(showBlockEntity));
+        }
+
+        public static void openModelingScreen(ItemBlockEntity itemBlockEntity) {
+            Minecraft.getInstance().setScreen(
+                    com.yuushya.modelling.gui.modeling.ModelingScreen.forItemBlock(itemBlockEntity));
+        }
 }

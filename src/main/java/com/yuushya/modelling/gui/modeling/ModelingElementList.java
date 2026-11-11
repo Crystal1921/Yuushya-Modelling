@@ -1,21 +1,12 @@
 package com.yuushya.modelling.gui.modeling;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
-import com.yuushya.modelling.blockentity.transformData.TransformBlockData;
+import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.state.BlockState;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.function.IntConsumer;
@@ -82,25 +73,23 @@ public final class ModelingElementList {
     };
     private Tool hoveredTool;
 
-    private final Minecraft minecraft;
     private final Font font;
-    private final List<TransformBlockData> data;
-    private final IntConsumer onSelect;
+        private final List<? extends ITransformDataProvider> data;
+        private final IntConsumer onSelect;
 
-    @Setter
-    private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
-    @Getter
-    private int selected;
-    private int scroll;
+        @Setter
+        private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
+        @Getter
+        private int selected;
+        private int scroll;
 
-    public ModelingElementList(Minecraft minecraft, Font font, List<TransformBlockData> data,
-                               int selected, IntConsumer onSelect) {
-        this.minecraft = minecraft;
-        this.font = font;
-        this.data = data;
-        this.selected = selected;
-        this.onSelect = onSelect;
-    }
+        public ModelingElementList(Font font, List<? extends ITransformDataProvider> data,
+                                   int selected, IntConsumer onSelect) {
+            this.font = font;
+            this.data = data;
+            this.selected = selected;
+            this.onSelect = onSelect;
+        }
 
     public void setSelected(int selected) {
         this.selected = selected;
@@ -303,10 +292,10 @@ public final class ModelingElementList {
                 guiGraphics.fill(this.rect.x(), top, this.rect.right() - SCROLLBAR_WIDTH - 1, top + ROW_HEIGHT, background);
             }
 
-            TransformBlockData entry = this.data.get(index);
-            boolean empty = isEmpty(entry);
+            ITransformDataProvider entry = this.data.get(index);
+                        boolean empty = entry.empty();
             if (!empty) {
-                renderIcon(guiGraphics, entry.blockState, this.rect.x() + 6, top + 2,
+                            renderIcon(guiGraphics, entry.iconStack(), this.rect.x() + 6, top + 2,
                         this.rect.x(), top, this.rect.right() - SCROLLBAR_WIDTH - 1, top + ROW_HEIGHT);
             } else {
                 // 空槽位：画一个虚线方框占位
@@ -318,25 +307,20 @@ public final class ModelingElementList {
 
             String slot = String.valueOf(index);
             guiGraphics.drawString(this.font, slot, this.rect.x() + 4, top + 6,
-                    slotColor(isSelected, empty || !entry.isShown), false);
+                                slotColor(isSelected, empty || !entry.isShown()), false);
 
             int nameX = this.rect.x() + 20 + this.font.width(slot) + 8;
             int nameWidth = Math.max(8, this.rect.right() - SCROLLBAR_WIDTH - 3 - nameX);
             String name = empty
-                    ? "（空）"
-                    : this.font.plainSubstrByWidth(displayName(entry.blockState), nameWidth);
+                                ? Component.translatable("gui.yuushya.modeling.slot.empty").getString()
+                                : this.font.plainSubstrByWidth(displayName(entry.iconStack()), nameWidth);
             guiGraphics.drawString(this.font, name, nameX, top + 6,
-                    nameColor(isSelected, empty, entry.isShown), false);
+                                nameColor(isSelected, empty, entry.isShown()), false);
         }
 
         renderScrollbar(guiGraphics);
         renderToolbar(guiGraphics);
         renderMenu(guiGraphics);
-    }
-
-    /** 判定空槽位：AIR 且未显示。 */
-    public static boolean isEmpty(TransformBlockData data) {
-        return data.blockState.isAir();
     }
 
     /** 元素名颜色：隐藏元素一律淡灰（选中时稍亮），正常元素选中时纯白。 */
@@ -395,34 +379,28 @@ public final class ModelingElementList {
     }
 
     /**
-     * 画一行的方块图标。
-     * <p>
-     * 图标是按元素数据缩放绘制的：多元素模型常常远超一个方块的范围，会糊到相邻行与面板外，
-     * 因此这里用 GL 裁剪把每个图标限制在自己这一行内（裁剪范围含行宽，横向也不会溢出）。
-     * 裁剪前先 flush，避免把已排队的 2D 内容一起裁掉。
-     */
-    private void renderIcon(GuiGraphics guiGraphics, BlockState state, int x, int y,
-                            int clipLeft, int clipTop, int clipRight, int clipBottom) {
-        BakedModel model = this.minecraft.getBlockRenderer().getBlockModel(state);
-        PoseStack pose = guiGraphics.pose();
-
-        guiGraphics.flush();
-        guiGraphics.enableScissor(clipLeft, clipTop, clipRight, clipBottom);
-        try {
-            pose.pushPose();
-            pose.translate(x + 8.0F, y + 13.0F, 100.0F);
-            pose.scale(11.0F, -11.0F, 11.0F);
-            pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-            pose.mulPose(Axis.YP.rotationDegrees(45.0F));
-            this.minecraft.getBlockRenderer().getModelRenderer().renderModel(pose.last(),
-                    guiGraphics.bufferSource().getBuffer(RenderType.TRANSLUCENT), state, model,
-                    1.0F, 1.0F, 1.0F, 0xF000F0, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
+         * 画一行的图标。
+         * <p>
+         * 图标按元素数据缩放绘制：多元素模型常常远超一个方块的范围，会糊到相邻行与面板外，
+         * 因此这里用 GL 裁剪把每个图标限制在自己这一行内（裁剪范围含行宽，横向也不会溢出）。
+         * 裁剪前先 flush，避免把已排队的 2D 内容一起裁掉。
+         * <p>
+         * 物品与方块统一走 {@code renderItem}：它内部按 {@code BakedModel.isGui3d()} 决定用
+         * 方块模型还是物品模型，正好覆盖两种目标。
+         */
+        private void renderIcon(GuiGraphics guiGraphics, ItemStack stack, int x, int y,
+                                int clipLeft, int clipTop, int clipRight, int clipBottom) {
+            if (stack.isEmpty()) {
+                return;
+            }
             guiGraphics.flush();
-        } finally {
-            guiGraphics.disableScissor();
+            guiGraphics.enableScissor(clipLeft, clipTop, clipRight, clipBottom);
+            try {
+                guiGraphics.renderItem(stack, x, y);
+            } finally {
+                guiGraphics.disableScissor();
+            }
         }
-    }
 
     private void renderScrollbar(GuiGraphics guiGraphics) {
         int max = maxScroll();
@@ -437,14 +415,7 @@ public final class ModelingElementList {
         guiGraphics.fill(x, thumbY, x + SCROLLBAR_WIDTH, thumbY + thumbHeight, 0xFF5A5A5A);
     }
 
-    private static String displayName(BlockState state) {
-        Item item = state.getBlock().asItem();
-        Component name = item == Items.AIR ? state.getBlock().getName() : item.getName(item.getDefaultInstance());
-        return name.getString();
+    private static String displayName(ItemStack stack) {
+            return stack.isEmpty() ? "" : stack.getHoverName().getString();
+        }
     }
-
-    /** 供界面判断点击是否落在列表上。 */
-    public static boolean isLeftButton(int button) {
-        return button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
-    }
-}

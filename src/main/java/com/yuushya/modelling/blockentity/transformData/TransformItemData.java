@@ -112,4 +112,46 @@ public class TransformItemData implements ITransformDataProvider {
     public void setShown(boolean shown) {
         this.isShown = shown;
     }
-}
+
+        @Override
+        public void setPosition(double x, double y, double z) {
+            this.pos.set(x, y, z);
+        }
+
+        @Override
+        public void setRotation(float x, float y, float z) {
+            this.rot.set(x, y, z);
+        }
+
+        @Override
+        public void setScale(float x, float y, float z) {
+            this.scales.set(x, y, z);
+        }
+
+        @Override
+        public void reset() {
+            set();
+        }
+
+        @Override
+        public void setFrom(ITransformDataProvider other) {
+            if (other instanceof TransformItemData item) {
+                set(item);
+                return;
+            }
+            this.pos.set(other.getPosition());
+            this.rot.set(other.getRotation());
+            this.scales.set(other.getScale());
+            this.isShown = other.isShown();
+        }
+
+        @Override
+        public ItemStack iconStack() {
+            return empty() ? ItemStack.EMPTY : this.itemStack;
+        }
+
+        @Override
+        public boolean empty() {
+            return this.itemStack.isEmpty();
+        }
+    }

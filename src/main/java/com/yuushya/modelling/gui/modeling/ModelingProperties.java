@@ -1,7 +1,8 @@
 package com.yuushya.modelling.gui.modeling;
 
-import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
-import com.yuushya.modelling.blockentity.transformData.TransformType;
+import com.yuushya.modelling.gui.modeling.target.ModelingChannel;
+import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
+import com.yuushya.modelling.gui.modeling.target.TransformRow;
 import com.yuushya.modelling.gui.widget.NumberField;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -17,7 +18,8 @@ import java.util.function.BiConsumer;
  * 建模界面右下角的「变换」面板。
  * <p>
  * Blender / Blockbench 式的紧凑排版：每个分组只占一行，X / Y / Z 三个数字框并排，
- * 直接拖动即可改值。数值没有上下限，与建模软件一致 —— 不会拖到某个值就停住。
+ * 直接拖动即可改值。行定义来自 {@link ModelingTarget#rows()}，因此新增一种方块类型
+ * 只需要在 target 里多返回一行，这里不改代码。
  */
 public final class ModelingProperties {
 
@@ -26,49 +28,35 @@ public final class ModelingProperties {
     private static final int LABEL_WIDTH = 46;
     private static final int GAP = 3;
 
-    private static final TransformType[] POS_TYPES = {TransformType.POS_X, TransformType.POS_Y, TransformType.POS_Z};
-    private static final TransformType[] ROT_TYPES = {TransformType.ROT_X, TransformType.ROT_Y, TransformType.ROT_Z};
-    private static final TransformType[] SCALE_TYPES = {TransformType.SCALE_X, TransformType.SCALE_Y, TransformType.SCALE_Z};
-
-    /**
-     * 光源等级的取值范围，必须与 {@code YuushyaBlockStates.LIT} 的定义一致
-     * （{@code IntegerProperty.create("lit", 0, 15)}）。越界会让 {@code setValue} 抛异常。
-     */
-    public static final double LIT_MIN = 0.0;
-    public static final double LIT_MAX = 15.0;
-
-    private final ShowBlockEntity blockEntity;
-    private final BiConsumer<TransformType, Double> onChange;
+    private final ModelingTarget target;
+    private final BiConsumer<ModelingChannel, Double> onChange;
     private final List<NumberField> fields = new ArrayList<>();
-    private final List<TransformType> fieldTypes = new ArrayList<>();
+    private final List<ModelingChannel> fieldChannels = new ArrayList<>();
     private final Map<Integer, Component> rowLabels = new LinkedHashMap<>();
     private int slot;
 
-    public ModelingProperties(ShowBlockEntity blockEntity, BiConsumer<TransformType, Double> onChange) {
-        this.blockEntity = blockEntity;
+    public ModelingProperties(ModelingTarget target, BiConsumer<ModelingChannel, Double> onChange) {
+        this.target = target;
         this.onChange = onChange;
     }
 
-    /** 在给定区域内排布四组：位移 / 旋转 / 缩放 / 亮度。 */
+    /** 在给定区域内按 {@link ModelingTarget#rows()} 排布。 */
     public void layout(ModelingLayout.Rect rect, int slot, Font font) {
         this.fields.clear();
-        this.fieldTypes.clear();
+        this.fieldChannels.clear();
         this.rowLabels.clear();
         this.slot = slot;
 
+        List<TransformRow> all = this.target.rows();
         int maxRows = Math.max(0, (rect.height() - TITLE_HEIGHT) / ROW_HEIGHT);
-        int row = 0;
-        if (row < maxRows) {
-            addVectorRow(rect, row++, font, Component.translatable("gui.yuushya.modeling.pos"), POS_TYPES);
-        }
-        if (row < maxRows) {
-            addVectorRow(rect, row++, font, Component.translatable("gui.yuushya.modeling.rot"), ROT_TYPES);
-        }
-        if (row < maxRows) {
-            addVectorRow(rect, row++, font, Component.translatable("gui.yuushya.modeling.scale"), SCALE_TYPES);
-        }
-        if (row < maxRows) {
-            addBrightnessRow(rect, row, font);
+        for (int i = 0; i < all.size() && i < maxRows; i++) {
+            TransformRow row = all.get(i);
+            this.rowLabels.put(i, row.label());
+            if (row instanceof TransformRow.Vector vector) {
+                addVectorRow(rect, i, font, vector);
+            } else if (row instanceof TransformRow.Single single) {
+                addSingleRow(rect, i, font, single);
+            }
         }
     }
 
@@ -76,73 +64,33 @@ public final class ModelingProperties {
         return rect.y() + TITLE_HEIGHT + row * ROW_HEIGHT;
     }
 
-    private void addVectorRow(ModelingLayout.Rect rect, int row, Font font,
-                              Component label, TransformType[] types) {
+    private void addVectorRow(ModelingLayout.Rect rect, int row, Font font, TransformRow.Vector vector) {
         int y = rowY(rect, row);
         int startX = rect.x() + LABEL_WIDTH;
         int totalWidth = rect.right() - 6 - startX;
         int fieldWidth = Math.max(20, (totalWidth - GAP * 2) / 3);
-
+        ModelingChannel[] channels = {vector.x(), vector.y(), vector.z()};
         for (int axis = 0; axis < 3; axis++) {
-            final int axisIndex = axis;
-            TransformType type = types[axis];
-            NumberField field = new NumberField(font,
-                    startX + axisIndex * (fieldWidth + GAP), y, fieldWidth, ROW_HEIGHT - 2,
-                    scrubStep(type), decimals(type),
-                    type.extract(this.blockEntity, this.slot),
-                    value -> apply(type, axisIndex, value));
-            this.fields.add(field);
-            this.fieldTypes.add(type);
+            addField(channels[axis], font, startX + axis * (fieldWidth + GAP), y, fieldWidth,
+                    vector.step(), vector.decimals(), vector.min(), vector.max());
         }
-        this.rowLabels.put(row, label);
     }
 
-    private void addBrightnessRow(ModelingLayout.Rect rect, int row, Font font) {
+    private void addSingleRow(ModelingLayout.Rect rect, int row, Font font, TransformRow.Single single) {
         int y = rowY(rect, row);
-        NumberField field = new NumberField(font, rect.x() + LABEL_WIDTH, y, 46, ROW_HEIGHT - 2,
-                1.0, 0, LIT_MIN, LIT_MAX,
-                TransformType.LIT.extract(this.blockEntity, this.slot),
-                value -> this.onChange.accept(TransformType.LIT, value));
+        int startX = rect.x() + LABEL_WIDTH;
+        int width = single.width() > 0 ? single.width() : rect.right() - 6 - startX;
+        addField(single.channel(), font, startX, y, width, single.step(), single.decimals(),
+                single.min(), single.max());
+    }
+
+    private void addField(ModelingChannel channel, Font font, int x, int y, int width,
+                          double step, int decimals, double min, double max) {
+        NumberField field = new NumberField(font, x, y, width, ROW_HEIGHT - 2, step, decimals,
+                min, max, this.target.get(this.slot, channel),
+                value -> this.onChange.accept(channel, value));
         this.fields.add(field);
-        this.fieldTypes.add(TransformType.LIT);
-        this.rowLabels.put(row, Component.translatable("gui.yuushya.modeling.lit"));
-    }
-
-    private static double scrubStep(TransformType type) {
-        return switch (type) {
-            case POS_X, POS_Y, POS_Z -> 0.5;
-            case ROT_X, ROT_Y, ROT_Z -> 1.0;
-            case SCALE_X, SCALE_Y, SCALE_Z -> 0.02;
-            default -> 1.0;
-        };
-    }
-
-    private static int decimals(TransformType type) {
-        return switch (type) {
-            case POS_X, POS_Y, POS_Z, SCALE_X, SCALE_Y, SCALE_Z -> 1;
-            default -> 0;
-        };
-    }
-
-    /** 三个轴的缩放是等比的：拖任意一个都同步三轴。 */
-    private void apply(TransformType type, int axis, double value) {
-        if (isScale(type)) {
-            double effective = Math.abs(value) <= 0.001 ? 1.0 : value;
-            for (TransformType scaleType : SCALE_TYPES) {
-                this.onChange.accept(scaleType, effective);
-            }
-            for (int i = 0; i < this.fieldTypes.size(); i++) {
-                if (isScale(this.fieldTypes.get(i))) {
-                    this.fields.get(i).setValue(effective);
-                }
-            }
-            return;
-        }
-        this.onChange.accept(type, value);
-    }
-
-    private static boolean isScale(TransformType type) {
-        return type == TransformType.SCALE_X || type == TransformType.SCALE_Y || type == TransformType.SCALE_Z;
+        this.fieldChannels.add(channel);
     }
 
     public List<AbstractWidget> widgets() {
@@ -153,14 +101,14 @@ public final class ModelingProperties {
     public void refresh(int slot) {
         this.slot = slot;
         for (int i = 0; i < this.fields.size(); i++) {
-            this.fields.get(i).setValue(this.fieldTypes.get(i).extract(this.blockEntity, slot));
+            this.fields.get(i).setValue(this.target.get(slot, this.fieldChannels.get(i)));
         }
     }
 
     /** 外部改值后同步字段显示。 */
-    public void sync(TransformType type, double value) {
+    public void sync(ModelingChannel channel, double value) {
         for (int i = 0; i < this.fields.size(); i++) {
-            if (this.fieldTypes.get(i) == type) {
+            if (this.fieldChannels.get(i) == channel) {
                 this.fields.get(i).setValue(value);
             }
         }

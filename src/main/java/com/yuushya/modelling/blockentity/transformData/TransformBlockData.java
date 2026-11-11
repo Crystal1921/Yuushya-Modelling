@@ -5,6 +5,9 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.nbt.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -92,4 +95,50 @@ public class TransformBlockData implements ITransformDataProvider {
     public void setShown(boolean shown) {
         this.isShown = shown;
     }
-}
+
+        @Override
+        public void setPosition(double x, double y, double z) {
+            this.pos.set(x, y, z);
+        }
+
+        @Override
+        public void setRotation(float x, float y, float z) {
+            this.rot.set(x, y, z);
+        }
+
+        @Override
+        public void setScale(float x, float y, float z) {
+            this.scales.set(x, y, z);
+        }
+
+        @Override
+        public void reset() {
+            set();
+        }
+
+        @Override
+        public void setFrom(ITransformDataProvider other) {
+            if (other instanceof TransformBlockData block) {
+                set(block);
+                return;
+            }
+            this.pos.set(other.getPosition());
+            this.rot.set(other.getRotation());
+            this.scales.set(other.getScale());
+            this.isShown = other.isShown();
+        }
+
+        @Override
+        public ItemStack iconStack() {
+            if (empty()) {
+                return ItemStack.EMPTY;
+            }
+            Item item = this.blockState.getBlock().asItem();
+            return item == Items.AIR ? ItemStack.EMPTY : new ItemStack(item);
+        }
+
+        @Override
+        public boolean empty() {
+            return this.blockState.isAir();
+        }
+    }
