@@ -396,7 +396,7 @@ public final class ModelingElementList {
             guiGraphics.flush();
             guiGraphics.enableScissor(clipLeft, clipTop, clipRight, clipBottom);
             try {
-                guiGraphics.renderItem(stack, x, y);
+                guiGraphics.renderItem(stack, x + 6, y);
             } finally {
                 guiGraphics.disableScissor();
             }
