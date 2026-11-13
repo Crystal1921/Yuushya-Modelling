@@ -4,27 +4,22 @@ import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.ITransformDataProvider;
-import com.yuushya.modelling.blockentity.transformData.ITransformItemDataInventory;
 import com.yuushya.modelling.blockentity.transformData.ItemTransformType;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.gui.engrave.EngraveItemResultLoader;
 import com.yuushya.modelling.network.ItemStackPacket;
 import com.yuushya.modelling.network.ItemTransformDataOncePacket;
-import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.ShareUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlockItemStateProperties;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -59,8 +54,6 @@ public final class ItemBlockTarget implements ModelingTarget {
     private final List<Integer> pendingStacks = new ArrayList<>();
     private final List<ItemStack> pendingStackValues = new ArrayList<>();
 
-    private ItemStack preview;
-    private long previewSignature = Long.MIN_VALUE;
 
     public ItemBlockTarget(ItemBlockEntity entity) {
         this.entity = entity;
@@ -345,48 +338,18 @@ public final class ItemBlockTarget implements ModelingTarget {
             second.set(copy);
             resend(a, first);
             resend(b, second);
-            invalidatePreview();
         }
 
-    // ---- 预览 / 统计 ----
-
-    @Override
-    public ItemStack previewStack() {
-        long signature = signature();
-        if (this.preview != null && signature == this.previewSignature) {
-            return this.preview;
-        }
-        Level level = level() != null ? level() : Minecraft.getInstance().level;
-        if (level == null) {
-            return ItemStack.EMPTY;
-        }
-        CompoundTag tag = new CompoundTag();
-        ITransformItemDataInventory.saveAdditional(tag, this.entity.getTransformData(), level.registryAccess());
-        ItemStack stack = new ItemStack(ItemRegistry.ITEM_BLOCK.get());
-        stack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tag));
-        this.preview = stack;
-        this.previewSignature = signature;
-        return stack;
-    }
+    // ---- 视口 / 统计 ----
 
     @Override
-    public void invalidatePreview() {
-        this.previewSignature = Long.MIN_VALUE;
-    }
-
-    private long signature() {
-        long hash = this.entity.getSlot() * 31L;
-        for (TransformItemData entry : this.entity.getTransformData()) {
-            hash = hash * 31L + entry.itemStack.getItem().hashCode();
-            hash = hash * 31L + entry.itemStack.getCount();
-            hash = hash * 31L + entry.color;
-            hash = hash * 31L + Double.hashCode(entry.pos.x + entry.pos.y * 7 + entry.pos.z * 13);
-            hash = hash * 31L + Float.hashCode(entry.rot.x() + entry.rot.y() * 7 + entry.rot.z() * 13);
-            hash = hash * 31L + Float.hashCode(entry.scales.x() + entry.scales.y() * 7 + entry.scales.z() * 13);
-            hash = hash * 31L + (entry.isShown ? 1 : 0);
-            hash = hash * 31L + (entry.enableBlock ? 1 : 0);
+    public List<ElementView> views() {
+        List<TransformItemData> data = this.entity.getTransformData();
+        List<ElementView> views = new ArrayList<>(data.size());
+        for (TransformItemData entry : data) {
+            views.add(new ElementView(entry, null, entry.itemStack, entry.color));
         }
-        return hash;
+        return views;
     }
 
     @Override
@@ -438,7 +401,6 @@ public final class ItemBlockTarget implements ModelingTarget {
         if (slot() >= size()) {
             setSlot(Math.max(0, size() - 1));
         }
-        invalidatePreview();
         return true;
     }
 
@@ -504,7 +466,6 @@ public final class ItemBlockTarget implements ModelingTarget {
                 stack.set(DataComponents.BLOCK_STATE, props);
                 setContent(slot, stack);
             }
-            invalidatePreview();
             resync();
         }
 
@@ -522,7 +483,6 @@ public final class ItemBlockTarget implements ModelingTarget {
         if (level != null) {
             level.setBlock(pos(), next, 18);
         }
-        invalidatePreview();
         return shapeLabel();
     }
 

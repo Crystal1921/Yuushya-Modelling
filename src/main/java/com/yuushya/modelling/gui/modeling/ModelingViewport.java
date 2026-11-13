@@ -1,59 +1,193 @@
 package com.yuushya.modelling.gui.modeling;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
+import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.Direction;
+import net.minecraft.util.FastColor;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.List;
 
 /**
  * 建模界面的 3D 视口：实心背景 + 可自由环绕的相机。
  * <p>
- * 用「物品形态 + {@link net.minecraft.client.renderer.entity.ItemRenderer#renderStatic}」绘制：
- * 模型由 {@code NeoShowBlockModel} / {@code NeoItemBlockModel} 从 {@code BLOCK_ENTITY_DATA}
- * 重建，几何、渲染类型与光照都由物品渲染器处理。世界管线的 {@code renderSingleBlock}
- * 在 GUI 阶段没有配套状态，画不出来。
+ * 直接读取方块实体里的元素数据，<b>逐元素</b>套变换矩阵后绘制内容，不再把整份数据
+ * 塞进 {@code ItemStack} 走物品模型通道。好处是每帧都是最新数据、不需要
+ * {@code BakedModel} 缓存、也不会再掉进「3 参数 {@code getQuads} 只返回备份方块」的坑。
  * <p>
- * 这里只接收已经构建好的 {@link ItemStack}，具体是哪种方块实体由
- * {@link com.yuushya.modelling.gui.modeling.target.ModelingTarget#previewStack()} 决定。
+ * 变换链与 {@code ShowBlockModel} / {@code NeoItemBlockModel} 完全一致：
+ * <pre>
+ *   YuushyaUtils.scale   → T(.5)·S·T(-.5)
+ *   YuushyaUtils.translate → T(pos/16)
+ *   YuushyaUtils.rotate  → T(.5)·R·T(-.5)
+ * </pre>
+ * 顶点仍是 0..1 的方块局部坐标，因此相机矩阵末端的 {@code translate(-0.5)} 负责居中，
+ * 与 gizmo 共用同一份矩阵。
+ * <p>
+ * GUI 阶段是正交投影，矩阵变换后的坐标直接就是像素。
  */
 public final class ModelingViewport {
 
     public static final int BACKGROUND = 0xFF151515;
 
+    /** 与 {@code ItemRenderer.renderModelLists} 一致的固定种子，避免面片在帧间抖动。 */
+    private static final long QUAD_SEED = 42L;
+
     private final ModelingCamera camera;
 
-        public ModelingViewport(ModelingCamera camera) {
-            this.camera = camera;
+    public ModelingViewport(ModelingCamera camera) {
+        this.camera = camera;
+    }
+
+    public void render(GuiGraphics guiGraphics, ModelingLayout.Rect rect, ModelingTarget target) {
+        if (rect.width() <= 0 || rect.height() <= 0) {
+            return;
         }
+        guiGraphics.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), BACKGROUND);
 
-        public void render(GuiGraphics guiGraphics, ModelingLayout.Rect rect, ItemStack itemStack) {
-            if (rect.width() <= 0 || rect.height() <= 0) {
-                return;
-            }
-            guiGraphics.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), BACKGROUND);
+        List<ModelingTarget.ElementView> views = target.views();
+        if (views.isEmpty()) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
 
-            if (itemStack == null || itemStack.isEmpty()) {
-                return;
-            }
-            Minecraft minecraft = Minecraft.getInstance();
+        guiGraphics.enableScissor(rect.x(), rect.y(), rect.right(), rect.bottom());
+        try {
+            PoseStack poseStack = guiGraphics.pose();
+            poseStack.pushPose();
+            // 与 ModelingCamera 共用同一份矩阵，gizmo 才能严丝合缝地对齐
+            poseStack.mulPose(this.camera.baseMatrix(rect));
 
-            guiGraphics.enableScissor(rect.x(), rect.y(), rect.right(), rect.bottom());
-            try {
-                PoseStack poseStack = guiGraphics.pose();
+            for (ModelingTarget.ElementView view : views) {
+                if (!view.renderable()) {
+                    continue;
+                }
                 poseStack.pushPose();
-                // 与 ModelingCamera 共用同一份矩阵，gizmo 才能严丝合缝地对齐
-                poseStack.mulPose(this.camera.baseMatrix(rect));
-
-                minecraft.getItemRenderer().renderStatic(itemStack, ItemDisplayContext.FIXED,
-                        LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
-                        poseStack, guiGraphics.bufferSource(), minecraft.level, 0);
+                applyElementTransform(poseStack, view);
+                if (view.state() != null) {
+                    renderBlock(minecraft, guiGraphics, poseStack, view.state());
+                } else {
+                    renderItem(minecraft, guiGraphics, poseStack, view.stack(), view.color());
+                }
                 poseStack.popPose();
-                guiGraphics.flush();
-            } finally {
-                guiGraphics.disableScissor();
+            }
+
+            poseStack.popPose();
+            guiGraphics.flush();
+        } finally {
+            guiGraphics.disableScissor();
+        }
+    }
+
+    /** 元素自身的变换，顺序与 {@code ShowBlockModel#getQuads} 一致。 */
+    private static void applyElementTransform(PoseStack poseStack, ModelingTarget.ElementView view) {
+        YuushyaUtils.scale(poseStack, view.transform().getScale());
+        YuushyaUtils.translate(poseStack, view.transform().getPosition());
+        YuushyaUtils.rotate(poseStack, view.transform().getRotation());
+    }
+
+    // ---- 方块内容 ----
+
+    /**
+     * 画方块。方块模型的面片按方向分组，{@code side == null} 只返回"无剔除"那一部分，
+     * 所以必须把六个方向和 {@code null} 都取一遍。
+     */
+    private static void renderBlock(Minecraft minecraft, GuiGraphics guiGraphics,
+                                    PoseStack poseStack, BlockState state) {
+        BakedModel model = minecraft.getBlockRenderer().getBlockModel(state);
+        RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(state);
+        VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(renderType);
+        PoseStack.Pose pose = poseStack.last();
+        RandomSource random = RandomSource.create(QUAD_SEED);
+
+        // 直接用手上的真实方块状态问色，不需要 ShowBlockModel 那套"编码进 tintIndex"的手法
+        for (Direction side : Direction.values()) {
+            submit(minecraft, consumer, pose, state, model.getQuads(state, side, random));
+        }
+        submit(minecraft, consumer, pose, state, model.getQuads(state, null, random));
+    }
+
+    private static void submit(Minecraft minecraft, VertexConsumer consumer, PoseStack.Pose pose,
+                               BlockState state, List<BakedQuad> quads) {
+        for (BakedQuad quad : quads) {
+            int argb = -1;
+            if (quad.isTinted()) {
+                argb = minecraft.getBlockColors().getColor(state, null, null, quad.getTintIndex());
+            }
+            put(consumer, pose, quad, argb, 1.0F, 1.0F, 1.0F);
+        }
+    }
+
+    // ---- 物品内容 ----
+
+    /**
+     * 画物品。物品模型可能是多通道的（{@code getRenderPasses}），每个通道自己声明
+     * 需要哪些 {@code RenderType}，逐个通道提交即可。
+     */
+    private static void renderItem(Minecraft minecraft, GuiGraphics guiGraphics, PoseStack poseStack,
+                                   ItemStack stack, int color) {
+        BakedModel model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        PoseStack.Pose pose = poseStack.last();
+        RandomSource random = RandomSource.create(QUAD_SEED);
+
+        float mulR = FastColor.ARGB32.red(color) / 255.0F;
+        float mulG = FastColor.ARGB32.green(color) / 255.0F;
+        float mulB = FastColor.ARGB32.blue(color) / 255.0F;
+
+        for (BakedModel pass : model.getRenderPasses(stack, true)) {
+            for (RenderType renderType : pass.getRenderTypes(stack, true)) {
+                VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(renderType);
+                random.setSeed(QUAD_SEED);
+                for (Direction side : Direction.values()) {
+                    submitItem(minecraft, consumer, pose, stack,
+                            pass.getQuads(null, side, random), mulR, mulG, mulB);
+                }
+                random.setSeed(QUAD_SEED);
+                submitItem(minecraft, consumer, pose, stack,
+                        pass.getQuads(null, null, random), mulR, mulG, mulB);
             }
         }
     }
+
+    private static void submitItem(Minecraft minecraft, VertexConsumer consumer, PoseStack.Pose pose,
+                                   ItemStack stack, List<BakedQuad> quads,
+                                   float mulR, float mulG, float mulB) {
+        for (BakedQuad quad : quads) {
+            int argb = -1;
+            if (quad.isTinted()) {
+                argb = minecraft.getItemColors().getColor(stack, quad.getTintIndex());
+            }
+            put(consumer, pose, quad, argb, mulR, mulG, mulB);
+        }
+    }
+
+    // ---- 提交 ----
+
+    /**
+     * 提交单个面片。
+     *
+     * @param argb 已有颜色（{@code -1} 视作不透明白色），一般来自方块 / 物品染色器
+     * @param mulR 额外的颜色乘数（元素染色），无染色时传 1
+     */
+    private static void put(VertexConsumer consumer, PoseStack.Pose pose, BakedQuad quad,
+                            int argb, float mulR, float mulG, float mulB) {
+        float alpha = FastColor.ARGB32.alpha(argb) / 255.0F;
+        float red = FastColor.ARGB32.red(argb) / 255.0F * mulR;
+        float green = FastColor.ARGB32.green(argb) / 255.0F * mulG;
+        float blue = FastColor.ARGB32.blue(argb) / 255.0F * mulB;
+        consumer.putBulkData(pose, quad, red, green, blue, alpha,
+                LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+    }
+}

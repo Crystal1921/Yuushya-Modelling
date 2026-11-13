@@ -98,15 +98,27 @@ public interface ModelingTarget {
     // ---- 视口 / 预览 ----
 
     /**
-     * 供 3D 视口渲染的物品形态。
+     * 视口渲染用的元素快照：每个元素的内容 + 变换，视口据此自己套矩阵绘制。
      * <p>
-     * 数据没变时必须返回<b>同一个实例</b>：物品模型缓存以 {@code ItemStack} 为弱键，
-     * 每帧新建会导致模型反复重建。
+     * 不再把整份数据塞进一个 {@code ItemStack} 走物品模型通道 —— 那条路要求
+     * {@code BakedModel} 在 {@code getRenderPasses} 里重建，且缓存以 {@code ItemStack}
+     * 为弱键，既慢又容易失效。
+     *
+     * @param transform 位移 / 旋转 / 缩放 / 显示状态
+     * @param state     方块内容；纯物品元素为 {@code null}
+     * @param stack     物品内容；纯方块元素为 {@link ItemStack#EMPTY}
+     * @param color     元素染色（ARGB），{@code -1} 表示不染色
      */
-    ItemStack previewStack();
+    record ElementView(ITransformDataProvider transform, @Nullable BlockState state,
+                       ItemStack stack, int color) {
 
-    /** 数据变了以后丢弃 {@link #previewStack()} 的缓存。 */
-    void invalidatePreview();
+        public boolean renderable() {
+            return this.transform.isShown() && (this.state != null || !this.stack.isEmpty());
+        }
+    }
+
+    /** 当前全部元素，供 3D 视口逐元素绘制。 */
+    List<ElementView> views();
 
     /** 当前模型的面数（开销较大，只在点统计时算）。 */
     long faceCount();

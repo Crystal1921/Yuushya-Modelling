@@ -12,8 +12,6 @@ import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
 import com.yuushya.modelling.gui.transform.AxisDragController;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -55,24 +53,20 @@ public final class ModelingGizmo {
         private final ModelingTarget target;
         private final IntSupplier slotSupplier;
         private final BiConsumer<ModelingChannel, Double> apply;
-        private final java.util.function.Supplier<ItemStack> stackSupplier;
         private final AxisDragController controller;
 
         private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
         private int highlighted;
         private Matrix4f matrixCache;
         private ModelingLayout.Rect matrixRect;
-        private ItemStack matrixStack;
         private int matrixRevision = -1;
 
         public ModelingGizmo(ModelingCamera camera, ModelingTarget target,
-                             IntSupplier slotSupplier, BiConsumer<ModelingChannel, Double> apply,
-                             java.util.function.Supplier<ItemStack> stackSupplier) {
+                             IntSupplier slotSupplier, BiConsumer<ModelingChannel, Double> apply) {
             this.camera = camera;
             this.target = target;
             this.slotSupplier = slotSupplier;
             this.apply = apply;
-            this.stackSupplier = stackSupplier;
             this.controller = new AxisDragController(new Host(), this::toNdc);
         }
 
@@ -81,22 +75,17 @@ public final class ModelingGizmo {
         this.rect = rect;
     }
 
-    /** 缓存"方块局部 → 像素"矩阵，避免每个采样点都重建一次；相机或模型变化时失效。 */
-    private Matrix4f matrix() {
-        ItemStack stack = this.stackSupplier.get();
-        ItemStack key = stack == null ? ItemStack.EMPTY : stack;
-        int revision = this.camera.revision();
-        if (this.matrixCache == null || !this.rect.equals(this.matrixRect)
-                        || key != this.matrixStack || revision != this.matrixRevision) {
-                    var state = this.target.contentState(this.slotSupplier.getAsInt());
-                    this.matrixCache = this.camera.itemMatrix(this.rect, key,
-                            state == null ? Blocks.AIR.defaultBlockState() : state);
+    /** 缓存"方块局部 → 像素"矩阵，避免每个采样点都重建一次；相机变化时失效。 */
+        private Matrix4f matrix() {
+                int revision = this.camera.revision();
+                if (this.matrixCache == null || !this.rect.equals(this.matrixRect)
+                        || revision != this.matrixRevision) {
+                    this.matrixCache = this.camera.itemMatrix(this.rect);
                     this.matrixRect = this.rect;
-                    this.matrixStack = key;
                     this.matrixRevision = revision;
                 }
-        return this.matrixCache;
-    }
+                return this.matrixCache;
+        }
 
     public boolean isActive() {
         return this.controller.isActive();

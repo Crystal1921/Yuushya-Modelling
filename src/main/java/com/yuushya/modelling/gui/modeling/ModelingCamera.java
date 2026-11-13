@@ -1,13 +1,6 @@
 package com.yuushya.modelling.gui.modeling;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix4f;
 
 /**
@@ -107,36 +100,32 @@ public final class ModelingCamera {
         this.revision++;
     }
 
-    /** 我们自己的 pose：视口中心 + 平移偏移 + 适配缩放 + 俯仰 / 环绕。输出坐标即 GUI 像素。 */
-    public Matrix4f baseMatrix(ModelingLayout.Rect rect) {
-        float fit = Math.min(rect.width(), rect.height()) * FIT_RATIO / this.distance;
-        return new Matrix4f()
-                .translation(rect.x() + rect.width() / 2.0F + this.panX,
-                        rect.y() + rect.height() / 2.0F + this.panY, 150.0F)
-                .scale(fit, -fit, fit)
-                .rotateX((float) Math.toRadians(this.pitch))
-                .rotateY((float) Math.toRadians(this.yaw));
-    }
-
     /**
-     * 叠加物品的显示变换（{@code FIXED}），得到与 {@code ItemRenderer.renderStatic} 完全一致的
-     * "方块局部坐标 → GUI 像素"矩阵。
-     * <p>
-     * {@code ItemRenderer.render} 的链是：{@code 显示变换 → translate(-0.5,-0.5,-0.5)}，
-     * 最后那一步把模型从 0..1 的方块坐标挪到以原点为中心。漏掉它会导致 gizmo 整体偏移
-     * {@code 0.5 × fixedScale}（FIXED 缩放 0.5 时约 0.25 方块）。
-     */
-    public Matrix4f itemMatrix(ModelingLayout.Rect rect, ItemStack stack, BlockState fallbackState) {
-        PoseStack pose = new PoseStack();
-        pose.last().pose().set(baseMatrix(rect));
+         * 我们自己的 pose：视口中心 + 平移偏移 + 适配缩放 + 俯仰 / 环绕。输出坐标即 GUI 像素。
+         * <p>
+         * 末尾的 {@code translate(-0.5)} 把模型从 0..1 的方块坐标挪到以原点为中心 ——
+         * 视口直接提交 {@code BakedQuad}，不再经过 {@code ItemRenderer} 的
+         * {@code FIXED 显示变换 + translate(-0.5)} 那一套。
+         */
+        public Matrix4f baseMatrix(ModelingLayout.Rect rect) {
+            float fit = Math.min(rect.width(), rect.height()) * FIT_RATIO / this.distance;
+            return new Matrix4f()
+                    .translation(rect.x() + rect.width() / 2.0F + this.panX,
+                            rect.y() + rect.height() / 2.0F + this.panY, 150.0F)
+                    .scale(fit, -fit, fit)
+                    .rotateX((float) Math.toRadians(this.pitch))
+                    .rotateY((float) Math.toRadians(this.yaw))
+                    .translate(-0.5F, -0.5F, -0.5F);
+        }
 
-        Minecraft minecraft = Minecraft.getInstance();
-        BakedModel model = stack.isEmpty()
-                ? minecraft.getBlockRenderer().getBlockModel(fallbackState)
-                : minecraft.getItemRenderer().getModel(stack, minecraft.level, null, 0);
-        ItemTransforms transforms = model.getTransforms();
-        transforms.getTransform(ItemDisplayContext.FIXED).apply(false, pose);
-        pose.translate(-0.5F, -0.5F, -0.5F);
-        return new Matrix4f(pose.last().pose());
+        /**
+         * "方块局部坐标 → GUI 像素"矩阵。
+         * <p>
+         * 视口自己提交 {@code BakedQuad}，而 {@code NeoShowBlockModel} / {@code NeoItemBlockModel}
+         * 已经把每个元素的位移、旋转、缩放烘焙进顶点，坐标仍是 0..1 的方块局部空间。
+         * 因此这里与渲染共用 {@link #baseMatrix} 即可，不需要再叠显示变换。
+         */
+        public Matrix4f itemMatrix(ModelingLayout.Rect rect) {
+            return baseMatrix(rect);
+        }
     }
-}

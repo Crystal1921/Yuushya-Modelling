@@ -103,8 +103,7 @@ public class ModelingScreen extends Screen {
             this.addRenderableWidget(widget);
         }
 
-        this.gizmo = new ModelingGizmo(this.camera, this.target, () -> this.slot, this::applyValue,
-                this.target::previewStack);
+        this.gizmo = new ModelingGizmo(this.camera, this.target, () -> this.slot, this::applyValue);
         this.gizmo.setRect(this.layout.viewport);
 
         initElementPropertyWidgets();
@@ -193,7 +192,6 @@ public class ModelingScreen extends Screen {
             } else {
                 row.next().run();
             }
-            this.target.invalidatePreview();
             this.toolbar.invalidateStats();
         }
 
@@ -206,17 +204,15 @@ public class ModelingScreen extends Screen {
         this.viewportDirty();
     }
 
-        /** 属性区内容变了（切换属性 / 改值 / 换元素），按钮与文字都要跟随。 */
-            private void refreshElementProperties() {
-                if (this.shapeButton != null) {
-                    this.shapeButton.setMessage(this.target.shapeLabel());
-                }
-                this.target.invalidatePreview();
-            }
+    /** 属性区内容变了（切换属性 / 改值 / 换元素），按钮与文字都要跟随。 */
+    private void refreshElementProperties() {
+        if (this.shapeButton != null) {
+            this.shapeButton.setMessage(this.target.shapeLabel());
+        }
+    }
 
     /** 数据变了：刷新视口、失效面数统计。 */
     private void viewportDirty() {
-        this.target.invalidatePreview();
         this.target.resync();
         this.toolbar.invalidateStats();
     }
@@ -235,7 +231,6 @@ public class ModelingScreen extends Screen {
         }
         this.elementList.setSelected(slot);
         initElementPropertyWidgets();
-        this.target.invalidatePreview();
     }
 
     /** 提交正在输入的数字框并冲刷待发送的改动。 */
@@ -265,7 +260,7 @@ public class ModelingScreen extends Screen {
             this.layout = new ModelingLayout(this.width, this.height);
         }
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        this.viewport.render(guiGraphics, this.layout.viewport, this.target.previewStack());
+        this.viewport.render(guiGraphics, this.layout.viewport, this.target);
         this.gizmo.setRect(this.layout.viewport);
         this.gizmo.renderGrid(guiGraphics, this.width, this.height);
         this.gizmo.render(guiGraphics, this.width, this.height);
@@ -609,7 +604,6 @@ public class ModelingScreen extends Screen {
                     this.properties.sync(channel, value);
                 }
             }
-            this.target.invalidatePreview();
             this.target.resync();
             // 几何变了，之前统计的面数不再成立
             this.toolbar.invalidateStats();
