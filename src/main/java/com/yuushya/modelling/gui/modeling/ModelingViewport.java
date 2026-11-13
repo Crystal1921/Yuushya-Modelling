@@ -13,10 +13,16 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 
 import java.util.List;
 
@@ -103,10 +109,22 @@ public final class ModelingViewport {
     /**
      * 画方块。方块模型的面片按方向分组，{@code side == null} 只返回"无剔除"那一部分，
      * 所以必须把六个方向和 {@code null} 都取一遍。
+     * <p>
+     * 声明了自定义渲染的方块（{@code isCustomRenderer()}）没有面片，几何由
+     * {@code BlockEntityRenderer} 生成，这时退回物品渲染器，让它走
+     * {@code renderByItem}。
      */
     private static void renderBlock(Minecraft minecraft, GuiGraphics guiGraphics,
                                     PoseStack poseStack, BlockState state) {
         BakedModel model = minecraft.getBlockRenderer().getBlockModel(state);
+        if (model.isCustomRenderer()) {
+            ItemStack stack = blockStack(state);
+            if (!stack.isEmpty()) {
+                renderItem(minecraft, guiGraphics, poseStack, stack, -1);
+            }
+            return;
+        }
+
         RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(state);
         VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(renderType);
         PoseStack.Pose pose = poseStack.last();
@@ -117,6 +135,23 @@ public final class ModelingViewport {
             submit(minecraft, consumer, pose, state, model.getQuads(state, side, random));
         }
         submit(minecraft, consumer, pose, state, model.getQuads(state, null, random));
+    }
+
+    /** 方块状态 → 携带该状态的物品栈（自定义渲染器只认物品形态）。 */
+    private static ItemStack blockStack(BlockState state) {
+        Item item = state.getBlock().asItem();
+        if (item == Items.AIR) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack stack = new ItemStack(item);
+        if (!state.getProperties().isEmpty()) {
+            BlockItemStateProperties props = BlockItemStateProperties.EMPTY;
+            for (Property<?> property : state.getProperties()) {
+                props = props.with(property, state);
+            }
+            stack.set(DataComponents.BLOCK_STATE, props);
+        }
+        return stack;
     }
 
     private static void submit(Minecraft minecraft, VertexConsumer consumer, PoseStack.Pose pose,
@@ -135,10 +170,19 @@ public final class ModelingViewport {
     /**
      * 画物品。物品模型可能是多通道的（{@code getRenderPasses}），每个通道自己声明
      * 需要哪些 {@code RenderType}，逐个通道提交即可。
+     * <p>
+     * 声明了自定义渲染的物品（箱子、潜影盒、旗帜、三叉戟 …）没有面片，几何由
+     * {@code BlockEntityWithoutLevelRenderer} 生成，必须交给
+     * {@link net.minecraft.client.renderer.entity.ItemRenderer#render}。
      */
     private static void renderItem(Minecraft minecraft, GuiGraphics guiGraphics, PoseStack poseStack,
                                    ItemStack stack, int color) {
         BakedModel model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
+        if (model.isCustomRenderer()) {
+            renderByItemRenderer(minecraft, guiGraphics, poseStack, stack, model);
+            return;
+        }
+
         PoseStack.Pose pose = poseStack.last();
         RandomSource random = RandomSource.create(QUAD_SEED);
 
@@ -159,6 +203,26 @@ public final class ModelingViewport {
                         pass.getQuads(null, null, random), mulR, mulG, mulB);
             }
         }
+    }
+
+    /**
+     * 交给原版物品渲染器处理自定义模型（无面片，几何由 {@code BEWLR} 生成）。
+     * <p>
+     * {@code ItemRenderer.render} 内部会执行 {@code translate(-0.5)}，而我们的元素变换
+     * 与相机矩阵已经让内容占据 0..1 的方块空间，所以这里先 {@code translate(+0.5)}
+     * 抵消掉，避免整体偏移半个方块。
+     * <p>
+     * 用 {@link ItemDisplayContext#NONE}：它对应恒等显示变换，位置完全由我们的矩阵决定。
+     * <p>
+     * 注意这条路径拿不到顶点颜色，元素染色对它不生效。
+     */
+    private static void renderByItemRenderer(Minecraft minecraft, GuiGraphics guiGraphics,
+                                             PoseStack poseStack, ItemStack stack, BakedModel model) {
+        poseStack.pushPose();
+        poseStack.translate(0.5F, 0.5F, 0.5F);
+        minecraft.getItemRenderer().render(stack, ItemDisplayContext.NONE, false, poseStack,
+                guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, model);
+        poseStack.popPose();
     }
 
     private static void submitItem(Minecraft minecraft, VertexConsumer consumer, PoseStack.Pose pose,
