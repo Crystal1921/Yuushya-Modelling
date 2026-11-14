@@ -20,8 +20,10 @@ public final class ModelingLayout {
     public static final int MIN_RIGHT_WIDTH = 104;
     /** 元素列表行高。 */
     public static final int OUTLINER_ROW_HEIGHT = 26;
-    /** 右上"元素属性"占内容区高度的比例（其余给右下变换面板）。 */
-        private static final float ELEMENT_PROPERTIES_RATIO = 0.5F;
+    /** 右上"元素属性"里按钮与文字的行高，比变换面板的行更紧凑。 */
+    public static final int ELEMENT_ROW_HEIGHT = 16;
+    /** 元素属性面板的底部留白。 */
+    private static final int ELEMENT_PROPERTIES_PADDING = 4;
 
     /** 一块矩形区域。 */
     public record Rect(int x, int y, int width, int height) {
@@ -67,10 +69,10 @@ public final class ModelingLayout {
         }
 
         int rightX = width - right;
-                // 标题 + 元素名 + 属性行 + 值行 + 开关行 + 形状行
-                int minElementProperties = PANEL_TITLE_HEIGHT + 5 * 20;
-                int elementPropertiesHeight = Mth.clamp(Math.round(contentHeight * ELEMENT_PROPERTIES_RATIO),
-                        minElementProperties, Math.max(minElementProperties, contentHeight / 2));
+                // 按内容取高：标题 + 元素名 + 属性行 + 值行 + 开关行 + 形状行，剩余高度全给变换面板
+                int elementPropertiesHeight = Math.min(
+                        PANEL_TITLE_HEIGHT + ELEMENT_ROW_HEIGHT * 5 + ELEMENT_PROPERTIES_PADDING,
+                        Math.max(PANEL_TITLE_HEIGHT, contentHeight / 2));
 
         this.header = new Rect(0, 0, width, HEADER_HEIGHT);
         this.footer = new Rect(0, height - FOOTER_HEIGHT, width, FOOTER_HEIGHT);

@@ -31,6 +31,8 @@ public class ModelingScreen extends Screen {
 
     private static final int TITLE_HEIGHT = ModelingLayout.PANEL_TITLE_HEIGHT;
         private static final int ROW = 20;
+    /** 右上「元素属性」的行高，比变换面板紧凑。 */
+    private static final int ELEMENT_ROW = ModelingLayout.ELEMENT_ROW_HEIGHT;
 
     private final ModelingTarget target;
     private final ModelingCamera camera = new ModelingCamera();
@@ -117,22 +119,22 @@ public class ModelingScreen extends Screen {
         this.elementPropertyWidgets.clear();
 
         ModelingLayout.Rect rect = this.layout.elementProperties;
-            int propertyRow = rect.y() + TITLE_HEIGHT + ROW;
-            int valueRow = propertyRow + ROW;
-            int toggleRow = valueRow + ROW;
-            int shapeRow = rect.y() + TITLE_HEIGHT + ROW * 4;
+            int propertyRow = rect.y() + TITLE_HEIGHT + ELEMENT_ROW;
+            int valueRow = propertyRow + ELEMENT_ROW;
+            int toggleRow = valueRow + ELEMENT_ROW;
+            int shapeRow = rect.y() + TITLE_HEIGHT + ELEMENT_ROW * 4;
             int left = rect.x() + 4;
             int right = rect.right() - 14;
 
             // 上一行切「属性」，下一行切「值」
             addWidget(Button.builder(Component.literal("<"), btn -> selectProperty(-1))
-                    .bounds(left, propertyRow, 10, ROW).build());
+                    .bounds(left, propertyRow, 10, ELEMENT_ROW).build());
             addWidget(Button.builder(Component.literal(">"), btn -> selectProperty(1))
-                    .bounds(right, propertyRow, 10, ROW).build());
+                    .bounds(right, propertyRow, 10, ELEMENT_ROW).build());
             addWidget(Button.builder(Component.literal("<"), btn -> cycleValue(-1))
-                    .bounds(left, valueRow, 10, ROW).build());
+                    .bounds(left, valueRow, 10, ELEMENT_ROW).build());
             addWidget(Button.builder(Component.literal(">"), btn -> cycleValue(1))
-                    .bounds(right, valueRow, 10, ROW).build());
+                    .bounds(right, valueRow, 10, ELEMENT_ROW).build());
 
             // 类型特有的开关（ItemBlock 的物品 / 方块）：整行一个循环按钮，和形状按钮一致，没有就整行隐藏
             List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
@@ -140,7 +142,7 @@ public class ModelingScreen extends Screen {
             if (!toggles.isEmpty()) {
                 ModelingTarget.PropertyRow toggle = toggles.get(0);
                 this.toggleButton = Button.builder(toggleMessage(toggle), btn -> cycleToggle())
-                        .bounds(left, toggleRow, right + 10 - left, ROW)
+                        .bounds(left, toggleRow, right + 10 - left, ELEMENT_ROW)
                         .tooltip(Tooltip.create(toggle.label()))
                         .build();
                 addWidget(this.toggleButton);
@@ -148,7 +150,7 @@ public class ModelingScreen extends Screen {
 
             // 形状：独立于方块状态属性，写的是方块本身的 SHAPES 属性
             this.shapeButton = Button.builder(this.target.shapeLabel(), btn -> cycleShape())
-                    .bounds(left, shapeRow, right + 10 - left, ROW)
+                    .bounds(left, shapeRow, right + 10 - left, ELEMENT_ROW)
                     .tooltip(Tooltip.create(Component.translatable("gui.yuushya.modeling.shape.tip")))
                     .build();
             addWidget(this.shapeButton);
@@ -339,18 +341,19 @@ public class ModelingScreen extends Screen {
     private void renderElementProperties(GuiGraphics guiGraphics) {
         ModelingLayout.Rect rect = this.layout.elementProperties;
         int y = rect.y() + TITLE_HEIGHT;
-        guiGraphics.drawString(this.font, this.target.displayName(), rect.x() + 5, y, 0xFFFFFFFF, false);
+        int textOffset = (ELEMENT_ROW - 9) / 2;
+        guiGraphics.drawString(this.font, this.target.displayName(), rect.x() + 5, y + textOffset, 0xFFFFFFFF, false);
 
         ModelingTarget.PropertyRow row = currentProperty();
                 if (row == null) {
                     guiGraphics.drawString(this.font, Component.translatable("gui.yuushya.modeling.noProperties"),
-                            rect.x() + 5, y + ROW, ModelingChrome.PANEL_TITLE, false);
+                            rect.x() + 5, y + ELEMENT_ROW + textOffset, ModelingChrome.PANEL_TITLE, false);
                     return;
                 }
                 guiGraphics.drawString(this.font, row.label(), centered(rect, row.label().getString()),
-                        y + ROW + 6, 0xFFB0B0B0, false);
+                        y + ELEMENT_ROW + textOffset, 0xFFB0B0B0, false);
                 guiGraphics.drawString(this.font, row.value(), centered(rect, row.value().getString()),
-                        y + ROW * 2 + 6, 0xFFFFFFFF, false);
+                        y + ELEMENT_ROW * 2 + textOffset, 0xFFFFFFFF, false);
             }
 
     private int centered(ModelingLayout.Rect rect, String text) {
