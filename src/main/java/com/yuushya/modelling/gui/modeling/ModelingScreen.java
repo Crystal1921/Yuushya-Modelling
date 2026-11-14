@@ -49,8 +49,8 @@ public class ModelingScreen extends Screen {
     /** 当前显示在右上属性区的第几组方块状态属性。 */
     private int propertyIndex;
     private Button shapeButton;
-        /** 开关行的纵向位置（无开关时也不影响绘制）。 */
-        private int toggleAreaTop;
+    /** 类型特有的开关行按钮（例如 ItemBlock 的物品 / 方块），没有该行时为 {@code null}。 */
+    private Button toggleButton;
 
     /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
     private static final int CAMERA_NONE = 0;
@@ -134,15 +134,16 @@ public class ModelingScreen extends Screen {
             addWidget(Button.builder(Component.literal(">"), btn -> cycleValue(1))
                     .bounds(right, valueRow, 10, ROW).build());
 
-            // 类型特有的开关（ItemBlock 的物品 / 方块），没有就整行隐藏
+            // 类型特有的开关（ItemBlock 的物品 / 方块）：整行一个循环按钮，和形状按钮一致，没有就整行隐藏
             List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
-            this.toggleAreaTop = toggleRow;
+            this.toggleButton = null;
             if (!toggles.isEmpty()) {
                 ModelingTarget.PropertyRow toggle = toggles.get(0);
-                addWidget(Button.builder(Component.literal("<"), btn -> toggle.previous().run())
-                        .bounds(left, toggleRow, 10, ROW).build());
-                addWidget(Button.builder(Component.literal(">"), btn -> toggle.next().run())
-                        .bounds(right, toggleRow, 10, ROW).build());
+                this.toggleButton = Button.builder(toggleMessage(toggle), btn -> cycleToggle())
+                        .bounds(left, toggleRow, right + 10 - left, ROW)
+                        .tooltip(Tooltip.create(toggle.label()))
+                        .build();
+                addWidget(this.toggleButton);
             }
 
             // 形状：独立于方块状态属性，写的是方块本身的 SHAPES 属性
@@ -195,6 +196,17 @@ public class ModelingScreen extends Screen {
             this.toolbar.invalidateStats();
         }
 
+        /** 开关行：整行一个循环按钮，点一下切到下一档。 */
+        private void cycleToggle() {
+            List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
+            if (toggles.isEmpty()) {
+                return;
+            }
+            toggles.get(0).next().run();
+            refreshElementProperties();
+            this.toolbar.invalidateStats();
+        }
+
     /** 循环切换形状（点一下下一档），并下发到服务端。 */
     private void cycleShape() {
         Component label = this.target.cycleShape();
@@ -209,6 +221,17 @@ public class ModelingScreen extends Screen {
         if (this.shapeButton != null) {
             this.shapeButton.setMessage(this.target.shapeLabel());
         }
+        if (this.toggleButton != null) {
+            List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
+            if (!toggles.isEmpty()) {
+                this.toggleButton.setMessage(toggleMessage(toggles.get(0)));
+            }
+        }
+    }
+
+    /** 开关按钮上的文字：左侧标签 + 右侧当前值。 */
+    private static Component toggleMessage(ModelingTarget.PropertyRow toggle) {
+        return Component.empty().append(toggle.label()).append(Component.literal(": ")).append(toggle.value());
     }
 
     /** 数据变了：刷新视口、失效面数统计。 */
@@ -328,16 +351,6 @@ public class ModelingScreen extends Screen {
                         y + ROW + 6, 0xFFB0B0B0, false);
                 guiGraphics.drawString(this.font, row.value(), centered(rect, row.value().getString()),
                         y + ROW * 2 + 6, 0xFFFFFFFF, false);
-
-                List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
-                if (!toggles.isEmpty()) {
-                    ModelingTarget.PropertyRow toggle = toggles.get(0);
-                    int toggleText = this.toggleAreaTop + 6;
-                    guiGraphics.drawString(this.font, toggle.label(), rect.x() + 16, toggleText, 0xFFB0B0B0, false);
-                    String value = toggle.value().getString();
-                    guiGraphics.drawString(this.font, value,
-                            rect.right() - 16 - this.font.width(value), toggleText, 0xFFFFFFFF, false);
-                }
             }
 
     private int centered(ModelingLayout.Rect rect, String text) {

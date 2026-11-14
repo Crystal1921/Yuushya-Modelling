@@ -347,7 +347,9 @@ public final class ItemBlockTarget implements ModelingTarget {
         List<TransformItemData> data = this.entity.getTransformData();
         List<ElementView> views = new ArrayList<>(data.size());
         for (TransformItemData entry : data) {
-            views.add(new ElementView(entry, null, entry.itemStack, entry.color));
+            // 方块形态画方块模型，物品形态交给物品渲染器；拿不到方块状态（纯物品 / 空气）时仍按物品画
+            BlockState state = entry.enableBlock ? ShowBlockTarget.stateOf(entry.itemStack) : null;
+            views.add(new ElementView(entry, state, entry.itemStack, entry.color));
         }
         return views;
     }
@@ -507,18 +509,22 @@ public final class ItemBlockTarget implements ModelingTarget {
                         0.0, 255.0, 1.0, 0));
     }
 
-        /** 物品 / 方块归属开关：物品形态下没有方块状态可改。 */
-        @Override
-        public List<PropertyRow> toggles(int slot) {
-            if (isEmptyElement(slot)) {
-                return List.of();
-            }
-            boolean enabled = element(slot).enableBlock;
-            return List.of(new PropertyRow(
-                    Component.translatable("gui.yuushya.modeling.enableBlock"),
-                    Component.translatable(enabled ? "gui.yuushya.modeling.enableBlock.on"
-                            : "gui.yuushya.modeling.enableBlock.off"),
-                    () -> set(slot, ModelingChannel.ENABLE_BLOCK, 0.0),
-                    () -> set(slot, ModelingChannel.ENABLE_BLOCK, 1.0)));
+    /**
+     * 物品 / 方块归属开关：物品形态下没有方块状态可改。
+     * <p>
+     * 界面上是一整行的循环按钮，点一下就在两种形态间切换，所以前后两个动作都是翻转当前值。
+     */
+    @Override
+    public List<PropertyRow> toggles(int slot) {
+        if (isEmptyElement(slot)) {
+            return List.of();
         }
+        boolean enabled = element(slot).enableBlock;
+        Runnable flip = () -> set(slot, ModelingChannel.ENABLE_BLOCK, enabled ? 0.0 : 1.0);
+        return List.of(new PropertyRow(
+                Component.translatable("gui.yuushya.modeling.enableBlock"),
+                Component.translatable(enabled ? "gui.yuushya.modeling.enableBlock.on"
+                        : "gui.yuushya.modeling.enableBlock.off"),
+                flip, flip));
+    }
     }

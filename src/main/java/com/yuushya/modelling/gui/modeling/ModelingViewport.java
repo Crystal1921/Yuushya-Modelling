@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -83,7 +84,7 @@ public final class ModelingViewport {
                 poseStack.pushPose();
                 applyElementTransform(poseStack, view);
                 if (view.state() != null) {
-                    renderBlock(minecraft, guiGraphics, poseStack, view.state());
+                    renderBlock(minecraft, guiGraphics, poseStack, view.state(), view.stack(), view.color());
                 } else {
                     renderItem(minecraft, guiGraphics, poseStack, view.stack(), view.color());
                 }
@@ -112,15 +113,18 @@ public final class ModelingViewport {
      * <p>
      * 声明了自定义渲染的方块（{@code isCustomRenderer()}）没有面片，几何由
      * {@code BlockEntityRenderer} 生成，这时退回物品渲染器，让它走
-     * {@code renderByItem}。
+     * {@code renderByItem}；ItemBlock 元素能给出原始物品栈，就优先用它，保住物品上的组件。
+     *
+     * @param stack 元素的原始物品栈，只在上面的自定义渲染回退里用到
+     * @param color 元素染色（ARGB），{@code -1} 表示不染色
      */
     private static void renderBlock(Minecraft minecraft, GuiGraphics guiGraphics,
-                                    PoseStack poseStack, BlockState state) {
+                                    PoseStack poseStack, BlockState state, ItemStack stack, int color) {
         BakedModel model = minecraft.getBlockRenderer().getBlockModel(state);
         if (model.isCustomRenderer()) {
-            ItemStack stack = blockStack(state);
-            if (!stack.isEmpty()) {
-                renderItem(minecraft, guiGraphics, poseStack, stack, -1);
+            ItemStack fallback = stack.isEmpty() ? blockStack(state) : stack;
+            if (!fallback.isEmpty()) {
+                renderItem(minecraft, guiGraphics, poseStack, fallback, color);
             }
             return;
         }
@@ -129,12 +133,15 @@ public final class ModelingViewport {
         VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(renderType);
         PoseStack.Pose pose = poseStack.last();
         RandomSource random = RandomSource.create(QUAD_SEED);
+        float mulR = FastColor.ARGB32.red(color) / 255.0F;
+        float mulG = FastColor.ARGB32.green(color) / 255.0F;
+        float mulB = FastColor.ARGB32.blue(color) / 255.0F;
 
         // 直接用手上的真实方块状态问色，不需要 ShowBlockModel 那套"编码进 tintIndex"的手法
         for (Direction side : Direction.values()) {
-            submit(minecraft, consumer, pose, state, model.getQuads(state, side, random));
+            submit(minecraft, consumer, pose, state, model.getQuads(state, side, random), mulR, mulG, mulB);
         }
-        submit(minecraft, consumer, pose, state, model.getQuads(state, null, random));
+        submit(minecraft, consumer, pose, state, model.getQuads(state, null, random), mulR, mulG, mulB);
     }
 
     /** 方块状态 → 携带该状态的物品栈（自定义渲染器只认物品形态）。 */
@@ -155,13 +162,14 @@ public final class ModelingViewport {
     }
 
     private static void submit(Minecraft minecraft, VertexConsumer consumer, PoseStack.Pose pose,
-                               BlockState state, List<BakedQuad> quads) {
+                               BlockState state, List<BakedQuad> quads,
+                               float mulR, float mulG, float mulB) {
         for (BakedQuad quad : quads) {
             int argb = -1;
             if (quad.isTinted()) {
                 argb = minecraft.getBlockColors().getColor(state, null, null, quad.getTintIndex());
             }
-            put(consumer, pose, quad, argb, 1.0F, 1.0F, 1.0F);
+            put(consumer, pose, quad, argb, mulR, mulG, mulB);
         }
     }
 
@@ -179,7 +187,7 @@ public final class ModelingViewport {
                                    ItemStack stack, int color) {
         BakedModel model = minecraft.getItemRenderer().getModel(stack, null, null, 0);
         if (model.isCustomRenderer()) {
-            renderByItemRenderer(minecraft, guiGraphics, poseStack, stack, model);
+            renderByItemRenderer(minecraft, guiGraphics, poseStack, stack, model, color);
             return;
         }
 
@@ -214,14 +222,19 @@ public final class ModelingViewport {
      * <p>
      * 用 {@link ItemDisplayContext#NONE}：它对应恒等显示变换，位置完全由我们的矩阵决定。
      * <p>
-     * 注意这条路径拿不到顶点颜色，元素染色对它不生效。
+     * 顶点颜色由 {@code BEWLR} 自己写，没有「传一个颜色参数」的入口，所以元素染色靠
+     * {@link TintedBufferSource} 包一层缓冲区，把每个顶点颜色乘上元素颜色。
      */
     private static void renderByItemRenderer(Minecraft minecraft, GuiGraphics guiGraphics,
-                                             PoseStack poseStack, ItemStack stack, BakedModel model) {
+                                             PoseStack poseStack, ItemStack stack, BakedModel model,
+                                             int color) {
+        MultiBufferSource buffers = color == -1
+                ? guiGraphics.bufferSource()
+                : new TintedBufferSource(guiGraphics.bufferSource(), color);
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.5F, 0.5F);
         minecraft.getItemRenderer().render(stack, ItemDisplayContext.NONE, false, poseStack,
-                guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, model);
+                buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, model);
         poseStack.popPose();
     }
 
@@ -253,5 +266,85 @@ public final class ModelingViewport {
         float blue = FastColor.ARGB32.blue(argb) / 255.0F * mulB;
         consumer.putBulkData(pose, quad, red, green, blue, alpha,
                 LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+    }
+
+    // ---- 元素染色包装 ----
+
+    /**
+     * 给自定义渲染的输出乘上元素染色。
+     * <p>
+     * 这些渲染器直接往 {@code MultiBufferSource} 里写顶点颜色，没有颜色参数可传，
+     * 所以包一层缓冲区，在 {@code setColor} 处乘色；其它调用原样转发。
+     */
+    private static final class TintedBufferSource implements MultiBufferSource {
+
+        private final MultiBufferSource delegate;
+        private final float mulR;
+        private final float mulG;
+        private final float mulB;
+
+        private TintedBufferSource(MultiBufferSource delegate, int color) {
+            this.delegate = delegate;
+            this.mulR = FastColor.ARGB32.red(color) / 255.0F;
+            this.mulG = FastColor.ARGB32.green(color) / 255.0F;
+            this.mulB = FastColor.ARGB32.blue(color) / 255.0F;
+        }
+
+        @Override
+        public VertexConsumer getBuffer(RenderType renderType) {
+            return new TintedVertexConsumer(this.delegate.getBuffer(renderType), this.mulR, this.mulG, this.mulB);
+        }
+    }
+
+    /** 只改顶点颜色，其余原样转发。 */
+    private static final class TintedVertexConsumer implements VertexConsumer {
+
+        private final VertexConsumer delegate;
+        private final float mulR;
+        private final float mulG;
+        private final float mulB;
+
+        private TintedVertexConsumer(VertexConsumer delegate, float mulR, float mulG, float mulB) {
+            this.delegate = delegate;
+            this.mulR = mulR;
+            this.mulG = mulG;
+            this.mulB = mulB;
+        }
+
+        @Override
+        public VertexConsumer addVertex(float x, float y, float z) {
+            this.delegate.addVertex(x, y, z);
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
+            this.delegate.setColor((int) (red * this.mulR), (int) (green * this.mulG), (int) (blue * this.mulB), alpha);
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setUv(float u, float v) {
+            this.delegate.setUv(u, v);
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setUv1(int u, int v) {
+            this.delegate.setUv1(u, v);
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setUv2(int u, int v) {
+            this.delegate.setUv2(u, v);
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setNormal(float x, float y, float z) {
+            this.delegate.setNormal(x, y, z);
+            return this;
+        }
     }
 }

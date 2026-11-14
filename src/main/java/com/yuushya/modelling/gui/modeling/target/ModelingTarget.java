@@ -105,8 +105,8 @@ public interface ModelingTarget {
      * 为弱键，既慢又容易失效。
      *
      * @param transform 位移 / 旋转 / 缩放 / 显示状态
-     * @param state     方块内容；纯物品元素为 {@code null}
-     * @param stack     物品内容；纯方块元素为 {@link ItemStack#EMPTY}
+     * @param state     方块内容；物品形态（或物品没有对应方块状态）为 {@code null}
+     * @param stack     原始物品栈；方块形态下只给自定义渲染器兜底，单方块元素为 {@link ItemStack#EMPTY}
      * @param color     元素染色（ARGB），{@code -1} 表示不染色
      */
     record ElementView(ITransformDataProvider transform, @Nullable BlockState state,
