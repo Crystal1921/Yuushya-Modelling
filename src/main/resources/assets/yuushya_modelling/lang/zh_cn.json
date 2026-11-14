@@ -180,6 +180,7 @@
   "gui.yuushya.modeling.pos": "位移",
   "gui.yuushya.modeling.rot": "旋转",
   "gui.yuushya.modeling.scale": "缩放",
+  "gui.yuushya.modeling.uniformScale.tip": "等比缩放：强制 X / Y / Z 缩放保持一致",
   "gui.yuushya.modeling.lit": "亮度",
   "gui.yuushya.modeling.shape.tip": "方块形状（碰撞与渲染范围）",
   "gui.yuushya.modeling.order.up": "上移一层",

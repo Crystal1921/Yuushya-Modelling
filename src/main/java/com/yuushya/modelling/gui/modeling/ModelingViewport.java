@@ -296,55 +296,46 @@ public final class ModelingViewport {
         }
     }
 
-    /** 只改顶点颜色，其余原样转发。 */
-    private static final class TintedVertexConsumer implements VertexConsumer {
-
-        private final VertexConsumer delegate;
-        private final float mulR;
-        private final float mulG;
-        private final float mulB;
-
-        private TintedVertexConsumer(VertexConsumer delegate, float mulR, float mulG, float mulB) {
-            this.delegate = delegate;
-            this.mulR = mulR;
-            this.mulG = mulG;
-            this.mulB = mulB;
-        }
+    /**
+     * 只改顶点颜色，其余原样转发。
+     */
+        private record TintedVertexConsumer(VertexConsumer delegate, float mulR, float mulG,
+                                            float mulB) implements VertexConsumer {
 
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
-            this.delegate.addVertex(x, y, z);
-            return this;
-        }
+            public VertexConsumer addVertex(float x, float y, float z) {
+                this.delegate.addVertex(x, y, z);
+                return this;
+            }
 
-        @Override
-        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
-            this.delegate.setColor((int) (red * this.mulR), (int) (green * this.mulG), (int) (blue * this.mulB), alpha);
-            return this;
-        }
+            @Override
+            public VertexConsumer setColor(int red, int green, int blue, int alpha) {
+                this.delegate.setColor((int) (red * this.mulR), (int) (green * this.mulG), (int) (blue * this.mulB), alpha);
+                return this;
+            }
 
-        @Override
-        public VertexConsumer setUv(float u, float v) {
-            this.delegate.setUv(u, v);
-            return this;
-        }
+            @Override
+            public VertexConsumer setUv(float u, float v) {
+                this.delegate.setUv(u, v);
+                return this;
+            }
 
-        @Override
-        public VertexConsumer setUv1(int u, int v) {
-            this.delegate.setUv1(u, v);
-            return this;
-        }
+            @Override
+            public VertexConsumer setUv1(int u, int v) {
+                this.delegate.setUv1(u, v);
+                return this;
+            }
 
-        @Override
-        public VertexConsumer setUv2(int u, int v) {
-            this.delegate.setUv2(u, v);
-            return this;
-        }
+            @Override
+            public VertexConsumer setUv2(int u, int v) {
+                this.delegate.setUv2(u, v);
+                return this;
+            }
 
-        @Override
-        public VertexConsumer setNormal(float x, float y, float z) {
-            this.delegate.setNormal(x, y, z);
-            return this;
+            @Override
+            public VertexConsumer setNormal(float x, float y, float z) {
+                this.delegate.setNormal(x, y, z);
+                return this;
+            }
         }
-    }
 }

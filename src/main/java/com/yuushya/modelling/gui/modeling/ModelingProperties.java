@@ -6,6 +6,8 @@ import com.yuushya.modelling.gui.modeling.target.TransformRow;
 import com.yuushya.modelling.gui.widget.NumberField;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -33,6 +35,10 @@ public final class ModelingProperties {
     private final List<NumberField> fields = new ArrayList<>();
     private final List<ModelingChannel> fieldChannels = new ArrayList<>();
     private final Map<Integer, Component> rowLabels = new LinkedHashMap<>();
+    /** 缩放行上方的「等比」复选框；没有缩放行时为 {@code null}。 */
+    private Checkbox uniformScale;
+    /** 「等比」复选框的当前状态，拖动数字框时以此决定是否同步三轴。 */
+    private boolean uniformScaleOn;
     private int slot;
 
     public ModelingProperties(ModelingTarget target, BiConsumer<ModelingChannel, Double> onChange) {
@@ -45,28 +51,69 @@ public final class ModelingProperties {
         this.fields.clear();
         this.fieldChannels.clear();
         this.rowLabels.clear();
+        this.uniformScale = null;
         this.slot = slot;
 
         List<TransformRow> all = this.target.rows();
         int maxRows = Math.max(0, (rect.height() - TITLE_HEIGHT) / ROW_HEIGHT);
-        for (int i = 0; i < all.size() && i < maxRows; i++) {
-            TransformRow row = all.get(i);
-            this.rowLabels.put(i, row.label());
-            if (row instanceof TransformRow.Vector vector) {
-                addVectorRow(rect, i, font, vector);
-            } else if (row instanceof TransformRow.Single single) {
-                addSingleRow(rect, i, font, single);
+        for (int row = 0; row < all.size() && row < maxRows; row++) {
+            TransformRow transformRow = all.get(row);
+            this.rowLabels.put(row, transformRow.label());
+            if (transformRow instanceof TransformRow.Vector vector) {
+                // 缩放行的标签后面紧跟一个无文字的「等比」复选框，字段整体给它让位
+                int startX = isScaleRow(vector)
+                        ? addUniformScaleCheckbox(rect, row, font, slot, vector.label())
+                        : rect.x() + LABEL_WIDTH;
+                addVectorRow(rect, row, font, vector, startX);
+            } else if (transformRow instanceof TransformRow.Single single) {
+                addSingleRow(rect, row, font, single);
             }
         }
+    }
+
+    private static boolean isScaleRow(TransformRow.Vector row) {
+        return row.x() == ModelingChannel.SCALE_X;
+    }
+
+    /**
+     * 在缩放行的标签后面摆一个只有方框、没有文字的复选框。
+     *
+     * @return 数字框的起始 x，至少从 {@link #LABEL_WIDTH} 处开始
+     */
+    private int addUniformScaleCheckbox(ModelingLayout.Rect rect, int row, Font font, int slot, Component label) {
+        this.uniformScaleOn = scaleAxesEqual(slot);
+        int boxSize = Checkbox.getBoxSize(font);
+        int x = rect.x() + 5 + font.width(label) + 2;
+        int y = rowY(rect, row) + (ROW_HEIGHT - boxSize) / 2;
+        this.uniformScale = Checkbox.builder(Component.empty(), font)
+                .pos(x, y)
+                .maxWidth(boxSize)
+                .selected(this.uniformScaleOn)
+                .tooltip(Tooltip.create(Component.translatable("gui.yuushya.modeling.uniformScale.tip")))
+                .onValueChange((checkbox, value) -> this.uniformScaleOn = value)
+                .build();
+        return Math.max(rect.x() + LABEL_WIDTH, x + boxSize + GAP);
+    }
+
+    /** 当前元素三轴缩放是否一致（决定复选框的初始状态）。 */
+    private boolean scaleAxesEqual(int slot) {
+        double x = this.target.get(slot, ModelingChannel.SCALE_X);
+        double y = this.target.get(slot, ModelingChannel.SCALE_Y);
+        double z = this.target.get(slot, ModelingChannel.SCALE_Z);
+        return Math.abs(x - y) < 1.0E-4 && Math.abs(y - z) < 1.0E-4;
+    }
+
+    /** 勾选「等比」后，改任意一轴都要同步三轴。 */
+    public boolean isUniformScale() {
+        return this.uniformScaleOn;
     }
 
     private int rowY(ModelingLayout.Rect rect, int row) {
         return rect.y() + TITLE_HEIGHT + row * ROW_HEIGHT;
     }
 
-    private void addVectorRow(ModelingLayout.Rect rect, int row, Font font, TransformRow.Vector vector) {
+    private void addVectorRow(ModelingLayout.Rect rect, int row, Font font, TransformRow.Vector vector, int startX) {
         int y = rowY(rect, row);
-        int startX = rect.x() + LABEL_WIDTH;
         int totalWidth = rect.right() - 6 - startX;
         int fieldWidth = Math.max(20, (totalWidth - GAP * 2) / 3);
         ModelingChannel[] channels = {vector.x(), vector.y(), vector.z()};
@@ -94,14 +141,22 @@ public final class ModelingProperties {
     }
 
     public List<AbstractWidget> widgets() {
-        return new ArrayList<>(this.fields);
+        List<AbstractWidget> widgets = new ArrayList<>(this.fields);
+        if (this.uniformScale != null) {
+            widgets.add(this.uniformScale);
+        }
+        return widgets;
     }
 
-    /** 切换元素后把字段刷到新数据。 */
+    /** 切换元素后把字段刷到新数据，「等比」复选框也按新元素的三轴重新判断。 */
     public void refresh(int slot) {
         this.slot = slot;
         for (int i = 0; i < this.fields.size(); i++) {
             this.fields.get(i).setValue(this.target.get(slot, this.fieldChannels.get(i)));
+        }
+        if (this.uniformScale != null && this.uniformScale.selected() != scaleAxesEqual(slot)) {
+            // Checkbox 没有 setSelected，走一次和点击相同的流程，onValueChange 会同步 uniformScaleOn
+            this.uniformScale.onPress();
         }
     }
 

@@ -601,8 +601,8 @@ public class ModelingScreen extends Screen {
         if (!this.target.supports(channel)) {
             return;
         }
-            if (channel.isScale()) {
-                // 缩放是等比的：拖任意一个都同步三轴（0 会造成退化矩阵，夹到 1）
+            if (channel.isScale() && (this.properties == null || this.properties.isUniformScale())) {
+                // 勾了「等比」：拖任意一轴都同步三轴（0 会造成退化矩阵，夹到 1）
                 double effective = Math.abs(value) <= 0.001 ? 1.0 : value;
                 for (ModelingChannel axis : new ModelingChannel[]{
                         ModelingChannel.SCALE_X, ModelingChannel.SCALE_Y, ModelingChannel.SCALE_Z}) {
