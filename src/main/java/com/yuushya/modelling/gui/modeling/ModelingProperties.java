@@ -148,6 +148,15 @@ public final class ModelingProperties {
         return widgets;
     }
 
+    /** 收起面板（例如切到颜色编辑器）时清空行定义与控件。 */
+    public void clear() {
+        this.fields.clear();
+        this.fieldChannels.clear();
+        this.rowLabels.clear();
+        this.uniformScale = null;
+        this.uniformScaleOn = false;
+    }
+
     /** 切换元素后把字段刷到新数据，「等比」复选框也按新元素的三轴重新判断。 */
     public void refresh(int slot) {
         this.slot = slot;

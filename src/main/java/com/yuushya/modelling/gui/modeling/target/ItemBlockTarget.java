@@ -39,7 +39,7 @@ import java.util.List;
  * {@link ItemStackPacket}（内容变更无法用 double 表达），序列化走
  * {@link ShareUtils#transferItems(List)}，存盘进 {@code modellings/items}。
  * <p>
- * 比 ShowBlock 多三样东西：元素颜色（RGB 三个数字框）、"物品/方块"归属开关，
+ * 比 ShowBlock 多三样东西：元素颜色（走右下面板的颜色编辑器）、"物品/方块"归属开关，
  * 以及内容为方块时才可用的方块状态属性。
  */
 public final class ItemBlockTarget implements ModelingTarget {
@@ -503,10 +503,7 @@ public final class ItemBlockTarget implements ModelingTarget {
                 TransformRow.Vector.unbounded(Component.translatable("gui.yuushya.modeling.scale"),
                         ModelingChannel.SCALE_X, ModelingChannel.SCALE_Y, ModelingChannel.SCALE_Z, 0.02, 1),
                 new TransformRow.Single(Component.translatable("gui.yuushya.modeling.lit"),
-                        ModelingChannel.LIT, LIT_MIN, LIT_MAX, 1.0, 0, 46),
-                new TransformRow.Vector(Component.translatable("gui.yuushya.modeling.color"),
-                        ModelingChannel.COLOR_R, ModelingChannel.COLOR_G, ModelingChannel.COLOR_B,
-                        0.0, 255.0, 1.0, 0));
+                        ModelingChannel.LIT, LIT_MIN, LIT_MAX, 1.0, 0, 46));
     }
 
     /**

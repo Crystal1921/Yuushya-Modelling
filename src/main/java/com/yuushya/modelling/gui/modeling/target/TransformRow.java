@@ -6,7 +6,7 @@ import net.minecraft.network.chat.Component;
  * 右下「变换」面板里的一行。
  * <p>
  * 由 {@link ModelingTarget} 给出，界面照着摆数字框，不再对具体方块类型做分支：
- * ShowBlock 是 位移 / 旋转 / 缩放 / 亮度，ItemBlock 再多一行颜色（R/G/B）。
+ * ShowBlock 与 ItemBlock 都是 位移 / 旋转 / 缩放 / 亮度；颜色改用单独的颜色编辑器。
  */
 public sealed interface TransformRow {
 

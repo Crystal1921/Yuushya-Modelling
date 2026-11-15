@@ -12,20 +12,32 @@ public final class ModelingLayout {
 
     public static final int HEADER_HEIGHT = 24;
     public static final int FOOTER_HEIGHT = 16;
-    /** 面板标题行高度。 */
+    /**
+     * 面板标题行高度。
+     */
     public static final int PANEL_TITLE_HEIGHT = 14;
-    /** 视口最小宽度，小于它时优先压缩两侧面板。 */
+    /**
+     * 视口最小宽度，小于它时优先压缩两侧面板。
+     */
     public static final int MIN_VIEWPORT_WIDTH = 120;
     public static final int MIN_LEFT_WIDTH = 72;
     public static final int MIN_RIGHT_WIDTH = 104;
-    /** 元素列表行高。 */
+    /**
+     * 元素列表行高。
+     */
     public static final int OUTLINER_ROW_HEIGHT = 26;
-    /** 右上"元素属性"里按钮与文字的行高，比变换面板的行更紧凑。 */
+    /**
+     * 右上"元素属性"里按钮与文字的行高，比变换面板的行更紧凑。
+     */
     public static final int ELEMENT_ROW_HEIGHT = 16;
-    /** 元素属性面板的底部留白。 */
+    /**
+     * 元素属性面板的底部留白。
+     */
     private static final int ELEMENT_PROPERTIES_PADDING = 4;
 
-    /** 一块矩形区域。 */
+    /**
+     * 一块矩形区域。
+     */
     public record Rect(int x, int y, int width, int height) {
         public int right() {
             return x + width;
@@ -42,13 +54,21 @@ public final class ModelingLayout {
 
     public final Rect header;
     public final Rect footer;
-    /** 左侧元素列表。 */
+    /**
+     * 左侧元素列表。
+     */
     public final Rect elements;
-    /** 右上元素属性（方块状态等）。 */
+    /**
+     * 右上元素属性（方块状态等）。
+     */
     public final Rect elementProperties;
-    /** 右下变换属性（位移/旋转/缩放/亮度）。 */
+    /**
+     * 右下变换属性（位移/旋转/缩放/亮度）。
+     */
     public final Rect transform;
-    /** 中间 3D 视口。 */
+    /**
+     * 中间 3D 视口。
+     */
     public final Rect viewport;
 
     public ModelingLayout(int width, int height) {
@@ -69,10 +89,9 @@ public final class ModelingLayout {
         }
 
         int rightX = width - right;
-                // 按内容取高：标题 + 元素名 + 属性行 + 值行 + 开关行 + 形状行，剩余高度全给变换面板
-                int elementPropertiesHeight = Math.min(
-                        PANEL_TITLE_HEIGHT + ELEMENT_ROW_HEIGHT * 5 + ELEMENT_PROPERTIES_PADDING,
-                        Math.max(PANEL_TITLE_HEIGHT, contentHeight / 2));
+        // 按内容取高：标题 + 元素名 + 属性行 + 值行 + 开关行 + 形状行，剩余高度全给变换面板
+        int elementPropertiesHeight = Math.clamp(contentHeight / 2, PANEL_TITLE_HEIGHT,
+                PANEL_TITLE_HEIGHT + ELEMENT_ROW_HEIGHT * 5 + ELEMENT_PROPERTIES_PADDING);
 
         this.header = new Rect(0, 0, width, HEADER_HEIGHT);
         this.footer = new Rect(0, height - FOOTER_HEIGHT, width, FOOTER_HEIGHT);

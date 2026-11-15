@@ -4,15 +4,18 @@ import com.yuushya.modelling.gui.modeling.target.ItemBlockTarget;
 import com.yuushya.modelling.gui.modeling.target.ModelingChannel;
 import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
 import com.yuushya.modelling.gui.modeling.target.ShowBlockTarget;
+import com.yuushya.modelling.gui.widget.AbstractColorScreen;
+import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.utils.ClientMethod;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -27,7 +30,7 @@ import java.util.List;
  * 界面本身不认识具体方块实体，所有数据读写都通过 {@link ModelingTarget}；
  * ShowBlock 与 ItemBlock 各有一个实现，切换只需要换 target。
  */
-public class ModelingScreen extends Screen {
+public class ModelingScreen extends AbstractColorScreen {
 
     private static final int TITLE_HEIGHT = ModelingLayout.PANEL_TITLE_HEIGHT;
         private static final int ROW = 20;
@@ -53,6 +56,14 @@ public class ModelingScreen extends Screen {
     private Button shapeButton;
     /** 类型特有的开关行按钮（例如 ItemBlock 的物品 / 方块），没有该行时为 {@code null}。 */
     private Button toggleButton;
+
+    private final List<AbstractWidget> transformWidgets = new ArrayList<>();
+    /** 右下变换面板摆内容用的区域：顶部要给「变换 / 颜色」切换行留位置。 */
+    private ModelingLayout.Rect transformRows;
+    private ColorWidget colorWidget;
+    private EditBox colorEditBox;
+    /** 右下角当前显示的是颜色编辑器而不是普通变换。 */
+    private boolean colorMode;
 
     /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
     private static final int CAMERA_NONE = 0;
@@ -100,15 +111,156 @@ public class ModelingScreen extends Screen {
         this.elementList.setToolListener(this::onTool);
 
         this.properties = new ModelingProperties(this.target, this::applyValue);
-        this.properties.layout(this.layout.transform, this.slot, this.font);
-        for (AbstractWidget widget : this.properties.widgets()) {
-            this.addRenderableWidget(widget);
-        }
+        initTransformWidgets();
 
         this.gizmo = new ModelingGizmo(this.camera, this.target, () -> this.slot, this::applyValue);
         this.gizmo.setRect(this.layout.viewport);
 
         initElementPropertyWidgets();
+    }
+
+    // ---- 右下：变换 / 颜色 ----
+
+    /**
+     * 重建右下角面板：顶行是「变换 / 颜色」切换按钮，下面按当前模式摆数字框或颜色选择器。
+     * <p>
+     * 只有能改颜色的目标（ItemBlock）才显示切换行，ShowBlock 依旧是纯变换面板。
+     */
+    private void initTransformWidgets() {
+        for (AbstractWidget widget : this.transformWidgets) {
+            this.removeWidget(widget);
+        }
+        this.transformWidgets.clear();
+        this.colorWidget = null;
+        this.colorEditBox = null;
+
+        ModelingLayout.Rect panel = this.layout.transform;
+        boolean supportsColor = this.target.supports(ModelingChannel.COLOR_R);
+        int topOffset = supportsColor ? ROW : 0;
+        if (supportsColor) {
+            addTransformWidget(Button.builder(panelModeMessage(), btn -> toggleColorMode())
+                    .bounds(panel.x() + 4, panel.y() + TITLE_HEIGHT, panel.width() - 8, ROW - 4)
+                    .tooltip(Tooltip.create(Component.translatable("gui.yuushya.modeling.panel.tip")))
+                    .build());
+        }
+        this.transformRows = new ModelingLayout.Rect(panel.x(), panel.y() + topOffset,
+                panel.width(), Math.max(0, panel.height() - topOffset));
+
+        if (this.colorMode && supportsColor) {
+            this.properties.clear();
+            initColorEditor();
+        } else {
+            this.properties.layout(this.transformRows, this.slot, this.font);
+            for (AbstractWidget widget : this.properties.widgets()) {
+                addTransformWidget(widget);
+            }
+        }
+    }
+
+    private void addTransformWidget(AbstractWidget widget) {
+        this.addRenderableWidget(widget);
+        this.transformWidgets.add(widget);
+    }
+
+    /** 切换按钮上写的就是当前模式，点一下在变换与颜色之间切换。 */
+    private Component panelModeMessage() {
+        return Component.translatable(this.colorMode
+                ? "gui.yuushya.modeling.panel.color" : "gui.yuushya.modeling.panel.transform");
+    }
+
+    /** 在「普通变换」和「颜色编辑器」之间切换。 */
+    private void toggleColorMode() {
+        if (!this.target.supports(ModelingChannel.COLOR_R)) {
+            return;
+        }
+        commitInputs();
+        this.colorMode = !this.colorMode;
+        initTransformWidgets();
+    }
+
+    /** 复用旧的 HSB 颜色选择器：上方十六进制输入，下方色板。 */
+    private void initColorEditor() {
+        ModelingLayout.Rect area = this.transformRows;
+        int x = area.x() + 4;
+        int top = area.y() + TITLE_HEIGHT;
+        int width = Math.max(40, Math.min(110, area.width() - 8));
+        int color = currentColor();
+
+        this.colorEditBox = new EditBox(this.font, x, top, width, 16,
+                Component.translatable("gui.yuushya.modeling.color"));
+        this.colorEditBox.setMaxLength(7);
+        this.colorEditBox.setValue(String.format("#%06X", color & 0xFFFFFF));
+        this.colorEditBox.setResponder(this::onColorHexChanged);
+        addTransformWidget(this.colorEditBox);
+
+        this.colorWidget = new ColorWidget(x, top + 20, width, 160, color,
+                Component.translatable("gui.yuushya.modeling.color"), this);
+        // 色板是固定尺寸的，面板太矮就只留十六进制输入，免得画到面板外面
+        this.colorWidget.visible = area.height() - TITLE_HEIGHT >= 206;
+        addTransformWidget(this.colorWidget);
+    }
+
+    /** 十六进制框只认 {@code #RRGGBB}，边输边应用；其余内容无视。 */
+    private void onColorHexChanged(String text) {
+        if (text.length() != 7 || text.charAt(0) != '#') {
+            return;
+        }
+        try {
+            int rgb = Integer.parseInt(text.substring(1), 16);
+            if (this.colorWidget != null) {
+                this.colorWidget.setColor(rgb);
+            }
+            applyColor(rgb);
+        } catch (NumberFormatException ignored) {
+        }
+    }
+
+    /** 颜色选择器回调：写进当前元素的三色通道。 */
+    private void applyColor(int rgb) {
+        if (!this.target.supports(ModelingChannel.COLOR_R)) {
+            return;
+        }
+        int color = FastColor.ARGB32.color(255, FastColor.ARGB32.red(rgb),
+                FastColor.ARGB32.green(rgb), FastColor.ARGB32.blue(rgb));
+        if (color == currentColor()) {
+            return;
+        }
+        this.target.set(this.slot, ModelingChannel.COLOR_R, FastColor.ARGB32.red(color));
+        this.target.set(this.slot, ModelingChannel.COLOR_G, FastColor.ARGB32.green(color));
+        this.target.set(this.slot, ModelingChannel.COLOR_B, FastColor.ARGB32.blue(color));
+        this.target.resync();
+        this.toolbar.invalidateStats();
+    }
+
+    /** 当前元素的颜色（不透明 RGB）。 */
+    private int currentColor() {
+        return FastColor.ARGB32.color(255,
+                (int) this.target.get(this.slot, ModelingChannel.COLOR_R),
+                (int) this.target.get(this.slot, ModelingChannel.COLOR_G),
+                (int) this.target.get(this.slot, ModelingChannel.COLOR_B));
+    }
+
+    /** 切换元素后同步右下角：颜色模式刷选择器，变换模式刷数字框。 */
+    private void syncTransformPanel() {
+        if (this.colorMode && this.colorWidget != null) {
+            int color = currentColor();
+            this.colorWidget.setColor(color);
+            if (this.colorEditBox != null) {
+                this.colorEditBox.setValue(String.format("#%06X", color & 0xFFFFFF));
+            }
+            return;
+        }
+        this.properties.refresh(this.slot);
+    }
+
+    @Override
+    public EditBox getColorEditBox() {
+        return this.colorEditBox;
+    }
+
+    @Override
+    public void updateColorData(int colorValue) {
+        applyColor(colorValue);
     }
 
     /** 右上「元素属性」里的方块状态切换按钮。 */
@@ -251,9 +403,7 @@ public class ModelingScreen extends Screen {
         this.slot = slot;
         this.target.setSlot(slot);
         this.propertyIndex = 0;
-        if (this.properties != null) {
-            this.properties.refresh(slot);
-        }
+        syncTransformPanel();
         this.elementList.setSelected(slot);
         initElementPropertyWidgets();
     }
@@ -330,7 +480,10 @@ public class ModelingScreen extends Screen {
 
     /** 右下每行的左侧标签。 */
     private void renderTransformLabels(GuiGraphics guiGraphics) {
-        ModelingLayout.Rect rect = this.layout.transform;
+        if (this.transformRows == null) {
+            return;
+        }
+        ModelingLayout.Rect rect = this.transformRows;
         for (var entry : this.properties.labels().entrySet()) {
             int y = rect.y() + TITLE_HEIGHT + entry.getKey() * ROW + 6;
             guiGraphics.drawString(this.font, entry.getValue(), rect.x() + 5, y, ModelingChrome.PANEL_TITLE, false);
@@ -400,7 +553,7 @@ public class ModelingScreen extends Screen {
                 this.elementList.setSelected(to);
                 this.elementList.markDirty();
                 this.toolbar.invalidateStats();
-                this.properties.refresh(to);
+                syncTransformPanel();
                 this.propertyIndex = 0;
                 viewportDirty();
             }
@@ -434,7 +587,7 @@ public class ModelingScreen extends Screen {
         this.slot = Math.min(this.slot, Math.max(0, this.target.size() - 1));
         this.target.setSlot(this.slot);
         this.propertyIndex = 0;
-        this.properties.refresh(this.slot);
+        syncTransformPanel();
         this.elementList.setSelected(this.slot);
         this.elementList.markDirty();
         this.toolbar.invalidateStats();
@@ -527,7 +680,7 @@ public class ModelingScreen extends Screen {
         this.slot = targetSlot;
         this.target.setSlot(targetSlot);
         this.propertyIndex = 0;
-        this.properties.refresh(targetSlot);
+        syncTransformPanel();
         this.elementList.setSelected(targetSlot);
         this.elementList.markDirty();
         initElementPropertyWidgets();
@@ -548,7 +701,7 @@ public class ModelingScreen extends Screen {
         this.slot = newSlot;
         this.target.setSlot(newSlot);
         this.propertyIndex = 0;
-        this.properties.refresh(newSlot);
+        syncTransformPanel();
         this.elementList.setSelected(newSlot);
         this.elementList.markDirty();
         initElementPropertyWidgets();
@@ -581,7 +734,7 @@ public class ModelingScreen extends Screen {
         this.slot = newSlot;
         this.target.setSlot(newSlot);
         this.propertyIndex = 0;
-        this.properties.refresh(newSlot);
+        syncTransformPanel();
         this.elementList.setSelected(newSlot);
         this.elementList.markDirty();
         initElementPropertyWidgets();
@@ -751,6 +904,10 @@ public class ModelingScreen extends Screen {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE && this.addPanel.isOpen()) {
             this.addPanel.close();
             return true;
+        }
+        // 十六进制颜色框在输入时，快捷键让位给文本编辑
+        if (this.getFocused() instanceof EditBox) {
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
         boolean ctrl = hasControlDown();
         if (keyCode == GLFW.GLFW_KEY_DELETE) {

@@ -147,7 +147,7 @@ public interface ModelingTarget {
     /** 当前形状的显示文本。 */
     Component shapeLabel();
 
-    /** 右下「变换」面板的行定义（位移 / 旋转 / 缩放 / 亮度 / 颜色 …）。 */
+    /** 右下「变换」面板的行定义（位移 / 旋转 / 缩放 / 亮度 …）；颜色由单独的颜色编辑器处理。 */
     List<TransformRow> rows();
 
         /**
