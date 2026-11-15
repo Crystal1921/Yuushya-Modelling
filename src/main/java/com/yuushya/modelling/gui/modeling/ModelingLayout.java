@@ -59,13 +59,13 @@ public final class ModelingLayout {
      */
     public final Rect elements;
     /**
-     * 右上元素属性（方块状态等）。
+     * 右侧整条属性栏：元素属性与变换/颜色编辑器共用一块面板。
      */
-    public final Rect elementProperties;
+    public final Rect right;
     /**
-     * 右下变换属性（位移/旋转/缩放/亮度）。
+     * 「元素属性」块按内容取到的高度（不含面板标题行，也不含顶部的变换/颜色切换行）。
      */
-    public final Rect transform;
+    public final int elementPropertiesHeight;
     /**
      * 中间 3D 视口。
      */
@@ -89,16 +89,15 @@ public final class ModelingLayout {
         }
 
         int rightX = width - right;
-        // 按内容取高：标题 + 元素名 + 属性行 + 值行 + 开关行 + 形状行，剩余高度全给变换面板
-        int elementPropertiesHeight = Math.clamp(contentHeight / 2, PANEL_TITLE_HEIGHT,
-                PANEL_TITLE_HEIGHT + ELEMENT_ROW_HEIGHT * 5 + ELEMENT_PROPERTIES_PADDING);
+        // 按内容取高：元素名 + 属性行 + 值行 + 开关行 + 形状行（不含面板标题，标题由整条右栏共用）
+        int elementPropertiesHeight = Math.clamp(contentHeight / 2, ELEMENT_ROW_HEIGHT,
+                ELEMENT_ROW_HEIGHT * 5 + ELEMENT_PROPERTIES_PADDING);
 
         this.header = new Rect(0, 0, width, HEADER_HEIGHT);
         this.footer = new Rect(0, height - FOOTER_HEIGHT, width, FOOTER_HEIGHT);
         this.elements = new Rect(0, HEADER_HEIGHT, left, contentHeight);
-        this.elementProperties = new Rect(rightX, HEADER_HEIGHT, right, elementPropertiesHeight);
-        this.transform = new Rect(rightX, HEADER_HEIGHT + elementPropertiesHeight, right,
-                Math.max(0, contentHeight - elementPropertiesHeight));
+        this.right = new Rect(rightX, HEADER_HEIGHT, right, contentHeight);
+        this.elementPropertiesHeight = elementPropertiesHeight;
         this.viewport = new Rect(left, HEADER_HEIGHT, Math.max(0, rightX - left), contentHeight);
     }
 }

@@ -169,6 +169,7 @@
   "gui.yuushya.modeling.title": "建模工作台",
   "gui.yuushya.modeling.outliner": "元素",
   "gui.yuushya.modeling.elementProperties": "元素属性",
+  "gui.yuushya.modeling.properties": "属性",
   "gui.yuushya.modeling.transform": "变换",
   "gui.yuushya.modeling.panel.transform": "变换",
   "gui.yuushya.modeling.panel.color": "颜色",

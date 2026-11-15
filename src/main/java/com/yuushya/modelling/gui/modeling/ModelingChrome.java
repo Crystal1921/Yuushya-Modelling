@@ -37,16 +37,10 @@ public final class ModelingChrome {
         guiGraphics.fill(footer.x(), footer.y(), footer.right(), footer.y() + 1, PANEL_BORDER);
 
         panel(guiGraphics, layout.elements);
-        panel(guiGraphics, layout.elementProperties);
-        panel(guiGraphics, layout.transform);
-
-        // 右侧两块之间的分隔
-        guiGraphics.fill(layout.transform.x(), layout.transform.y(), layout.transform.right(),
-                layout.transform.y() + 1, PANEL_BORDER);
+        panel(guiGraphics, layout.right);
 
         title(guiGraphics, font, layout.elements, "gui.yuushya.modeling.outliner");
-        title(guiGraphics, font, layout.elementProperties, "gui.yuushya.modeling.elementProperties");
-        title(guiGraphics, font, layout.transform, "gui.yuushya.modeling.transform");
+        title(guiGraphics, font, layout.right, "gui.yuushya.modeling.properties");
 
         if (active != null) {
             guiGraphics.drawString(font, active, (header.right() - font.width(active)) / 2,

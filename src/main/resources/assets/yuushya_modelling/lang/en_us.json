@@ -145,6 +145,7 @@
   "gui.yuushya.modeling.title": "Modelling Workbench",
   "gui.yuushya.modeling.outliner": "Elements",
   "gui.yuushya.modeling.elementProperties": "Element",
+  "gui.yuushya.modeling.properties": "Properties",
   "gui.yuushya.modeling.transform": "Transform",
   "gui.yuushya.modeling.panel.transform": "Transform",
   "gui.yuushya.modeling.panel.color": "Color",
