@@ -476,16 +476,24 @@ public final class ItemBlockTarget implements ModelingTarget {
             return props.with(property, state);
         }
 
+    /**
+     * 循环切换碰撞箱。
+     * <p>
+     * 形状写的是方块状态而不是元素数据，必须让<b>服务端</b>真正改一次方块：只在客户端
+     * {@code setBlock} 的话，碰撞箱算的还是服务端那份状态，重载区块后也会丢。
+     */
     @Override
     public Component cycleShape() {
         BlockState state = this.entity.getBlockState();
-        BlockState next = state.setValue(YuushyaBlockStates.SHAPES, YuushyaBlockStates.getRelative(
-                List.of(BlockShape.values()), state.getValue(YuushyaBlockStates.SHAPES), true));
+        BlockShape next = YuushyaBlockStates.getRelative(
+                List.of(BlockShape.values()), state.getValue(YuushyaBlockStates.SHAPES), true);
+        ItemTransformDataOncePacket.sendToServerSide(pos(), slot(), ItemTransformType.SHAPE, next.ordinal());
         Level level = level();
         if (level != null) {
-            level.setBlock(pos(), next, 18);
+            // 本地先改一份，界面与视口立刻有反馈；服务端随后会广播同一份状态
+            level.setBlock(pos(), state.setValue(YuushyaBlockStates.SHAPES, next), 18);
         }
-        return shapeLabel();
+        return next.getSymbol();
     }
 
     @Override

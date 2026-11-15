@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntityRender;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
+import com.yuushya.modelling.client.TintedBufferSource;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
@@ -57,7 +58,9 @@ public class ItemBlockEntityRender extends AbstractTransformBlockEntityRender<It
                         scale(matrixStack, transformData.scales);
                         YuushyaUtils.translate(matrixStack, transformData.pos);
                         rotate(matrixStack, transformData.rot);
-                        mc.getItemRenderer().renderStatic(itemStack, ItemDisplayContext.NONE, light, overlay, matrixStack, bufferSource, blockEntity.getLevel(), (int) blockEntity.getBlockPos().asLong());
+                        // 物品渲染没有颜色参数，包一层缓冲区把元素染色写进顶点
+                        MultiBufferSource tinted = TintedBufferSource.of(bufferSource, transformData.color);
+                        mc.getItemRenderer().renderStatic(itemStack, ItemDisplayContext.NONE, light, overlay, matrixStack, tinted, blockEntity.getLevel(), (int) blockEntity.getBlockPos().asLong());
                     }
                     matrixStack.popPose();
                 }

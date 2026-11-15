@@ -9,6 +9,7 @@ import com.yuushya.modelling.blockentity.AbstractTransformBlock;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.transformData.TransformItemData;
 import com.yuushya.modelling.client.NeoItemBlockModel;
+import com.yuushya.modelling.client.TintedBufferSource;
 import com.yuushya.modelling.registries.DataComponentRegistry;
 import com.yuushya.modelling.registries.ItemRegistry;
 import com.yuushya.modelling.utils.YuushyaUtils;
@@ -18,6 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -394,7 +396,9 @@ public class CachedRegion {
                                             poseStack.translate(0.5f, 0.5f, 0.5f);
                                         }
                                         int packedLight = LevelRenderer.getLightColor(level, offset);
-                                        itemRenderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY, model);
+                                        // 自定义渲染器的几何没有面片可乘色，包一层缓冲区把元素染色写进顶点
+                                        MultiBufferSource tinted = TintedBufferSource.of(bufferSource, transformData.color);
+                                        itemRenderer.render(itemStack, ItemDisplayContext.NONE, false, poseStack, tinted, packedLight, OverlayTexture.NO_OVERLAY, model);
                                         poseStack.popPose();
                                     } else {
                                         for (Direction value : directions) {

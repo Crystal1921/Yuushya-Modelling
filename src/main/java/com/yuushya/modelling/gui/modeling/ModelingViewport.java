@@ -2,6 +2,7 @@ package com.yuushya.modelling.gui.modeling;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.yuushya.modelling.client.TintedBufferSource;
 import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
 import com.yuushya.modelling.utils.YuushyaUtils;
 import net.minecraft.client.Minecraft;
@@ -223,14 +224,13 @@ public final class ModelingViewport {
      * 用 {@link ItemDisplayContext#NONE}：它对应恒等显示变换，位置完全由我们的矩阵决定。
      * <p>
      * 顶点颜色由 {@code BEWLR} 自己写，没有「传一个颜色参数」的入口，所以元素染色靠
-     * {@link TintedBufferSource} 包一层缓冲区，把每个顶点颜色乘上元素颜色。
+     * {@link com.yuushya.modelling.client.TintedBufferSource} 包一层缓冲区，
+     * 把每个顶点颜色乘上元素颜色。
      */
     private static void renderByItemRenderer(Minecraft minecraft, GuiGraphics guiGraphics,
                                              PoseStack poseStack, ItemStack stack, BakedModel model,
                                              int color) {
-        MultiBufferSource buffers = color == -1
-                ? guiGraphics.bufferSource()
-                : new TintedBufferSource(guiGraphics.bufferSource(), color);
+        MultiBufferSource buffers = TintedBufferSource.of(guiGraphics.bufferSource(), color);
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.5F, 0.5F);
         minecraft.getItemRenderer().render(stack, ItemDisplayContext.NONE, false, poseStack,
@@ -267,75 +267,4 @@ public final class ModelingViewport {
         consumer.putBulkData(pose, quad, red, green, blue, alpha,
                 LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
     }
-
-    // ---- 元素染色包装 ----
-
-    /**
-     * 给自定义渲染的输出乘上元素染色。
-     * <p>
-     * 这些渲染器直接往 {@code MultiBufferSource} 里写顶点颜色，没有颜色参数可传，
-     * 所以包一层缓冲区，在 {@code setColor} 处乘色；其它调用原样转发。
-     */
-    private static final class TintedBufferSource implements MultiBufferSource {
-
-        private final MultiBufferSource delegate;
-        private final float mulR;
-        private final float mulG;
-        private final float mulB;
-
-        private TintedBufferSource(MultiBufferSource delegate, int color) {
-            this.delegate = delegate;
-            this.mulR = FastColor.ARGB32.red(color) / 255.0F;
-            this.mulG = FastColor.ARGB32.green(color) / 255.0F;
-            this.mulB = FastColor.ARGB32.blue(color) / 255.0F;
-        }
-
-        @Override
-        public VertexConsumer getBuffer(RenderType renderType) {
-            return new TintedVertexConsumer(this.delegate.getBuffer(renderType), this.mulR, this.mulG, this.mulB);
-        }
-    }
-
-    /**
-     * 只改顶点颜色，其余原样转发。
-     */
-        private record TintedVertexConsumer(VertexConsumer delegate, float mulR, float mulG,
-                                            float mulB) implements VertexConsumer {
-
-        @Override
-            public VertexConsumer addVertex(float x, float y, float z) {
-                this.delegate.addVertex(x, y, z);
-                return this;
-            }
-
-            @Override
-            public VertexConsumer setColor(int red, int green, int blue, int alpha) {
-                this.delegate.setColor((int) (red * this.mulR), (int) (green * this.mulG), (int) (blue * this.mulB), alpha);
-                return this;
-            }
-
-            @Override
-            public VertexConsumer setUv(float u, float v) {
-                this.delegate.setUv(u, v);
-                return this;
-            }
-
-            @Override
-            public VertexConsumer setUv1(int u, int v) {
-                this.delegate.setUv1(u, v);
-                return this;
-            }
-
-            @Override
-            public VertexConsumer setUv2(int u, int v) {
-                this.delegate.setUv2(u, v);
-                return this;
-            }
-
-            @Override
-            public VertexConsumer setNormal(float x, float y, float z) {
-                this.delegate.setNormal(x, y, z);
-                return this;
-            }
-        }
 }
