@@ -166,7 +166,7 @@ public class ModelingScreen extends AbstractColorScreen {
             return;
         }
 
-        int propsHeight = Math.min(this.layout.elementPropertiesHeight, Math.max(0, panel.bottom() - top));
+        int propsHeight = Math.clamp(panel.bottom() - top, 0, this.layout.elementPropertiesHeight);
         this.elementPropertiesRect = new ModelingLayout.Rect(panel.x(), top, panel.width(), propsHeight);
         initElementPropertyWidgets();
 
@@ -203,7 +203,7 @@ public class ModelingScreen extends AbstractColorScreen {
     private void initColorEditor() {
         ModelingLayout.Rect area = this.transformRows;
         int top = area.y();
-        int width = Math.max(40, Math.min(110, area.width() - 8));
+        int width = Math.clamp(area.width() - 8, 40, 110);
         int x = area.x() + (area.width() - width) / 2;
         int color = currentColor();
 
@@ -306,7 +306,7 @@ public class ModelingScreen extends AbstractColorScreen {
             List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
             this.toggleButton = null;
             if (!toggles.isEmpty()) {
-                ModelingTarget.PropertyRow toggle = toggles.get(0);
+                ModelingTarget.PropertyRow toggle = toggles.getFirst();
                 this.toggleButton = Button.builder(toggleMessage(toggle), btn -> cycleToggle())
                         .bounds(left, toggleRow, right + 10 - left, ELEMENT_ROW)
                         .tooltip(Tooltip.create(toggle.label()))
@@ -370,7 +370,7 @@ public class ModelingScreen extends AbstractColorScreen {
             if (toggles.isEmpty()) {
                 return;
             }
-            toggles.get(0).next().run();
+            toggles.getFirst().next().run();
             refreshElementProperties();
             this.toolbar.invalidateStats();
         }
@@ -392,7 +392,7 @@ public class ModelingScreen extends AbstractColorScreen {
         if (this.toggleButton != null) {
             List<ModelingTarget.PropertyRow> toggles = this.target.toggles(this.slot);
             if (!toggles.isEmpty()) {
-                this.toggleButton.setMessage(toggleMessage(toggles.get(0)));
+                this.toggleButton.setMessage(toggleMessage(toggles.getFirst()));
             }
         }
     }
@@ -600,7 +600,7 @@ public class ModelingScreen extends AbstractColorScreen {
             toast(Component.translatable("gui.yuushya.modeling.action.paste.fail"));
             return;
         }
-        this.slot = Math.min(this.slot, Math.max(0, this.target.size() - 1));
+        this.slot = Math.clamp(this.target.size() - 1, 0, this.slot);
         this.target.setSlot(this.slot);
         this.propertyIndex = 0;
         this.elementList.setSelected(this.slot);
