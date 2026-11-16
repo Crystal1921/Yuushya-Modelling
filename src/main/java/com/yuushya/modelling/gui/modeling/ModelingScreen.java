@@ -775,12 +775,16 @@ public class ModelingScreen extends AbstractColorScreen {
                 double effective = Math.abs(value) <= 0.001 ? 1.0 : value;
                 for (ModelingChannel axis : new ModelingChannel[]{
                         ModelingChannel.SCALE_X, ModelingChannel.SCALE_Y, ModelingChannel.SCALE_Z}) {
+                    compensateScalePivot(axis, effective);
                     this.target.set(this.slot, axis, effective);
                     if (this.properties != null) {
                         this.properties.sync(axis, effective);
                     }
                 }
             } else {
+                if (channel.isScale()) {
+                    compensateScalePivot(channel, value);
+                }
                 this.target.set(this.slot, channel, value);
                 if (this.properties != null) {
                     this.properties.sync(channel, value);
@@ -790,6 +794,41 @@ public class ModelingScreen extends AbstractColorScreen {
             // 几何变了，之前统计的面数不再成立
             this.toolbar.invalidateStats();
         }
+
+    /**
+     * 缩放时同步补偿位移，让元素等于「绕自身中心缩放」。
+     * <p>
+     * 渲染链是 {@code T(.5)·S·T(-.5) · T(pos/16) · T(.5)·R·T(-.5)}，位移会跟着缩放走，
+     * 元素中心因此从 {@code 0.5 + pos/16} 变成 {@code 0.5 + S·pos/16}（拖动时看上去在漂）。
+     * 改缩放前把同轴位移按 {@code pos' = pos·scale/scale'} 一起修正，中心就固定在原处，
+     * 且改的是元素数据本身，世界渲染和编辑预览完全一致。
+     *
+     * @param axis     被修改的缩放轴
+     * @param newScale 该轴的新缩放（0 会让矩阵退化，此时不做补偿）
+     */
+    private void compensateScalePivot(ModelingChannel axis, double newScale) {
+        if (Math.abs(newScale) <= 0.001) {
+            return;
+        }
+        double oldScale = this.target.get(this.slot, axis);
+        if (Math.abs(oldScale - newScale) <= 1.0E-6) {
+            return;
+        }
+        ModelingChannel position = switch (axis) {
+            case SCALE_X -> ModelingChannel.POS_X;
+            case SCALE_Y -> ModelingChannel.POS_Y;
+            default -> ModelingChannel.POS_Z;
+        };
+        double oldPosition = this.target.get(this.slot, position);
+        if (Math.abs(oldPosition) <= 1.0E-9) {
+            return;
+        }
+        double newPosition = oldPosition * oldScale / newScale;
+        this.target.set(this.slot, position, newPosition);
+        if (this.properties != null) {
+            this.properties.sync(position, newPosition);
+        }
+    }
 
     @Override
     public boolean isPauseScreen() {
