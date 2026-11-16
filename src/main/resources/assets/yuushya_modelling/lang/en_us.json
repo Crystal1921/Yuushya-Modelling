@@ -139,8 +139,8 @@
   "item.yuushya.gui_item.line1": "\u00A79Right click on an [Entity Block]/[Item Block] to open a screen",
   "item.yuushya.gui_item.line2": "\u00A79You can modify the values and layers within this screen",
   "item.yuushya.modeling_wand": "\u00A7BModelling Workbench",
-  "item.yuushya.modeling_wand.line1": "\u00A79Right click an [Entity Block] to open the modelling screen",
-  "item.yuushya.modeling_wand.line2": "\u00A79Blockbench-like element list, properties panel and 3D viewport",
+  "item.yuushya.modeling_wand.line1": "\u00A79Right click an [Entity Block/ Item Block] to open the modelling screen",
+  "item.yuushya.modeling_wand.line2": "\u00A79Blockbench-like Editor",
 
   "gui.yuushya.modeling.title": "Modelling Workbench",
   "gui.yuushya.modeling.outliner": "Elements",
