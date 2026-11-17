@@ -439,7 +439,7 @@ public class ModelingScreen extends AbstractColorScreen {
 
     @Override
     public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.fill(0, 0, this.width, this.height, ModelingChrome.CHROME_BG);
+        guiGraphics.fill(0, 0, this.width, this.height, -943, ModelingChrome.CHROME_BG);
     }
 
     @Override

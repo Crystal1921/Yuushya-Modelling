@@ -63,7 +63,6 @@ public final class ModelingViewport {
         if (rect.width() <= 0 || rect.height() <= 0) {
             return;
         }
-        guiGraphics.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), -100, BACKGROUND);
 
         List<ModelingTarget.ElementView> views = target.views();
         if (views.isEmpty()) {
