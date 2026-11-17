@@ -57,6 +57,10 @@ public final class ModelingGizmo {
 
         private ModelingLayout.Rect rect = new ModelingLayout.Rect(0, 0, 0, 0);
         private int highlighted;
+                /** 坐标轴是否跟随元素旋转（局部坐标轴）。 */
+                private boolean localAxis;
+                /** 局部坐标轴平移的起点位移，按下瞬间缓存；单通道换算不需要它。 */
+                private double[] dragStartPosition;
         private Matrix4f matrixCache;
         private ModelingLayout.Rect matrixRect;
         private int matrixRevision = -1;
@@ -74,6 +78,15 @@ public final class ModelingGizmo {
     public void setRect(ModelingLayout.Rect rect) {
         this.rect = rect;
     }
+
+        /** 坐标轴是否跟随元素旋转。 */
+        public boolean isLocalAxis() {
+            return this.localAxis;
+        }
+
+        public void setLocalAxis(boolean localAxis) {
+            this.localAxis = localAxis;
+        }
 
     /** 缓存"方块局部 → 像素"矩阵，避免每个采样点都重建一次；相机变化时失效。 */
         private Matrix4f matrix() {
@@ -301,12 +314,26 @@ public final class ModelingGizmo {
                     (float) (0.5 + pos.z * scales.z() / 16.0)};
         }
 
-    private float[] hostDirection(int axis) {
-        return switch (axis) {
-            case 0 -> new float[]{1.0F, 0.0F, 0.0F};
-            case 1 -> new float[]{0.0F, 1.0F, 0.0F};
-            default -> new float[]{0.0F, 0.0F, 1.0F};
+    /**
+         * 该轴在方块局部空间里的方向。
+         * <p>
+         * 跟随旋转模式下按元素的 ROT_X/Y/Z 旋转，顺序与渲染器的 {@code Rz·Ry·Rx}
+         * （{@code YuushyaUtils.rotate} 依次 mulPose Z→Y→X）一致，
+         * 因此画出来的轴线、拾取判断、拖拽换算三者永远指向同一方向。
+         */
+        private float[] hostDirection(int axis) {
+            Vector3f direction = switch (axis) {
+                case 0 -> new Vector3f(1.0F, 0.0F, 0.0F);
+                case 1 -> new Vector3f(0.0F, 1.0F, 0.0F);
+                default -> new Vector3f(0.0F, 0.0F, 1.0F);
         };
+            if (this.localAxis && hasData()) {
+                Vector3f rot = current().getRotation();
+                direction.rotateX((float) Math.toRadians(rot.x()));
+                direction.rotateY((float) Math.toRadians(rot.y()));
+                direction.rotateZ((float) Math.toRadians(rot.z()));
+            }
+            return new float[]{direction.x, direction.y, direction.z};
     }
 
     /** 世界（这里是方块局部）坐标 → NDC。正交投影，直接取矩阵变换后的像素再换算。 */
@@ -408,5 +435,42 @@ public final class ModelingGizmo {
         public float handleHalfLength() {
             return HANDLE_HALF_LENGTH;
         }
+
+                @Override
+                public void onDragBegin(int axis, boolean rotation) {
+                    // 局部坐标轴平移要按"起点 + 沿局部轴的位移"写，先把起点冻住
+                    if (rotation || !localAxis || !hasData()) {
+                        dragStartPosition = null;
+                        return;
+                    }
+                    var pos = current().getPosition();
+                    dragStartPosition = new double[]{pos.x, pos.y, pos.z};
+                }
+
+                /**
+                 * 局部坐标轴下的平移：沿旋转后的轴移动 {@code blocks} 个方块，再按缩放反解成位移数据。
+                 * <p>
+                 * 渲染链里位移被缩放后作用于方块空间（中心 = {@code 0.5 + S·pos/16}），要沿方向 {@code d}
+                 * 移动 δ 个方块，就要求 {@code S·Δpos/16 = δ·d}，即 {@code Δpos_i = 16·δ·d_i/scale_i}，
+                 * 三个通道各写一次。
+                 */
+                @Override
+                public boolean translateByBlocks(int axis, double blocks) {
+                    if (!localAxis || dragStartPosition == null || !hasData()) {
+                        return false;
+                    }
+                    float[] direction = hostDirection(axis);
+                    var scales = current().getScale();
+                    double[] scaleValues = {scales.x(), scales.y(), scales.z()};
+                    double[] values = new double[3];
+                    for (int i = 0; i < 3; i++) {
+                        double scale = Math.abs(scaleValues[i]) <= 1.0E-6 ? 1.0 : scaleValues[i];
+                        values[i] = dragStartPosition[i] + blocks * 16.0 * direction[i] / scale;
+                    }
+                    for (int i = 0; i < 3; i++) {
+                        ModelingGizmo.this.apply.accept(POS_CHANNELS[i], values[i]);
+                    }
+                    return true;
+                }
     }
 }

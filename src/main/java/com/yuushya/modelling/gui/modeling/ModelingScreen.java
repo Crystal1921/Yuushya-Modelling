@@ -68,6 +68,8 @@ public class ModelingScreen extends AbstractColorScreen {
     private EditBox colorEditBox;
     /** 右侧栏当前显示的是颜色编辑器而不是普通变换。 */
     private boolean colorMode;
+        /** 坐标轴是否跟随元素旋转（局部坐标轴）；gizmo 每次 init 都会重建，状态存在这里。 */
+        private boolean localAxis;
 
     /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
     private static final int CAMERA_NONE = 0;
@@ -120,6 +122,8 @@ public class ModelingScreen extends AbstractColorScreen {
 
         this.gizmo = new ModelingGizmo(this.camera, this.target, () -> this.slot, this::applyValue);
         this.gizmo.setRect(this.layout.viewport);
+        this.gizmo.setLocalAxis(this.localAxis);
+        this.toolbar.setLocalAxis(this.localAxis);
 
         rebuildRightPanel();
     }
@@ -581,8 +585,20 @@ public class ModelingScreen extends AbstractColorScreen {
             case PASTE -> pasteAll();
             case SAVE -> saveToFile();
             case STATS -> this.toolbar.setFaceCount(this.target.faceCount());
+            case AXIS_LOCAL -> toggleLocalAxis();
             case HELP -> this.minecraft.setScreen(new ModelingHelpScreen(this));
         }
+    }
+
+    /**
+     * 切换坐标轴方向：世界轴 ↔ 跟随元素旋转。
+     * <p>
+     * 只影响视口里的 gizmo（轴线指向、拾取与拖拽换算），不改变元素数据，所以不需要 commit / flush。
+     */
+    private void toggleLocalAxis() {
+        this.localAxis = !this.localAxis;
+        this.gizmo.setLocalAxis(this.localAxis);
+        this.toolbar.setLocalAxis(this.localAxis);
     }
 
     /** 复制：把整个模型序列化到剪贴板。 */

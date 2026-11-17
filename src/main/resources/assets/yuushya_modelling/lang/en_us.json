@@ -166,6 +166,10 @@
   "gui.yuushya.modeling.order.up": "Move up one layer",
   "gui.yuushya.modeling.order.down": "Move down one layer",
   "gui.yuushya.modeling.action.help": "Controls",
+  "gui.yuushya.modeling.action.axisLocal": "Axis orientation",
+  "gui.yuushya.modeling.action.axisLocal.on": "Axes: follow element rotation (local)",
+  "gui.yuushya.modeling.action.axisLocal.off": "Axes: world direction",
+  "gui.yuushya.modeling.help.other.axis": "Toggle axis orientation: W = world axes, L = follow element rotation",
 
   "gui.yuushya.modeling.help.title": "Controls",
   "gui.yuushya.modeling.help.back": "Back",

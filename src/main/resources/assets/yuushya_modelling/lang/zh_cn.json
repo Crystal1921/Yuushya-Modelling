@@ -190,6 +190,10 @@
   "gui.yuushya.modeling.order.up": "上移一层",
   "gui.yuushya.modeling.order.down": "下移一层",
   "gui.yuushya.modeling.action.help": "操作说明",
+  "gui.yuushya.modeling.action.axisLocal": "坐标轴方向",
+  "gui.yuushya.modeling.action.axisLocal.on": "坐标轴：跟随元素旋转（本地）",
+  "gui.yuushya.modeling.action.axisLocal.off": "坐标轴：世界方向",
+  "gui.yuushya.modeling.help.other.axis": "切换坐标轴方向：W = 世界轴，L = 跟随元素旋转",
 
   "gui.yuushya.modeling.help.title": "操作说明",
   "gui.yuushya.modeling.help.back": "返回",

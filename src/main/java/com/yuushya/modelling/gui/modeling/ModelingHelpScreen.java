@@ -71,6 +71,7 @@ public class ModelingHelpScreen extends Screen {
             new Section("gui.yuushya.modeling.help.sec.other", List.of(
                     new Entry("右上 < >", "gui.yuushya.modeling.help.other.property"),
                     new Entry("形状按钮", "gui.yuushya.modeling.help.other.shape"),
+                                new Entry("W / L 按钮", "gui.yuushya.modeling.help.other.axis"),
                     new Entry("Esc", "gui.yuushya.modeling.help.other.esc"))));
 
     public ModelingHelpScreen(Screen parent) {

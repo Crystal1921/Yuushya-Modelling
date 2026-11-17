@@ -57,6 +57,22 @@ public final class AxisDragController {
         default float handleHalfLength() {
             return 1.5F;
         }
+
+                /** 拖拽开始，界面可在此缓存起点（例如局部坐标轴平移要同时改三个通道）。 */
+                default void onDragBegin(int axis, boolean rotation) {
+                }
+
+                /**
+                 * 平移时直接按「沿该轴移动了多少方块」写入。
+                 * <p>
+                 * 单通道换算默认够用；局部坐标轴下位移要按旋转分解到三个通道，界面可以在这里接管。
+                 *
+                 * @param blocks 相对按下点沿该轴的位移（方块，已含精细倍率）
+                 * @return {@code true} 表示已处理，控制器不再走单通道换算
+                 */
+                default boolean translateByBlocks(int axis, double blocks) {
+                    return false;
+                }
     }
 
     /** 拖拽整体灵敏度倍率。 */
@@ -144,6 +160,7 @@ public final class AxisDragController {
         this.screenAxisY = screenAxis[1];
         this.screenAxisLengthSq = lengthSq;
         this.active = true;
+                host.onDragBegin(axis, rotation);
         host.highlight(axis);
         return true;
     }
@@ -184,6 +201,10 @@ public final class AxisDragController {
             }
             host.apply(axis, true, startValue + Math.toDegrees(blocks / scale) * factor);
         } else {
+                    // 局部坐标轴下位移要分解到三个通道，界面自行处理时到此为止
+                    if (host.translateByBlocks(axis, blocks * factor)) {
+                        return;
+                    }
             // 1 个数据单位 = scales / 16 个方块
             double scale = host.axisScale(axis);
             if (scale == 0.0) {
