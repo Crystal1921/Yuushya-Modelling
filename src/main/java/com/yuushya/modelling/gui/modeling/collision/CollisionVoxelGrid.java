@@ -1,0 +1,171 @@
+package com.yuushya.modelling.gui.modeling.collision;
+
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.util.Arrays;
+
+/**
+ * 碰撞箱雕刻用的 16³ 体素掩码（每格 1/16 方块，与 Minecraft 的碰撞精度一致）。
+ * <p>
+ * 用位运算存 4096 个格子：编辑时只改内部的 {@code long[]}，应用时再用
+ * {@link #toShape()} 合并成 {@link VoxelShape} 存回方块实体。
+ */
+public final class CollisionVoxelGrid {
+
+    /** 每轴的格数。 */
+    public static final int SIZE = 16;
+        /** 总格数。 */
+        public static final int CELLS = SIZE * SIZE * SIZE;
+    /** 一格对应的方块长度。 */
+    public static final double CELL = 1.0 / SIZE;
+
+        private static final int WORDS = CELLS / Long.SIZE;
+
+    private final long[] bits;
+
+    public CollisionVoxelGrid() {
+        this.bits = new long[WORDS];
+    }
+
+    /** 格子坐标是否在 0..15 范围内。 */
+    public static boolean inside(int x, int y, int z) {
+        return x >= 0 && x < SIZE && y >= 0 && y < SIZE && z >= 0 && z < SIZE;
+    }
+
+    /** 世界坐标（0..1）落在哪一格；区间外夹到边界。 */
+    public static int cellOf(double coordinate) {
+        int cell = (int) Math.floor(coordinate * SIZE);
+        return Math.clamp(cell, 0, SIZE - 1);
+    }
+
+    private static int index(int x, int y, int z) {
+        return (x * SIZE + y) * SIZE + z;
+    }
+
+    public boolean get(int x, int y, int z) {
+        if (!inside(x, y, z)) {
+            return false;
+        }
+        int index = index(x, y, z);
+        return (this.bits[index / Long.SIZE] & (1L << (index % Long.SIZE))) != 0;
+    }
+
+    /** @return 该格之前是否有内容 */
+    public boolean set(int x, int y, int z, boolean value) {
+        if (!inside(x, y, z)) {
+            return false;
+        }
+        int index = index(x, y, z);
+        int word = index / Long.SIZE;
+        long mask = 1L << (index % Long.SIZE);
+        boolean previous = (this.bits[word] & mask) != 0;
+        if (value) {
+            this.bits[word] |= mask;
+        } else {
+            this.bits[word] &= ~mask;
+        }
+        return previous;
+    }
+
+    public void clear() {
+        Arrays.fill(this.bits, 0L);
+    }
+
+    public void fillAll() {
+        Arrays.fill(this.bits, -1L);
+    }
+
+    public boolean isEmpty() {
+        for (long word : this.bits) {
+            if (word != 0L) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int count() {
+        int total = 0;
+        for (long word : this.bits) {
+            total += Long.bitCount(word);
+        }
+        return total;
+    }
+
+    /** 撤销用的快照。 */
+    public long[] snapshot() {
+        return this.bits.clone();
+    }
+
+    /** 恢复快照；长度不匹配时忽略。 */
+    public void restore(long[] snapshot) {
+        if (snapshot.length == this.bits.length) {
+            System.arraycopy(snapshot, 0, this.bits, 0, this.bits.length);
+        }
+    }
+
+    /**
+     * 合并成一个 VoxelShape。
+     * <p>
+     * 先沿 X 合并同一行里连续的格子（满块每层最多 256 个盒子），
+     * 再交给 {@link Shapes#joinUnoptimized} 拼起来并 {@code optimize()} 合并相邻面。
+     */
+    public VoxelShape toShape() {
+        VoxelShape result = Shapes.empty();
+        for (int y = 0; y < SIZE; y++) {
+            for (int z = 0; z < SIZE; z++) {
+                int x = 0;
+                while (x < SIZE) {
+                    if (!get(x, y, z)) {
+                        x++;
+                        continue;
+                    }
+                    int start = x;
+                    while (x < SIZE && get(x, y, z)) {
+                        x++;
+                    }
+                    result = Shapes.joinUnoptimized(result, Shapes.box(
+                            start * CELL, y * CELL, z * CELL,
+                            x * CELL, (y + 1) * CELL, (z + 1) * CELL), BooleanOp.OR);
+                }
+            }
+        }
+        return result.optimize();
+    }
+
+    /** 把已有形状栅格化回来，便于在旧碰撞箱基础上继续雕。 */
+    public void fromShape(VoxelShape shape) {
+        clear();
+        if (shape == null || shape.isEmpty()) {
+            return;
+        }
+        for (AABB box : shape.toAabbs()) {
+            int minX = startCell(box.minX);
+            int minY = startCell(box.minY);
+            int minZ = startCell(box.minZ);
+            int maxX = endCell(box.maxX);
+            int maxY = endCell(box.maxY);
+            int maxZ = endCell(box.maxZ);
+            for (int x = minX; x <= maxX; x++) {
+                for (int y = minY; y <= maxY; y++) {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        set(x, y, z, true);
+                    }
+                }
+            }
+        }
+    }
+
+    /** 盒子的起点格：向下取整。 */
+    private static int startCell(double coordinate) {
+        return Math.clamp((int) Math.floor(coordinate * SIZE + 1.0E-4), 0, SIZE - 1);
+    }
+
+    /** 盒子的终点格：向上取整后减一（盒子右边界是开区间）。 */
+    private static int endCell(double coordinate) {
+        return Math.clamp((int) Math.ceil(coordinate * SIZE - 1.0E-4) - 1, 0, SIZE - 1);
+    }
+}

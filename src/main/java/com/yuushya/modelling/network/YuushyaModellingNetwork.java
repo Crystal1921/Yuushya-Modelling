@@ -22,5 +22,6 @@ public class YuushyaModellingNetwork {
         registrar.playToClient(ReloadModelPacket.TYPE, ReloadModelPacket.STREAM_CODEC, ReloadModelPacket::handler);
         registrar.playToServer(UpdateAOPacket.TYPE, UpdateAOPacket.STREAM_CODEC, UpdateAOPacket::handler);
         registrar.playToServer(PickColorPacket.TYPE, PickColorPacket.STREAM_CODEC, PickColorPacket::handler);
+        registrar.playToServer(CustomShapePacket.TYPE, CustomShapePacket.STREAM_CODEC, CustomShapePacket::handler);
     }
 }

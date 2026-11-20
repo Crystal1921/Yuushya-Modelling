@@ -28,6 +28,16 @@ public final class ModelingChrome {
      */
     public static void render(GuiGraphics guiGraphics, Font font, ModelingLayout layout,
                               Component active, Component status) {
+            render(guiGraphics, font, layout, active, status,
+                    "gui.yuushya.modeling.outliner", "gui.yuushya.modeling.properties");
+        }
+
+        /**
+         * 同上，但左右两块面板的标题可以自定义（碰撞箱雕刻界面用「工具 / 选项」）。
+         */
+        public static void render(GuiGraphics guiGraphics, Font font, ModelingLayout layout,
+                                  Component active, Component status,
+                                  String leftTitleKey, String rightTitleKey) {
         ModelingLayout.Rect header = layout.header;
         guiGraphics.fill(header.x(), header.y(), header.right(), header.bottom(), CHROME_BG);
         guiGraphics.fill(header.x(), header.bottom() - 1, header.right(), header.bottom(), PANEL_BORDER);
@@ -39,8 +49,8 @@ public final class ModelingChrome {
         panel(guiGraphics, layout.elements);
         panel(guiGraphics, layout.right);
 
-        title(guiGraphics, font, layout.elements, "gui.yuushya.modeling.outliner");
-        title(guiGraphics, font, layout.right, "gui.yuushya.modeling.properties");
+        title(guiGraphics, font, layout.elements, leftTitleKey);
+                title(guiGraphics, font, layout.right, rightTitleKey);
 
         if (active != null) {
             guiGraphics.drawString(font, active, (header.right() - font.width(active)) / 2,

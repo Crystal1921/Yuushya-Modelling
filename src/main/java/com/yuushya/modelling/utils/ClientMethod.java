@@ -1,10 +1,12 @@
 package com.yuushya.modelling.utils;
 
 import com.mojang.blaze3d.platform.Window;
+import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.itemblock.ItemBlockEntity;
 import com.yuushya.modelling.blockentity.showblock.ShowBlockEntity;
 import com.yuushya.modelling.blockentity.textblock.TextBlockEntity;
 import com.yuushya.modelling.gui.itemblock.ItemBlockScreen;
+import com.yuushya.modelling.gui.modeling.collision.CollisionEditorScreen;
 import com.yuushya.modelling.gui.showblock.ShowBlockScreen;
 import com.yuushya.modelling.gui.textblock.TextBlockScreen;
 import com.yuushya.modelling.item.showblocktool.GetBlockStateItem;
@@ -110,4 +112,14 @@ public class ClientMethod {
             Minecraft.getInstance().setScreen(
                     com.yuushya.modelling.gui.modeling.ModelingScreen.forItemBlock(itemBlockEntity));
         }
+
+            /**
+             * 打开碰撞箱雕刻界面。
+             *
+             * @param parent 返回时的上一级界面，可为 {@code null}（直接回到游戏）
+             */
+            public static void openCollisionEditor(net.minecraft.client.gui.screens.Screen parent,
+                                                   AbstractTransformBlockEntity entity) {
+                Minecraft.getInstance().setScreen(new CollisionEditorScreen(parent, entity));
+            }
 }

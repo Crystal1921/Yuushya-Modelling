@@ -21,6 +21,8 @@ public final class ModelingToolbar {
         STATS("📊", "gui.yuushya.modeling.action.stats"),
                 /** 坐标轴方向：World（世界轴）/ Local（跟随元素旋转）。 */
                 AXIS_LOCAL("W", "gui.yuushya.modeling.action.axisLocal"),
+                /** 打开碰撞箱雕刻界面。 */
+                COLLISION("▦", "gui.yuushya.modeling.action.collision"),
         HELP("?", "gui.yuushya.modeling.action.help");
 
         final String symbol;
@@ -43,7 +45,7 @@ public final class ModelingToolbar {
     private static final int BUTTON = 18;
     private static final int GAP = 2;
         /** 固定在右上角的按钮（从右往左依次排列）。 */
-        private static final Action[] RIGHT_ALIGNED = {Action.AXIS_LOCAL, Action.HELP};
+        private static final Action[] RIGHT_ALIGNED = {Action.COLLISION, Action.AXIS_LOCAL, Action.HELP};
     private static final int BG = 0xFF2A2A2A;
     private static final int BG_HOVER = 0xFF3C3C3C;
     private static final int BORDER = 0xFF0B0B0B;

@@ -586,7 +586,16 @@ public class ModelingScreen extends AbstractColorScreen {
             case SAVE -> saveToFile();
             case STATS -> this.toolbar.setFaceCount(this.target.faceCount());
             case AXIS_LOCAL -> toggleLocalAxis();
+            case COLLISION -> openCollisionEditor();
             case HELP -> this.minecraft.setScreen(new ModelingHelpScreen(this));
+        }
+    }
+
+    /** 打开同一方块实体的碰撞箱雕刻界面，本界面作为返回目标。 */
+    private void openCollisionEditor() {
+        commitInputs();
+        if (this.target.entity() instanceof com.yuushya.modelling.blockentity.AbstractTransformBlockEntity transform) {
+            com.yuushya.modelling.utils.ClientMethod.openCollisionEditor(this, transform);
         }
     }
 
