@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
+import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.gui.modeling.ModelingAxisIndicator;
 import com.yuushya.modelling.gui.modeling.ModelingCamera;
 import com.yuushya.modelling.gui.modeling.ModelingChrome;
@@ -24,6 +25,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
@@ -33,8 +35,11 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
+
+import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
 
 /**
  * 碰撞箱雕刻界面：在 3D 视口里把碰撞箱当成 16³ 体素来搭。
@@ -50,7 +55,8 @@ import java.util.List;
  *   <li>左键：按当前笔刷放置；右键：按当前笔刷挖除</li>
  *   <li>左键拖动环绕视角、右键拖动平移、滚轮缩放；Ctrl+Z / Ctrl+Y 撤销 / 重做</li>
  * </ul>
- * 体素比画板更靠近相机（视线先穿过实体）时优先编辑体素，否则编辑画板。
+ * 拾取以「光标射线实际穿过的笔刷体积」为准：优先已有实心格，其次上一帧仍压在光标下的预览框，
+ * 最后才落到三张零坐标画板，保证画出来的框就是点下去会改的格子。
  * <p>
  * 编辑的是一份 {@link CollisionVoxelGrid}，点「应用」时才通过 {@link CustomShapePacket} 写回服务端，
  * 并把方块形状设为 {@code CUSTOM}（否则新的碰撞箱不会参与判定）。
@@ -62,6 +68,16 @@ public final class CollisionEditorScreen extends Screen {
     private static final int BUTTON_HEIGHT = 18;
     /** 按下后移动超过这个像素数就算拖动视角，不再触发放置 / 挖除。 */
     private static final double DRAG_THRESHOLD = 4.0;
+    /**
+     * 反投影射线在屏幕 z 方向上的半长。
+     * <p>
+     * GUI 的 z 越大越靠近观察者（GuiRenderer 用 ortho 1000..11000 后再平移 -11000），
+     * 所以起点取 {@code +RAY_DEPTH}（观察者一侧），终点取 {@code -RAY_DEPTH}（画面深处）。
+     * <p>
+     * 数值要足够大：GUI 的 z 跨度换算到模型空间要除以缩放系数（{@code min(宽,高) * 0.72 / distance}），
+     * 放大到极限时模型能占到 ±数千的 z 范围，取小了会让「射线」整段落在方块内部。
+     */
+    private static final float RAY_DEPTH = 20000.0F;
     private static final int UNDO_LIMIT = 64;
 
     /** 三块画板：0 = x=0（YZ），1 = y=0（XZ），2 = z=0（XY）。 */
@@ -136,6 +152,19 @@ public final class CollisionEditorScreen extends Screen {
     private double pressX;
     private double pressY;
     private boolean dragged;
+    /** 按下瞬间解析好的落笔锚点：抬手时直接用它，保证改动与按下时看到的预览框一致。 */
+    private int[] pressAnchor;
+    /** 射线在三个轴上的步进方向（±1）：给命中格找相邻空格时用来判断「往里」是哪边。 */
+    private int hoverStepX = 1;
+    private int hoverStepY = 1;
+    private int hoverStepZ = 1;
+    /**
+     * 当前帧解析出的放置 / 挖除锚点。
+     * <p>
+     * 预览框、点击落笔和下一帧的「粘滞」判定都用这一份结果，保证看到的框就是会改的格子。
+     */
+    private int[] placeTarget;
+    private int[] eraseTarget;
 
     /**
      * 模拟「打开界面时摄像机已经转过 90°」。
@@ -151,8 +180,18 @@ public final class CollisionEditorScreen extends Screen {
         this.parent = parent;
         this.entity = entity;
         this.grid = new CollisionVoxelGrid();
-        this.grid.fromShape(entity.getCustomShape());
+        this.grid.fromShape(effectiveShape(entity));
         this.camera.orbit(INITIAL_ORBIT_DEGREES / ORBIT_DEGREES_PER_PIXEL, 0.0);
+    }
+
+    /** 当前真正生效的碰撞箱：CUSTOM 用实体里的自定义形状，其余用方块状态的预设形状。 */
+    private static VoxelShape effectiveShape(AbstractTransformBlockEntity entity) {
+        BlockShape preset = entity.getBlockState().getValue(SHAPES);
+        if (preset != BlockShape.CUSTOM) {
+            return preset.voxelShape;
+        }
+        VoxelShape custom = entity.getCustomShape();
+        return custom == null ? Shapes.empty() : custom;
     }
 
     /**
@@ -171,7 +210,7 @@ public final class CollisionEditorScreen extends Screen {
         /** 1/2 方块 = 8 格见方。 */
         HALF(8),
         /** 沿主轴贯通的一根。 */
-        BAR(0),
+        BAR(1),
         /** 垂直于主轴铺满的一层。 */
         PLATE(0);
 
@@ -348,7 +387,7 @@ public final class CollisionEditorScreen extends Screen {
         int[] min = new int[3];
         int[] max = new int[3];
         for (int axis = 0; axis < 3; axis++) {
-            int size = Math.min(CollisionVoxelGrid.SIZE, sizes[axis]);
+            int size = Math.clamp(sizes[axis], 1, CollisionVoxelGrid.SIZE);
             int start;
             if (size >= CollisionVoxelGrid.SIZE) {
                 start = 0;
@@ -366,35 +405,106 @@ public final class CollisionEditorScreen extends Screen {
     }
 
     /**
-     * 当前鼠标位置的笔刷锚点与主轴。
-     *
-     * @param place 是否为放置（左键）；否则是挖除（右键）
-     * @return {@code {x, y, z, primaryAxis}}；没有可编辑目标时返回 {@code null}
+     * 左键（放置）候选：命中面外侧那格优先，边界处退回往里一格，最后退回命中格本身。
+     * <p>
+     * 每个候选都要通过「笔刷体积被射线穿过」的检查，保证预览框始终压在光标下；
+     * 大笔刷伸出碰撞箱轮廓的部分也因此可以继续点击。
      */
-    private int[] actionAnchor(boolean place) {
-        if (this.wallPlane >= 0) {
-            int[] cell = wallCellToVoxel(this.wallPlane, this.wallCellU, this.wallCellV);
-            return new int[]{cell[0], cell[1], cell[2], wallAxis(this.wallPlane)};
-        }
+    private int[] voxelPlaceTarget(double originX, double originY, double originZ,
+                                   double dirX, double dirY, double dirZ) {
         if (!this.voxelHover) {
             return null;
         }
-        if (place) {
-            if (!this.placeValid) {
-                return null;
+        if (this.placeValid) {
+            int[] outward = {this.placeX, this.placeY, this.placeZ, this.hoverFaceAxis};
+            if (rangeHit(outward, originX, originY, originZ, dirX, dirY, dirZ)) {
+                return outward;
             }
-            return new int[]{this.placeX, this.placeY, this.placeZ, this.hoverFaceAxis};
         }
-        return new int[]{this.hoverX, this.hoverY, this.hoverZ, this.hoverFaceAxis};
+        int[] inward = inwardFreeCell();
+        if (inward != null && rangeHit(inward, originX, originY, originZ, dirX, dirY, dirZ)) {
+            return inward;
+        }
+        int[] hit = {this.hoverX, this.hoverY, this.hoverZ, this.hoverFaceAxis};
+        return rangeHit(hit, originX, originY, originZ, dirX, dirY, dirZ) ? hit : null;
     }
 
-    /** 鼠标位置会被改成目标状态的那块体积；用于高亮预览。 */
-    private int[] previewRange() {
-        int[] anchor = actionAnchor(true);
-        if (anchor == null) {
-            anchor = actionAnchor(false);
+    /**
+     * 命中格「往里」那一格（沿射线穿过该面的方向），仅在它是空格时返回。
+     * <p>
+     * 命中面正好贴在 16³ 边界上时，外侧那一格在体积之外、无处可放；这时退一步填到方块内部，
+     * 至少能让左键在贴着边界的表面上继续加料，而不是完全没反应。
+     */
+    private int[] inwardFreeCell() {
+        int axis = this.hoverFaceAxis;
+        int step = axis == 0 ? this.hoverStepX : axis == 1 ? this.hoverStepY : this.hoverStepZ;
+        int x = this.hoverX + (axis == 0 ? step : 0);
+        int y = this.hoverY + (axis == 1 ? step : 0);
+        int z = this.hoverZ + (axis == 2 ? step : 0);
+        if (CollisionVoxelGrid.inside(x, y, z) && !this.grid.get(x, y, z)) {
+            return new int[]{x, y, z, axis};
         }
-        return anchor == null ? null : brushRange(anchor, anchor[3]);
+        return null;
+    }
+
+    /** 右键（挖除）候选：命中格本身。 */
+    private int[] voxelEraseTarget(double originX, double originY, double originZ,
+                                   double dirX, double dirY, double dirZ) {
+        if (!this.voxelHover) {
+            return null;
+        }
+        int[] hit = {this.hoverX, this.hoverY, this.hoverZ, this.hoverFaceAxis};
+        return rangeHit(hit, originX, originY, originZ, dirX, dirY, dirZ) ? hit : null;
+    }
+
+    /** 画板格 → 贴平面那一格；没有命中画板时返回 {@code null}。 */
+    private int[] wallAnchor() {
+        if (this.wallPlane < 0) {
+            return null;
+        }
+        int[] cell = wallCellToVoxel(this.wallPlane, this.wallCellU, this.wallCellV);
+        return new int[]{cell[0], cell[1], cell[2], wallAxis(this.wallPlane)};
+    }
+
+    /** 画板候选：只有落在光标下的画板格才接受。 */
+    private int[] wallTarget(double originX, double originY, double originZ,
+                             double dirX, double dirY, double dirZ) {
+        int[] wall = wallAnchor();
+        if (wall == null) {
+            return null;
+        }
+        return rangeHit(wall, originX, originY, originZ, dirX, dirY, dirZ) ? wall : null;
+    }
+
+    /**
+     * 解析一帧的落笔锚点。
+     * <p>
+     * 优先级：已有实心格 → 上一帧仍压在光标下的预览框 → 零坐标画板。
+     * 「上一帧的预览框」让大笔刷伸出去的那部分也能点中，同时不会把画板上的目标顶掉；
+     * 没有候选时返回 {@code null}，界面就不画框，点击也不生效。
+     */
+    private int[] resolveTarget(boolean place, double originX, double originY, double originZ,
+                                double dirX, double dirY, double dirZ, int[] previous) {
+        int[] voxel = place
+                ? voxelPlaceTarget(originX, originY, originZ, dirX, dirY, dirZ)
+                : voxelEraseTarget(originX, originY, originZ, dirX, dirY, dirZ);
+        if (voxel != null) {
+            return voxel;
+        }
+        // 画板格必须跟着光标走；只有光标已经离开画板/体素时，才允许沿用上一帧的框
+        boolean overWall = !this.voxelHover && this.wallPlane >= 0;
+        if (!overWall && previous != null
+                && rangeHit(previous, originX, originY, originZ, dirX, dirY, dirZ)) {
+            return previous;
+        }
+        return wallTarget(originX, originY, originZ, dirX, dirY, dirZ);
+    }
+
+    /** 从该锚点展开的笔刷体积是否被射线穿过。 */
+    private boolean rangeHit(int[] anchor, double originX, double originY, double originZ,
+                             double dirX, double dirY, double dirZ) {
+        return rayBoxEntry(originX, originY, originZ, dirX, dirY, dirZ,
+                brushRange(anchor, anchor[3])) >= 0.0;
     }
 
     /**
@@ -643,7 +753,7 @@ public final class CollisionEditorScreen extends Screen {
 
     /** 打开界面时的原碰撞箱，只做参考线框。 */
     private void renderOriginalShape(GuiGraphics guiGraphics) {
-        VoxelShape shape = this.entity.getCustomShape();
+        VoxelShape shape = effectiveShape(this.entity);
         if (shape == null || shape.isEmpty()) {
             return;
         }
@@ -665,36 +775,43 @@ public final class CollisionEditorScreen extends Screen {
         }
     }
 
-    /** 悬停高亮：当前笔刷将覆盖的体积（半透明填充 + 白色线框），命中格本身（绿色）。 */
+    /**
+     * 悬停高亮：白色 = 左键放置的实际体积（半透明填充 + 线框），绿色 = 右键挖除的实际体积。
+     * 两个范围直接取 {@link #placeTarget} / {@link #eraseTarget}，和点击落笔完全同源。
+     */
     private void renderHover(GuiGraphics guiGraphics) {
-        if (!this.voxelHover && this.wallPlane < 0) {
+        int[] placeRange = this.placeTarget == null
+                ? null : brushRange(this.placeTarget, this.placeTarget[3]);
+        int[] eraseRange = this.eraseTarget == null
+                ? null : brushRange(this.eraseTarget, this.eraseTarget[3]);
+        if (placeRange == null && eraseRange == null) {
             return;
         }
-        int[] range = previewRange();
+        boolean sameRange = placeRange != null && Arrays.equals(placeRange, eraseRange);
         Matrix4f matrix = viewMatrix();
         guiGraphics.flush();
         beginOverlay();
         Tesselator tesselator = Tesselator.getInstance();
         try {
-            if (range != null) {
+            if (placeRange != null) {
                 RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 BufferBuilder fill = tesselator.begin(VertexFormat.Mode.QUADS,
                         DefaultVertexFormat.POSITION_COLOR);
-                addRangeFaces(fill, matrix, range, HOVER_PLACE_FILL);
+                addRangeFaces(fill, matrix, placeRange, HOVER_PLACE_FILL);
                 BufferUploader.drawWithShader(fill.buildOrThrow());
             }
             RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
             RenderSystem.lineWidth(2.0F);
-            if (this.voxelHover) {
+            if (eraseRange != null && !sameRange) {
                 BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES,
                         DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                addCellBox(builder, matrix, this.hoverX, this.hoverY, this.hoverZ, HOVER_REMOVE);
+                addRangeBox(builder, matrix, eraseRange, HOVER_REMOVE);
                 BufferUploader.drawWithShader(builder.buildOrThrow());
             }
-            if (range != null) {
+            if (placeRange != null) {
                 BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES,
                         DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                addRangeBox(builder, matrix, range, HOVER_PLACE);
+                addRangeBox(builder, matrix, placeRange, HOVER_PLACE);
                 BufferUploader.drawWithShader(builder.buildOrThrow());
             }
         } finally {
@@ -740,9 +857,8 @@ public final class CollisionEditorScreen extends Screen {
                 Component.translatable("gui.yuushya.collision.boxes", boxCount()),
                 x, y + 12, ModelingChrome.PANEL_TITLE, false);
         String hint = null;
-        if (this.wallPlane >= 0 || this.voxelHover) {
-            int[] anchor = actionAnchor(true);
-            boolean empty = anchor != null && !this.grid.get(anchor[0], anchor[1], anchor[2]);
+        if (this.placeTarget != null) {
+            boolean empty = !this.grid.get(this.placeTarget[0], this.placeTarget[1], this.placeTarget[2]);
             hint = Component.translatable(empty
                     ? "gui.yuushya.collision.hover.fill"
                     : "gui.yuushya.collision.hover.erase").getString();
@@ -827,12 +943,6 @@ public final class CollisionEditorScreen extends Screen {
         addLine(builder, matrix, x0, y0, z1, x0, y1, z1, color);
     }
 
-    private static void addCellBox(BufferBuilder builder, Matrix4f matrix, int x, int y, int z, int color) {
-        double cell = CollisionVoxelGrid.CELL;
-        addBox(builder, matrix, new AABB(x * cell, y * cell, z * cell,
-                (x + 1) * cell, (y + 1) * cell, (z + 1) * cell), color);
-    }
-
     /** 体素范围内的方框（闭区间坐标）。 */
     private static void addRangeBox(BufferBuilder builder, Matrix4f matrix, int[] range, int color) {
         double cell = CollisionVoxelGrid.CELL;
@@ -890,15 +1000,27 @@ public final class CollisionEditorScreen extends Screen {
     // ---- 拾取 ----
 
     /**
-     * 把鼠标像素反投影成射线，分别与体素、三块画板求交，取更近的那个作为编辑目标。
+         * 把鼠标像素反投影成射线，与体素、三块画板求交，再解析出「光标真正压住的笔刷体积」。
      * <p>
      * 相机矩阵是仿射的，像素 {@code (mx, my)} 对应的模型空间射线就是
-     * {@code M⁻¹(mx, my, 0)} → {@code M⁻¹(mx, my, 1)} 两点连线，不需要投影矩阵。
+     * {@code M⁻¹(mx, my, +RAY_DEPTH)} → {@code M⁻¹(mx, my, -RAY_DEPTH)} 两点连线（正交投影下与投影矩阵无关）。
+     * <p>
+     * 深度必须取得足够大：GUI 的 z 跨度换算到模型空间要除以缩放系数，放大到极限时
+     * 1 像素只对应千分之几个方块，{@code z=0..1} 的「射线」会整段落在方块内部 ——
+     * 既回溯不到命中格外侧的格子（放置判定永远失败），也搜不到更近的遮挡格。
+     * <p>
+         * 解析顺序见 {@link #resolveTarget}：已有实心格 → 上一帧仍压在光标下的预览框 → 零坐标画板。
+         * 每个候选都要求笔刷体积真的被射线穿过，所以预览框不会画到光标之外，
+         * 大笔刷伸出去的部分也能直接点中。
      */
     private void updateHover(double mouseX, double mouseY) {
+            int[] previousPlace = this.placeTarget;
+            int[] previousErase = this.eraseTarget;
         this.voxelHover = false;
         this.placeValid = false;
         this.wallPlane = -1;
+            this.placeTarget = null;
+                    this.eraseTarget = null;
         if (this.layout == null) {
             return;
         }
@@ -911,8 +1033,11 @@ public final class CollisionEditorScreen extends Screen {
             return;
         }
         inverse.invert();
-        Vector4f near = inverse.transform(new Vector4f((float) mouseX, (float) mouseY, 0.0F, 1.0F), new Vector4f());
-        Vector4f far = inverse.transform(new Vector4f((float) mouseX, (float) mouseY, 1.0F, 1.0F), new Vector4f());
+        // GUI 的 z 越大越靠近观察者：从观察者一侧（+RAY_DEPTH）射向画面深处（-RAY_DEPTH）
+        Vector4f near = inverse.transform(
+                new Vector4f((float) mouseX, (float) mouseY, RAY_DEPTH, 1.0F), new Vector4f());
+        Vector4f far = inverse.transform(
+                new Vector4f((float) mouseX, (float) mouseY, -RAY_DEPTH, 1.0F), new Vector4f());
         double dirX = far.x() - near.x();
         double dirY = far.y() - near.y();
         double dirZ = far.z() - near.z();
@@ -924,14 +1049,16 @@ public final class CollisionEditorScreen extends Screen {
         dirY /= length;
         dirZ /= length;
 
-        double voxelT = traceVoxel(near.x(), near.y(), near.z(), dirX, dirY, dirZ);
-        double wallT = traceWall(near.x(), near.y(), near.z(), dirX, dirY, dirZ);
-        if (voxelT >= 0 && (wallT < 0 || voxelT <= wallT)) {
+        traceVoxel(near.x(), near.y(), near.z(), dirX, dirY, dirZ);
+        traceWall(near.x(), near.y(), near.z(), dirX, dirY, dirZ);
+        if (this.voxelHover) {
+            // 画板只是「画布」：射线碰到实体格时一律编辑实体格
             this.wallPlane = -1;
-        } else if (wallT >= 0) {
-            this.voxelHover = false;
+        } else {
             this.placeValid = false;
         }
+        this.placeTarget = resolveTarget(true, near.x(), near.y(), near.z(), dirX, dirY, dirZ, previousPlace);
+        this.eraseTarget = resolveTarget(false, near.x(), near.y(), near.z(), dirX, dirY, dirZ, previousErase);
     }
 
     /**
@@ -953,6 +1080,9 @@ public final class CollisionEditorScreen extends Screen {
         int stepX = dirX > 0 ? 1 : -1;
         int stepY = dirY > 0 ? 1 : -1;
         int stepZ = dirZ > 0 ? 1 : -1;
+                this.hoverStepX = stepX;
+                this.hoverStepY = stepY;
+                this.hoverStepZ = stepZ;
         double cellSize = CollisionVoxelGrid.CELL;
 
         double maxX = Math.abs(dirX) < 1.0E-9 ? Double.MAX_VALUE
@@ -1119,6 +1249,54 @@ public final class CollisionEditorScreen extends Screen {
         return true;
     }
 
+    /** 射线穿过格子范围（闭区间）的进入参数；未相交返回 -1。 */
+    private static double rayBoxEntry(double originX, double originY, double originZ,
+                                      double dirX, double dirY, double dirZ, int[] range) {
+        double cell = CollisionVoxelGrid.CELL;
+        return clipRayToBox(originX, originY, originZ, dirX, dirY, dirZ,
+                range[0] * cell, range[1] * cell, range[2] * cell,
+                (range[3] + 1) * cell, (range[4] + 1) * cell, (range[5] + 1) * cell);
+    }
+
+    /** 射线与任意轴对齐盒的进入参数；未相交返回 -1。 */
+    private static double clipRayToBox(double originX, double originY, double originZ,
+                                       double dirX, double dirY, double dirZ,
+                                       double minX, double minY, double minZ,
+                                       double maxX, double maxY, double maxZ) {
+        double tMin = -Double.MAX_VALUE;
+        double tMax = Double.MAX_VALUE;
+        double[] origins = {originX, originY, originZ};
+        double[] dirs = {dirX, dirY, dirZ};
+        double[] mins = {minX, minY, minZ};
+        double[] maxs = {maxX, maxY, maxZ};
+        for (int axis = 0; axis < 3; axis++) {
+            double origin = origins[axis];
+            double dir = dirs[axis];
+            if (Math.abs(dir) < 1.0E-9) {
+                if (origin < mins[axis] || origin > maxs[axis]) {
+                    return -1.0;
+                }
+                continue;
+            }
+            double t1 = (mins[axis] - origin) / dir;
+            double t2 = (maxs[axis] - origin) / dir;
+            if (t1 > t2) {
+                double swap = t1;
+                t1 = t2;
+                t2 = swap;
+            }
+            tMin = Math.max(tMin, t1);
+            tMax = Math.min(tMax, t2);
+            if (tMin > tMax) {
+                return -1.0;
+            }
+        }
+        if (tMax < 0.0) {
+            return -1.0;
+        }
+        return Math.max(tMin, 0.0);
+    }
+
     // ---- 输入 ----
 
     @Override
@@ -1139,6 +1317,17 @@ public final class CollisionEditorScreen extends Screen {
         this.pressY = mouseY;
         this.pressButton = button;
         this.dragged = false;
+        this.pressAnchor = null;
+        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            // 直接复用这一帧画出来的锚点：看到哪个框，落笔就是哪块体积
+            boolean place = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
+            this.pressAnchor = place ? this.placeTarget : this.eraseTarget;
+            if (this.pressAnchor == null) {
+                // 首帧还没产生预览时兜底
+                updateHover(mouseX, mouseY);
+                this.pressAnchor = place ? this.placeTarget : this.eraseTarget;
+            }
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             this.gesture = GESTURE_ORBIT;
         } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
@@ -1171,7 +1360,8 @@ public final class CollisionEditorScreen extends Screen {
     /**
      * 单击执行编辑：左键按笔刷放置，右键按笔刷挖除。
      * <p>
-     * 拖动过视角就不触发编辑，避免转视角时误改数据。
+     * 用的是<b>按下时</b>解析好的锚点（见 {@link #pressAnchor}），所以实际改动的格子与按下瞬间
+     * 预览框显示的完全一致。拖动过视角就不触发编辑，避免转视角时误改数据。
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
@@ -1179,17 +1369,10 @@ public final class CollisionEditorScreen extends Screen {
             return super.mouseReleased(mouseX, mouseY, button);
         }
         this.gesture = GESTURE_NONE;
-        if (!this.dragged && button == this.pressButton) {
-            updateHover(mouseX, mouseY);
-            boolean place = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
-            boolean erase = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-            if (place || erase) {
-                int[] anchor = actionAnchor(place);
-                if (anchor != null) {
-                    paintBrush(anchor, place);
-                }
-            }
+        if (!this.dragged && button == this.pressButton && this.pressAnchor != null) {
+            paintBrush(this.pressAnchor, button == GLFW.GLFW_MOUSE_BUTTON_LEFT);
         }
+        this.pressAnchor = null;
         this.pressButton = -1;
         return true;
     }
