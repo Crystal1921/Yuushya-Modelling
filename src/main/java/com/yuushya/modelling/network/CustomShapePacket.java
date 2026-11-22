@@ -2,6 +2,7 @@ package com.yuushya.modelling.network;
 
 import com.yuushya.modelling.Yuushya;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
+import com.yuushya.modelling.blockentity.BlockShape;
 import com.yuushya.modelling.utils.VoxelShapeSerializer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -20,7 +21,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
-import static com.yuushya.modelling.blockentity.BlockShape.CUSTOM;
 
 /**
  * 碰撞箱雕刻结果同步：把客户端雕好的形状写回服务端的方块实体。
@@ -59,11 +59,14 @@ public record CustomShapePacket(BlockPos blockPos, CompoundTag shape, boolean se
             if (!(blockEntity instanceof AbstractTransformBlockEntity transformBlockEntity)) {
                 return;
             }
-            transformBlockEntity.setCustomShape(VoxelShapeSerializer.deserializeVoxelShape(packet.shape));
+            VoxelShape shape = VoxelShapeSerializer.deserializeVoxelShape(packet.shape);
+            transformBlockEntity.setCustomShape(shape);
             if (packet.setCustomShape) {
-                            // 与形状工具一致：只改状态并同步客户端，不触发邻居更新
+                // 雕出来的形状与某个预设完全一致时退化回预设，不保留多余的自定义形状
+                BlockShape targetShape = BlockShape.presetOf(shape);
+                // 与形状工具一致：只改状态并同步客户端，不触发邻居更新
                 serverLevel.setBlock(packet.blockPos,
-                                    transformBlockEntity.getBlockState().setValue(SHAPES, CUSTOM),
+                                    transformBlockEntity.getBlockState().setValue(SHAPES, targetShape),
                                     Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             }
             // setChanged + 广播给客户端，让客户端方块实体也拿到新形状

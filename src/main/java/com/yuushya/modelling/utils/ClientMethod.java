@@ -104,22 +104,22 @@ public class ClientMethod {
     }
 
     public static void openModelingScreen(ShowBlockEntity showBlockEntity) {
-            Minecraft.getInstance().setScreen(
-                    com.yuushya.modelling.gui.modeling.ModelingScreen.forShowBlock(showBlockEntity));
-        }
+        Minecraft.getInstance().setScreen(
+                com.yuushya.modelling.gui.modeling.ModelingScreen.forShowBlock(showBlockEntity));
+    }
 
-        public static void openModelingScreen(ItemBlockEntity itemBlockEntity) {
-            Minecraft.getInstance().setScreen(
-                    com.yuushya.modelling.gui.modeling.ModelingScreen.forItemBlock(itemBlockEntity));
-        }
+    public static void openModelingScreen(ItemBlockEntity itemBlockEntity) {
+        Minecraft.getInstance().setScreen(
+                com.yuushya.modelling.gui.modeling.ModelingScreen.forItemBlock(itemBlockEntity));
+    }
 
-            /**
-             * 打开碰撞箱雕刻界面。
-             *
-             * @param parent 返回时的上一级界面，可为 {@code null}（直接回到游戏）
-             */
-            public static void openCollisionEditor(net.minecraft.client.gui.screens.Screen parent,
-                                                   AbstractTransformBlockEntity entity) {
-                Minecraft.getInstance().setScreen(new CollisionEditorScreen(parent, entity));
-            }
+    /**
+     * 打开碰撞箱雕刻界面。
+     *
+     * @param parent 返回时的上一级界面，可为 {@code null}（直接回到游戏）
+     */
+    public static void openCollisionEditor(net.minecraft.client.gui.screens.Screen parent,
+                                           AbstractTransformBlockEntity entity) {
+        Minecraft.getInstance().setScreen(new CollisionEditorScreen(parent, entity));
+    }
 }

@@ -62,8 +62,8 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
  * 拾取以「光标射线实际穿过的笔刷体积」为准：优先已有实心格，其次上一帧仍压在光标下的预览框，
  * 最后才落到三张零坐标画板，保证画出来的框就是点下去会改的格子。
  * <p>
- * 编辑的是一份 {@link CollisionVoxelGrid}，点「应用」时才通过 {@link CustomShapePacket} 写回服务端，
- * 并把方块形状设为 {@code CUSTOM}（否则新的碰撞箱不会参与判定）。
+ * 编辑的是一份 {@link CollisionVoxelGrid}，点「应用」时才通过 {@link CustomShapePacket} 写回服务端；
+ * 方块形状一般设为 {@code CUSTOM} 才会参与判定；雕出的形状与某个预设完全一致时退化为该预设。
  */
 public final class CollisionEditorScreen extends AbstractModelingScreen {
 
