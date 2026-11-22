@@ -98,11 +98,7 @@ public final class ModelingAxisIndicator {
     }
 
     private void drawGl(int cx, int cy, ModelingLayout.Rect viewport) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
+        ModelingRender.beginOverlay();
 
         Matrix4f identity = new Matrix4f();
         Tesselator tesselator = Tesselator.getInstance();
@@ -116,9 +112,9 @@ public final class ModelingAxisIndicator {
                 int py = posY(viewport, axis);
                 int nx = negX(viewport, axis);
                 int ny = negY(viewport, axis);
-                addSegment(lines, identity, cx, cy, nx, ny, AXIS_DIM);
+                ModelingRender.segment(lines, identity, cx, cy, nx, ny, AXIS_DIM);
                 boolean hovered = this.hoverAxis == axis && this.hoverPositive;
-                addSegment(lines, identity, cx, cy, px, py, hovered ? COLORS_HOVER[axis] : COLORS[axis]);
+                ModelingRender.segment(lines, identity, cx, cy, px, py, hovered ? COLORS_HOVER[axis] : COLORS[axis]);
             }
             for (int axis = 0; axis < 3; axis++) {
                 boolean hovered = this.hoverAxis == axis && !this.hoverPositive;
@@ -141,23 +137,8 @@ public final class ModelingAxisIndicator {
             addDisc(tris, identity, cx, cy, 1, 0xFFFFFFFF);
             BufferUploader.drawWithShader(tris.buildOrThrow());
         } finally {
-            RenderSystem.lineWidth(1.0F);
-            RenderSystem.depthMask(true);
-            RenderSystem.enableDepthTest();
-            RenderSystem.enableCull();
-            RenderSystem.disableBlend();
+            ModelingRender.endOverlay();
         }
-    }
-
-    private static void addSegment(BufferBuilder builder, Matrix4f matrix,
-                                   float x0, float y0, float x1, float y1, int color) {
-        float dx = x1 - x0;
-        float dy = y1 - y0;
-        float length = Math.max(1.0E-4F, (float) Math.hypot(dx, dy));
-        float nx = dx / length;
-        float ny = dy / length;
-        builder.addVertex(matrix, x0, y0, 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
-        builder.addVertex(matrix, x1, y1, 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
     }
 
     /** 圆环拆成 N 条线段（lines 模式无法直接画环）。 */
@@ -166,7 +147,7 @@ public final class ModelingAxisIndicator {
         for (int i = 0; i < segments; i++) {
             double a0 = i * Math.PI * 2.0 / segments;
             double a1 = (i + 1) * Math.PI * 2.0 / segments;
-            addSegment(builder, matrix,
+            ModelingRender.segment(builder, matrix,
                     cx + (float) Math.cos(a0) * radius, cy + (float) Math.sin(a0) * radius,
                     cx + (float) Math.cos(a1) * radius, cy + (float) Math.sin(a1) * radius, color);
         }

@@ -24,7 +24,7 @@ public class ColorWidget extends AbstractWidget {
     /** 色相对控件顶部的位置：预览块 + 间距 + 色相条 + 间距。 */
     private static final int PALETTE_TOP = 65;
 
-    private final AbstractColorScreen colorScreen;
+    private final ColorEditorHost colorScreen;
     /** 色板边长；面板比默认尺寸小时跟着缩小，整块色板才不会画到控件外面。 */
     private final int paletteSize;
     private final int xPadding = 5;
@@ -32,7 +32,7 @@ public class ColorWidget extends AbstractWidget {
     private final int yHeight = PALETTE_TOP;
     float[] hsbVals = new float[3];
 
-    public ColorWidget(int posX, int posY, int width, int height, int finalColor, Component message, AbstractColorScreen colorScreen) {
+    public ColorWidget(int posX, int posY, int width, int height, int finalColor, Component message, ColorEditorHost colorScreen) {
         super(posX, posY, width, height, message);
         this.colorScreen = colorScreen;
         int room = Math.min(width - 2 * xPadding, height - PALETTE_TOP - TEXT_SPACE);

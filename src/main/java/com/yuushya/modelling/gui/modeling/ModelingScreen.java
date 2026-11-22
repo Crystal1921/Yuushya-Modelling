@@ -4,9 +4,10 @@ import com.yuushya.modelling.gui.modeling.target.ItemBlockTarget;
 import com.yuushya.modelling.gui.modeling.target.ModelingChannel;
 import com.yuushya.modelling.gui.modeling.target.ModelingTarget;
 import com.yuushya.modelling.gui.modeling.target.ShowBlockTarget;
-import com.yuushya.modelling.gui.widget.AbstractColorScreen;
+import com.yuushya.modelling.gui.widget.ColorEditorHost;
 import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.utils.ClientMethod;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -30,24 +31,19 @@ import java.util.List;
  * 界面本身不认识具体方块实体，所有数据读写都通过 {@link ModelingTarget}；
  * ShowBlock 与 ItemBlock 各有一个实现，切换只需要换 target。
  */
-public class ModelingScreen extends AbstractColorScreen {
+public class ModelingScreen extends AbstractModelingScreen implements ColorEditorHost {
 
-    private static final int TITLE_HEIGHT = ModelingLayout.PANEL_TITLE_HEIGHT;
-        private static final int ROW = 20;
     /** 右上「元素属性」的行高，比变换面板紧凑。 */
     private static final int ELEMENT_ROW = ModelingLayout.ELEMENT_ROW_HEIGHT;
     /** 放得下完整色板（色相条 + 色板 + HSV 文本）所需的最小高度，再矮就只留十六进制输入。 */
     private static final int MIN_PALETTE_HEIGHT = 121;
 
     private final ModelingTarget target;
-    private final ModelingCamera camera = new ModelingCamera();
     private final ModelingViewport viewport = new ModelingViewport(this.camera);
 
-    private ModelingLayout layout;
     private ModelingElementList elementList;
     private ModelingProperties properties;
     private ModelingGizmo gizmo;
-    private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
     private final ModelingAddPanel addPanel = new ModelingAddPanel(this::insertElement);
     private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
     private final ModelingOrderButtons orderButtons = new ModelingOrderButtons(this::onMove);
@@ -68,14 +64,8 @@ public class ModelingScreen extends AbstractColorScreen {
     private EditBox colorEditBox;
     /** 右侧栏当前显示的是颜色编辑器而不是普通变换。 */
     private boolean colorMode;
-        /** 坐标轴是否跟随元素旋转（局部坐标轴）；gizmo 每次 init 都会重建，状态存在这里。 */
-        private boolean localAxis;
-
-    /** 视口内正在进行的手势：无 / 环绕视角 / 平移视角。 */
-    private static final int CAMERA_NONE = 0;
-    private static final int CAMERA_ORBIT = 1;
-    private static final int CAMERA_PAN = 2;
-    private int cameraDrag = CAMERA_NONE;
+    /** 坐标轴是否跟随元素旋转（局部坐标轴）；gizmo 每次 init 都会重建，状态存在这里。 */
+    private boolean localAxis;
 
     /** 最近一次鼠标位置，供弹出面板定位。 */
     private double lastMouseX;
@@ -98,8 +88,7 @@ public class ModelingScreen extends AbstractColorScreen {
     }
 
     @Override
-    protected void init() {
-        this.layout = new ModelingLayout(this.width, this.height);
+    protected void initScreen() {
         // 窗口尺寸变化会重进 init，先把上一轮的待发送改动冲刷掉
         this.target.flush();
         this.propertyIndex = 0;
@@ -278,6 +267,21 @@ public class ModelingScreen extends AbstractColorScreen {
         applyColor(colorValue);
     }
 
+    @Override
+    public Font getColorFont() {
+        return this.font;
+    }
+
+    @Override
+    public void setColorFocused(AbstractWidget widget) {
+        this.setFocused(widget);
+    }
+
+    @Override
+    public void setColorDragging(boolean dragging) {
+        this.setDragging(dragging);
+    }
+
     /** 右侧栏「元素属性」块里的方块状态切换按钮。 */
     private void initElementPropertyWidgets() {
         for (Button button : this.elementPropertyWidgets) {
@@ -439,24 +443,23 @@ public class ModelingScreen extends AbstractColorScreen {
         this.target.commit();
     }
 
+    /** 建模界面的相机对像素位移更敏感：按下即开始环绕，不加起步阈值。 */
+    @Override
+    protected double cameraDragThreshold() {
+        return 0.0;
+    }
+
     // ---- 渲染 ----
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.fill(0, 0, this.width, this.height, -943, ModelingChrome.CHROME_BG);
-    }
-
-    @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        if (this.layout == null) {
-            this.layout = new ModelingLayout(this.width, this.height);
-        }
+        ensureLayout();
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         this.viewport.render(guiGraphics, this.layout.viewport, this.target);
         this.gizmo.setRect(this.layout.viewport);
         this.gizmo.renderGrid(guiGraphics, this.width, this.height);
         this.gizmo.render(guiGraphics, this.width, this.height);
-        this.axisIndicator.render(guiGraphics, this.layout.viewport, mouseX, mouseY);
+        renderAxisIndicator(guiGraphics, mouseX, mouseY);
         ModelingChrome.render(guiGraphics, this.font, this.layout, this.target.displayName(), null);
         this.toolbar.render(guiGraphics, this.font, mouseX, mouseY);
         this.orderButtons.setBounds(this.slot > 0, this.slot < this.target.size() - 1);
@@ -534,13 +537,9 @@ public class ModelingScreen extends AbstractColorScreen {
     }
 
     private void renderStatus(GuiGraphics guiGraphics) {
-        ModelingLayout.Rect footer = this.layout.footer;
-        guiGraphics.drawString(this.font,
+        renderFooterHints(guiGraphics,
                 Component.translatable("gui.yuushya.modeling.status", this.target.size(), this.slot),
-                footer.x() + 5, footer.y() + 4, ModelingChrome.TEXT, false);
-        Component right = Component.translatable("gui.yuushya.modeling.cameraHint");
-        guiGraphics.drawString(this.font, right, footer.right() - 5 - this.font.width(right),
-                footer.y() + 4, ModelingChrome.PANEL_TITLE, false);
+                Component.translatable("gui.yuushya.modeling.cameraHint"));
     }
 
     // ---- 元素增删改 ----
@@ -855,16 +854,7 @@ public class ModelingScreen extends AbstractColorScreen {
         }
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
-
     // ---- 输入分发 ----
-
-    private boolean isOverViewport(double mouseX, double mouseY) {
-        return this.layout != null && this.layout.viewport.contains(mouseX, mouseY);
-    }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -906,12 +896,7 @@ public class ModelingScreen extends AbstractColorScreen {
                 return true;
             }
             // 2) 未命中轴线 → 左键环绕视角、右键平移视角（中键同样环绕）
-            if (left || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-                this.cameraDrag = CAMERA_ORBIT;
-                return true;
-            }
-            if (right) {
-                this.cameraDrag = CAMERA_PAN;
+            if (beginCameraGesture(mouseX, mouseY, button)) {
                 return true;
             }
         }
@@ -935,12 +920,7 @@ public class ModelingScreen extends AbstractColorScreen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (this.cameraDrag == CAMERA_ORBIT) {
-            this.camera.orbit(dragX, dragY);
-            return true;
-        }
-        if (this.cameraDrag == CAMERA_PAN) {
-            this.camera.pan(dragX, dragY);
+        if (dragCamera(mouseX, mouseY, dragX, dragY)) {
             return true;
         }
         if (this.gizmo.isActive()) {
@@ -952,8 +932,7 @@ public class ModelingScreen extends AbstractColorScreen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.cameraDrag != CAMERA_NONE) {
-            this.cameraDrag = CAMERA_NONE;
+        if (endCameraGesture()) {
             return true;
         }
         if (this.gizmo.isActive()) {
@@ -969,8 +948,7 @@ public class ModelingScreen extends AbstractColorScreen {
         if (this.elementList.mouseScrolled(mouseX, mouseY, scrollY)) {
             return true;
         }
-        if (isOverViewport(mouseX, mouseY) && scrollY != 0.0) {
-            this.camera.zoom(scrollY);
+        if (zoomCamera(mouseX, mouseY, scrollY)) {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);

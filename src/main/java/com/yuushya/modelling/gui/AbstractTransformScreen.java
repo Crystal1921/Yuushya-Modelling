@@ -7,17 +7,20 @@ import com.yuushya.modelling.gui.transform.AxisDragController;
 import com.yuushya.modelling.gui.validate.DoubleRange;
 import com.yuushya.modelling.gui.validate.LazyDoubleRange;
 import com.yuushya.modelling.gui.validate.ValidateRange;
-import com.yuushya.modelling.gui.widget.AbstractColorScreen;
+import com.yuushya.modelling.gui.widget.ColorEditorHost;
 import com.yuushya.modelling.gui.widget.ColorWidget;
 import com.yuushya.modelling.gui.widget.TransformComponent;
 import com.yuushya.modelling.utils.ClientMethod;
 import com.mojang.math.Axis;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.core.BlockPos;
@@ -51,7 +54,7 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
  * @param <T> 该界面使用的变换类型枚举
  * @param <E> 该界面编辑的方块实体类型
  */
-public abstract class AbstractTransformScreen<T, E extends AbstractTransformBlockEntity> extends AbstractColorScreen {
+public abstract class AbstractTransformScreen<T, E extends AbstractTransformBlockEntity> extends Screen implements ColorEditorHost {
     public static final int PER_HEIGHT = 20;
     public static final int SMALL_BUTTON_WIDTH = 10;
     protected static final int TOP = 10;
@@ -612,6 +615,21 @@ public abstract class AbstractTransformScreen<T, E extends AbstractTransformBloc
     @Override
     public EditBox getColorEditBox() {
         return this.colorEditBox;
+    }
+
+    @Override
+    public Font getColorFont() {
+        return this.font;
+    }
+
+    @Override
+    public void setColorFocused(AbstractWidget widget) {
+        this.setFocused(widget);
+    }
+
+    @Override
+    public void setColorDragging(boolean dragging) {
+        this.setDragging(dragging);
     }
 
     /**

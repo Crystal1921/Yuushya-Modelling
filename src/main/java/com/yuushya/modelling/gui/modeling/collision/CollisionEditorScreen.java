@@ -8,10 +8,11 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.yuushya.modelling.blockentity.AbstractTransformBlockEntity;
 import com.yuushya.modelling.blockentity.BlockShape;
-import com.yuushya.modelling.gui.modeling.ModelingAxisIndicator;
+import com.yuushya.modelling.gui.modeling.AbstractModelingScreen;
 import com.yuushya.modelling.gui.modeling.ModelingCamera;
 import com.yuushya.modelling.gui.modeling.ModelingChrome;
 import com.yuushya.modelling.gui.modeling.ModelingLayout;
+import com.yuushya.modelling.gui.modeling.ModelingRender;
 import com.yuushya.modelling.network.CustomShapePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -29,7 +30,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -65,13 +65,9 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
  * 编辑的是一份 {@link CollisionVoxelGrid}，点「应用」时才通过 {@link CustomShapePacket} 写回服务端，
  * 并把方块形状设为 {@code CUSTOM}（否则新的碰撞箱不会参与判定）。
  */
-public final class CollisionEditorScreen extends Screen {
+public final class CollisionEditorScreen extends AbstractModelingScreen {
 
-    private static final int ROW = 20;
-    private static final int TITLE_HEIGHT = ModelingLayout.PANEL_TITLE_HEIGHT;
     private static final int BUTTON_HEIGHT = 18;
-    /** 按下后移动超过这个像素数才算真正的相机拖动，避免点击时画面抖一下。 */
-    private static final double DRAG_THRESHOLD = 4.0;
     /**
      * 反投影射线在屏幕 z 方向上的半长。
      * <p>
@@ -105,7 +101,7 @@ public final class CollisionEditorScreen extends Screen {
     private static final int HOVER_PLACE = 0xFFFFFFFF;
     private static final int HOVER_PLACE_FILL = 0x40FFFFFF;
     private static final int HOVER_REMOVE = 0xFF5AD67D;
-        private static final int HOVER_REMOVE_FILL = 0x405AD67D;
+    private static final int HOVER_REMOVE_FILL = 0x405AD67D;
 
     private final Screen parent;
     private final AbstractTransformBlockEntity entity;
@@ -113,11 +109,8 @@ public final class CollisionEditorScreen extends Screen {
     private final Deque<long[]> undoStack = new ArrayDeque<>();
     private final Deque<long[]> redoStack = new ArrayDeque<>();
 
-    private final ModelingCamera camera = new ModelingCamera();
-    private final ModelingAxisIndicator axisIndicator = new ModelingAxisIndicator(this.camera);
     private final List<AbstractWidget> panels = new ArrayList<>();
 
-    private ModelingLayout layout;
     private boolean showGrid = true;
     private boolean showOriginalShape = true;
     private Button undoButton;
@@ -149,14 +142,7 @@ public final class CollisionEditorScreen extends Screen {
     private BrushMode brush = BrushMode.PIN;
 
     // 手势
-    private static final int GESTURE_NONE = 0;
-    private static final int GESTURE_ORBIT = 1;
-    private static final int GESTURE_PAN = 2;
-    private int gesture = GESTURE_NONE;
     private int pressButton = -1;
-    private double pressX;
-    private double pressY;
-    private boolean dragged;
     /** 按下瞬间的落笔锚点（非方框笔刷）：抬手没拖动时用它落笔。 */
     private int[] pressAnchor;
 
@@ -267,8 +253,7 @@ public final class CollisionEditorScreen extends Screen {
     // ---- 初始化 ----
 
     @Override
-    protected void init() {
-        this.layout = new ModelingLayout(this.width, this.height);
+    protected void initScreen() {
         rebuildPanels();
     }
 
@@ -640,22 +625,15 @@ public final class CollisionEditorScreen extends Screen {
         }
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
-
     // ---- 渲染 ----
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        if (this.layout == null) {
-            this.layout = new ModelingLayout(this.width, this.height);
-        }
+        ensureLayout();
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         updateHover(mouseX, mouseY);
         renderViewport(guiGraphics);
-        this.axisIndicator.render(guiGraphics, this.layout.viewport, mouseX, mouseY);
+        renderAxisIndicator(guiGraphics, mouseX, mouseY);
         ModelingChrome.render(guiGraphics, this.font, this.layout, this.entity.getBlockState().getBlock().getName(),
                 null, "gui.yuushya.collision.tools", "gui.yuushya.collision.options");
         renderCounters(guiGraphics);
@@ -663,11 +641,6 @@ public final class CollisionEditorScreen extends Screen {
         for (Renderable renderable : this.renderables) {
             renderable.render(guiGraphics, mouseX, mouseY, partialTick);
         }
-    }
-
-    @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.fill(0, 0, this.width, this.height, -943, ModelingChrome.CHROME_BG);
     }
 
     private void renderViewport(GuiGraphics guiGraphics) {
@@ -748,47 +721,45 @@ public final class CollisionEditorScreen extends Screen {
                 | (int) (VOXEL_BLUE * shade);
         switch (face) {
             case DOWN -> {
-                vertex(builder, matrix, x0, y0, z0, color);
-                vertex(builder, matrix, x1, y0, z0, color);
-                vertex(builder, matrix, x1, y0, z1, color);
-                vertex(builder, matrix, x0, y0, z1, color);
+                ModelingRender.vertex(builder, matrix, x0, y0, z0, color);
+                ModelingRender.vertex(builder, matrix, x1, y0, z0, color);
+                ModelingRender.vertex(builder, matrix, x1, y0, z1, color);
+                ModelingRender.vertex(builder, matrix, x0, y0, z1, color);
             }
             case UP -> {
-                vertex(builder, matrix, x0, y1, z0, color);
-                vertex(builder, matrix, x0, y1, z1, color);
-                vertex(builder, matrix, x1, y1, z1, color);
-                vertex(builder, matrix, x1, y1, z0, color);
+                ModelingRender.vertex(builder, matrix, x0, y1, z0, color);
+                ModelingRender.vertex(builder, matrix, x0, y1, z1, color);
+                ModelingRender.vertex(builder, matrix, x1, y1, z1, color);
+                ModelingRender.vertex(builder, matrix, x1, y1, z0, color);
             }
             case NORTH -> {
-                vertex(builder, matrix, x0, y0, z0, color);
-                vertex(builder, matrix, x0, y1, z0, color);
-                vertex(builder, matrix, x1, y1, z0, color);
-                vertex(builder, matrix, x1, y0, z0, color);
+                ModelingRender.vertex(builder, matrix, x0, y0, z0, color);
+                ModelingRender.vertex(builder, matrix, x0, y1, z0, color);
+                ModelingRender.vertex(builder, matrix, x1, y1, z0, color);
+                ModelingRender.vertex(builder, matrix, x1, y0, z0, color);
             }
             case SOUTH -> {
-                vertex(builder, matrix, x0, y0, z1, color);
-                vertex(builder, matrix, x1, y0, z1, color);
-                vertex(builder, matrix, x1, y1, z1, color);
-                vertex(builder, matrix, x0, y1, z1, color);
+                ModelingRender.vertex(builder, matrix, x0, y0, z1, color);
+                ModelingRender.vertex(builder, matrix, x1, y0, z1, color);
+                ModelingRender.vertex(builder, matrix, x1, y1, z1, color);
+                ModelingRender.vertex(builder, matrix, x0, y1, z1, color);
             }
             case WEST -> {
-                vertex(builder, matrix, x0, y0, z0, color);
-                vertex(builder, matrix, x0, y0, z1, color);
-                vertex(builder, matrix, x0, y1, z1, color);
-                vertex(builder, matrix, x0, y1, z0, color);
+                ModelingRender.vertex(builder, matrix, x0, y0, z0, color);
+                ModelingRender.vertex(builder, matrix, x0, y0, z1, color);
+                ModelingRender.vertex(builder, matrix, x0, y1, z1, color);
+                ModelingRender.vertex(builder, matrix, x0, y1, z0, color);
             }
             default -> {
-                vertex(builder, matrix, x1, y0, z0, color);
-                vertex(builder, matrix, x1, y1, z0, color);
-                vertex(builder, matrix, x1, y1, z1, color);
-                vertex(builder, matrix, x1, y0, z1, color);
+                ModelingRender.vertex(builder, matrix, x1, y0, z0, color);
+                ModelingRender.vertex(builder, matrix, x1, y1, z0, color);
+                ModelingRender.vertex(builder, matrix, x1, y1, z1, color);
+                ModelingRender.vertex(builder, matrix, x1, y0, z1, color);
             }
         }
     }
 
-    private static void vertex(BufferBuilder builder, Matrix4f matrix, float x, float y, float z, int color) {
-        builder.addVertex(matrix, x, y, z).setColor(color);
-    }
+
     /**
          * 三块画板：{@code x=0} / {@code y=0} / {@code z=0} 三个坐标平面各画 16×16 网格。
      * <p>
@@ -801,7 +772,7 @@ public final class CollisionEditorScreen extends Screen {
         }
         Matrix4f matrix = viewMatrix();
         guiGraphics.flush();
-        beginOverlay();
+        ModelingRender.beginOverlay();
         Tesselator tesselator = Tesselator.getInstance();
         try {
             RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
@@ -816,10 +787,10 @@ public final class CollisionEditorScreen extends Screen {
                 }
             }
                 // 方块本身的 12 条棱：画板都贴在内侧，没有这圈外框就看不出可雕刻的范围
-                addBox(builder, matrix, new AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), CUBE_OUTLINE);
+                ModelingRender.box(builder, matrix, new AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), CUBE_OUTLINE);
             BufferUploader.drawWithShader(builder.buildOrThrow());
         } finally {
-            endOverlay();
+            ModelingRender.endOverlay();
         }
     }
 
@@ -827,16 +798,16 @@ public final class CollisionEditorScreen extends Screen {
     private static void addWallLines(BufferBuilder builder, Matrix4f matrix, int plane, float offset, int color) {
         switch (plane) {
             case WALL_YZ -> {
-                    addLine(builder, matrix, 0.0F, offset, 0.0F, 0.0F, offset, 1.0F, color);
-                    addLine(builder, matrix, 0.0F, 0.0F, offset, 0.0F, 1.0F, offset, color);
+                    ModelingRender.line(builder, matrix, 0.0F, offset, 0.0F, 0.0F, offset, 1.0F, color);
+                    ModelingRender.line(builder, matrix, 0.0F, 0.0F, offset, 0.0F, 1.0F, offset, color);
             }
             case WALL_XZ -> {
-                    addLine(builder, matrix, offset, 0.0F, 0.0F, offset, 0.0F, 1.0F, color);
-                    addLine(builder, matrix, 0.0F, 0.0F, offset, 1.0F, 0.0F, offset, color);
+                    ModelingRender.line(builder, matrix, offset, 0.0F, 0.0F, offset, 0.0F, 1.0F, color);
+                    ModelingRender.line(builder, matrix, 0.0F, 0.0F, offset, 1.0F, 0.0F, offset, color);
             }
             default -> {
-                    addLine(builder, matrix, offset, 0.0F, 0.0F, offset, 1.0F, 0.0F, color);
-                    addLine(builder, matrix, 0.0F, offset, 0.0F, 1.0F, offset, 0.0F, color);
+                    ModelingRender.line(builder, matrix, offset, 0.0F, 0.0F, offset, 1.0F, 0.0F, color);
+                    ModelingRender.line(builder, matrix, 0.0F, offset, 0.0F, 1.0F, offset, 0.0F, color);
             }
         }
     }
@@ -849,7 +820,7 @@ public final class CollisionEditorScreen extends Screen {
         }
         Matrix4f matrix = viewMatrix();
         guiGraphics.flush();
-        beginOverlay();
+        ModelingRender.beginOverlay();
         Tesselator tesselator = Tesselator.getInstance();
         try {
             RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
@@ -857,11 +828,11 @@ public final class CollisionEditorScreen extends Screen {
             BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES,
                     DefaultVertexFormat.POSITION_COLOR_NORMAL);
             for (AABB box : shape.toAabbs()) {
-                addBox(builder, matrix, box, ORIGINAL_SHAPE_COLOR);
+                ModelingRender.box(builder, matrix, box, ORIGINAL_SHAPE_COLOR);
             }
             BufferUploader.drawWithShader(builder.buildOrThrow());
         } finally {
-            endOverlay();
+            ModelingRender.endOverlay();
         }
     }
 
@@ -890,7 +861,7 @@ public final class CollisionEditorScreen extends Screen {
         }
         Matrix4f matrix = viewMatrix();
         guiGraphics.flush();
-        beginOverlay();
+        ModelingRender.beginOverlay();
         Tesselator tesselator = Tesselator.getInstance();
         try {
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
@@ -920,35 +891,13 @@ public final class CollisionEditorScreen extends Screen {
                 BufferUploader.drawWithShader(builder.buildOrThrow());
             }
         } finally {
-            endOverlay();
+            ModelingRender.endOverlay();
         }
     }
 
     /** 模型空间 → GUI 像素的矩阵：绘制与拾取共用一份，保证画的和点的是同一处。 */
     private Matrix4f viewMatrix() {
         return this.camera.baseMatrix(this.layout.viewport);
-    }
-
-    /**
-     * 视口里的线框 / 高亮统一关掉深度测试。
-     * <p>
-     * 它们贴在体素面上（同一深度上的两个图元），开着深度测试会互相剔除，只剩零碎几段；
-     * 这些本来就是叠加显示的辅助线，压在最上层才不会被体素挡住。
-     */
-    private static void beginOverlay() {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-    }
-
-    private static void endOverlay() {
-        RenderSystem.lineWidth(1.0F);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
     }
 
     private void renderCounters(GuiGraphics guiGraphics) {
@@ -992,87 +941,16 @@ public final class CollisionEditorScreen extends Screen {
         return this.cachedBoxCount;
     }
 
-    /**
-     * 底栏提示：左侧操作说明 + 右侧视角说明。
-     * <p>
-     * 窄窗口或长文本时两侧会撞在一起，所以右侧那段只在放得下时才画，
-     * 优先保证「怎么放 / 怎么挖」这半句始终可读。
-     */
     private void renderHint(GuiGraphics guiGraphics) {
-        ModelingLayout.Rect footer = this.layout.footer;
-        Component hint = Component.translatable("gui.yuushya.collision.hint");
-        int leftX = footer.x() + 5;
-        int y = footer.y() + 4;
-        guiGraphics.drawString(this.font, hint, leftX, y, ModelingChrome.TEXT, false);
-
-        Component right = Component.translatable("gui.yuushya.collision.cameraHint");
-        int rightX = footer.right() - 5 - this.font.width(right);
-        if (rightX > leftX + this.font.width(hint) + 8) {
-            guiGraphics.drawString(this.font, right, rightX, y, ModelingChrome.PANEL_TITLE, false);
-        }
-    }
-
-    // ---- 线与盒 ----
-
-    /**
-     * 提交一条线段。
-     * <p>
-     * {@code rendertype_lines} 的顶点着色器把 {@code Normal} 当作「第二个顶点」来探测屏幕方向：
-     * {@code ProjMat * ModelViewMat * (Position + Normal)} 再和 {@code Position} 的投影相减，
-     * 用两者的 xy 差做线宽扩张。GUI 的 {@code ProjMat} 是正交投影、只吃 xy，所以这里的
-     * {@code Normal} 必须是<b>像素空间</b>的方向：若按模型空间传 {@code (0,0,1)}（沿 Z 的线），
-     * 探测出的 xy 位移恒为 0，{@code normalize(0)} 得 NaN，整段线直接被丢弃。
-     */
-    private static void addLine(BufferBuilder builder, Matrix4f matrix,
-                                float x0, float y0, float z0, float x1, float y1, float z1, int color) {
-        float[] dir = screenDirection(matrix, x0, y0, z0, x1, y1, z1);
-        builder.addVertex(matrix, x0, y0, z0).setColor(color).setNormal(dir[0], dir[1], 0.0F);
-        builder.addVertex(matrix, x1, y1, z1).setColor(color).setNormal(dir[0], dir[1], 0.0F);
-    }
-
-    /**
-     * 线段在 GUI 像素空间的方向（单位向量）。
-     * <p>
-     * 线正好与视线平行、投影成一个点时退回水平方向，避免着色器里出现 {@code normalize(0, 0)}。
-     */
-    private static float[] screenDirection(Matrix4f matrix,
-                                           float x0, float y0, float z0, float x1, float y1, float z1) {
-        Vector3f from = matrix.transformPosition(new Vector3f(x0, y0, z0));
-        Vector3f to = matrix.transformPosition(new Vector3f(x1, y1, z1));
-        float dx = to.x - from.x;
-        float dy = to.y - from.y;
-        float length = (float) Math.sqrt(dx * dx + dy * dy);
-        if (length < 1.0E-4F) {
-            return new float[]{1.0F, 0.0F};
-        }
-        return new float[]{dx / length, dy / length};
-    }
-
-    private static void addBox(BufferBuilder builder, Matrix4f matrix, AABB box, int color) {
-        float x0 = (float) box.minX;
-        float y0 = (float) box.minY;
-        float z0 = (float) box.minZ;
-        float x1 = (float) box.maxX;
-        float y1 = (float) box.maxY;
-        float z1 = (float) box.maxZ;
-        addLine(builder, matrix, x0, y0, z0, x1, y0, z0, color);
-        addLine(builder, matrix, x1, y0, z0, x1, y0, z1, color);
-        addLine(builder, matrix, x1, y0, z1, x0, y0, z1, color);
-        addLine(builder, matrix, x0, y0, z1, x0, y0, z0, color);
-        addLine(builder, matrix, x0, y1, z0, x1, y1, z0, color);
-        addLine(builder, matrix, x1, y1, z0, x1, y1, z1, color);
-        addLine(builder, matrix, x1, y1, z1, x0, y1, z1, color);
-        addLine(builder, matrix, x0, y1, z1, x0, y1, z0, color);
-        addLine(builder, matrix, x0, y0, z0, x0, y1, z0, color);
-        addLine(builder, matrix, x1, y0, z0, x1, y1, z0, color);
-        addLine(builder, matrix, x1, y0, z1, x1, y1, z1, color);
-        addLine(builder, matrix, x0, y0, z1, x0, y1, z1, color);
+        renderFooterHints(guiGraphics,
+                Component.translatable("gui.yuushya.collision.hint"),
+                Component.translatable("gui.yuushya.collision.cameraHint"));
     }
 
     /** 体素范围内的方框（闭区间坐标）。 */
     private static void addRangeBox(BufferBuilder builder, Matrix4f matrix, int[] range, int color) {
         double cell = CollisionVoxelGrid.CELL;
-        addBox(builder, matrix, new AABB(range[0] * cell, range[1] * cell, range[2] * cell,
+        ModelingRender.box(builder, matrix, new AABB(range[0] * cell, range[1] * cell, range[2] * cell,
                 (range[3] + 1) * cell, (range[4] + 1) * cell, (range[5] + 1) * cell), color);
     }
 
@@ -1085,24 +963,14 @@ public final class CollisionEditorScreen extends Screen {
         float x1 = (float) ((range[3] + 1) * cell);
         float y1 = (float) ((range[4] + 1) * cell);
         float z1 = (float) ((range[5] + 1) * cell);
-        quad(builder, matrix, color, x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0);
-        quad(builder, matrix, color, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1);
-        quad(builder, matrix, color, x0, y0, z0, x0, y1, z0, x1, y1, z0, x1, y0, z0);
-        quad(builder, matrix, color, x0, y0, z1, x1, y0, z1, x1, y1, z1, x0, y1, z1);
-        quad(builder, matrix, color, x0, y0, z0, x0, y0, z1, x0, y1, z1, x0, y1, z0);
-        quad(builder, matrix, color, x1, y0, z0, x1, y1, z0, x1, y1, z1, x1, y0, z1);
+        ModelingRender.quad(builder, matrix, color, x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0);
+        ModelingRender.quad(builder, matrix, color, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1);
+        ModelingRender.quad(builder, matrix, color, x0, y0, z0, x0, y1, z0, x1, y1, z0, x1, y0, z0);
+        ModelingRender.quad(builder, matrix, color, x0, y0, z1, x1, y0, z1, x1, y1, z1, x0, y1, z1);
+        ModelingRender.quad(builder, matrix, color, x0, y0, z0, x0, y0, z1, x0, y1, z1, x0, y1, z0);
+        ModelingRender.quad(builder, matrix, color, x1, y0, z0, x1, y1, z0, x1, y1, z1, x1, y0, z1);
     }
 
-    private static void quad(BufferBuilder builder, Matrix4f matrix, int color,
-                             float x0, float y0, float z0,
-                             float x1, float y1, float z1,
-                             float x2, float y2, float z2,
-                             float x3, float y3, float z3) {
-        vertex(builder, matrix, x0, y0, z0, color);
-        vertex(builder, matrix, x1, y1, z1, color);
-        vertex(builder, matrix, x2, y2, z2, color);
-        vertex(builder, matrix, x3, y3, z3, color);
-    }
 
     /** 画板格 → 该列起点体素坐标（贴平面那一格，垂直轴从 0 开始）。 */
     private static int[] wallCellToVoxel(int plane, int u, int v) {
@@ -1218,15 +1086,13 @@ public final class CollisionEditorScreen extends Screen {
 
     /**
      * 在 [0,1]³ 里步进找第一个实心格。
-     *
-     * @return 射线进入该格的 t；没命中返回 -1
      */
-    private double traceVoxel(double originX, double originY, double originZ,
-                              double dirX, double dirY, double dirZ) {
+    private void traceVoxel(double originX, double originY, double originZ,
+                            double dirX, double dirY, double dirZ) {
         double[] enter = new double[1];
         double[] exit = new double[1];
         if (!clipToUnitCube(originX, originY, originZ, dirX, dirY, dirZ, enter, exit)) {
-            return -1;
+            return;
         }
         int cellX = CollisionVoxelGrid.cellOf(originX + dirX * enter[0]);
         int cellY = CollisionVoxelGrid.cellOf(originY + dirY * enter[0]);
@@ -1268,7 +1134,7 @@ public final class CollisionEditorScreen extends Screen {
                 this.placeX = previousX;
                 this.placeY = previousY;
                 this.placeZ = previousZ;
-                return cellEntryT;
+                return;
             }
             previousX = cellX;
             previousY = cellY;
@@ -1276,7 +1142,7 @@ public final class CollisionEditorScreen extends Screen {
 
             double next = Math.min(maxX, Math.min(maxY, maxZ));
             if (next > exit[0]) {
-                return -1;
+                return;
             }
             if (maxX <= maxY && maxX <= maxZ) {
                 cellX += stepX;
@@ -1293,19 +1159,16 @@ public final class CollisionEditorScreen extends Screen {
             }
             cellEntryT = next;
             if (!CollisionVoxelGrid.inside(cellX, cellY, cellZ)) {
-                return -1;
+                return;
             }
         }
-        return -1;
     }
 
     /**
      * 与三块画板求交，取最近的一块并把命中的格子记下来。
-     *
-     * @return 命中处的 t；没命中返回 -1
      */
-    private double traceWall(double originX, double originY, double originZ,
-                             double dirX, double dirY, double dirZ) {
+    private void traceWall(double originX, double originY, double originZ,
+                           double dirX, double dirY, double dirZ) {
         double best = -1.0;
         int bestPlane = -1;
         int bestU = 0;
@@ -1363,7 +1226,6 @@ public final class CollisionEditorScreen extends Screen {
             this.wallCellU = bestU;
             this.wallCellV = bestV;
         }
-        return best;
     }
 
     /** 射线与 [0,1]³ 的相交区间；不直接穿入时返回 {@code false}。 */
@@ -1468,10 +1330,7 @@ public final class CollisionEditorScreen extends Screen {
         if (!this.layout.viewport.contains(mouseX, mouseY)) {
             return false;
         }
-        this.pressX = mouseX;
-        this.pressY = mouseY;
         this.pressButton = button;
-        this.dragged = false;
         this.pressAnchor = null;
 
         boolean left = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
@@ -1489,20 +1348,13 @@ public final class CollisionEditorScreen extends Screen {
         // 方框笔刷：按住拖动划范围，松开才提交，期间不操作视角
         if (paintButton && anchor != null && this.brush == BrushMode.RECT) {
             beginRect(button, anchor);
-            this.gesture = GESTURE_NONE;
             return true;
         }
 
         // 其它笔刷：只记下落笔点，抬手没拖动时才落一次笔
         this.pressAnchor = anchor;
 
-        if (left || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-            this.gesture = GESTURE_ORBIT;
-        } else if (right) {
-            this.gesture = GESTURE_PAN;
-        } else {
-            this.gesture = GESTURE_NONE;
-        }
+        beginCameraGesture(mouseX, mouseY, button);
         return true;
     }
 
@@ -1512,25 +1364,14 @@ public final class CollisionEditorScreen extends Screen {
             updateRect(mouseX, mouseY);
             return true;
         }
-        if (this.gesture == GESTURE_NONE) {
-            return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        if (dragCamera(mouseX, mouseY, dragX, dragY)) {
+            return true;
         }
-        if (!this.dragged) {
-            this.dragged = Math.abs(mouseX - this.pressX) > DRAG_THRESHOLD
-                    || Math.abs(mouseY - this.pressY) > DRAG_THRESHOLD;
-        }
-        if (this.dragged) {
-            if (this.gesture == GESTURE_ORBIT) {
-                this.camera.orbit(dragX, dragY);
-            } else {
-                this.camera.pan(dragX, dragY);
-            }
-        }
-        return true;
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     /**
-     * 抬手：方框在这里提交；其它笔刷只在「没有拖动」时按一次笔刷。
+     * 抬手：方框在这里提交；其它笔刷只在「没有拖动视角」时按一次笔刷。
      * <p>
      * 拖动过视角就不触发编辑，避免转视角时误改数据。
      */
@@ -1544,11 +1385,11 @@ public final class CollisionEditorScreen extends Screen {
             this.pressButton = -1;
             return true;
         }
-        if (this.gesture == GESTURE_NONE) {
+        boolean moved = cameraMoved();
+        if (!endCameraGesture()) {
             return super.mouseReleased(mouseX, mouseY, button);
         }
-        this.gesture = GESTURE_NONE;
-        if (!this.dragged && button == this.pressButton && this.pressAnchor != null) {
+        if (!moved && button == this.pressButton && this.pressAnchor != null) {
             paintBrush(this.pressAnchor, button == GLFW.GLFW_MOUSE_BUTTON_LEFT);
         }
         this.pressAnchor = null;
@@ -1558,8 +1399,7 @@ public final class CollisionEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (this.layout != null && this.layout.viewport.contains(mouseX, mouseY) && scrollY != 0.0) {
-            this.camera.zoom(scrollY);
+        if (zoomCamera(mouseX, mouseY, scrollY)) {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);

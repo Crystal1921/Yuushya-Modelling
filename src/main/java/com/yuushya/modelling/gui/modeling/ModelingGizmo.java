@@ -157,11 +157,7 @@ public final class ModelingGizmo {
         }
         guiGraphics.flush();
         guiGraphics.enableScissor(this.rect.x(), this.rect.y(), this.rect.right(), this.rect.bottom());
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
+        ModelingRender.beginOverlay();
         Matrix4f identity = new Matrix4f();
         Tesselator tesselator = Tesselator.getInstance();
         try {
@@ -179,11 +175,7 @@ public final class ModelingGizmo {
             }
             BufferUploader.drawWithShader(builder.buildOrThrow());
         } finally {
-            RenderSystem.lineWidth(1.0F);
-            RenderSystem.depthMask(true);
-            RenderSystem.enableDepthTest();
-            RenderSystem.enableCull();
-            RenderSystem.disableBlend();
+            ModelingRender.endOverlay();
             guiGraphics.disableScissor();
         }
     }
@@ -197,19 +189,7 @@ public final class ModelingGizmo {
         if (from == null || to == null) {
             return;
         }
-        addSegment(builder, identity, from[0], from[1], to[0], to[1], color);
-    }
-
-    /** 提交一条线段（顶点已是 GUI 像素坐标）。 */
-    private static void addSegment(BufferBuilder builder, Matrix4f matrix,
-                                   float x0, float y0, float x1, float y1, int color) {
-        float dx = x1 - x0;
-        float dy = y1 - y0;
-        float length = Math.max(1.0E-4F, (float) Math.hypot(dx, dy));
-        float nx = dx / length;
-        float ny = dy / length;
-        builder.addVertex(matrix, x0, y0, 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
-        builder.addVertex(matrix, x1, y1, 0.0F).setColor(color).setNormal(nx, ny, 0.0F);
+        ModelingRender.segment(builder, identity, from[0], from[1], to[0], to[1], color);
     }
 
     public void render(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
@@ -251,12 +231,8 @@ public final class ModelingGizmo {
     private void drawAxes(GuiGraphics guiGraphics, float[][] segments, float[] center, int active) {
         guiGraphics.flush();
 
+        ModelingRender.beginOverlay();
         RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
 
         Matrix4f identity = new Matrix4f();
         Tesselator tesselator = Tesselator.getInstance();
@@ -269,15 +245,12 @@ public final class ModelingGizmo {
                 boolean lit = axis == active;
                 RenderSystem.lineWidth(lit ? 4.0F : 2.0F);
                 BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-                addSegment(builder, identity, s[0], s[1], s[2], s[3], lit ? COLORS_HIGHLIGHT[axis] : COLORS[axis]);
+                ModelingRender.segment(builder, identity, s[0], s[1], s[2], s[3],
+                        lit ? COLORS_HIGHLIGHT[axis] : COLORS[axis]);
                 BufferUploader.drawWithShader(builder.buildOrThrow());
             }
         } finally {
-            RenderSystem.lineWidth(1.0F);
-            RenderSystem.depthMask(true);
-            RenderSystem.enableDepthTest();
-            RenderSystem.enableCull();
-            RenderSystem.disableBlend();
+            ModelingRender.endOverlay();
         }
 
         // 原点：画一个小方块做视觉锚点
