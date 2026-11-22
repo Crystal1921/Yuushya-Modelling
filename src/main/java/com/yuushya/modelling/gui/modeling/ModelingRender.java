@@ -2,9 +2,17 @@ package com.yuushya.modelling.gui.modeling;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+
+import java.util.function.Consumer;
 
 /**
  * 建模系列界面共用的叠加绘制工具：GL 状态、线段、盒与四边形。
@@ -17,6 +25,8 @@ import org.joml.Vector3f;
  * <p>
  * 视口里的辅助线（网格、线框、高亮）都用 {@link #beginOverlay()} / {@link #endOverlay()}
  * 包起来：关深度测试后它们压在最上层，不会与共面的体素面互相剔除。
+ * 需要整段「flush → 开叠加层 → 选 shader → 建 buffer → 提交」的调用方直接用
+ * {@link #overlayLines} / {@link #overlayQuads}。
  */
 public final class ModelingRender {
 
@@ -39,6 +49,46 @@ public final class ModelingRender {
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
+    }
+
+    /**
+     * 在叠加层里画一批线：自动 flush、切到 {@code rendertype_lines}、提交后还原 GL 状态。
+     *
+     * @param width 线宽（像素）
+     * @param body  往 line buffer 里写线段的回调
+     */
+    public static void overlayLines(GuiGraphics guiGraphics, float width, Consumer<BufferBuilder> body) {
+        guiGraphics.flush();
+        beginOverlay();
+        try {
+            RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+            RenderSystem.lineWidth(width);
+            BufferBuilder builder = Tesselator.getInstance()
+                    .begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+            body.accept(builder);
+            BufferUploader.drawWithShader(builder.buildOrThrow());
+        } finally {
+            endOverlay();
+        }
+    }
+
+    /**
+     * 在叠加层里画一批四边形：自动 flush、切到 {@code position_color}、提交后还原 GL 状态。
+     *
+     * @param body 往 quad buffer 里写四边形的回调
+     */
+    public static void overlayQuads(GuiGraphics guiGraphics, Consumer<BufferBuilder> body) {
+        guiGraphics.flush();
+        beginOverlay();
+        try {
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            BufferBuilder builder = Tesselator.getInstance()
+                    .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            body.accept(builder);
+            BufferUploader.drawWithShader(builder.buildOrThrow());
+        } finally {
+            endOverlay();
+        }
     }
 
     /** 端点已经是 GUI 像素坐标的线段：法线直接取像素方向。 */
@@ -100,6 +150,22 @@ public final class ModelingRender {
         line(builder, matrix, x1, y0, z0, x1, y1, z0, color);
         line(builder, matrix, x1, y0, z1, x1, y1, z1, color);
         line(builder, matrix, x0, y0, z1, x0, y1, z1, color);
+    }
+
+    /** 轴对齐盒的六个外表面（半透明填充用）：剔除已关，每个面只发一次。 */
+    public static void boxFaces(BufferBuilder builder, Matrix4f matrix, AABB box, int color) {
+        float x0 = (float) box.minX;
+        float y0 = (float) box.minY;
+        float z0 = (float) box.minZ;
+        float x1 = (float) box.maxX;
+        float y1 = (float) box.maxY;
+        float z1 = (float) box.maxZ;
+        quad(builder, matrix, color, x0, y0, z0, x0, y0, z1, x1, y0, z1, x1, y0, z0);
+        quad(builder, matrix, color, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1);
+        quad(builder, matrix, color, x0, y0, z0, x0, y1, z0, x1, y1, z0, x1, y0, z0);
+        quad(builder, matrix, color, x0, y0, z1, x1, y0, z1, x1, y1, z1, x0, y1, z1);
+        quad(builder, matrix, color, x0, y0, z0, x0, y0, z1, x0, y1, z1, x0, y1, z0);
+        quad(builder, matrix, color, x1, y0, z0, x1, y1, z0, x1, y1, z1, x1, y0, z1);
     }
 
     /** 提交一个顶点。 */

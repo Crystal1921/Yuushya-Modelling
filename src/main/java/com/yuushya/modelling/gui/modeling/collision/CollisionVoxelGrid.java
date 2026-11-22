@@ -41,6 +41,23 @@ public final class CollisionVoxelGrid {
         return Math.clamp(cell, 0, SIZE - 1);
     }
 
+    /**
+     * 两个锚点围成的闭区间范围。
+     *
+     * @param first  一个角 {@code {x, y, z, ...}}（多余元素会被忽略）
+     * @param second 另一个角，同上
+     * @return {@code {x0, y0, z0, x1, y1, z1}}（闭区间）
+     */
+    public static int[] rangeBetween(int[] first, int[] second) {
+        int[] min = new int[3];
+        int[] max = new int[3];
+        for (int axis = 0; axis < 3; axis++) {
+            min[axis] = Math.min(first[axis], second[axis]);
+            max[axis] = Math.max(first[axis], second[axis]);
+        }
+        return new int[]{min[0], min[1], min[2], max[0], max[1], max[2]};
+    }
+
     private static int index(int x, int y, int z) {
         return (x * SIZE + y) * SIZE + z;
     }
@@ -93,6 +110,39 @@ public final class CollisionVoxelGrid {
             total += Long.bitCount(word);
         }
         return total;
+    }
+
+    /** 指定范围（闭区间 {@code {x0,y0,z0,x1,y1,z1}}）里是否有格子与 {@code filled} 不同。 */
+    public boolean needsFill(int[] range, boolean filled) {
+        for (int x = range[0]; x <= range[3]; x++) {
+            for (int y = range[1]; y <= range[4]; y++) {
+                for (int z = range[2]; z <= range[5]; z++) {
+                    if (get(x, y, z) != filled) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 把指定范围（闭区间）整体写成 {@code filled}。
+     *
+     * @return 是否有格子真的被改动
+     */
+    public boolean fill(int[] range, boolean filled) {
+        boolean changed = false;
+        for (int x = range[0]; x <= range[3]; x++) {
+            for (int y = range[1]; y <= range[4]; y++) {
+                for (int z = range[2]; z <= range[5]; z++) {
+                    if (set(x, y, z, filled) != filled) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed;
     }
 
     /** 撤销用的快照。 */

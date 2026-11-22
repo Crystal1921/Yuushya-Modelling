@@ -91,10 +91,7 @@ public abstract class AbstractTransformBlock extends AbstractYuushyaBlock implem
 
         BlockEntity blockEntity = blockGetter.getBlockEntity(blockPos);
         if (blockEntity instanceof AbstractTransformBlockEntity transformBlockEntity) {
-            VoxelShape customShape = transformBlockEntity.getCustomShape();
-            if (customShape != null) {
-                return customShape;
-            }
+            return transformBlockEntity.getEffectiveShape();
         }
 
         return super.getCollisionShape(blockState, blockGetter, blockPos, collisionContext);

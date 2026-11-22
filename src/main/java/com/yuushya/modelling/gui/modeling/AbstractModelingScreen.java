@@ -1,10 +1,13 @@
 package com.yuushya.modelling.gui.modeling;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.List;
 
 /**
  * 建模 / 碰撞箱两个编辑界面的公共骨架：布局、相机、导航轴，以及视口里的相机手势。
@@ -60,6 +63,22 @@ public abstract class AbstractModelingScreen extends Screen {
         if (this.layout == null) {
             this.layout = new ModelingLayout(this.width, this.height);
         }
+    }
+
+    /**
+     * 加入一个需要整批重建的控件：既交给界面渲染，也记进分组，便于之后统一移除。
+     */
+    protected void addManagedWidget(List<AbstractWidget> group, AbstractWidget widget) {
+        this.addRenderableWidget(widget);
+        group.add(widget);
+    }
+
+    /** 移除分组里的全部控件并清空分组。 */
+    protected void clearManagedWidgets(List<AbstractWidget> group) {
+        for (AbstractWidget widget : group) {
+            this.removeWidget(widget);
+        }
+        group.clear();
     }
 
     /** 光标是否落在 3D 视口内。 */

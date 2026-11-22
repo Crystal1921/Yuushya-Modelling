@@ -47,7 +47,7 @@ public class ModelingScreen extends AbstractModelingScreen implements ColorEdito
     private final ModelingAddPanel addPanel = new ModelingAddPanel(this::insertElement);
     private final ModelingToolbar toolbar = new ModelingToolbar(this::onToolbarAction);
     private final ModelingOrderButtons orderButtons = new ModelingOrderButtons(this::onMove);
-    private final List<Button> elementPropertyWidgets = new ArrayList<>();
+    private final List<AbstractWidget> elementPropertyWidgets = new ArrayList<>();
     private int slot;
     /** 当前显示在右上属性区的第几组方块状态属性。 */
     private int propertyIndex;
@@ -126,14 +126,8 @@ public class ModelingScreen extends AbstractModelingScreen implements ColorEdito
      * 这样色板才有足够高度。只有能改颜色的目标（ItemBlock）才显示切换行。
      */
     private void rebuildRightPanel() {
-        for (AbstractWidget widget : this.transformWidgets) {
-            this.removeWidget(widget);
-        }
-        this.transformWidgets.clear();
-        for (Button button : this.elementPropertyWidgets) {
-            this.removeWidget(button);
-        }
-        this.elementPropertyWidgets.clear();
+        clearManagedWidgets(this.transformWidgets);
+        clearManagedWidgets(this.elementPropertyWidgets);
         this.colorWidget = null;
         this.colorEditBox = null;
         this.shapeButton = null;
@@ -172,8 +166,7 @@ public class ModelingScreen extends AbstractModelingScreen implements ColorEdito
     }
 
     private void addTransformWidget(AbstractWidget widget) {
-        this.addRenderableWidget(widget);
-        this.transformWidgets.add(widget);
+        addManagedWidget(this.transformWidgets, widget);
     }
 
     /** 切换按钮上写的就是当前模式，点一下在变换与颜色之间切换。 */
@@ -284,10 +277,7 @@ public class ModelingScreen extends AbstractModelingScreen implements ColorEdito
 
     /** 右侧栏「元素属性」块里的方块状态切换按钮。 */
     private void initElementPropertyWidgets() {
-        for (Button button : this.elementPropertyWidgets) {
-            this.removeWidget(button);
-        }
-        this.elementPropertyWidgets.clear();
+        clearManagedWidgets(this.elementPropertyWidgets);
         if (this.elementPropertiesRect == null) {
             return;
         }
@@ -331,8 +321,7 @@ public class ModelingScreen extends AbstractModelingScreen implements ColorEdito
         }
 
         private void addWidget(Button button) {
-            this.addRenderableWidget(button);
-            this.elementPropertyWidgets.add(button);
+            addManagedWidget(this.elementPropertyWidgets, button);
         }
 
         /** 当前元素可用的属性行。 */

@@ -1,5 +1,6 @@
 package com.yuushya.modelling.blockentity;
 
+import com.yuushya.modelling.block.blockstate.YuushyaBlockStates;
 import com.yuushya.modelling.utils.VoxelShapeSerializer;
 import lombok.Getter;
 import lombok.Setter;
@@ -106,6 +107,15 @@ public abstract class AbstractTransformBlockEntity extends BlockEntity {
         if (this.getLevel() != null && !this.getLevel().isClientSide) {
             this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         }
+    }
+
+    /** 当前真正生效的碰撞箱：CUSTOM 用实体里的自定义形状，其余用方块状态的预设形状。 */
+    public VoxelShape getEffectiveShape() {
+        BlockShape preset = getBlockState().getValue(YuushyaBlockStates.SHAPES);
+        if (preset != BlockShape.CUSTOM) {
+            return preset.voxelShape;
+        }
+        return this.customShape == null ? Shapes.empty() : this.customShape;
     }
 
     @Override
