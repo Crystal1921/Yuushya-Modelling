@@ -145,6 +145,101 @@ public final class CollisionVoxelGrid {
         return changed;
     }
 
+    /** 镜像后的坐标（以方块中心为镜面）。 */
+    private static int mirror(int coordinate) {
+        return SIZE - 1 - coordinate;
+    }
+
+    private static void setBits(long[] bits, int x, int y, int z) {
+        int index = index(x, y, z);
+        bits[index / Long.SIZE] |= 1L << (index % Long.SIZE);
+    }
+
+    /**
+     * 沿某轴整体翻转：只保留镜像后的形状。
+     *
+     * @param axis 0 = X，1 = Y，2 = Z
+     * @return 是否有变化
+     */
+    public boolean flip(int axis) {
+        long[] before = this.bits.clone();
+        long[] mirrored = new long[WORDS];
+        for (int x = 0; x < SIZE; x++) {
+            for (int y = 0; y < SIZE; y++) {
+                for (int z = 0; z < SIZE; z++) {
+                    if (!get(x, y, z)) {
+                        continue;
+                    }
+                    setBits(mirrored,
+                            axis == 0 ? mirror(x) : x,
+                            axis == 1 ? mirror(y) : y,
+                            axis == 2 ? mirror(z) : z);
+                }
+            }
+        }
+        System.arraycopy(mirrored, 0, this.bits, 0, WORDS);
+        return !Arrays.equals(before, this.bits);
+    }
+
+    /**
+     * 沿某轴镜像并与原形状取并集：原形状保留，另一侧补出镜像。
+     *
+     * @param axis 0 = X，1 = Y，2 = Z
+     * @return 是否有变化
+     */
+    public boolean mirrorUnion(int axis) {
+        long[] before = this.bits.clone();
+        long[] extra = new long[WORDS];
+        for (int x = 0; x < SIZE; x++) {
+            for (int y = 0; y < SIZE; y++) {
+                for (int z = 0; z < SIZE; z++) {
+                    if (!get(x, y, z)) {
+                        continue;
+                    }
+                    setBits(extra,
+                            axis == 0 ? mirror(x) : x,
+                            axis == 1 ? mirror(y) : y,
+                            axis == 2 ? mirror(z) : z);
+                }
+            }
+        }
+        for (int word = 0; word < WORDS; word++) {
+            this.bits[word] |= extra[word];
+        }
+        return !Arrays.equals(before, this.bits);
+    }
+
+    /**
+     * 沿某轴整体平移一格，移出方块范围的格子会被丢弃。
+     *
+     * @param axis  0 = X，1 = Y，2 = Z
+     * @param delta 位移（格），负数为反方向
+     * @return 是否有变化
+     */
+    public boolean translate(int axis, int delta) {
+        if (delta == 0) {
+            return false;
+        }
+        long[] before = this.bits.clone();
+        long[] moved = new long[WORDS];
+        for (int x = 0; x < SIZE; x++) {
+            for (int y = 0; y < SIZE; y++) {
+                for (int z = 0; z < SIZE; z++) {
+                    if (!get(x, y, z)) {
+                        continue;
+                    }
+                    int nx = axis == 0 ? x + delta : x;
+                    int ny = axis == 1 ? y + delta : y;
+                    int nz = axis == 2 ? z + delta : z;
+                    if (inside(nx, ny, nz)) {
+                        setBits(moved, nx, ny, nz);
+                    }
+                }
+            }
+        }
+        System.arraycopy(moved, 0, this.bits, 0, WORDS);
+        return !Arrays.equals(before, this.bits);
+    }
     /** 撤销用的快照。 */
     public long[] snapshot() {
         return this.bits.clone();

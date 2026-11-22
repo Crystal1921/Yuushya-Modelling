@@ -20,6 +20,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.IntConsumer;
 
 /**
  * 碰撞箱雕刻界面：在 3D 视口里把碰撞箱当成 16³ 体素来搭。
@@ -60,6 +62,9 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
     private static final double INITIAL_ORBIT_DEGREES = -90.0;
     private static final double ORBIT_DEGREES_PER_PIXEL = 0.6;
 
+    /** 三组轴按钮上显示的轴名。 */
+    private static final String[] AXIS_NAMES = {"X", "Y", "Z"};
+
     private final Screen parent;
     private final AbstractTransformBlockEntity entity;
     private final CollisionVoxelGrid grid;
@@ -68,6 +73,8 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
     private final UndoHistory<long[]> history = new UndoHistory<>(UNDO_LIMIT);
 
     private final List<AbstractWidget> panels = new ArrayList<>();
+    /** 左栏里「对称 / 复制 / 移动」三组轴按钮所在的行（按钮只有 X/Y/Z，靠左边的组名区分作用）。 */
+    private final List<AxisGroup> axisGroups = new ArrayList<>();
 
     private boolean showGrid = true;
     private boolean showOriginalShape = true;
@@ -95,6 +102,10 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
     private int[] rectStart;
     private int[] rectEnd;
 
+    /** 一组轴按钮：行位置、组名，以及给组名预留的宽度。 */
+    private record AxisGroup(int y, Component caption) {
+    }
+
     public CollisionEditorScreen(Screen parent, AbstractTransformBlockEntity entity) {
         super(Component.translatable("gui.yuushya.collision.title"));
         this.parent = parent;
@@ -116,6 +127,7 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
     /** 左栏工具 + 右栏选项 + 顶栏应用/取消。 */
     private void rebuildPanels() {
         clearManagedWidgets(this.panels);
+        this.axisGroups.clear();
 
         ModelingLayout.Rect left = this.layout.elements;
         int leftX = left.x() + 4;
@@ -138,6 +150,14 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
                 .create(leftX, y + ROW * 4, leftWidth, ROW - 2,
                         Component.translatable("gui.yuushya.collision.brush"),
                         (button, mode) -> this.brush = mode));
+
+        int groupY = y + ROW * 5;
+        addAxisGroup(groupY, "gui.yuushya.collision.mirror.flip", "gui.yuushya.collision.mirror.flip.tip",
+                this::mirrorFlip);
+        addAxisGroup(groupY + ROW, "gui.yuushya.collision.mirror.copy", "gui.yuushya.collision.mirror.copy.tip",
+                this::mirrorCopy);
+        addAxisGroup(groupY + ROW * 2, "gui.yuushya.collision.move", "gui.yuushya.collision.move.tip",
+                axis -> moveShape(axis, hasShiftDown() ? -1 : 1));
 
         ModelingLayout.Rect right = this.layout.right;
         int rightX = right.x() + 4;
@@ -227,16 +247,70 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
         this.boxesDirty = true;
     }
 
+    /**
+     * 三组轴按钮（对称 / 复制 / 移动）：左边留出组名，右边三个按钮各管一根轴。
+     *
+     * @param action 收到轴序号（0 = X，1 = Y，2 = Z）
+     */
+    private void addAxisGroup(int rowY, String captionKey, String tooltipKey, IntConsumer action) {
+        Component caption = Component.translatable(captionKey);
+        ModelingLayout.Rect left = this.layout.elements;
+        int leftX = left.x() + 4;
+        int innerWidth = Math.max(30, left.width() - 8);
+        int captionWidth = Math.min(this.font.width(caption) + 4, Math.max(12, innerWidth / 3));
+        this.axisGroups.add(new AxisGroup(rowY, caption));
+
+        int buttonsX = leftX + captionWidth;
+        int buttonsWidth = Math.max(18, innerWidth - captionWidth);
+        int buttonWidth = Math.max(10, (buttonsWidth - 4) / 3);
+        for (int axis = 0; axis < AXIS_NAMES.length; axis++) {
+            int index = axis;
+            addManagedWidget(this.panels, Button.builder(Component.literal(AXIS_NAMES[axis]),
+                            btn -> action.accept(index))
+                    .bounds(buttonsX + axis * (buttonWidth + 2), rowY, buttonWidth, ROW - 2)
+                    .tooltip(Tooltip.create(Component.translatable(tooltipKey, AXIS_NAMES[axis])))
+                    .build());
+        }
+    }
+
+    /**
+     * 执行一次改动网格的操作：没有变化就不压撤销，有变化则记一步并让面数统计失效。
+     */
+    private void changeGrid(BooleanSupplier operation) {
+        changeGrid(this.grid.snapshot(), operation);
+    }
+
+    /** 同上，但用调用方事先拍好的快照（例如方框拖动开始前的状态）。 */
+    private void changeGrid(long[] before, BooleanSupplier operation) {
+        if (!operation.getAsBoolean()) {
+            return;
+        }
+        pushUndo(before);
+        this.boxesDirty = true;
+    }
+
+    /** 镜像对称：沿该轴整体翻转，只保留镜像后的形状。 */
+    private void mirrorFlip(int axis) {
+        changeGrid(() -> this.grid.flip(axis));
+    }
+
+    /** 镜像复制：沿该轴镜像并与原形状取并集。 */
+    private void mirrorCopy(int axis) {
+        changeGrid(() -> this.grid.mirrorUnion(axis));
+    }
+
+    /** 沿该轴平移一格；Shift + 点击是反方向。 */
+    private void moveShape(int axis, int delta) {
+        changeGrid(() -> this.grid.translate(axis, delta));
+    }
+
     /** 把当前笔刷的范围整体写成 {@code filled}；没变化时不压撤销。 */
     private void paintBrush(int[] anchor, boolean filled) {
         int[] range = this.brush.range(anchor, anchor[3]);
         if (!this.grid.needsFill(range, filled)) {
             return;
         }
-        pushUndo();
-        if (this.grid.fill(range, filled)) {
-            this.boxesDirty = true;
-        }
+        changeGrid(() -> this.grid.fill(range, filled));
     }
 
     // ---- 方框拖拽 ----
@@ -280,10 +354,7 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
         if (range == null || !this.grid.needsFill(range, place)) {
             return;
         }
-        pushUndo(this.rectSnapshot);
-        if (this.grid.fill(range, place)) {
-            this.boxesDirty = true;
-        }
+        changeGrid(this.rectSnapshot, () -> this.grid.fill(range, place));
     }
 
     private void apply() {
@@ -309,6 +380,7 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
         renderAxisIndicator(guiGraphics, mouseX, mouseY);
         ModelingChrome.render(guiGraphics, this.font, this.layout, this.entity.getBlockState().getBlock().getName(),
                 null, "gui.yuushya.collision.tools", "gui.yuushya.collision.options");
+        renderAxisGroupCaptions(guiGraphics);
         renderCounters(guiGraphics);
         renderHint(guiGraphics);
         for (Renderable renderable : this.renderables) {
@@ -381,6 +453,15 @@ public final class CollisionEditorScreen extends AbstractModelingScreen {
             this.boxesDirty = false;
         }
         return this.cachedBoxCount;
+    }
+
+    /** 左栏三组轴按钮的组名：按钮上只有 X/Y/Z，靠这一列文字区分作用。 */
+    private void renderAxisGroupCaptions(GuiGraphics guiGraphics) {
+        int x = this.layout.elements.x() + 5;
+        for (AxisGroup group : this.axisGroups) {
+            guiGraphics.drawString(this.font, group.caption(), x, group.y() + (ROW - 8) / 2,
+                    ModelingChrome.PANEL_TITLE, false);
+        }
     }
 
     private void renderHint(GuiGraphics guiGraphics) {
