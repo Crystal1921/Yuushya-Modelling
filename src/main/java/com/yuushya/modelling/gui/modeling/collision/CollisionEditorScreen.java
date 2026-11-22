@@ -35,7 +35,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 
@@ -45,16 +44,21 @@ import static com.yuushya.modelling.block.blockstate.YuushyaBlockStates.SHAPES;
  * 碰撞箱雕刻界面：在 3D 视口里把碰撞箱当成 16³ 体素来搭。
  * <p>
  * 三块「画板」就是方块局部空间的三个坐标平面 —— {@code x = 0}（YZ 面）、{@code y = 0}（XZ 面，地板）、
-  * {@code z = 0}（XY 面，背墙），各画成 16×16 网格。在画板上点一格，就把当前笔刷形状从该面往方块内部放，
-  * 于是从地板往上垒、从背墙往外补，像搭积木一样叠出碰撞箱。
+ * {@code z = 0}（XY 面，背墙），各画成 16×16 网格。在画板上点一格，就把当前笔刷形状从该面往方块内部放，
+ * 于是从地板往上垒、从背墙往外补，像搭积木一样叠出碰撞箱。
  * <p>
- * 笔刷形状见 {@link BrushMode}：丁状（单格）、1/8、1/4、1/2 方块、条状、板状。
+ * 笔刷形状见 {@link BrushMode}：丁状（单格）、1/8、1/4、1/2 方块、条状、板状，以及方框。
  * <p>
  * 交互（与 Minecraft 的放置 / 破坏一致）：
  * <ul>
- *   <li>左键：按当前笔刷放置；右键：按当前笔刷挖除</li>
- *   <li>左键拖动环绕视角、右键拖动平移、滚轮缩放；Ctrl+Z / Ctrl+Y 撤销 / 重做</li>
+ *   <li>左键：按当前笔刷放置；右键：按当前笔刷挖除；都是点一下落一次笔</li>
+ *   <li>方框笔刷：按住拖动用与普通笔刷相同的选点划出方框，松开时才填充 / 清除整框</li>
+ *   <li>左键拖动环绕视角、右键拖动平移、中键拖动环绕、滚轮缩放</li>
+ *   <li>方框笔刷拖动时会占用左右键，此时按住 Alt 拖动才是视角操作</li>
+ *   <li>Ctrl+Z / Ctrl+Y 撤销 / 重做；Esc 取消</li>
  * </ul>
+ * 方框松开时才提交，一次拖动只压一份撤销快照。
+ * <p>
  * 拾取以「光标射线实际穿过的笔刷体积」为准：优先已有实心格，其次上一帧仍压在光标下的预览框，
  * 最后才落到三张零坐标画板，保证画出来的框就是点下去会改的格子。
  * <p>
@@ -66,7 +70,7 @@ public final class CollisionEditorScreen extends Screen {
     private static final int ROW = 20;
     private static final int TITLE_HEIGHT = ModelingLayout.PANEL_TITLE_HEIGHT;
     private static final int BUTTON_HEIGHT = 18;
-    /** 按下后移动超过这个像素数就算拖动视角，不再触发放置 / 挖除。 */
+    /** 按下后移动超过这个像素数才算真正的相机拖动，避免点击时画面抖一下。 */
     private static final double DRAG_THRESHOLD = 4.0;
     /**
      * 反投影射线在屏幕 z 方向上的半长。
@@ -101,6 +105,7 @@ public final class CollisionEditorScreen extends Screen {
     private static final int HOVER_PLACE = 0xFFFFFFFF;
     private static final int HOVER_PLACE_FILL = 0x40FFFFFF;
     private static final int HOVER_REMOVE = 0xFF5AD67D;
+        private static final int HOVER_REMOVE_FILL = 0x405AD67D;
 
     private final Screen parent;
     private final AbstractTransformBlockEntity entity;
@@ -152,8 +157,18 @@ public final class CollisionEditorScreen extends Screen {
     private double pressX;
     private double pressY;
     private boolean dragged;
-    /** 按下瞬间解析好的落笔锚点：抬手时直接用它，保证改动与按下时看到的预览框一致。 */
+    /** 按下瞬间的落笔锚点（非方框笔刷）：抬手没拖动时用它落笔。 */
     private int[] pressAnchor;
+
+    // ---- 方框拖拽（仅方框笔刷） ----
+    /** 正在拖方框的鼠标键（左 / 右），{@code -1} 表示没有。 */
+    private int rectButton = -1;
+    /** 拖动开始前的网格快照：整框只压一次撤销。 */
+    private long[] rectSnapshot;
+    /** 方框的两个角（体素锚点）；没有方框时为 {@code null}。 */
+    private int[] rectStart;
+    private int[] rectEnd;
+
     /** 射线在三个轴上的步进方向（±1）：给命中格找相邻空格时用来判断「往里」是哪边。 */
     private int hoverStepX = 1;
     private int hoverStepY = 1;
@@ -198,7 +213,8 @@ public final class CollisionEditorScreen extends Screen {
      * 笔刷形状：点一下要覆盖多大的体积。
      * <p>
      * 三个「方块比例」模式的边长按方块算（1/8 方块 = 2 格，1/4 = 4 格，1/2 = 8 格，居中展开）；
-     * 条状沿当前平面 / 命中面的法线方向贯通整条；板状铺满除法线以外的两个方向。
+          * 条状沿当前平面 / 命中面的法线方向贯通整条；板状铺满除法线以外的两个方向；
+          * 方框则是按住拖动划出范围，松开时才一次性填充 / 清除。
      */
     public enum BrushMode {
         /** 单格（丁状）。 */
@@ -212,7 +228,9 @@ public final class CollisionEditorScreen extends Screen {
         /** 沿主轴贯通的一根。 */
         BAR(1),
         /** 垂直于主轴铺满的一层。 */
-        PLATE(0);
+        PLATE(0),
+        /** 按住拖动划出方框，松开后填充 / 清除整个方框。 */
+        RECT(1);
 
         private final int side;
 
@@ -329,10 +347,15 @@ public final class CollisionEditorScreen extends Screen {
 
     /** 改动前先压一份快照，撤销才有得回。 */
     private void pushUndo() {
+            pushUndo(this.grid.snapshot());
+        }
+
+        /** 压入一份已经拍好的快照（一笔拖动只在第一次真正改动时压一次）。 */
+        private void pushUndo(long[] snapshot) {
         if (this.undoStack.size() >= UNDO_LIMIT) {
             this.undoStack.removeLast();
         }
-        this.undoStack.push(this.grid.snapshot());
+            this.undoStack.push(snapshot);
         this.redoStack.clear();
         refreshUndoButtons();
     }
@@ -507,35 +530,102 @@ public final class CollisionEditorScreen extends Screen {
                 brushRange(anchor, anchor[3])) >= 0.0;
     }
 
-    /**
-     * 按当前笔刷放置 / 挖除。
-     * <p>
-     * 先检查范围内是否真有格子需要改，避免"点一下没变化也压一份撤销"；整块一起改，撤销只算一步。
-     */
-    private void paintBrush(int[] anchor, boolean filled) {
-        int[] range = brushRange(anchor, anchor[3]);
-        boolean changed = false;
-        for (int x = range[0]; x <= range[3] && !changed; x++) {
-            for (int y = range[1]; y <= range[4] && !changed; y++) {
-                for (int z = range[2]; z <= range[5] && !changed; z++) {
+    /** 指定的格子范围（闭区间）里是否有格子需要改成 {@code filled}。 */
+    private boolean needsPaintRange(int[] range, boolean filled) {
+        for (int x = range[0]; x <= range[3]; x++) {
+            for (int y = range[1]; y <= range[4]; y++) {
+                for (int z = range[2]; z <= range[5]; z++) {
                     if (this.grid.get(x, y, z) != filled) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** 把指定格子范围（闭区间）整体写成 {@code filled}。 */
+    private void stampRange(int[] range, boolean filled) {
+        boolean changed = false;
+        for (int x = range[0]; x <= range[3]; x++) {
+            for (int y = range[1]; y <= range[4]; y++) {
+                for (int z = range[2]; z <= range[5]; z++) {
+                    if (this.grid.set(x, y, z, filled) != filled) {
                         changed = true;
                     }
                 }
             }
         }
-        if (!changed) {
+        if (changed) {
+            this.boxesDirty = true;
+        }
+    }
+
+    /**
+     * 单击落笔（除方框外的笔刷）：整块一次写入，一次撤销。
+     * <p>
+     * 先检测范围内是否真有格子需要改，避免"点一下没变化也压一份撤销"。
+     */
+    private void paintBrush(int[] anchor, boolean filled) {
+        int[] range = brushRange(anchor, anchor[3]);
+        if (!needsPaintRange(range, filled)) {
             return;
         }
         pushUndo();
-        for (int x = range[0]; x <= range[3]; x++) {
-            for (int y = range[1]; y <= range[4]; y++) {
-                for (int z = range[2]; z <= range[5]; z++) {
-                    this.grid.set(x, y, z, filled);
-                }
-            }
+        stampRange(range, filled);
+    }
+
+    // ---- 方框拖拽 ----
+
+    /** 开始拖方框：记下第一个角与快照，松开时才提交。 */
+    private void beginRect(int button, int[] anchor) {
+        this.rectButton = button;
+        this.rectSnapshot = this.grid.snapshot();
+        this.rectStart = new int[]{anchor[0], anchor[1], anchor[2], anchor[3]};
+        this.rectEnd = this.rectStart.clone();
+    }
+
+    /** 结束方框拖动。 */
+    private void endRect() {
+        this.rectButton = -1;
+        this.rectSnapshot = null;
+        this.rectStart = null;
+        this.rectEnd = null;
+    }
+
+    /** 方框拖动：用与普通笔刷相同的选点更新另一个角。 */
+    private void updateRect(double mouseX, double mouseY) {
+        boolean place = this.rectButton == GLFW.GLFW_MOUSE_BUTTON_LEFT;
+        int[] anchor = pickTarget(mouseX, mouseY, place);
+        if (anchor != null) {
+            this.rectEnd = anchor;
         }
-        this.boxesDirty = true;
+    }
+
+    /** 两个角围成的格子范围（闭区间）；没有方框时返回 {@code null}。 */
+    private int[] rectRange() {
+        if (this.rectStart == null || this.rectEnd == null) {
+            return null;
+        }
+        int[] min = new int[3];
+        int[] max = new int[3];
+        for (int axis = 0; axis < 3; axis++) {
+            int a = this.rectStart[axis];
+            int b = this.rectEnd[axis];
+            min[axis] = Math.min(a, b);
+            max[axis] = Math.max(a, b);
+        }
+        return new int[]{min[0], min[1], min[2], max[0], max[1], max[2]};
+    }
+
+    /** 松开方框时提交：整框填充 / 清除，只算一步撤销。 */
+    private void commitRect(boolean place) {
+        int[] range = rectRange();
+        if (range == null || !needsPaintRange(range, place)) {
+            return;
+        }
+        pushUndo(this.rectSnapshot);
+        stampRange(range, place);
     }
 
     private void apply() {
@@ -777,32 +867,47 @@ public final class CollisionEditorScreen extends Screen {
 
     /**
      * 悬停高亮：白色 = 左键放置的实际体积（半透明填充 + 线框），绿色 = 右键挖除的实际体积。
-     * 两个范围直接取 {@link #placeTarget} / {@link #eraseTarget}，和点击落笔完全同源。
+     * <p>
+     * 普通笔刷取 {@link #placeTarget} / {@link #eraseTarget}，和点击落笔完全同源；
+     * 方框笔刷在拖动期间改用 {@link #rectRange()}，画出来的就是松开后会提交的那一整块。
      */
     private void renderHover(GuiGraphics guiGraphics) {
-        int[] placeRange = this.placeTarget == null
-                ? null : brushRange(this.placeTarget, this.placeTarget[3]);
-        int[] eraseRange = this.eraseTarget == null
-                ? null : brushRange(this.eraseTarget, this.eraseTarget[3]);
+        int[] placeRange;
+        int[] eraseRange;
+        if (this.rectButton >= 0) {
+            boolean place = this.rectButton == GLFW.GLFW_MOUSE_BUTTON_LEFT;
+            int[] range = rectRange();
+            placeRange = place ? range : null;
+            eraseRange = place ? null : range;
+        } else {
+            placeRange = this.placeTarget == null
+                    ? null : brushRange(this.placeTarget, this.placeTarget[3]);
+            eraseRange = this.eraseTarget == null
+                    ? null : brushRange(this.eraseTarget, this.eraseTarget[3]);
+        }
         if (placeRange == null && eraseRange == null) {
             return;
         }
-        boolean sameRange = placeRange != null && Arrays.equals(placeRange, eraseRange);
         Matrix4f matrix = viewMatrix();
         guiGraphics.flush();
         beginOverlay();
         Tesselator tesselator = Tesselator.getInstance();
         try {
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
             if (placeRange != null) {
-                RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 BufferBuilder fill = tesselator.begin(VertexFormat.Mode.QUADS,
                         DefaultVertexFormat.POSITION_COLOR);
                 addRangeFaces(fill, matrix, placeRange, HOVER_PLACE_FILL);
                 BufferUploader.drawWithShader(fill.buildOrThrow());
+            } else if (eraseRange != null) {
+                BufferBuilder fill = tesselator.begin(VertexFormat.Mode.QUADS,
+                        DefaultVertexFormat.POSITION_COLOR);
+                addRangeFaces(fill, matrix, eraseRange, HOVER_REMOVE_FILL);
+                BufferUploader.drawWithShader(fill.buildOrThrow());
             }
             RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
             RenderSystem.lineWidth(2.0F);
-            if (eraseRange != null && !sameRange) {
+            if (eraseRange != null) {
                 BufferBuilder builder = tesselator.begin(VertexFormat.Mode.LINES,
                         DefaultVertexFormat.POSITION_COLOR_NORMAL);
                 addRangeBox(builder, matrix, eraseRange, HOVER_REMOVE);
@@ -845,6 +950,7 @@ public final class CollisionEditorScreen extends Screen {
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
     }
+
     private void renderCounters(GuiGraphics guiGraphics) {
         ModelingLayout.Rect right = this.layout.right;
         int x = right.x() + 5;
@@ -857,7 +963,16 @@ public final class CollisionEditorScreen extends Screen {
                 Component.translatable("gui.yuushya.collision.boxes", boxCount()),
                 x, y + 12, ModelingChrome.PANEL_TITLE, false);
         String hint = null;
-        if (this.placeTarget != null) {
+        if (this.rectButton >= 0) {
+            int[] range = rectRange();
+            if (range != null) {
+                int volume = (range[3] - range[0] + 1) * (range[4] - range[1] + 1) * (range[5] - range[2] + 1);
+                boolean place = this.rectButton == GLFW.GLFW_MOUSE_BUTTON_LEFT;
+                hint = Component.translatable(place
+                        ? "gui.yuushya.collision.rect.fill"
+                        : "gui.yuushya.collision.rect.erase", volume).getString();
+            }
+        } else if (this.placeTarget != null) {
             boolean empty = !this.grid.get(this.placeTarget[0], this.placeTarget[1], this.placeTarget[2]);
             hint = Component.translatable(empty
                     ? "gui.yuushya.collision.hover.fill"
@@ -877,13 +992,24 @@ public final class CollisionEditorScreen extends Screen {
         return this.cachedBoxCount;
     }
 
+    /**
+     * 底栏提示：左侧操作说明 + 右侧视角说明。
+     * <p>
+     * 窄窗口或长文本时两侧会撞在一起，所以右侧那段只在放得下时才画，
+     * 优先保证「怎么放 / 怎么挖」这半句始终可读。
+     */
     private void renderHint(GuiGraphics guiGraphics) {
         ModelingLayout.Rect footer = this.layout.footer;
         Component hint = Component.translatable("gui.yuushya.collision.hint");
-        guiGraphics.drawString(this.font, hint, footer.x() + 5, footer.y() + 4, ModelingChrome.TEXT, false);
+        int leftX = footer.x() + 5;
+        int y = footer.y() + 4;
+        guiGraphics.drawString(this.font, hint, leftX, y, ModelingChrome.TEXT, false);
+
         Component right = Component.translatable("gui.yuushya.collision.cameraHint");
-        guiGraphics.drawString(this.font, right, footer.right() - 5 - this.font.width(right),
-                footer.y() + 4, ModelingChrome.PANEL_TITLE, false);
+        int rightX = footer.right() - 5 - this.font.width(right);
+        if (rightX > leftX + this.font.width(hint) + 8) {
+            guiGraphics.drawString(this.font, right, rightX, y, ModelingChrome.PANEL_TITLE, false);
+        }
     }
 
     // ---- 线与盒 ----
@@ -1000,40 +1126,26 @@ public final class CollisionEditorScreen extends Screen {
     // ---- 拾取 ----
 
     /**
-         * 把鼠标像素反投影成射线，与体素、三块画板求交，再解析出「光标真正压住的笔刷体积」。
+     * 把鼠标像素反投影成模型空间射线。
      * <p>
      * 相机矩阵是仿射的，像素 {@code (mx, my)} 对应的模型空间射线就是
      * {@code M⁻¹(mx, my, +RAY_DEPTH)} → {@code M⁻¹(mx, my, -RAY_DEPTH)} 两点连线（正交投影下与投影矩阵无关）。
+     * GUI 的 z 越大越靠近观察者，所以起点在观察者一侧。
      * <p>
      * 深度必须取得足够大：GUI 的 z 跨度换算到模型空间要除以缩放系数，放大到极限时
-     * 1 像素只对应千分之几个方块，{@code z=0..1} 的「射线」会整段落在方块内部 ——
-     * 既回溯不到命中格外侧的格子（放置判定永远失败），也搜不到更近的遮挡格。
-     * <p>
-         * 解析顺序见 {@link #resolveTarget}：已有实心格 → 上一帧仍压在光标下的预览框 → 零坐标画板。
-         * 每个候选都要求笔刷体积真的被射线穿过，所以预览框不会画到光标之外，
-         * 大笔刷伸出去的部分也能直接点中。
+     * 1 像素只对应千分之几个方块，取小了整段「射线」都会落在方块内部。
+     *
+     * @return {@code {originX, originY, originZ, dirX, dirY, dirZ}}；不可用时返回 {@code null}
      */
-    private void updateHover(double mouseX, double mouseY) {
-            int[] previousPlace = this.placeTarget;
-            int[] previousErase = this.eraseTarget;
-        this.voxelHover = false;
-        this.placeValid = false;
-        this.wallPlane = -1;
-            this.placeTarget = null;
-                    this.eraseTarget = null;
-        if (this.layout == null) {
-            return;
+    private double[] castRay(double mouseX, double mouseY) {
+        if (this.layout == null || !this.layout.viewport.contains(mouseX, mouseY)) {
+            return null;
         }
-        ModelingLayout.Rect rect = this.layout.viewport;
-        if (!rect.contains(mouseX, mouseY)) {
-            return;
-        }
-        Matrix4f inverse = new Matrix4f(this.camera.baseMatrix(rect));
+        Matrix4f inverse = new Matrix4f(this.camera.baseMatrix(this.layout.viewport));
         if (Math.abs(inverse.determinant()) < 1.0E-9F) {
-            return;
+            return null;
         }
         inverse.invert();
-        // GUI 的 z 越大越靠近观察者：从观察者一侧（+RAY_DEPTH）射向画面深处（-RAY_DEPTH）
         Vector4f near = inverse.transform(
                 new Vector4f((float) mouseX, (float) mouseY, RAY_DEPTH, 1.0F), new Vector4f());
         Vector4f far = inverse.transform(
@@ -1043,22 +1155,65 @@ public final class CollisionEditorScreen extends Screen {
         double dirZ = far.z() - near.z();
         double length = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
         if (length < 1.0E-9) {
-            return;
+            return null;
         }
-        dirX /= length;
-        dirY /= length;
-        dirZ /= length;
+        return new double[]{near.x(), near.y(), near.z(), dirX / length, dirY / length, dirZ / length};
+    }
 
-        traceVoxel(near.x(), near.y(), near.z(), dirX, dirY, dirZ);
-        traceWall(near.x(), near.y(), near.z(), dirX, dirY, dirZ);
+    /**
+     * 在指定像素位置做一次完整拾取，返回该点的新锚点（不做上一帧的「粘滞」）。
+     * <p>
+     * 拖动画笔时逐点采样都走这里，因此笔迹始终贴着当前光标下的表面。
+     */
+    private int[] pickTarget(double mouseX, double mouseY, boolean place) {
+        double[] ray = castRay(mouseX, mouseY);
+        if (ray == null) {
+            return null;
+        }
+        this.voxelHover = false;
+        this.placeValid = false;
+        this.wallPlane = -1;
+        traceVoxel(ray[0], ray[1], ray[2], ray[3], ray[4], ray[5]);
+        traceWall(ray[0], ray[1], ray[2], ray[3], ray[4], ray[5]);
         if (this.voxelHover) {
             // 画板只是「画布」：射线碰到实体格时一律编辑实体格
             this.wallPlane = -1;
         } else {
             this.placeValid = false;
         }
-        this.placeTarget = resolveTarget(true, near.x(), near.y(), near.z(), dirX, dirY, dirZ, previousPlace);
-        this.eraseTarget = resolveTarget(false, near.x(), near.y(), near.z(), dirX, dirY, dirZ, previousErase);
+        return resolveTarget(place, ray[0], ray[1], ray[2], ray[3], ray[4], ray[5], null);
+    }
+
+    /**
+     * 刷新悬停预览：解析出「光标真正压住的笔刷体积」。
+     * <p>
+     * 解析顺序见 {@link #resolveTarget}：已有实心格 → 上一帧仍压在光标下的预览框 → 零坐标画板。
+     * 每个候选都要求笔刷体积真的被射线穿过，所以预览框不会画到光标之外，
+     * 大笔刷伸出去的部分也能直接点中。
+     */
+    private void updateHover(double mouseX, double mouseY) {
+        // 拖方框时不做「粘滞」，预览直接跟随光标，和松手提交的范围保持同源
+        int[] previousPlace = this.rectButton < 0 ? this.placeTarget : null;
+        int[] previousErase = this.rectButton < 0 ? this.eraseTarget : null;
+        this.voxelHover = false;
+        this.placeValid = false;
+        this.wallPlane = -1;
+        this.placeTarget = null;
+        this.eraseTarget = null;
+        double[] ray = castRay(mouseX, mouseY);
+        if (ray == null) {
+            return;
+        }
+        traceVoxel(ray[0], ray[1], ray[2], ray[3], ray[4], ray[5]);
+        traceWall(ray[0], ray[1], ray[2], ray[3], ray[4], ray[5]);
+        if (this.voxelHover) {
+            // 画板只是「画布」：射线碰到实体格时一律编辑实体格
+            this.wallPlane = -1;
+        } else {
+            this.placeValid = false;
+        }
+        this.placeTarget = resolveTarget(true, ray[0], ray[1], ray[2], ray[3], ray[4], ray[5], previousPlace);
+        this.eraseTarget = resolveTarget(false, ray[0], ray[1], ray[2], ray[3], ray[4], ray[5], previousErase);
     }
 
     /**
@@ -1318,19 +1473,32 @@ public final class CollisionEditorScreen extends Screen {
         this.pressButton = button;
         this.dragged = false;
         this.pressAnchor = null;
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            // 直接复用这一帧画出来的锚点：看到哪个框，落笔就是哪块体积
-            boolean place = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
-            this.pressAnchor = place ? this.placeTarget : this.eraseTarget;
-            if (this.pressAnchor == null) {
-                // 首帧还没产生预览时兜底
-                updateHover(mouseX, mouseY);
-                this.pressAnchor = place ? this.placeTarget : this.eraseTarget;
+
+        boolean left = button == GLFW.GLFW_MOUSE_BUTTON_LEFT;
+        boolean right = button == GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+        boolean paintButton = (left || right) && !hasAltDown();
+        int[] anchor = null;
+        if (paintButton) {
+            // 用当前帧画出来的锚点起笔：看到哪个框就从哪块开始
+            anchor = left ? this.placeTarget : this.eraseTarget;
+            if (anchor == null) {
+                anchor = pickTarget(mouseX, mouseY, left);
             }
         }
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+
+        // 方框笔刷：按住拖动划范围，松开才提交，期间不操作视角
+        if (paintButton && anchor != null && this.brush == BrushMode.RECT) {
+            beginRect(button, anchor);
+            this.gesture = GESTURE_NONE;
+            return true;
+        }
+
+        // 其它笔刷：只记下落笔点，抬手没拖动时才落一次笔
+        this.pressAnchor = anchor;
+
+        if (left || button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
             this.gesture = GESTURE_ORBIT;
-        } else if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        } else if (right) {
             this.gesture = GESTURE_PAN;
         } else {
             this.gesture = GESTURE_NONE;
@@ -1340,6 +1508,10 @@ public final class CollisionEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.rectButton >= 0) {
+            updateRect(mouseX, mouseY);
+            return true;
+        }
         if (this.gesture == GESTURE_NONE) {
             return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
@@ -1358,13 +1530,20 @@ public final class CollisionEditorScreen extends Screen {
     }
 
     /**
-     * 单击执行编辑：左键按笔刷放置，右键按笔刷挖除。
+     * 抬手：方框在这里提交；其它笔刷只在「没有拖动」时按一次笔刷。
      * <p>
-     * 用的是<b>按下时</b>解析好的锚点（见 {@link #pressAnchor}），所以实际改动的格子与按下瞬间
-     * 预览框显示的完全一致。拖动过视角就不触发编辑，避免转视角时误改数据。
+     * 拖动过视角就不触发编辑，避免转视角时误改数据。
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.rectButton >= 0) {
+            updateRect(mouseX, mouseY);
+            commitRect(this.rectButton == GLFW.GLFW_MOUSE_BUTTON_LEFT);
+            endRect();
+            this.pressAnchor = null;
+            this.pressButton = -1;
+            return true;
+        }
         if (this.gesture == GESTURE_NONE) {
             return super.mouseReleased(mouseX, mouseY, button);
         }
